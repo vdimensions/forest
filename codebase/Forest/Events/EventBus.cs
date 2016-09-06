@@ -2,26 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Axle.Collections;
-using Axle.Extensions.Type;
-using Axle.Forest.UI.Composition;
-using Axle.References;
-using Axle.Verification;
-
-
-namespace Axle.Forest.UI.Messaging
+namespace Forest.Events
 {
-    class EventBus : IDisposable, IEventBus
+    internal sealed class EventBus : IEventBus
     {
         [ThreadStatic]
-        private static WeakReference<EventBus> _staticEventBus;
+        private static WeakReference _staticEventBus;
 
         public static EventBus Get()
         {
-            var existing = _staticEventBus == null ? null : _staticEventBus.Value;
+            var existing = _staticEventBus == null ? null : _staticEventBus.Target as EventBus;
             if (existing == null)
             {
-                _staticEventBus = new WeakReference<EventBus>(existing = new EventBus());
+                _staticEventBus = new WeakReference(existing = new EventBus());
             }
             return existing.MarkUsed();
         }
@@ -35,7 +28,7 @@ namespace Axle.Forest.UI.Messaging
                 {
                     throw new InvalidOperationException("No event bus is associated with the current thread!");
                 }
-                return wr.Value;
+                return (EventBus) wr.Target;
             }
         }
 
@@ -66,14 +59,14 @@ namespace Axle.Forest.UI.Messaging
             {
                 return;
             }
-            Dispose(true);
+            DoDispose();
             var exiting = _staticEventBus.Target;
             if (ReferenceEquals(exiting, this))
             {
                 _staticEventBus = null;
             }
         }
-        private void Dispose(bool disposing)
+        private void DoDispose()
         {
             foreach (var value in subscriptions.Values)
             {
@@ -82,30 +75,61 @@ namespace Axle.Forest.UI.Messaging
             subscriptions.Clear();
         }
 
-        public bool Publish<T>(IView sender, T message, string topic)
+        public bool Publish<T>(IView sender, T message, string[] topics)
         {
-            topic.VerifyArgument("topic").IsNotNull();
-            message.VerifyArgument("message").IsNotNull();
-            IDictionary<Type, IList<ISubscriptionHandler>> topicSubscriptionHandlers;
-            var subscribersFound = 0;
-            if (subscriptions.TryGetValue(topic, out topicSubscriptionHandlers))
+            if (message == null)
             {
-                var type = typeof(T);
-                var keys = topicSubscriptionHandlers.Keys.Where(x => (type == x) || type.ExtendsOrImplements(x));
-                foreach (var subscription in keys.SelectMany(key => topicSubscriptionHandlers[key].Where(subscription => !ReferenceEquals(sender, subscription.Receiver))))
+                throw new ArgumentNullException("message");
+            }
+            var subscribersFound = 0;
+            if (topics.Length > 0)
+            {
+                foreach (var topic in topics)
                 {
-                    subscription.Invoke(message);
-                    subscribersFound++;
+                    IDictionary<Type, IList<ISubscriptionHandler>> topicSubscriptionHandlers;
+                    if (subscriptions.TryGetValue(topic, out topicSubscriptionHandlers))
+                    {
+                        subscribersFound += InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var topicSubscriptionHandlers in subscriptions.Values)
+                {
+                    subscribersFound += InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers);
                 }
             }
             
             return subscribersFound > 0;
         }
 
+        private static int InvokeMatchingSubscriptions<T>(
+            IView sender, 
+            T message, 
+            IDictionary<Type, IList<ISubscriptionHandler>> topicSubscriptionHandlers)
+        {
+            int subscribersFound = 0;
+            var type = typeof (T);
+            var keys = topicSubscriptionHandlers.Keys.Where(x => (type == x) || x.IsAssignableFrom(type));
+            foreach (var subscription in keys.SelectMany(key => topicSubscriptionHandlers[key].Where(subscription => !ReferenceEquals(sender, subscription.Receiver))))
+            {
+                subscription.Invoke(message);
+                subscribersFound++;
+            }
+            return subscribersFound;
+        }
+
         public IEventBus Subscribe(ISubscriptionHandler subscriptionHandler, string topic)
         {
-            topic.VerifyArgument("topic").IsNotNull();
-            subscriptionHandler.VerifyArgument("subscriptionHandler").IsNotNull();
+            if (topic == null)
+            {
+                throw new ArgumentNullException("topic");
+            }
+            if (subscriptionHandler == null)
+            {
+                throw new ArgumentNullException("subscriptionHandler");
+            }
 
             IDictionary<Type, IList<ISubscriptionHandler>> topicSubscriptionHandlers;
             if (!subscriptions.TryGetValue(topic, out topicSubscriptionHandlers))
@@ -116,7 +140,7 @@ namespace Axle.Forest.UI.Messaging
             IList<ISubscriptionHandler> subscriptionList;
             if (!topicSubscriptionHandlers.TryGetValue(subscriptionHandler.MessageType, out subscriptionList))
             {
-                topicSubscriptionHandlers.Add(subscriptionHandler.MessageType, subscriptionList = new ArrayList<ISubscriptionHandler>());
+                topicSubscriptionHandlers.Add(subscriptionHandler.MessageType, subscriptionList = new List<ISubscriptionHandler>());
             }
             subscriptionList.Add(subscriptionHandler); 
             

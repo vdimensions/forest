@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,19 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-using System;
-using System.Runtime.Serialization;
-
-namespace Forest.Events
+namespace Forest.Expressions
 {
-    [Serializable]
-    public class SubscriptionExecutionException : Exception
+    internal sealed class Literal : IExpression
     {
-        public SubscriptionExecutionException() { }
-        public SubscriptionExecutionException(string message) : base(message) { }
-        public SubscriptionExecutionException(string message, Exception inner) : base(message, inner) { }
+        private readonly string value;
 
-        protected SubscriptionExecutionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        public Literal (string value)
+        {
+            this.value = value;
+        }
+
+        string IExpression.Evaluate() { return this.value; }
     }
 }
