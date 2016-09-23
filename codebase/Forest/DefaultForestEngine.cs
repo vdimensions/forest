@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -99,6 +99,7 @@ namespace Forest
         }
 
         private static IViewNode RenderView(
+                IForestContext context,
                 IView view, 
                 ILayoutTemplate template,
                 IRegion containingRegion, 
@@ -146,6 +147,7 @@ namespace Forest
                 {
                     var childView = childViewKvp.Value;
                     var node = RenderView(
+                        context,
                         childView, 
                         template, 
                         region, 
@@ -196,11 +198,12 @@ namespace Forest
                     .Select<LinkToAttribute, ILink>(
                         x =>
                         {
+                            var viewID = x.ViewID ?? context.GetDescriptor(x.ViewType).ViewAttribute.ID;
                             if (x.Command == null)
                             {
-                                return new Link(x.LinkID, x.ViewID);
+                                return new Link(x.LinkID, viewID);
                             }
-                            return new CommandLink(x.LinkID, template.ID, x.ViewID, x.Command, x.CommandArgument);
+                            return new CommandLink(x.LinkID, template.ID, viewID, x.Command, x.CommandArgument);
                         })
                     .Where(x => view.CanExecuteCommand(x.Name))
                     .ToDictionary(x => x.Name, StringComparer)
@@ -229,6 +232,7 @@ namespace Forest
         public IViewNode RenderView(ForestResult forestResult, bool renderAll)
         {
             return RenderView(
+                context,
                 forestResult.View, 
                 forestResult.Template,
                 null, 
@@ -246,6 +250,7 @@ namespace Forest
                 throw new ArgumentNullException("modifications");
             }
             return RenderView(
+                context,
                 forestResult.View, 
                 forestResult.Template, 
                 null, 
@@ -264,6 +269,7 @@ namespace Forest
                 throw new ArgumentNullException("modifications");
             }
             return RenderView(
+                context,
                 forestResult.View, 
                 forestResult.Template, 
                 null, 

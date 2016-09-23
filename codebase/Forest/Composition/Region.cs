@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,13 +54,13 @@ namespace Forest.Composition
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string path;
 
-        private readonly ForestSetup setup;
+        private readonly IForestContext context;
 
-        public Region(ForestSetup setup, IRegionTemplate template, _ViewResolver resolver) : this(setup, template, resolver, StringComparer.Ordinal) { }
-        private Region(ForestSetup setup, IRegionTemplate template, _ViewResolver resolver, IEqualityComparer<string> comparer)
+        public Region(IForestContext context, IRegionTemplate template, _ViewResolver resolver) : this(context, template, resolver, StringComparer.Ordinal) { }
+        private Region(IForestContext context, IRegionTemplate template, _ViewResolver resolver, IEqualityComparer<string> comparer)
         {
-            this.setup = setup;
-            this.logger = setup.LoggerFactory.GetLogger<Region>();
+            this.context = context;
+            this.logger = context.LoggerFactory.GetLogger<Region>();
             this.activeViews = new ChronologicalDictionary<string, IView>(comparer);
             this.allViews = new ChronologicalDictionary<string, IView>(comparer);
             this.template = template;
@@ -200,10 +200,10 @@ namespace Forest.Composition
             return result;
         }
 
-        private static IViewTemplate CreateViewTemplateOnTheFly(string id)
+        private IViewTemplate CreateViewTemplateOnTheFly(string id)
         {
             ILayoutTemplate t;
-            if (ApplicationState.TryLoadTemplate(id, out t))
+            if (context.LayoutTemplateProvider.TryLoad(id, out t))
             {
                 return t;
             }
@@ -318,7 +318,7 @@ namespace Forest.Composition
                     p = ((Region) p.Region).presenter;
                     ids.AddFirst(p.View.ID);
                 }
-                path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(setup.PathSeparator).Append(x)).ToString();
+                path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(this.context.PathSeparator).Append(x)).ToString();
                 presenter = value;
             }
         }

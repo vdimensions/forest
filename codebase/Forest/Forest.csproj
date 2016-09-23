@@ -65,7 +65,6 @@
     <Compile Include="Composition\Templates\IViewContainer.cs" />
     <Compile Include="Composition\Templates\IViewTemplate.cs" />
     <Compile Include="Composition\Templates\LayoutContainerBase.cs" />
-    <Compile Include="Composition\Templates\LayoutTemplate.cs" />
     <Compile Include="Composition\Templates\LayoutTemplateException.cs" />
     <Compile Include="Composition\Templates\LayoutTemplateLoaderEntry.cs" />
     <Compile Include="Composition\Templates\ILayoutTemplateLoader.cs" />
@@ -108,9 +107,11 @@
     <Compile Include="Dom\Link.cs" />
     <Compile Include="Dom\Localization\IResourceManager.cs" />
     <Compile Include="Engine\IForestEngineComponent.cs" />
+    <Compile Include="ILayoutTemplateProvider.cs" />
     <Compile Include="LinkToAttribute.cs" />
     <Compile Include="Collections\ChronologicalDictionary.cs" />
     <Compile Include="Collections\DictionaryProxy.cs" />
+    <Compile Include="Stubs\IProperty.cs" />
     <Compile Include="Stubs\ResourceInfo.cs" />
     <Compile Include="Dom\NavigationTarget.cs" />
     <Compile Include="Dom\RegionNode.cs" />

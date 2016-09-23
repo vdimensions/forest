@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,20 +28,21 @@ namespace Forest.Composition
         private readonly IView view;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IRegion region;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly IForestContext context;
 
-        private ForestSetup setup;
-
-        public Presenter(ForestSetup setup, IViewTemplate template, IView view) : this(setup, template, view, null) { }
-        public Presenter(ForestSetup setup, IViewTemplate template, IView view, IRegion region)
+        public Presenter(IForestContext context, IViewTemplate template, IView view) : this(context, template, view, null) { }
+        public Presenter(IForestContext context, IViewTemplate template, IView view, IRegion region)
         {
+            this.context = context;
             this.template = template;
             this.view = view;
             this.region = region;
         }
 
-        public IViewTemplate Template { get { return this.template; } }
-        public IView View { get { return this.view; } }
-        public IRegion Region { get { return this.region; } }
-        public string Path { get { return (this.region == null ? string.Empty : this.region.Path) + this.setup.PathSeparator + this.view.ID; } }
+        public IViewTemplate Template { get { return template; } }
+        public IView View { get { return view; } }
+        public IRegion Region { get { return region; } }
+        public string Path { get { return (region == null ? string.Empty : region.Path) + context.PathSeparator + view.ID; } }
     }
 }

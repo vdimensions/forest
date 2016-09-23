@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-
-using Forest.Commands;
-using Forest.Events;
-using Forest.Stubs;
 
 
-namespace Forest
+namespace Forest.Stubs
 {
-    public interface IViewDescriptor
+    public interface IProperty
     {
-        UnboundCommand GetCommand(IView view, string commandName);
+        string Name { get; }
+        Type MemberType { get; }
+        bool IsWriteable { get; }
 
-        Type ViewType { get; }
-        Type ViewModelType { get; }
-        bool DismissViewModel { get; }
-        IDictionary<string, UnboundCommand> CommandMethods { get; }
-        ViewAttribute ViewAttribute { get; }
-        IEnumerable<LinkToAttribute> LinkToAttributes { get; }
-        IList<SubscriptionInfo> SubscriptionMethods { get; }
-        IDictionary<string, IProperty> ViewModelProperties { get; }
+        T[] GetAttributes<T>() where T: Attribute;
+        Attribute[] GetAttributes();
+
+        object GetValue(object target);
+
+        void SetValue(object target, object value);
     }
 }

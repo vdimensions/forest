@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,12 +28,10 @@ namespace Forest
 {
     public class ApplicationState
     {
-        public static readonly ApplicationState Initial = new ApplicationState();
-
         private static readonly object _true = true;
 
         private static ApplicationState Execute(
-            ForestEngineComponent engine, 
+            IForestContext context, 
             string templateName, 
             ApplicationState previousState, 
             DeferredCommandInfo deferredCommand)
@@ -47,8 +45,8 @@ namespace Forest
                     ILayoutTemplate template = null;
                     if ((previousState == null) || (ForestResult.Empty == previousState.Result) || !previousState.Result.Template.ID.Equals(templateName))
                     {
-                        template = LayoutTemplate.Load(templateName);
-                        viewResult = engine.ExecuteTemplate(template);
+                        template = context.LayoutTemplateProvider.Load(templateName);
+                        viewResult = context.Engine.ExecuteTemplate(template);
                     }
                     else
                     {
@@ -61,7 +59,7 @@ namespace Forest
                     /**** TODO TEMP FIX ****/
                     if (ForestResult.Empty == viewResult)
                     {
-                        return new ApplicationState(engine, new ForestResult(template, null), null);
+                        return new ApplicationState(context, new ForestResult(template, null), null);
                     }
                     TraverseView(viewResult.View, v => ((IViewInit) v).RegisterEventBus(eventBus));
                     TraverseView(viewResult.View, v => ((IViewInit) v).OnEventBusReady(eventBus));
@@ -77,25 +75,25 @@ namespace Forest
                                 {
                                     viewResult.View.Dispose();
                                 }
-                                template = LayoutTemplate.Load(templateName);
-                                viewResult = engine.ExecuteTemplate(template);
+                                template = context.LayoutTemplateProvider.Load(templateName);
+                                viewResult = context.Engine.ExecuteTemplate(template);
                             }
-                            node = engine.RenderView(viewResult, true);
+                            node = context.Engine.RenderView(viewResult, true);
                         }
                         else
                         {   //
                             // The command did not have a redirect view, or the view result suggest valudation errors. We only render visual feedback.
                             //
-                            node = engine.RenderView(viewResult, commandResult.RegionModifications, !isCached);
+                            node = context.Engine.RenderView(viewResult, commandResult.RegionModifications, !isCached);
                         }
                     }
                     else
                     {
                         node = isCached 
-                            ? engine.RenderView(viewResult, new RegionModification[0], true) 
-                            : engine.RenderView(viewResult, true);
+                            ? context.Engine.RenderView(viewResult, new RegionModification[0], true) 
+                            : context.Engine.RenderView(viewResult, true);
                     }
-                    return new ApplicationState(engine, viewResult, node);
+                    return new ApplicationState(context, viewResult, node);
                 }
                 finally
                 {
@@ -116,27 +114,26 @@ namespace Forest
             action(view);
         }
 
-        internal static ILayoutTemplate LoadTemplate(string templateName)
+        internal ILayoutTemplate LoadTemplate(string templateName)
         {
-            return LayoutTemplate.Load(templateName);
+            return context.LayoutTemplateProvider.Load(templateName);
         }
-        internal static bool TryLoadTemplate(string templateName, out ILayoutTemplate template)
+        internal bool TryLoadTemplate(string templateName, out ILayoutTemplate template)
         {
-            return LayoutTemplate.TryLoad(templateName, out template);
+            return context.LayoutTemplateProvider.TryLoad(templateName, out template);
         }
 
-        private readonly ForestEngineComponent forestEngine;
+        private readonly IForestContext context;
         private readonly ForestResult result;
         private readonly IViewNode renderedView;
 
-        private ApplicationState(ForestEngineComponent forestEngine) : this(forestEngine, ForestResult.Empty, null) { }
-        private ApplicationState(ForestEngineComponent forestEngine, ForestResult result, IViewNode renderedView)
+        private ApplicationState(IForestContext context) : this(context, ForestResult.Empty, null) { }
+        private ApplicationState(IForestContext context, ForestResult result, IViewNode renderedView)
         {
-            this.forestEngine = forestEngine;
+            this.context = context;
             this.result = result;
             this.renderedView = renderedView;
         }
-        private ApplicationState() : this(new ForestEngineComponent()) { }
 
         public IView FindView(string path)
         {
@@ -148,7 +145,7 @@ namespace Forest
             {
                 throw new ArgumentException("Value cannot be an empty string", "path");
             }
-            return forestEngine.FindView(result.View, path);
+            return context.Engine.FindView(result.View, path);
         }
 
         public IParameter GetCommandParameter(string path, string commandName)
@@ -169,10 +166,7 @@ namespace Forest
             {
                 throw new ArgumentException("Value cannot be an empty string", "commandName");
             }
-            return forestEngine.GetCommand(
-                result.View,
-                path,
-                commandName).Parameter;
+            return context.Engine.GetCommand(result.View, path, commandName).Parameter;
         }
 
         public ApplicationState ExecuteCommand(string path, string commandName, Func<CommandInfo, object> argumentResolver)
@@ -193,7 +187,7 @@ namespace Forest
             {
                 throw new ArgumentException("Value cannot be an empty string", "commandName");
             }
-            var command = forestEngine.GetCommand(result.View, path, commandName);
+            var command = context.Engine.GetCommand(result.View, path, commandName);
             Func<CommandInfo, CommandResult> resolveFn =
                 delegate(CommandInfo cmd)
                 {
@@ -215,7 +209,7 @@ namespace Forest
                 };
             var deferred = new DeferredCommandInfo(command, resolveFn);
             return Execute(
-                forestEngine,
+                context,
                 Result == ForestResult.Empty ? string.Empty : Result.Template.ID, 
                 this, 
                 deferred);
@@ -238,15 +232,15 @@ namespace Forest
             {
                 throw new ArgumentException("Value cannot be an empty string", "commandName");
             }
-            var command = forestEngine.GetCommand(result.View, path, commandName);
+            var command = context.Engine.GetCommand(result.View, path, commandName);
             return Execute(
-                forestEngine,
+                context,
                 Result == ForestResult.Empty ? string.Empty : Result.Template.ID,
                 this,
                 new DeferredCommandInfo(command, _ => _.Invoke(argument)));
         }
 
-        public ApplicationState NavigateTo(string templateName) { return Execute(forestEngine, templateName, this, null); }
+        public ApplicationState NavigateTo(string templateName) { return Execute(context, templateName, this, null); }
 
         public ForestResult Result { get { return result; } }
         public IViewNode RenderedView { get { return renderedView; } }

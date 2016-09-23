@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,26 +20,6 @@ namespace Forest.Stubs
 {
     public interface IContainer
     {
-        [Obsolete]
-        IContainer CreateChildContainer();
-
-        [Obsolete]
-        IContainer RegisterInstance<T>(T obj);
-
-        [Obsolete]
-        IContainer RegisterPrototype<T>();
-        [Obsolete]
-        IContainer RegisterPrototype(Type t);
-
-        [Obsolete]
-        T Resolve<T>();
-
-        [Obsolete]
-        bool TryResolve<T>(Type vmType, out T viewModel);
-
-        [Obsolete]
-        IContainer Register(Type vmType);
-
         IView ResolveView(Type viewType, string id, object viewModel);
         IView ResolveView(Type viewType, string id, Type viewModelType);
     }

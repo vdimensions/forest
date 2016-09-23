@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,8 @@ namespace Forest
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string linkID;
 
+        private Type viewType;
+
         [Localizable(false)]
         public LinkToAttribute(
             Type viewType, 
@@ -59,7 +61,8 @@ namespace Forest
             {
                 throw new ArgumentNullException("viewType");
             }
-            this.viewID = ViewDescriptor.For(viewType.VerifyArgument("viewType").Is<IView>().Value).ViewAttribute.ID;
+            this.viewType = viewType;
+            this.viewID = null;//ViewDescriptor.For(viewType.VerifyArgument("viewType").Is<IView>().Value).ViewAttribute.ID;
             this.command = command;
             this.commandArg = commandArg;
             this.linkID = linkID ?? command;//.VerifyArgument("linkName").IsNotNullOrEmpty();
@@ -123,7 +126,8 @@ namespace Forest
             {
                 throw new ArgumentNullException("viewType");
             }
-            this.viewID = ViewDescriptor.For(viewType.VerifyArgument("viewType").Is<IView>().Value).ViewAttribute.ID;
+            this.viewType = viewType;
+            this.viewID = null;//ViewDescriptor.For(viewType.VerifyArgument("viewType").Is<IView>().Value).ViewAttribute.ID;
             this.linkID = viewID;
         }
 
@@ -136,5 +140,7 @@ namespace Forest
             get { return  linkID; }
             set { linkID = value; }
         }
+        public Type ViewType { get { return viewType; } }
+        
     }
 }

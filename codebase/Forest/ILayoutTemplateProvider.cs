@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections;
+using Forest.Composition.Templates;
 
 
-namespace Forest.Composition.Templates.Mutable
+namespace Forest
 {
-    internal interface IMutableViewContainer : IMutableLayoutContainer<IViewTemplate, IMutableViewTemplate>, IViewContainer
+    public interface ILayoutTemplateProvider
     {
-        void AddPlaceholder(IMutablePlaceholder placeholder);
-
-        IEnumerable Buckets { get; }
+        ILayoutTemplate Load(string name);
+        bool TryLoad(string name, out ILayoutTemplate template);
     }
 }

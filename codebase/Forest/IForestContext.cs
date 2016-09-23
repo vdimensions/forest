@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,7 @@ using System;
 using Forest.Caching;
 using Forest.Dom;
 using Forest.Dom.Localization;
+using Forest.Engine;
 using Forest.Expressions;
 using Forest.Security;
 using Forest.Stubs;
@@ -35,6 +36,8 @@ namespace Forest
         ICacheManager CacheManager { get; }
         string PathSeparator { get; }
         ILocalizationManager LocalizationManager { get; }
+        ILayoutTemplateProvider LayoutTemplateProvider { get; }
+        IForestEngineComponent Engine { get; }
 
         IViewDescriptor GetDescriptor(Type viewType);
         IViewDescriptor GetDescriptor<T>() where T: IView;

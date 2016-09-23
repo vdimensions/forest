@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,11 +30,11 @@ namespace Forest.Composition
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private readonly _ViewRegistry viewRegistry;
-        private readonly ForestSetup setup;
+        private readonly IForestContext context;
 
-        public ViewResolver(ForestSetup setup, _ViewRegistry viewRegistry)
+        public ViewResolver(IForestContext context, _ViewRegistry viewRegistry)
         {
-            this.setup = setup;
+            this.context = context;
             this.viewRegistry = viewRegistry;
         }
 
@@ -49,7 +49,7 @@ namespace Forest.Composition
                 return false;
             }
             var childRegions = template.Regions
-                .Select(x => new Region(setup, x, this))
+                .Select(x => new Region(this.context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
                     
             var view = viewModel != null 
@@ -58,8 +58,8 @@ namespace Forest.Composition
             ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
 
             var resolvedPresenter = containingRegion == null 
-                ? new Presenter(setup, template, view) 
-                : new Presenter(setup, template, view, containingRegion);
+                ? new Presenter(context, template, view) 
+                : new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
             {
                 cr.Presenter = resolvedPresenter;
@@ -79,7 +79,7 @@ namespace Forest.Composition
             var id = entry.ID;
             var template = container[id] ?? CreateViewTemplateOnTheFly(id);
             var childRegions = template.Regions
-                .Select(x => new Region(setup, x, this))
+                .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
 
             var view = viewModel != null
@@ -88,8 +88,8 @@ namespace Forest.Composition
             ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
 
             var resolvedPresenter = containingRegion == null
-                ? new Presenter(setup, template, view)
-                : new Presenter(setup, template, view, containingRegion);
+                ? new Presenter(this.context, template, view)
+                : new Presenter(this.context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
             {
                 cr.Presenter = resolvedPresenter;
@@ -98,10 +98,10 @@ namespace Forest.Composition
             return true;
         }
 
-        private static IViewTemplate CreateViewTemplateOnTheFly(string id)
+        private IViewTemplate CreateViewTemplateOnTheFly(string id)
         {
             ILayoutTemplate t;
-            if (ApplicationState.TryLoadTemplate(id, out t))
+            if (context.LayoutTemplateProvider.TryLoad(id, out t))
             {
                 return t;
             }
