@@ -13,12 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+
+using Forest.Composition;
+
+
 namespace Forest
 {
-    public interface IView
+    public interface IView : IDisposable//, IViewLifecycle
     {
+        void Load();
+
+        void Refresh();
+
+        bool CanExecuteCommand(string commandName);
+
         /// <summary>
-        /// Publishes a message to a list of topics.
+        /// Publishes a message on a list of subscription topics.
         /// </summary>
         /// <typeparam name="TMessage">
         /// The type of the object representing the message.
@@ -33,5 +46,48 @@ namespace Forest
         /// <c>true</c> if the message was received by at least one subscriber, <c>false</c> otherwise.
         /// </returns>
         bool Publish<TMessage>(TMessage message, params string[] topics);
+
+        /// <summary>
+        /// An event that is fired when the current <see cref="IView">view</see> instance is activated in a <see cref="IRegion">region</see>.
+        /// </summary>
+        event EventHandler Activated;
+        /// <summary>
+        /// An event that is fired when the current <see cref="IView">view</see> instance is deactivated from a <see cref="IRegion">region</see>.
+        /// </summary>
+        event EventHandler Deactivated;
+        event Action<IView> Refreshed;
+
+        /// <summary>
+        /// An unique identifier for the current <see cref="IView" /> instance within its <see cref="IRegion">region</see> container.
+        /// </summary>
+        [Localizable(false)]
+        string ID { get; }
+
+        /// <summary>
+        /// Gets a reference to the view model object that has been bound to the current <see cref="IView">view instance</see>.
+        /// </summary>
+        object ViewModel { get; }
+
+        IView Parent { get; }
+        
+        /// <summary>
+        /// Gets a collection of <see cref="IRegion">regions</see> which are defined within this view. 
+        /// </summary>
+        [Localizable(false)]
+        IEnumerable<IRegion> Regions { get; }
+
+        /// <summary>
+        /// Gets a region defined in this view by a region name.
+        /// </summary>
+        /// <param name="regionName"></param>
+        /// <returns>
+        /// An instance of <see cref="IRegion"/> that corresponds to the specified <paramref name="regionName"/>, or <c>null</c> if there is no region with the specified name.
+        /// </returns>
+        IRegion this[string regionName] { get; }
+
+    }
+    public interface IView<TViewModel> : IView
+    {
+        new TViewModel ViewModel { get; }
     }
 }

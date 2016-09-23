@@ -1,10 +1,10 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>3a49dec2-142a-483e-99bf-42bf26909cfc</ProjectGuid>
+    <ProjectGuid>{3A49DEC2-142A-483E-99BF-42BF26909CFC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Forest</RootNamespace>
@@ -30,22 +30,141 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System"/>
-    
-    <Reference Include="System.Core"/>
-    <Reference Include="System.Xml.Linq"/>
-    <Reference Include="System.Data.DataSetExtensions"/>
-    
-    
-    <Reference Include="Microsoft.CSharp"/>
-    
-    <Reference Include="System.Data"/>
-    
-    <Reference Include="System.Xml"/>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="AbstractView.cs" />
+    <Compile Include="AbstractView.IViewInit.cs" />
+    <Compile Include="ApplicationState.cs" />
+    <Compile Include="Commands\CommandAttribute.cs" />
+    <Compile Include="Commands\CommandInfo.cs" />
+    <Compile Include="Commands\CommandResult.cs" />
+    <Compile Include="Commands\DeferredCommandInfo.cs" />
+    <Compile Include="Commands\UnboundCommand.cs" />
+    <Compile Include="Composition\IAnnouncingViewModel.cs" />
+    <Compile Include="Composition\IViewRegistry.cs" />
+    <Compile Include="Composition\Presenter.cs" />
+    <Compile Include="Composition\Region.cs" />
+    <Compile Include="Composition\RegionAttribute.cs" />
+    <Compile Include="Composition\Templates\DefaultLayoutTemplate.cs" />
+    <Compile Include="Composition\Templates\DefaultLayoutTemplateLoaderRegistry.cs" />
+    <Compile Include="Composition\Templates\ILayoutContainer.cs" />
+    <Compile Include="Composition\Templates\ILayoutTemplate.cs" />
+    <Compile Include="Composition\Templates\ILayoutTemplateLoaderRegistry.cs" />
+    <Compile Include="Composition\Templates\IPlaceholder.cs" />
+    <Compile Include="Composition\Templates\IPlaceholderContainer.cs" />
+    <Compile Include="Composition\Templates\IRegionContainer.cs" />
+    <Compile Include="Composition\Templates\IRegionTemplate.cs" />
+    <Compile Include="Composition\Templates\IViewContainer.cs" />
+    <Compile Include="Composition\Templates\IViewTemplate.cs" />
+    <Compile Include="Composition\Templates\LayoutContainerBase.cs" />
+    <Compile Include="Composition\Templates\LayoutTemplate.cs" />
+    <Compile Include="Composition\Templates\LayoutTemplateException.cs" />
+    <Compile Include="Composition\Templates\LayoutTemplateLoaderEntry.cs" />
+    <Compile Include="Composition\Templates\ILayoutTemplateLoader.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutableLayoutContainer.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutableLayoutTemplate.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutablePlaceholder.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutablePlaceholderContainer.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutableRegionContainer.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutableRegionTemplate.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutableViewContainer.cs" />
+    <Compile Include="Composition\Templates\Mutable\IMutableViewTemplate.cs" />
+    <Compile Include="Composition\Templates\NoОpRegionContainer.cs" />
+    <Compile Include="Composition\Templates\Placeholder.cs" />
+    <Compile Include="Composition\Templates\PlaceholderContainer.cs" />
+    <Compile Include="Composition\Templates\QuickViewTemplate.cs" />
+    <Compile Include="Composition\Templates\RegionContainer.cs" />
+    <Compile Include="Composition\Templates\RegionTemplate.cs" />
+    <Compile Include="Composition\Templates\ViewTemplate.cs" />
+    <Compile Include="Composition\ViewRegistry.cs" />
+    <Compile Include="Composition\ViewRegistryImpl.cs" />
+    <Compile Include="Composition\ViewResolver.cs" />
+    <Compile Include="Composition\_ViewRegistry.cs" />
+    <Compile Include="Composition\_ViewResolver.cs" />
+    <Compile Include="DefaultForestEngine.cs" />
+    <Compile Include="DefaultViewContext.cs" />
+    <Compile Include="Dom\AbstractNodeVisitor.cs" />
+    <Compile Include="Dom\Command.cs" />
+    <Compile Include="Dom\CommandLink.cs" />
+    <Compile Include="Dom\DomExpressionVisitor.cs" />
+    <Compile Include="Dom\DomVisitorChain.cs" />
+    <Compile Include="Dom\ICommand.cs" />
+    <Compile Include="Dom\ICommandLink.cs" />
+    <Compile Include="Dom\IDomNode.cs" />
+    <Compile Include="Dom\ILink.cs" />
+    <Compile Include="Dom\INavigationTarget.cs" />
+    <Compile Include="Dom\INodeVisitor.cs" />
+    <Compile Include="Dom\INodeVisitorRegistry.cs" />
+    <Compile Include="Dom\IRegionNode.cs" />
+    <Compile Include="Dom\IViewNode.cs" />
+    <Compile Include="Dom\Link.cs" />
+    <Compile Include="Dom\Localization\IResourceManager.cs" />
+    <Compile Include="Engine\IForestEngineComponent.cs" />
+    <Compile Include="LinkToAttribute.cs" />
+    <Compile Include="Collections\ChronologicalDictionary.cs" />
+    <Compile Include="Collections\DictionaryProxy.cs" />
+    <Compile Include="Stubs\ResourceInfo.cs" />
+    <Compile Include="Dom\NavigationTarget.cs" />
+    <Compile Include="Dom\RegionNode.cs" />
+    <Compile Include="Dom\ViewNode.cs" />
+    <Compile Include="Events\IEventBusAttribute.cs" />
+    <Compile Include="ForestResult.cs" />
+    <Compile Include="ForestSetup.cs" />
+    <Compile Include="IForestContext.cs" />
+    <Compile Include="IViewContext.cs" />
+    <Compile Include="IViewDescriptor.cs" />
+    <Compile Include="IViewInit.cs" />
+    <Compile Include="Presentation\DefaultNodeContext.cs" />
+    <Compile Include="Presentation\INodeContext.cs" />
+    <Compile Include="Dom\Localization\DomLocalizationVisitor.cs" />
+    <Compile Include="Dom\Localization\LocalizeAttribute.cs" />
+    <Compile Include="Dom\Localization\LocalizedPropertyInfo.cs" />
+    <Compile Include="Presentation\RenderMode.cs" />
+    <Compile Include="Security\IForestSecurityAdapter.cs" />
+    <Compile Include="Security\NoOpForestSecurityAdapter.cs" />
+    <Compile Include="Caching\ICache.cs" />
+    <Compile Include="Caching\ICacheManager.cs" />
+    <Compile Include="Stubs\ILogger.cs" />
+    <Compile Include="Stubs\ILoggerFactory.cs" />
+    <Compile Include="Stubs\IContainer.cs" />
+    <Compile Include="Composition\IRegion.cs" />
+    <Compile Include="Composition\IRegionUtil.cs" />
+    <Compile Include="Composition\IViewEntry.cs" />
+    <Compile Include="Composition\RegionEventSubscriber.cs" />
+    <Compile Include="Composition\RegionModification.cs" />
+    <Compile Include="Composition\RegionModificationsTracker.cs" />
+    <Compile Include="Composition\RegionModificationType.cs" />
+    <Compile Include="Composition\RegionLayout.cs" />
+    <Compile Include="Events\EventBus.cs" />
+    <Compile Include="Events\IEventBus.cs" />
+    <Compile Include="Expressions\SimpleExpressionEvaluator.cs" />
+    <Compile Include="Expressions\IExpression.cs" />
+    <Compile Include="Expressions\IForestExpressionEvaluator.cs" />
+    <Compile Include="Stubs\IViewContext.cs" />
+    <Compile Include="Expressions\Literal.cs" />
+    <Compile Include="Stubs\IParameter.cs" />
+    <Compile Include="Stubs\IMethod.cs" />
+    <Compile Include="Events\ISubscriptionHandler.cs" />
+    <Compile Include="Events\Message.cs" />
+    <Compile Include="Events\SubscriptionAttribute.cs" />
+    <Compile Include="Events\SubscriptionExecutionException.cs" />
+    <Compile Include="Events\SubscriptionHandler.cs" />
+    <Compile Include="Events\SubscriptionInfo.cs" />
+    <Compile Include="IView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewAttribute.cs" />
+    <Compile Include="ViewDescriptor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Reflection\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
@@ -55,5 +174,4 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-
- </Project>
+</Project>

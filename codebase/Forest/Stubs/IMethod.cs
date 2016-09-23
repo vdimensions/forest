@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.Collections.Generic;
+
+
 namespace Forest.Stubs
 {
     public interface IMethod
     {
-        void Invoke(IView view, object message);
+        object Invoke(IView view, object message);
         IParameter[] GetParameters();
+        IEnumerable<T> GetAttributes<T>() where T: Attribute;
+
         string Name { get; }
     }
 }
