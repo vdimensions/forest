@@ -32,8 +32,8 @@ namespace Forest.Composition.Templates
         private DefaultLayoutTemplate(string id, IMutableLayoutTemplate master, bool transferFromMaster)
         {
             this.id = id;
-            this.placeholderContainer = new PlaceholderContainer();
-            this.regionContainer = new RegionContainer(this);
+            placeholderContainer = new PlaceholderContainer();
+            regionContainer = new RegionContainer(this);
             if (master != null)
             {
                 this.master = master;
@@ -42,7 +42,7 @@ namespace Forest.Composition.Templates
                     foreach (IMutableRegionTemplate regionTemplate in master.Regions)
                     {
                         var rt = TransferViewsContent(regionTemplate, new RegionTemplate(regionTemplate.RegionName, regionTemplate.Layout, this), this);
-                        this.Regions[rt.RegionName] = rt;
+                        Regions[rt.RegionName] = rt;
                     }    
                 }
             }
@@ -81,9 +81,9 @@ namespace Forest.Composition.Templates
 
         private static IMutableViewTemplate CloneViewTemplate(IMutableViewTemplate viewTemplate, IMutableLayoutTemplate owner)
         {
-            if (viewTemplate is IProxy<IMutableViewTemplate>)
+            if (viewTemplate is ViewTemplateProxy)
             {
-                return new ViewTemplateProxy(CloneViewTemplate(((IProxy<IMutableViewTemplate>) viewTemplate).Value, owner));
+                return new ViewTemplateProxy(CloneViewTemplate(((ViewTemplateProxy) viewTemplate).Target, owner));
             }
             if (viewTemplate is IMutableLayoutTemplate)
             {
@@ -108,8 +108,8 @@ namespace Forest.Composition.Templates
 
         public IMutableLayoutTemplate Clone()
         {
-            var result = new DefaultLayoutTemplate(this.id, this.master, false);
-            foreach (IMutableRegionTemplate regionTemplate in this.Regions)
+            var result = new DefaultLayoutTemplate(id, master, false);
+            foreach (IMutableRegionTemplate regionTemplate in Regions)
             {
                 var rt = TransferViewsContent(regionTemplate, new RegionTemplate(regionTemplate.RegionName, regionTemplate.Layout, result), result);
                 result.Regions[rt.RegionName] = rt;
@@ -117,14 +117,14 @@ namespace Forest.Composition.Templates
             return result;
         }
 
-        public string ID { get { return this.id; } }
-        public string Master { get { return this.master == null ? null : this.master.ID; } }
+        public string ID { get { return id; } }
+        public string Master { get { return master == null ? null : master.ID; } }
 
-        public IMutablePlaceholderContainer Placeholders { get { return this.placeholderContainer; } }
-        IPlaceholderContainer ILayoutTemplate.Placeholders { get { return this.Placeholders; } }
+        public IMutablePlaceholderContainer Placeholders { get { return placeholderContainer; } }
+        IPlaceholderContainer ILayoutTemplate.Placeholders { get { return Placeholders; } }
 
-        public IMutableRegionContainer Regions { get { return this.regionContainer; } }
-        IRegionContainer IViewTemplate.Regions { get { return this.Regions; } }
+        public IMutableRegionContainer Regions { get { return regionContainer; } }
+        IRegionContainer IViewTemplate.Regions { get { return Regions; } }
 
         IMutableLayoutTemplate IMutableViewTemplate.Template { get { return this; } }
     }

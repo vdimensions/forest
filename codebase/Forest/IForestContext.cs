@@ -37,7 +37,7 @@ namespace Forest
         string PathSeparator { get; }
         ILocalizationManager LocalizationManager { get; }
         ILayoutTemplateProvider LayoutTemplateProvider { get; }
-        IForestEngineComponent Engine { get; }
+        IForestEngine Engine { get; }
 
         IViewDescriptor GetDescriptor(Type viewType);
         IViewDescriptor GetDescriptor<T>() where T: IView;

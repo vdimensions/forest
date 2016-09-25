@@ -17,6 +17,7 @@ using System;
 using System.Linq;
 
 using Forest.Composition.Templates;
+using Forest.Engine;
 
 
 namespace Forest.Composition
@@ -49,7 +50,7 @@ namespace Forest.Composition
                 return false;
             }
             var childRegions = template.Regions
-                .Select(x => new Region(this.context, x, this))
+                .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
                     
             var view = viewModel != null 
@@ -88,8 +89,8 @@ namespace Forest.Composition
             ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
 
             var resolvedPresenter = containingRegion == null
-                ? new Presenter(this.context, template, view)
-                : new Presenter(this.context, template, view, containingRegion);
+                ? new Presenter(context, template, view)
+                : new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
             {
                 cr.Presenter = resolvedPresenter;

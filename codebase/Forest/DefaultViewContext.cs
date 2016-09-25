@@ -37,21 +37,21 @@ namespace Forest
                 throw new ArgumentNullException("descriptor");
             }
             this.descriptor = descriptor;
-            this.contextData = descriptor.ViewModelProperties
+            contextData = descriptor.ViewModelProperties
                 .ToDictionary(
                     x => x.Key,
                     x => new Func<object>(() => x.Value.GetValue(view.ViewModel)),
                     StringComparer.Ordinal);
-            this.contextData.Add("@View", () => view.ID);
-            this.contextData.Add("@Self", () => view.ID);
-            this.contextData.Add("@Self.", () => this);
+            contextData.Add("@View", () => view.ID);
+            contextData.Add("@Self", () => view.ID);
+            contextData.Add("@Self.", () => this);
             var parentView = view.Parent;
             if (parentView != null)
             {
-                this.parentContext = ((IViewInit) parentView).Context;
-                this.contextData.Add("@ParentView", () => parentView.ID);
-                this.contextData.Add("@Parent", () => parentView.ID);
-                this.contextData.Add("@Parent.", () => this.parentContext);
+                parentContext = ((IViewInit) parentView).Context;
+                contextData.Add("@ParentView", () => parentView.ID);
+                contextData.Add("@Parent", () => parentView.ID);
+                contextData.Add("@Parent.", () => parentContext);
             }
         }
 
@@ -69,14 +69,14 @@ namespace Forest
             return evaluated != null ? evaluated.ToString() : expression;
         }
 
-        public IViewDescriptor Descriptor { get { return this.descriptor; } }
+        public IViewDescriptor Descriptor { get { return descriptor; } }
 
         public object this[string name]
         {
             get
             {
                 Func<object> getter;
-                return this.contextData.TryGetValue(name, out getter) ? getter() : null;
+                return contextData.TryGetValue(name, out getter) ? getter() : null;
             }
         }
     }

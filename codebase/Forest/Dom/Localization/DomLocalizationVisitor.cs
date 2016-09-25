@@ -43,8 +43,8 @@ namespace Forest.Dom.Localization
         private readonly IForestContext context;
 
 
-        public DomLocalizationVisitor(ForestSetup setup) 
-            : this(setup, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) { }
+        public DomLocalizationVisitor(IForestContext context) 
+            : this(context, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) { }
         private DomLocalizationVisitor(IForestContext context, BindingFlags scanOptions)
         {
             this.context = context;

@@ -46,10 +46,10 @@ namespace Forest
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IDictionary<string, IProperty> viewModelProperties;
 
-        internal ViewDescriptor(ForestSetup setup, Type viewType)
+        internal ViewDescriptor(IForestContext context, Type viewType)
         {
             var stringComparer = StringComparer.Ordinal;
-            var methods = setup.ReflectionProvider.GetMethods(viewType, BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic);
+            var methods = context.ReflectionProvider.GetMethods(viewType, BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic);
             var dictionary = new Dictionary<string, UnboundCommand>(methods.Count(), stringComparer);
             var subscriptionMethods = new List<SubscriptionInfo>(methods.Count());
             foreach (var method in methods)
@@ -84,8 +84,8 @@ namespace Forest
                 .Where(x => x.IsGenericType && typeof(IView<>).Equals(x.GetGenericTypeDefinition()))
                 .Select(x => x.GetGenericArguments()[0])
                 .SingleOrDefault();
-            var viewModelProperty = setup.ReflectionProvider.GetProperty(viewType, "ViewModel", BindingFlags.Instance| BindingFlags.Public);
-            var vmProps = setup.ReflectionProvider.GetProperties(vmType, BindingFlags.Instance|BindingFlags.Public)
+            var viewModelProperty = context.ReflectionProvider.GetProperty(viewType, "ViewModel", BindingFlags.Instance| BindingFlags.Public);
+            var vmProps = context.ReflectionProvider.GetProperties(vmType, BindingFlags.Instance|BindingFlags.Public)
                 .ToDictionary(x => x.Name, x => x, stringComparer);
 
             this.viewType = viewType;

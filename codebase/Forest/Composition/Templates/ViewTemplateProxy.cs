@@ -1,4 +1,4 @@
-﻿/*
+﻿/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,17 +15,20 @@
  */
 using System;
 
-using Axle.References;
-
 using Forest.Composition.Templates.Mutable;
 
 
 namespace Forest.Composition.Templates
 {
     [Serializable]
-    internal class ViewTemplateProxy : Proxy<IMutableViewTemplate>, IMutableViewTemplate
+    internal class ViewTemplateProxy : IMutableViewTemplate
     {
-        public ViewTemplateProxy(IMutableViewTemplate target) : base(target) { }
+        internal readonly IMutableViewTemplate Target;
+
+        public ViewTemplateProxy(IMutableViewTemplate target)
+        {
+            this.Target = target;
+        }
 
         public string ID { get { return Target.ID; } }
         public IMutableRegionContainer Regions { get { return Target.Regions; } }

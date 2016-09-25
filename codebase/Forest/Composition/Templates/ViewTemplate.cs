@@ -34,8 +34,8 @@ namespace Forest.Composition.Templates
         public ViewTemplate(string id, IMutableLayoutTemplate template)
         {
             this.id = id;
-            this.ownerTemplate = template;
-            this.regionContainer = new RegionContainer(template);
+            ownerTemplate = template;
+            regionContainer = new RegionContainer(template);
         }
 
         public string ID { get { return id; } }

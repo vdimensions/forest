@@ -34,7 +34,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -53,6 +52,7 @@
     <Compile Include="Composition\Presenter.cs" />
     <Compile Include="Composition\Region.cs" />
     <Compile Include="Composition\RegionAttribute.cs" />
+    <Compile Include="Composition\Templates\AbstractLayoutTemplateLoader.cs" />
     <Compile Include="Composition\Templates\DefaultLayoutTemplate.cs" />
     <Compile Include="Composition\Templates\DefaultLayoutTemplateLoaderRegistry.cs" />
     <Compile Include="Composition\Templates\ILayoutContainer.cs" />
@@ -68,6 +68,7 @@
     <Compile Include="Composition\Templates\LayoutTemplateException.cs" />
     <Compile Include="Composition\Templates\LayoutTemplateLoaderEntry.cs" />
     <Compile Include="Composition\Templates\ILayoutTemplateLoader.cs" />
+    <Compile Include="Composition\Templates\LayoutTemplateXPathLoader.cs" />
     <Compile Include="Composition\Templates\Mutable\IMutableLayoutContainer.cs" />
     <Compile Include="Composition\Templates\Mutable\IMutableLayoutTemplate.cs" />
     <Compile Include="Composition\Templates\Mutable\IMutablePlaceholder.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Composition\Templates\RegionContainer.cs" />
     <Compile Include="Composition\Templates\RegionTemplate.cs" />
     <Compile Include="Composition\Templates\ViewTemplate.cs" />
+    <Compile Include="Composition\Templates\ViewTemplateProxy.cs" />
     <Compile Include="Composition\ViewRegistry.cs" />
     <Compile Include="Composition\ViewRegistryImpl.cs" />
     <Compile Include="Composition\ViewResolver.cs" />

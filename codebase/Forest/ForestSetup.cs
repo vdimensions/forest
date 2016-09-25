@@ -26,7 +26,7 @@ using Forest.Stubs;
 
 namespace Forest
 {
-    public class ForestSetup : IForestContext
+    public class ForestContext : IForestContext
     {
         private const string _PathSeparator = "/";
 
@@ -63,7 +63,7 @@ namespace Forest
         public ICacheManager CacheManager { get; set; }
         public ILocalizationManager LocalizationManager { get; set; }
         public ILayoutTemplateProvider LayoutTemplateProvider { get; set; }
-        public IForestEngineComponent Engine { get; set; }
+        public IForestEngine Engine { get; set; }
 
         public string PathSeparator { get { return _PathSeparator; } }
     }

@@ -38,6 +38,10 @@ namespace Forest.Composition.Templates
         {
             this.templateID = templateID;
         }
+        public LayoutTemplateException(string templateID, Exception inner) : base(inner.Message, inner)
+        {
+            this.templateID = templateID;
+        }
         protected LayoutTemplateException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
         }
