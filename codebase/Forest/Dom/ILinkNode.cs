@@ -13,17 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using Forest.Composition.Templates;
-
-
-namespace Forest.Composition
+namespace Forest.Dom
 {
-    internal interface _ViewResolver
+    public interface ILinkNode : INavigationTarget, IDomNode
     {
-        Presenter Resolve(string id, object viewModel, IViewTemplate template, IRegion region);
-        Presenter Resolve(object viewModel, IViewContainer template, IRegion region);
-
-        bool TryResolve(string id, object viewModel, IViewTemplate template, IRegion region, out Presenter view);
-        bool TryResolve(object viewModel, IViewContainer template, IRegion region, out Presenter view);
+        string Template { get; }
     }
 }

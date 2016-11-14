@@ -15,7 +15,7 @@
  */
 namespace Forest.Dom
 {
-    public interface ICommand : INavigationTarget
+    public interface ICommandNode : INavigationTarget, IDomNode
     {
         
     }

@@ -19,7 +19,7 @@ using Forest.Expressions;
 using Forest.Stubs;
 
 
-namespace Forest.Dom.Localization
+namespace Forest.Localization
 {
     internal class LocalizedPropertyInfo
     {

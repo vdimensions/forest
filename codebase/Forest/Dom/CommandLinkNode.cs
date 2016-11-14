@@ -21,7 +21,7 @@ using System.Diagnostics;
 
 namespace Forest.Dom
 {
-    public class CommandLink : Link, ICommandLink
+    public class CommandLinkNode : LinkNode, ICommandLinkNode
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)]
@@ -33,7 +33,7 @@ namespace Forest.Dom
         [Localizable(false)] 
         private readonly string commandArgument;
 
-        public CommandLink(
+        public CommandLinkNode(
             string name, 
             string template,
             string viewID,

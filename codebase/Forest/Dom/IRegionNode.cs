@@ -18,7 +18,7 @@ using System.Collections.Generic;
 
 namespace Forest.Dom
 {
-    public interface IRegionNode : IEnumerable<KeyValuePair<string, IViewNode>>
+    public interface IRegionNode : IEnumerable<KeyValuePair<string, IViewNode>>, IDomNode
     {
         IViewNode this[string viewID] { get; }
 

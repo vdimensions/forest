@@ -40,6 +40,9 @@ namespace Forest.Composition
             this.container = container;
         }
 
+        //public IViewEntry Lookup(string id) { return this.realRegistry.Lookup(id); }
+        //public IViewEntry Lookup(Type viewModelType) { return this.realRegistry.Lookup(viewModelType); }
+
         public IViewRegistry Register(Type viewType)
         {
             if (viewType == null)

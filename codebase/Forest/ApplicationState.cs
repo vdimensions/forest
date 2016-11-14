@@ -202,7 +202,7 @@ namespace Forest
                              * If, however, the corresponding command expects an argument, which is not optional, then we should throw error.
                              */
                             throw new InvalidOperationException(
-                                string.Format("Command '{0}' expected argument of type `{1}`, but none was supplied.", cmd.Name, cmd.Parameter.Type));
+                                string.Format("Command '{0}' has mandatory argument of type `{1}`, but none was supplied.", cmd.Name, cmd.Parameter.Type));
                         }
                     }
                     return cmd.Invoke(arg);

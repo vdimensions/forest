@@ -17,9 +17,9 @@ using System;
 
 using Forest.Caching;
 using Forest.Dom;
-using Forest.Dom.Localization;
 using Forest.Engine;
 using Forest.Expressions;
+using Forest.Localization;
 using Forest.Security;
 using Forest.Stubs;
 
@@ -28,6 +28,11 @@ namespace Forest
 {
     public interface IForestContext
     {
+        IViewDescriptor GetDescriptor(Type viewType);
+        IViewDescriptor GetDescriptor<T>() where T: IView;
+
+        IViewDescriptor GetDescriptor(IView view);
+
         ILoggerFactory LoggerFactory { get; }
         IDomVisitorRegistry DomVisitorRegistry { get; }
         IForestSecurityAdapter SecurityAdapter { get; }
@@ -38,10 +43,5 @@ namespace Forest
         ILocalizationManager LocalizationManager { get; }
         ILayoutTemplateProvider LayoutTemplateProvider { get; }
         IForestEngine Engine { get; }
-
-        IViewDescriptor GetDescriptor(Type viewType);
-        IViewDescriptor GetDescriptor<T>() where T: IView;
-
-        IViewDescriptor GetDescriptor(IView view);
     }
 }

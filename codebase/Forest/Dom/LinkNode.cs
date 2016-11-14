@@ -15,14 +15,28 @@
  */
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 
 
 namespace Forest.Dom
 {
     [Serializable]
     [Localizable(true)]
-    public class Command : NavigationTarget, ICommand
+    public class LinkNode : NavigationTarget, ILinkNode
     {
-        public Command(string name) : base(name) { }
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [Localizable(false)] 
+        private readonly string template;
+
+        public LinkNode(string name, string template) : base(name)
+        {
+            if (template == null)
+            {
+                throw new ArgumentNullException("template");
+            }
+            this.template = template;
+        }
+        
+        public string Template { get { return template; } }
     }
 }

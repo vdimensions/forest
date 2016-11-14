@@ -22,7 +22,7 @@ using Forest.Engine;
 
 namespace Forest.Composition
 {
-    internal sealed class ViewResolver : _ViewResolver
+    internal sealed class ViewResolver
     {
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -49,18 +49,15 @@ namespace Forest.Composition
             {
                 return false;
             }
-            var childRegions = template.Regions
-                .Select(x => new Region(context, x, this))
-                .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-                    
             var view = viewModel != null 
                 ? entry.Container.ResolveView(entry.Type, id, viewModel)
                 : entry.Container.ResolveView(entry.Type, id, entry.ViewModelType);
+            var childRegions = template.Regions
+                .Select(x => new Region(context, x, this))
+                .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
             ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
 
-            var resolvedPresenter = containingRegion == null 
-                ? new Presenter(context, template, view) 
-                : new Presenter(context, template, view, containingRegion);
+            var resolvedPresenter = new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
             {
                 cr.Presenter = resolvedPresenter;
@@ -68,7 +65,6 @@ namespace Forest.Composition
             presenter = resolvedPresenter;
             return true;
         }
-
         private bool DoTryResolve(object viewModel, IViewContainer container, IRegion containingRegion, out Presenter presenter)
         {
             presenter = null;
@@ -79,18 +75,14 @@ namespace Forest.Composition
             }
             var id = entry.ID;
             var template = container[id] ?? CreateViewTemplateOnTheFly(id);
+
+            var view = entry.Container.ResolveView(entry.Type, id, viewModel);
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-
-            var view = viewModel != null
-                ? entry.Container.ResolveView(entry.Type, id, viewModel)
-                : entry.Container.ResolveView(entry.Type, id, entry.ViewModelType);
             ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
 
-            var resolvedPresenter = containingRegion == null
-                ? new Presenter(context, template, view)
-                : new Presenter(context, template, view, containingRegion);
+            var resolvedPresenter = new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
             {
                 cr.Presenter = resolvedPresenter;
@@ -109,7 +101,7 @@ namespace Forest.Composition
             return new QuickViewTemplate(id);
         }
 
-        Presenter _ViewResolver.Resolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion)
+        public Presenter Resolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion)
         {
             if (id == null)
             {
@@ -126,7 +118,7 @@ namespace Forest.Composition
             }
             throw new ArgumentException(string.Format("Unable to resolve view for id '{0}'.", id), "id");
         }
-        Presenter _ViewResolver.Resolve(object viewModel, IViewContainer template, IRegion containingRegion)
+        public Presenter Resolve(object viewModel, IViewContainer template, IRegion containingRegion)
         {
             if (viewModel == null)
             {
@@ -140,7 +132,7 @@ namespace Forest.Composition
             throw new ArgumentException(string.Format("Unable to resolve view for view model of type `{0}`.", viewModel.GetType()), "viewModel");
         }
 
-        bool _ViewResolver.TryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out Presenter view)
+        public bool TryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out Presenter view)
         {
             if (id == null)
             {
@@ -152,7 +144,7 @@ namespace Forest.Composition
             }
             return DoTryResolve(id, viewModel, template, containingRegion, out view);
         }
-        bool _ViewResolver.TryResolve(object viewModel, IViewContainer template, IRegion containingRegion, out Presenter view)
+        public bool TryResolve(object viewModel, IViewContainer template, IRegion containingRegion, out Presenter view)
         {
             if (viewModel == null)
             {

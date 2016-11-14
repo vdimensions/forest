@@ -20,7 +20,7 @@ using System.Diagnostics;
 using Forest.Stubs;
 
 
-namespace Forest.Dom.Localization
+namespace Forest.Localization
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
     public sealed class LocalizeAttribute : Attribute
@@ -43,8 +43,8 @@ namespace Forest.Dom.Localization
             this.name = name;
         }
 
-        public string Bundle { get { return bundle; } }
-        public string Name { get { return name; } }
-        public ResourceInfo ResourceInfo { get { return new ResourceInfo(bundle, name);} }
+        public string Bundle { get { return this.bundle; } }
+        public string Name { get { return this.name; } }
+        public ResourceInfo ResourceInfo { get { return new ResourceInfo(this.bundle, this.name);} }
     }
 }

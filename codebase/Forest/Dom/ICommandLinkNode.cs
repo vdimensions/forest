@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
-
-
-namespace Forest.Composition.Templates
+namespace Forest.Dom
 {
-    public interface ILayoutTemplateLoaderRegistry : IEnumerable<LayoutTemplateLoaderEntry>
+    public interface ICommandLinkNode : ILinkNode, IDomNode
     {
-        ILayoutTemplateLoaderRegistry Register(string fileExtension, ILayoutTemplateLoader loader);
+        string ViewID { get; }
+        string Command { get; }
+        string CommandArgument { get; }
     }
 }

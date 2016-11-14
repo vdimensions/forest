@@ -48,7 +48,7 @@ namespace Forest.Composition
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly _ViewResolver resolver;
+        private readonly ViewResolver resolver;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Presenter presenter;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -56,8 +56,8 @@ namespace Forest.Composition
 
         private readonly IForestContext context;
 
-        public Region(IForestContext context, IRegionTemplate template, _ViewResolver resolver) : this(context, template, resolver, StringComparer.Ordinal) { }
-        private Region(IForestContext context, IRegionTemplate template, _ViewResolver resolver, IEqualityComparer<string> comparer)
+        public Region(IForestContext context, IRegionTemplate template, ViewResolver resolver) : this(context, template, resolver, StringComparer.Ordinal) { }
+        private Region(IForestContext context, IRegionTemplate template, ViewResolver resolver, IEqualityComparer<string> comparer)
         {
             this.context = context;
             this.logger = context.LoggerFactory.GetLogger<Region>();

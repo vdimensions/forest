@@ -63,7 +63,7 @@ namespace Forest
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private IEventBus eventBus;
-        private Stack<Message> pendingMessages = new Stack<Message>();
+        private readonly Stack<Message> pendingMessages = new Stack<Message>();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Action<IView> refreshed;

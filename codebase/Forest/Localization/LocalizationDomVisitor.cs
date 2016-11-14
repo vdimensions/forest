@@ -23,14 +23,15 @@ using System.Linq;
 using System.Reflection;
 
 using Forest.Caching;
+using Forest.Dom;
 using Forest.Expressions;
 using Forest.Presentation;
 using Forest.Stubs;
 
 
-namespace Forest.Dom.Localization
+namespace Forest.Localization
 {
-    public sealed class DomLocalizationVisitor : AbstractDomVisitor
+    public sealed class LocalizationDomVisitor : AbstractDomVisitor
     {
         private readonly ILogger log;
 
@@ -43,26 +44,26 @@ namespace Forest.Dom.Localization
         private readonly IForestContext context;
 
 
-        public DomLocalizationVisitor(IForestContext context) 
+        public LocalizationDomVisitor(IForestContext context) 
             : this(context, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) { }
-        private DomLocalizationVisitor(IForestContext context, BindingFlags scanOptions)
+        private LocalizationDomVisitor(IForestContext context, BindingFlags scanOptions)
         {
             this.context = context;
-            this.log = context.LoggerFactory.GetLogger<DomLocalizationVisitor>();
+            this.log = context.LoggerFactory.GetLogger<LocalizationDomVisitor>();
             this.scanOptions = scanOptions;
         }
 
-        public override IViewNode Visit(IViewNode node, INodeContext context)
-        {
-            var viewModel = ProcessViewModel(node.Model, context);
-            var links = node.Links == null ? null : node.Links
-                .Select(x => new KeyValuePair<string, ILink>(x.Key, x.Value is ICommandLink ? ProcessCommandLink((ICommandLink)x.Value, context) : ProcessLink(x.Value, context)))
-                .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
-            var commands = node.Commands == null ? null : node.Commands
-                .Select(x => new KeyValuePair<string, ICommand>(x.Key, ProcessCommand(x.Value, context)))
-                .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
-            return new ViewNode(viewModel, links, commands, node.Regions);
-        }
+        //public override IViewNode Visit(IViewNode node, INodeContext context)
+        //{
+        //    var viewModel = ProcessViewModel(node.Model, context);
+        //    var links = node.Links == null ? null : node.Links
+        //        .Select(x => new KeyValuePair<string, ILinkNode>(x.Key, x.Value is ICommandLinkNode ? ProcessCommandLink((ICommandLinkNode)x.Value, context) : ProcessLink(x.Value, context)))
+        //        .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
+        //    var commands = node.Commands == null ? null : node.Commands
+        //        .Select(x => new KeyValuePair<string, ICommandNode>(x.Key, ProcessCommand(x.Value, context)))
+        //        .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
+        //    return new ViewNode(viewModel, links, commands, node.Regions);
+        //}
 
         protected override object ProcessViewModel(object viewModel, INodeContext nodeContext)
         {
@@ -78,13 +79,13 @@ namespace Forest.Dom.Localization
                 return viewModel;
             }
             var workingViewModel = PrepareLocalizableInstance(viewModel);
-            var rm = context.LocalizationManager; ;
+            var rm = this.context.LocalizationManager; ;
             var ci = CultureInfo.CurrentUICulture;
             Localize(rm, attr.ResourceInfo, ci, workingViewModel, nodeContext);
             return workingViewModel;
         }
 
-        protected override ICommand ProcessCommand(ICommand command, INodeContext nodeContext)
+        protected override ICommandNode ProcessCommand(ICommandNode command, INodeContext nodeContext)
         {
             var viewModel = nodeContext.View.ViewModel;
             var attr = viewModel.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
@@ -95,13 +96,13 @@ namespace Forest.Dom.Localization
                 return base.ProcessCommand(command, nodeContext);
             }
             var workingCommand = PrepareLocalizableInstance(command);
-            var rm = context.LocalizationManager;
+            var rm = this.context.LocalizationManager;
             var ci = CultureInfo.CurrentUICulture;
             Localize(rm, attr.ResourceInfo.ChangeKey("{0}.{1}", attr.ResourceInfo.Key, command.Name), ci, workingCommand, nodeContext);
             return workingCommand;
         }
 
-        protected override ICommandLink ProcessCommandLink(ICommandLink link, INodeContext nodeContext)
+        protected override ICommandLinkNode ProcessCommandLink(ICommandLinkNode link, INodeContext nodeContext)
         {
             var viewModel = nodeContext.View.ViewModel;
             var attr = viewModel.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
@@ -112,13 +113,13 @@ namespace Forest.Dom.Localization
                 return base.ProcessCommandLink(link, nodeContext);
             }
             var workingCommand = PrepareLocalizableInstance(link);
-            var rm = context.LocalizationManager;
+            var rm = this.context.LocalizationManager;
             var ci = CultureInfo.CurrentUICulture;
             Localize(rm, attr.ResourceInfo.ChangeKey("{0}.{1}", attr.ResourceInfo.Key, link.Name), ci, workingCommand, nodeContext);
             return workingCommand;
         }
 
-        protected override ILink ProcessLink(ILink link, INodeContext nodeContext)
+        protected override ILinkNode ProcessLink(ILinkNode link, INodeContext nodeContext)
         {
             var viewModel = nodeContext.View.ViewModel;
             var attr = viewModel.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
@@ -129,7 +130,7 @@ namespace Forest.Dom.Localization
                 return base.ProcessLink(link, nodeContext);
             }
             var workingCommand = PrepareLocalizableInstance(link);
-            var rm = context.LocalizationManager;
+            var rm = this.context.LocalizationManager;
             var ci = CultureInfo.CurrentUICulture;
             Localize(rm, attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, link.Name), ci, workingCommand, nodeContext);
             return workingCommand;
@@ -140,8 +141,8 @@ namespace Forest.Dom.Localization
             var vc = context.ViewContext;
             var targetType = target.GetType();
             var localizableProperties = 
-                Cache.GetOrAdd(targetType, () =>
-                    this.context.ReflectionProvider.GetProperties(targetType, scanOptions)
+                this.Cache.GetOrAdd(targetType, () =>
+                    this.context.ReflectionProvider.GetProperties(targetType, this.scanOptions)
                         .Select(x => new { Property = x, Attributes = x.GetAttributes() })
                         .Select(
                             x =>
@@ -191,8 +192,8 @@ namespace Forest.Dom.Localization
                         var kvpIs = enumerable.OfType<object>().First().GetType();
                         foreach (var obj in enumerable)
                         {
-                            var key = (string)this.context.ReflectionProvider.GetProperty(kvpIs, "Key", scanOptions).GetValue(obj);
-                            var val = this.context.ReflectionProvider.GetProperty(kvpIs, "Value", scanOptions).GetValue(obj);
+                            var key = (string)this.context.ReflectionProvider.GetProperty(kvpIs, "Key", this.scanOptions).GetValue(obj);
+                            var val = this.context.ReflectionProvider.GetProperty(kvpIs, "Value", this.scanOptions).GetValue(obj);
                             if (val == null)
                             {
                                 continue;
@@ -221,7 +222,7 @@ namespace Forest.Dom.Localization
                 object localizedValue;
                 if (!localizationManager.TryGetResource(propertyResKey, culture, out localizedValue))
                 {
-                    log.Trace("Could not find suitable resource to set to property '{0}' of type `{1}` using resource key '{2}'. Will now proceed with object deep-scanning.",
+                    this.log.Trace("Could not find suitable resource to set to property '{0}' of type `{1}` using resource key '{2}'. Will now proceed with object deep-scanning.",
                         property.Name,
                         target.GetType(),
                         resourceKey);
@@ -240,12 +241,12 @@ namespace Forest.Dom.Localization
                     }
                     catch (Exception ex)
                     {
-                        log.Warn(ex, string.Format("Error ocurred in setter when localizing property '{0}' of type `{1}`", property.Name, target.GetType()));
+                        this.log.Warn(ex, string.Format("Error ocurred in setter when localizing property '{0}' of type `{1}`", property.Name, target.GetType()));
                     }
                 }
                 else
                 {
-                    log.Warn("Cannot localize property '{0}' of type `{1}`. Property has no setter.", property.Name, target.GetType());
+                    this.log.Warn("Cannot localize property '{0}' of type `{1}`. Property has no setter.", property.Name, target.GetType());
                 }
             }
             return localizationSucesses > 0;
@@ -262,6 +263,6 @@ namespace Forest.Dom.Localization
             return workingViewModel;
         }
 
-        internal ICache Cache {  get { return context.CacheManager.GetCache(CacheName); } }
+        internal ICache Cache {  get { return this.context.CacheManager.GetCache(CacheName); } }
     }
 }

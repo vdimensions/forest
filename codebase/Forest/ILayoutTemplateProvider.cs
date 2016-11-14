@@ -21,6 +21,7 @@ namespace Forest
     public interface ILayoutTemplateProvider
     {
         ILayoutTemplate Load(string name);
+
         bool TryLoad(string name, out ILayoutTemplate template);
     }
 }

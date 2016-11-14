@@ -18,7 +18,7 @@ using System.Globalization;
 using Forest.Stubs;
 
 
-namespace Forest.Dom.Localization
+namespace Forest.Localization
 {
     public interface ILocalizationManager
     {

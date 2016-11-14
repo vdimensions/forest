@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,15 +42,20 @@ namespace Forest.Dom
             bool contains;
             do
             {
-                contains = this.nodeVisitors.Remove(domVisitor);
+                contains = nodeVisitors.Remove(domVisitor);
             }
             while (contains);
             return this;
         }
 
-        IViewNode IDomVisitor.Visit(IViewNode node, INodeContext context)
+        [Obsolete]
+        IViewNode IDomVisitor.Visit(IViewNode node, INodeContext nodeContext)
         {
-            return this.nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, context));
+            return nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, nodeContext));
+        }
+        IDomNode IDomVisitor.Visit(IDomNode node, INodeContext nodeContext)
+        {
+            return nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, nodeContext));
         }
     }
 }

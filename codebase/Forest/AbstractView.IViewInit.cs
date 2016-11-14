@@ -25,11 +25,6 @@ namespace Forest
 {
     partial class AbstractView<T> : IViewInit where T: class
     {
-        #if !DEBUG
-        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        #endif
-        private IViewDescriptor descriptor;
-
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private IViewContext context;
 
@@ -51,14 +46,12 @@ namespace Forest
             this.id = id;
             this.containingRegion = containingRegion;
             this.regions = regions;
-            this.context = new DefaultViewContext(this.descriptor = descriptor, this);
-
-            return this.context;
+            return this.context = new DefaultViewContext(descriptor, this);
         }
 
         void IViewInit.RegisterEventBus(IEventBus eventBus)
         {
-            foreach (var subscriptionMethod in this.descriptor.SubscriptionMethods)
+            foreach (var subscriptionMethod in context.Descriptor.SubscriptionMethods)
             {
                 foreach (var topic in subscriptionMethod.Topics)
                 {
@@ -86,6 +79,7 @@ namespace Forest
 
         IRegion IViewInit.ContainingRegion { get { return this.containingRegion; } }
         IViewContext IViewInit.Context { get { return this.context; } }
-        IViewDescriptor IViewInit.Descriptor { get { return this.descriptor; } }
+        [Obsolete("Use Context.Descriptor instead")]
+        IViewDescriptor IViewInit.Descriptor { get { return this.context.Descriptor; } }
     }
 }

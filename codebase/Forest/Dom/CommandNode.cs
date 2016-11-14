@@ -13,10 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.ComponentModel;
+
+
 namespace Forest.Dom
 {
-    public interface ILink : INavigationTarget
+    [Serializable]
+    [Localizable(true)]
+    public class CommandNode : NavigationTarget, ICommandNode
     {
-        string Template { get; }
+        public CommandNode(string name) : base(name) { }
     }
 }

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+
 using Forest.Presentation;
 
 
@@ -20,6 +22,8 @@ namespace Forest.Dom
 {
     public interface IDomVisitor
     {
-        IViewNode Visit(IViewNode node, INodeContext context);
+        [Obsolete] IViewNode Visit(IViewNode node, INodeContext nodeContext);
+
+        IDomNode Visit(IDomNode node, INodeContext nodeContext);
     }
 }

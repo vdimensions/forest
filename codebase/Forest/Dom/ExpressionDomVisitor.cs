@@ -21,31 +21,31 @@ using Forest.Presentation;
 
 namespace Forest.Dom
 {
-    internal sealed class DomExpressionVisitor : AbstractDomVisitor
+    public sealed class ExpressionDomVisitor : AbstractDomVisitor
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IForestExpressionEvaluator expressionEvaluator;
 
-        public DomExpressionVisitor(IForestExpressionEvaluator expressionEvaluator)
+        public ExpressionDomVisitor(IForestExpressionEvaluator expressionEvaluator)
         {
             this.expressionEvaluator = expressionEvaluator;
         }
 
-        protected override ICommand ProcessCommand(ICommand command, INodeContext nodeContext)
+        protected override ICommandNode ProcessCommand(ICommandNode command, INodeContext nodeContext)
         {
             var name = expressionEvaluator.Evaluate(nodeContext.ViewContext, command.Name);
-            return name == null ? command : new Command(name) { Text = command.Text, ToolTip = command.ToolTip, Description = command.Description };
+            return name == null ? command : new CommandNode(name) { Text = command.Text, ToolTip = command.ToolTip, Description = command.Description };
         }
 
-        protected override ILink ProcessLink(ILink link, INodeContext nodeContext)
+        protected override ILinkNode ProcessLink(ILinkNode link, INodeContext nodeContext)
         {
             var vc = nodeContext.ViewContext;
             var name = expressionEvaluator.Evaluate(vc, link.Name);
             var template = expressionEvaluator.Evaluate(vc, link.Template) ?? link.Template;
-            return name == null ? link : new Link(name, template) { Text = link.Text, ToolTip = link.ToolTip, Description = link.Description };
+            return name == null ? link : new LinkNode(name, template) { Text = link.Text, ToolTip = link.ToolTip, Description = link.Description };
         }
 
-        protected override ICommandLink ProcessCommandLink(ICommandLink link, INodeContext nodeContext)
+        protected override ICommandLinkNode ProcessCommandLink(ICommandLinkNode link, INodeContext nodeContext)
         {
             var vc = nodeContext.ViewContext;
             var name = expressionEvaluator.Evaluate(vc, link.Name) ?? link.Name;
@@ -54,7 +54,7 @@ namespace Forest.Dom
             var command = expressionEvaluator.Evaluate(vc, link.Command) ?? link.Command;
             var commandArgument = expressionEvaluator.Evaluate(vc, link.CommandArgument) ?? link.CommandArgument;
             return (name != null) || (command != null) || (commandArgument != null) 
-                ? new CommandLink(name, template, viewID, command, commandArgument) { Text = link.Text, ToolTip = link.ToolTip, Description = link.Description }
+                ? new CommandLinkNode(name, template, viewID, command, commandArgument) { Text = link.Text, ToolTip = link.ToolTip, Description = link.Description }
                 : link;
         }
     }

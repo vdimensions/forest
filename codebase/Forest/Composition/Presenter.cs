@@ -31,7 +31,6 @@ namespace Forest.Composition
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IForestContext context;
 
-        public Presenter(IForestContext context, IViewTemplate template, IView view) : this(context, template, view, null) { }
         public Presenter(IForestContext context, IViewTemplate template, IView view, IRegion region)
         {
             this.context = context;

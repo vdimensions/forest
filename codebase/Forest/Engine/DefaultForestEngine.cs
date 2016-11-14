@@ -38,19 +38,18 @@ namespace Forest.Engine
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly _ViewResolver resolver;
+        private readonly _ViewRegistry registry;
         private readonly IForestSecurityAdapter forestSecurityAdapter;
         private readonly IDomVisitor domVisitor;
         private readonly IForestContext context;
 
         public DefaultForestEngine(
-            IForestContext context, 
-            _ViewResolver resolver, 
+            IForestContext context,
             IDomVisitor domVisitor, 
             IForestSecurityAdapter forestSecurityAdapter)
         {
             //this.layoutTemplateRegistry = layoutTemplateRegistry;
-            this.resolver = resolver;
+            this.registry = new ViewRegistry(context);
             this.domVisitor = domVisitor;
             this.forestSecurityAdapter = forestSecurityAdapter;
             this.context = context;
@@ -76,6 +75,7 @@ namespace Forest.Engine
 
         public ForestResult ExecuteTemplate(ILayoutTemplate template)
         {
+            var resolver = new ViewResolver(context, registry);
             Presenter presenter;
             if (!resolver.TryResolve(template.Master ?? template.ID, null, template, null, out presenter))
             {
@@ -194,15 +194,15 @@ namespace Forest.Engine
             var commandLinks = viewModel != null
                 ? viewDescriptor.LinkToAttributes
                     .Where(x => securityAdapter.HasAccess(view, x.LinkID))
-                    .Select<LinkToAttribute, ILink>(
+                    .Select<LinkToAttribute, ILinkNode>(
                         x =>
                         {
                             var viewID = x.ViewID ?? context.GetDescriptor(x.ViewType).ViewAttribute.ID;
                             if (x.Command == null)
                             {
-                                return new Link(x.LinkID, viewID);
+                                return new LinkNode(x.LinkID, viewID);
                             }
-                            return new CommandLink(x.LinkID, template.ID, viewID, x.Command, x.CommandArgument);
+                            return new CommandLinkNode(x.LinkID, template.ID, viewID, x.Command, x.CommandArgument);
                         })
                     .Where(x => view.CanExecuteCommand(x.Name))
                     .ToDictionary(x => x.Name, StringComparer)
@@ -210,7 +210,7 @@ namespace Forest.Engine
             var commands = viewModel != null
                 ? viewDescriptor.CommandMethods
                     .Where(x => securityAdapter.HasAccess(view, x.Key))
-                    .Select(x => new Command(x.Key) as ICommand)
+                    .Select(x => new CommandNode(x.Key) as ICommandNode)
                     .Where(x => view.CanExecuteCommand(x.Name))
                     .ToDictionary(x => x.Name, StringComparer)
                 : null;

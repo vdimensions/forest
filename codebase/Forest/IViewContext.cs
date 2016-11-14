@@ -20,7 +20,6 @@ namespace Forest
         string EvaluateExpression(string expression);
 
         IViewDescriptor Descriptor { get; }
-
         object this[string name] { get; }
     }
 }

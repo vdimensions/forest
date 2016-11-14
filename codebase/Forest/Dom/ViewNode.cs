@@ -30,13 +30,13 @@ namespace Forest.Dom
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly object model;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, ILink> links;
+        private readonly IDictionary<string, ILinkNode> links;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, ICommand> commands;
+        private readonly IDictionary<string, ICommandNode> commands;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IDictionary<string, IRegionNode> regions;
 
-        public ViewNode(object model, IDictionary<string, ILink> links, IDictionary<string, ICommand> commands, IDictionary<string, IRegionNode> regions)
+        public ViewNode(object model, IDictionary<string, ILinkNode> links, IDictionary<string, ICommandNode> commands, IDictionary<string, IRegionNode> regions)
         {
             this.model = model;
             this.links = links;
@@ -45,15 +45,15 @@ namespace Forest.Dom
         }
 
         [Localizable(true)]
-        public virtual object Model { get { return this.model; } }
+        public virtual object Model { get { return model; } }
 
         [Localizable(false)]
-        public IDictionary<string, ILink> Links { get { return this.links; } }
+        public IDictionary<string, ILinkNode> Links { get { return links; } }
 
         [Localizable(false)]
-        public IDictionary<string, ICommand> Commands { get { return this.commands; } }
+        public IDictionary<string, ICommandNode> Commands { get { return commands; } }
 
         [Localizable(false)]
-        public IDictionary<string, IRegionNode> Regions { get { return this.regions; } }
+        public IDictionary<string, IRegionNode> Regions { get { return regions; } }
     }
 }

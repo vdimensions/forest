@@ -21,8 +21,8 @@ namespace Forest.Dom
     public interface IViewNode : IDomNode
     {
         object Model { get; }
-        IDictionary<string, ILink> Links { get; }
-        IDictionary<string, ICommand> Commands { get; }
+        IDictionary<string, ILinkNode> Links { get; }
+        IDictionary<string, ICommandNode> Commands { get; }
         IDictionary<string, IRegionNode> Regions { get; }
     }
 }
