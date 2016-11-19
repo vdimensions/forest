@@ -16,6 +16,7 @@
 using System;
 
 using Forest.Caching;
+using Forest.Composition;
 using Forest.Dom;
 using Forest.Engine;
 using Forest.Expressions;
@@ -33,15 +34,17 @@ namespace Forest
 
         IViewDescriptor GetDescriptor(IView view);
 
+        IForestContext BuildEngine(IViewRegistry viewRegistry);
+
         ILoggerFactory LoggerFactory { get; }
         IDomVisitorRegistry DomVisitorRegistry { get; }
         IForestSecurityAdapter SecurityAdapter { get; }
         IReflectionProvider ReflectionProvider { get; }
         IForestExpressionEvaluator ExpressionEvaluator { get; }
         ICacheManager CacheManager { get; }
+        IForestEngine Engine { get; }
         string PathSeparator { get; }
         ILocalizationManager LocalizationManager { get; }
         ILayoutTemplateProvider LayoutTemplateProvider { get; }
-        IForestEngine Engine { get; }
     }
 }

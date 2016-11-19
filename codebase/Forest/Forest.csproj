@@ -83,10 +83,7 @@
     <Compile Include="Composition\Templates\RegionTemplate.cs" />
     <Compile Include="Composition\Templates\ViewTemplate.cs" />
     <Compile Include="Composition\Templates\ViewTemplateProxy.cs" />
-    <Compile Include="Composition\ViewRegistry.cs" />
-    <Compile Include="Composition\ViewRegistryImpl.cs" />
     <Compile Include="Composition\ViewResolver.cs" />
-    <Compile Include="Composition\_ViewRegistry.cs" />
     <Compile Include="Engine\DefaultForestEngine.cs" />
     <Compile Include="DefaultViewContext.cs" />
     <Compile Include="Dom\AbstractDomVisitor.cs" />
@@ -138,7 +135,7 @@
     <Compile Include="Stubs\IContainer.cs" />
     <Compile Include="Composition\IRegion.cs" />
     <Compile Include="Composition\IRegionUtil.cs" />
-    <Compile Include="Composition\IViewEntry.cs" />
+    <Compile Include="Composition\IViewToken.cs" />
     <Compile Include="Composition\RegionEventSubscriber.cs" />
     <Compile Include="Composition\RegionModification.cs" />
     <Compile Include="Composition\RegionModificationsTracker.cs" />

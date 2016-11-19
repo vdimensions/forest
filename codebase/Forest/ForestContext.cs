@@ -17,6 +17,7 @@ using System;
 using System.Collections.Concurrent;
 
 using Forest.Caching;
+using Forest.Composition;
 using Forest.Dom;
 using Forest.Engine;
 using Forest.Expressions;
@@ -30,16 +31,18 @@ namespace Forest
     {
         private const string _PathSeparator = "/";
 
+        private readonly object syncRoot = new object();
+
         private readonly ConcurrentDictionary<Type, IViewDescriptor> viewDescriptors = new ConcurrentDictionary<Type, IViewDescriptor>();
         private readonly DomVisitorChain domVisitorRegistry = new DomVisitorChain();
         private readonly IForestSecurityAdapter securityAdapter;
-        private readonly IForestEngine engine;
+        private IForestEngine engine;
 
         public ForestContext() : this(new NoOpForestSecurityAdapter()) { }
         public ForestContext(IForestSecurityAdapter securityAdapter)
         {
             this.securityAdapter = securityAdapter;
-            this.engine = new DefaultForestEngine(this, domVisitorRegistry, securityAdapter);
+            
             ExpressionEvaluator = new SimpleExpressionEvaluator();
         }
 
@@ -66,6 +69,30 @@ namespace Forest
             return viewDescriptors.GetOrAdd(viewType, new ViewDescriptor(this, viewType));
         }
 
+        public IForestContext BuildEngine(IViewRegistry viewRegistry)
+        {
+            if (viewRegistry == null)
+            {
+                throw new ArgumentNullException("viewRegistry");
+            }
+            var engineExistsMessage = "A forest engine instance has aready been created for this context";
+            if (this.engine != null)
+            {
+                throw new InvalidOperationException(engineExistsMessage);
+            }
+            lock (syncRoot)
+            {
+                if (this.engine != null)
+                {
+                    throw new InvalidOperationException(engineExistsMessage);
+                }
+
+                var e = new DefaultForestEngine(this, domVisitorRegistry, securityAdapter, viewRegistry);
+                this.engine = e;
+            }
+            return this;
+        }
+
         public void Dispose()
         {
             domVisitorRegistry.Clear();
@@ -78,7 +105,7 @@ namespace Forest
 
         public ILoggerFactory LoggerFactory { get; set; }
         public IForestExpressionEvaluator ExpressionEvaluator { get; set; }
-        public ICacheManager CacheManager { get; set; }
+        public ICacheManager CacheManager { get; set; }        
         public ILocalizationManager LocalizationManager { get; set; }
         public ILayoutTemplateProvider LayoutTemplateProvider { get; set; }
 

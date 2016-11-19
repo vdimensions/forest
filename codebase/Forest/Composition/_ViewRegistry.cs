@@ -20,10 +20,11 @@ using Forest.Stubs;
 
 namespace Forest.Composition
 {
+    [Obsolete]
     internal interface _ViewRegistry
     {
-        IViewEntry Lookup(string id);
-        IViewEntry Lookup(Type viewModelType);
+        IViewToken Lookup(string id);
+        IViewToken Lookup(Type viewModelType);
 
         void Register(string id, Type viewType, IContainer container);
         void Register(IViewDescriptor descriptor, IContainer container);

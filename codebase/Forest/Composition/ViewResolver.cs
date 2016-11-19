@@ -30,10 +30,10 @@ namespace Forest.Composition
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly _ViewRegistry viewRegistry;
+        private readonly IViewRegistry viewRegistry;
         private readonly IForestContext context;
 
-        public ViewResolver(IForestContext context, _ViewRegistry viewRegistry)
+        public ViewResolver(IForestContext context, IViewRegistry viewRegistry)
         {
             this.context = context;
             this.viewRegistry = viewRegistry;
@@ -42,20 +42,20 @@ namespace Forest.Composition
         private bool DoTryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out Presenter presenter)
         {
             presenter = null;
-            var entry = id == null 
+            // TODO: remove ambiguity -- either access view by type or by id. Result false is not very consistent here
+            var token = id == null 
                 ? viewModel == null ? null : viewRegistry.Lookup(viewModel.GetType()) 
                 : viewRegistry.Lookup(id.Substring(0, id.LastIndexOf('#')));
-            if (entry == null)
+            if (token == null)
             {
                 return false;
             }
-            var view = viewModel != null 
-                ? entry.Container.ResolveView(entry.Type, id, viewModel)
-                : entry.Container.ResolveView(entry.Type, id, entry.ViewModelType);
+            var viewDescriptor = this.context.GetDescriptor(token.Type);
+            var view = token.ResolveView(token.Type, id, viewModel);
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-            ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
+            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions);
 
             var resolvedPresenter = new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
@@ -68,19 +68,20 @@ namespace Forest.Composition
         private bool DoTryResolve(object viewModel, IViewContainer container, IRegion containingRegion, out Presenter presenter)
         {
             presenter = null;
-            var entry = viewModel == null ? null : viewRegistry.Lookup(viewModel.GetType());
-            if (entry == null)
+            var token = viewModel == null ? null : viewRegistry.Lookup(viewModel.GetType());
+            if (token == null)
             {
                 return false;
             }
-            var id = entry.ID;
+            var id = token.ID;
             var template = container[id] ?? CreateViewTemplateOnTheFly(id);
 
-            var view = entry.Container.ResolveView(entry.Type, id, viewModel);
+            var viewDescriptor = this.context.GetDescriptor(token.Type);
+            var view = token.ResolveView(token.Type, id, viewModel);
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-            ((IViewInit) view).Init(id, entry.Descriptor, containingRegion, childRegions);
+            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions);
 
             var resolvedPresenter = new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)

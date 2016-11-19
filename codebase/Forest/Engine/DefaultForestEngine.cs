@@ -38,7 +38,7 @@ namespace Forest.Engine
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly _ViewRegistry registry;
+        private readonly IViewRegistry registry;
         private readonly IForestSecurityAdapter forestSecurityAdapter;
         private readonly IDomVisitor domVisitor;
         private readonly IForestContext context;
@@ -46,10 +46,11 @@ namespace Forest.Engine
         public DefaultForestEngine(
             IForestContext context,
             IDomVisitor domVisitor, 
-            IForestSecurityAdapter forestSecurityAdapter)
+            IForestSecurityAdapter forestSecurityAdapter,
+            IViewRegistry registry)
         {
             //this.layoutTemplateRegistry = layoutTemplateRegistry;
-            this.registry = new ViewRegistry(context);
+            this.registry = registry;
             this.domVisitor = domVisitor;
             this.forestSecurityAdapter = forestSecurityAdapter;
             this.context = context;

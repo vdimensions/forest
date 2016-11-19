@@ -15,17 +15,16 @@
  */
 using System;
 
-using Forest.Stubs;
-
 
 namespace Forest.Composition
 {
-    internal interface IViewEntry
+    public interface IViewToken
     {
+        IView ResolveView(Type viewType, string id, object viewModel);
+        [Obsolete]
+        IView ResolveView(Type viewType, string id, Type viewModelType);
+
         string ID { get; }
         Type Type { get; }
-        Type ViewModelType { get; }
-        IContainer Container { get; }
-        IViewDescriptor Descriptor { get; }
     }
 }

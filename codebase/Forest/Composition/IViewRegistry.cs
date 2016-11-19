@@ -20,8 +20,8 @@ namespace Forest.Composition
 {
     public interface IViewRegistry
     {
-        //IViewEntry Lookup(string id);
-        //IViewEntry Lookup(Type viewModelType);
+        IViewToken Lookup(string id);
+        IViewToken Lookup(Type viewModelType);
         IViewRegistry Register(Type viewType);
         IViewRegistry Register(params Type[] viewTypes);
         IViewRegistry Register<T>() where T: IView;
