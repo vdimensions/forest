@@ -38,7 +38,7 @@ namespace Forest.Engine
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly IViewRegistry registry;
+        private readonly IViewLookup viewLookup;
         private readonly IForestSecurityAdapter forestSecurityAdapter;
         private readonly IDomVisitor domVisitor;
         private readonly IForestContext context;
@@ -47,10 +47,9 @@ namespace Forest.Engine
             IForestContext context,
             IDomVisitor domVisitor, 
             IForestSecurityAdapter forestSecurityAdapter,
-            IViewRegistry registry)
+            IViewLookup viewLookup)
         {
-            //this.layoutTemplateRegistry = layoutTemplateRegistry;
-            this.registry = registry;
+            this.viewLookup = viewLookup;
             this.domVisitor = domVisitor;
             this.forestSecurityAdapter = forestSecurityAdapter;
             this.context = context;
@@ -76,7 +75,7 @@ namespace Forest.Engine
 
         public ForestResult ExecuteTemplate(ILayoutTemplate template)
         {
-            var resolver = new ViewResolver(context, registry);
+            var resolver = new ViewResolver(context, viewLookup);
             Presenter presenter;
             if (!resolver.TryResolve(template.Master ?? template.ID, null, template, null, out presenter))
             {

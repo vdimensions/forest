@@ -18,10 +18,8 @@ using System;
 
 namespace Forest.Composition
 {
-    public interface IViewRegistry
+    public interface IViewRegistry : IViewLookup
     {
-        IViewToken Lookup(string id);
-        IViewToken Lookup(Type viewModelType);
         IViewRegistry Register(Type viewType);
         IViewRegistry Register(params Type[] viewTypes);
         IViewRegistry Register<T>() where T: IView;

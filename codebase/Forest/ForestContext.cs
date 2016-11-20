@@ -22,8 +22,10 @@ using Forest.Dom;
 using Forest.Engine;
 using Forest.Expressions;
 using Forest.Localization;
+using Forest.Reflection;
 using Forest.Security;
 using Forest.Stubs;
+
 
 namespace Forest
 {
@@ -36,14 +38,22 @@ namespace Forest
         private readonly ConcurrentDictionary<Type, IViewDescriptor> viewDescriptors = new ConcurrentDictionary<Type, IViewDescriptor>();
         private readonly DomVisitorChain domVisitorRegistry = new DomVisitorChain();
         private readonly IForestSecurityAdapter securityAdapter;
+        private IReflectionProvider reflectionProvider = new DefaultReflectionProvider();
+        private IForestExpressionEvaluator expressionEvaluator = new SimpleExpressionEvaluator();
         private IForestEngine engine;
+        private ICacheManager cacheManager = new DefaultCacheManager();
+        private ILoggerFactory loggerFactory;
+        private ILocalizationManager localizationManager;
+        private ILayoutTemplateProvider layoutTemplateProvider;
 
         public ForestContext() : this(new NoOpForestSecurityAdapter()) { }
         public ForestContext(IForestSecurityAdapter securityAdapter)
         {
+            if (securityAdapter == null)
+            {
+                throw new ArgumentNullException("securityAdapter");
+            }
             this.securityAdapter = securityAdapter;
-            
-            ExpressionEvaluator = new SimpleExpressionEvaluator();
         }
 
         public IViewDescriptor GetDescriptor(Type viewType)
@@ -69,26 +79,26 @@ namespace Forest
             return viewDescriptors.GetOrAdd(viewType, new ViewDescriptor(this, viewType));
         }
 
-        public IForestContext BuildEngine(IViewRegistry viewRegistry)
+        public IForestContext BuildEngine(IViewLookup viewLookup)
         {
-            if (viewRegistry == null)
+            if (viewLookup == null)
             {
-                throw new ArgumentNullException("viewRegistry");
+                throw new ArgumentNullException("viewLookup");
             }
             var engineExistsMessage = "A forest engine instance has aready been created for this context";
-            if (this.engine != null)
+            if (engine != null)
             {
                 throw new InvalidOperationException(engineExistsMessage);
             }
             lock (syncRoot)
             {
-                if (this.engine != null)
+                if (engine != null)
                 {
                     throw new InvalidOperationException(engineExistsMessage);
                 }
 
-                var e = new DefaultForestEngine(this, domVisitorRegistry, securityAdapter, viewRegistry);
-                this.engine = e;
+                var e = new DefaultForestEngine(this, domVisitorRegistry, securityAdapter, viewLookup);
+                engine = e;
             }
             return this;
         }
@@ -101,13 +111,79 @@ namespace Forest
         public IDomVisitorRegistry DomVisitorRegistry { get { return domVisitorRegistry; } }
         public IForestSecurityAdapter SecurityAdapter { get { return securityAdapter; } }
         public IForestEngine Engine { get { return engine; } }
-        public IReflectionProvider ReflectionProvider { get; set; }
+        public IReflectionProvider ReflectionProvider
+        {
+            get { return reflectionProvider; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                reflectionProvider = value;
+            }
+        }
+        public IForestExpressionEvaluator ExpressionEvaluator
+        {
+            get { return this.expressionEvaluator; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                this.expressionEvaluator = value;
+            }
+        }
 
-        public ILoggerFactory LoggerFactory { get; set; }
-        public IForestExpressionEvaluator ExpressionEvaluator { get; set; }
-        public ICacheManager CacheManager { get; set; }        
-        public ILocalizationManager LocalizationManager { get; set; }
-        public ILayoutTemplateProvider LayoutTemplateProvider { get; set; }
+        public ICacheManager CacheManager
+        {
+            get { return this.cacheManager; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                this.cacheManager = value;
+            }
+        }
+        public ILoggerFactory LoggerFactory
+        {
+            get { return this.loggerFactory; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                this.loggerFactory = value;
+            }
+        }
+        public ILocalizationManager LocalizationManager
+        {
+            get { return this.localizationManager; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                this.localizationManager = value;
+            }
+        }
+        public ILayoutTemplateProvider LayoutTemplateProvider
+        {
+            get { return this.layoutTemplateProvider; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                this.layoutTemplateProvider = value;
+            }
+        }
 
         public string PathSeparator { get { return _PathSeparator; } }
     }

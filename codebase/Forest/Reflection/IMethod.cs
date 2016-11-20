@@ -17,7 +17,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace Forest.Stubs
+namespace Forest.Reflection
 {
     public interface IMethod
     {

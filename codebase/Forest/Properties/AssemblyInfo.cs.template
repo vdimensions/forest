@@ -1,0 +1,21 @@
+﻿using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+[assembly: AssemblyTitle("${id}")]
+[assembly: AssemblyProduct("${title}")]
+[assembly: AssemblyDescription("${description}")]
+
+[assembly: AssemblyCompany("${company}")]
+[assembly: AssemblyCopyright("${copyright}")]
+[assembly: AssemblyTrademark("")]
+
+[assembly: AssemblyConfiguration("")]
+[assembly: AssemblyCulture("")]
+
+[assembly: ComVisible(false)]
+[assembly: Guid("3a49dec2-142a-483e-99bf-42bf26909cfc")]
+
+[assembly: AssemblyVersion("${version}")]
+[assembly: AssemblyFileVersion("${version}")]
+[assembly: AssemblyInformationalVersion("${version}")]

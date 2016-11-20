@@ -38,20 +38,20 @@ namespace Forest.Stubs
         public ResourceInfo ChangeKey(string format, params object[] args)
         {
             return args.Length == 0
-                ? new ResourceInfo(this.bundle, format)
-                : new ResourceInfo(this.bundle, string.Format(format, args));
+                ? new ResourceInfo(bundle, format)
+                : new ResourceInfo(bundle, string.Format(format, args));
         }
 
         public override bool Equals(object other) { return other is ResourceInfo && Equals((ResourceInfo) other); }
         public bool Equals(ResourceInfo other)
         {
             var comparer = StringComparer.Ordinal;
-            return comparer.Equals(other.bundle, this.bundle) && comparer.Equals(other.key, this.key);
+            return comparer.Equals(other.bundle, bundle) && comparer.Equals(other.key, key);
         }
 
-        public override int GetHashCode() { return this.bundle.GetHashCode()^this.key.GetHashCode(); }
+        public override int GetHashCode() { return bundle.GetHashCode()^key.GetHashCode(); }
 
-        public string Bundle { get { return this.bundle ?? string.Empty; } }
-        public string Key { get { return this.key ?? string.Empty; } }
+        public string Bundle { get { return bundle ?? string.Empty; } }
+        public string Key { get { return key ?? string.Empty; } }
     }
 }

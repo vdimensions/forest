@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using Forest.Commands;
@@ -21,7 +22,7 @@ using Forest.Composition;
 using Forest.Composition.Templates;
 using Forest.Dom;
 using Forest.Events;
-using Forest.Stubs;
+using Forest.Reflection;
 
 
 namespace Forest
@@ -30,6 +31,7 @@ namespace Forest
     {
         private static readonly object _true = true;
 
+        [SuppressMessage("ReSharper", "AccessToDisposedClosure")]
         private static ApplicationState Execute(
             IForestContext context, 
             string templateName, 
@@ -237,7 +239,7 @@ namespace Forest
                 context,
                 Result == ForestResult.Empty ? string.Empty : Result.Template.ID,
                 this,
-                new DeferredCommandInfo(command, _ => _.Invoke(argument)));
+                new DeferredCommandInfo(command, c => c.Invoke(argument)));
         }
 
         public ApplicationState NavigateTo(string templateName) { return Execute(context, templateName, this, null); }

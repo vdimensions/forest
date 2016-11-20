@@ -21,6 +21,7 @@ using Forest.Dom;
 using Forest.Engine;
 using Forest.Expressions;
 using Forest.Localization;
+using Forest.Reflection;
 using Forest.Security;
 using Forest.Stubs;
 
@@ -34,7 +35,7 @@ namespace Forest
 
         IViewDescriptor GetDescriptor(IView view);
 
-        IForestContext BuildEngine(IViewRegistry viewRegistry);
+        IForestContext BuildEngine(IViewLookup viewLookup);
 
         ILoggerFactory LoggerFactory { get; }
         IDomVisitorRegistry DomVisitorRegistry { get; }

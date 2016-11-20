@@ -15,7 +15,8 @@
  */
 using System;
 
-namespace Forest.Stubs
+
+namespace Forest.Reflection
 {
     public interface IParameter
     {

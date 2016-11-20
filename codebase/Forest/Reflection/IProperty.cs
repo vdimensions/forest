@@ -16,19 +16,19 @@
 using System;
 
 
-namespace Forest.Stubs
+namespace Forest.Reflection
 {
     public interface IProperty
     {
-        string Name { get; }
-        Type MemberType { get; }
-        bool IsWriteable { get; }
-
         T[] GetAttributes<T>() where T: Attribute;
         Attribute[] GetAttributes();
 
         object GetValue(object target);
 
         void SetValue(object target, object value);
+
+        string Name { get; }
+        Type MemberType { get; }
+        bool IsWriteable { get; }
     }
 }

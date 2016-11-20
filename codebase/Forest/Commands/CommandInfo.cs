@@ -15,7 +15,7 @@
  */
 using System;
 
-using Forest.Stubs;
+using Forest.Reflection;
 
 
 namespace Forest.Commands

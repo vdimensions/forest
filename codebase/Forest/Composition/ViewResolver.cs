@@ -30,13 +30,13 @@ namespace Forest.Composition
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly IViewRegistry viewRegistry;
+        private readonly IViewLookup viewLookup;
         private readonly IForestContext context;
 
-        public ViewResolver(IForestContext context, IViewRegistry viewRegistry)
+        public ViewResolver(IForestContext context, IViewLookup viewLookup)
         {
             this.context = context;
-            this.viewRegistry = viewRegistry;
+            this.viewLookup = viewLookup;
         }
 
         private bool DoTryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out Presenter presenter)
@@ -44,8 +44,8 @@ namespace Forest.Composition
             presenter = null;
             // TODO: remove ambiguity -- either access view by type or by id. Result false is not very consistent here
             var token = id == null 
-                ? viewModel == null ? null : viewRegistry.Lookup(viewModel.GetType()) 
-                : viewRegistry.Lookup(id.Substring(0, id.LastIndexOf('#')));
+                ? viewModel == null ? null : this.viewLookup.Lookup(viewModel.GetType()) 
+                : this.viewLookup.Lookup(id.Substring(0, id.LastIndexOf('#')));
             if (token == null)
             {
                 return false;
@@ -68,7 +68,7 @@ namespace Forest.Composition
         private bool DoTryResolve(object viewModel, IViewContainer container, IRegion containingRegion, out Presenter presenter)
         {
             presenter = null;
-            var token = viewModel == null ? null : viewRegistry.Lookup(viewModel.GetType());
+            var token = viewModel == null ? null : this.viewLookup.Lookup(viewModel.GetType());
             if (token == null)
             {
                 return false;

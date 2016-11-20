@@ -16,6 +16,7 @@
 using System;
 
 using Forest.Expressions;
+using Forest.Reflection;
 using Forest.Stubs;
 
 
@@ -23,18 +24,18 @@ namespace Forest.Localization
 {
     internal class LocalizedPropertyInfo
     {
-        private readonly Func<ResourceInfo, IProperty, IForestExpressionEvaluator, IViewContext, ResourceInfo> resourceKeyResolverFunction;
+        private readonly Func<ResourceInfo, IProperty, IForestExpressionEvaluator, IViewContext, ResourceInfo> resolveResourceKey;
 
         public LocalizedPropertyInfo(Func<ResourceInfo, IProperty, IForestExpressionEvaluator, IViewContext, ResourceInfo> resourceKeyResolverFunction)
         {
-            this.resourceKeyResolverFunction = resourceKeyResolverFunction;
+            this.resolveResourceKey = resourceKeyResolverFunction;
         }
 
         public IProperty Property { get; set; }
 
         public ResourceInfo ResolveResourceKey(ResourceInfo resourceKey, IForestExpressionEvaluator v, IViewContext viewContext)
         {
-            return resourceKeyResolverFunction == null ? ResourceInfo.Empty : resourceKeyResolverFunction(resourceKey, Property, v, viewContext);
+            return this.resolveResourceKey == null ? ResourceInfo.Empty : this.resolveResourceKey(resourceKey, Property, v, viewContext);
         }
     }
 }

@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 
 
 namespace Forest.Stubs
@@ -24,14 +22,5 @@ namespace Forest.Stubs
     {
         ILogger GetLogger(Type type);
         ILogger GetLogger<T>();
-    }
-
-    public interface IReflectionProvider
-    {
-        IEnumerable<IMethod> GetMethods(Type type, BindingFlags flags);
-
-        IEnumerable<IProperty> GetProperties(Type type, BindingFlags flags);
-
-        IProperty GetProperty(Type type, object name, BindingFlags flags);
     }
 }

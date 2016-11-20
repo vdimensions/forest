@@ -42,12 +42,15 @@
     <Compile Include="AbstractView.cs" />
     <Compile Include="AbstractView.IViewInit.cs" />
     <Compile Include="ApplicationState.cs" />
+    <Compile Include="Caching\DefaultCache.cs" />
+    <Compile Include="Caching\DefaultCacheManager.cs" />
     <Compile Include="Commands\CommandAttribute.cs" />
     <Compile Include="Commands\CommandInfo.cs" />
     <Compile Include="Commands\CommandResult.cs" />
     <Compile Include="Commands\DeferredCommandInfo.cs" />
     <Compile Include="Commands\UnboundCommand.cs" />
     <Compile Include="Composition\IAnnouncingViewModel.cs" />
+    <Compile Include="Composition\IViewLookup.cs" />
     <Compile Include="Composition\IViewRegistry.cs" />
     <Compile Include="Composition\Presenter.cs" />
     <Compile Include="Composition\Region.cs" />
@@ -107,8 +110,13 @@
     <Compile Include="LinkToAttribute.cs" />
     <Compile Include="Collections\ChronologicalDictionary.cs" />
     <Compile Include="Collections\DictionaryProxy.cs" />
+    <None Include="Forest-Debug.nuspec" />
+    <None Include="Forest.nuspec" />
+    <None Include="Properties\AssemblyInfo.cs.template" />
+    <Compile Include="Reflection\DefaultReflectionProvider.cs" />
     <Compile Include="Security\SecurityDomVisitor.cs" />
-    <Compile Include="Stubs\IProperty.cs" />
+    <Compile Include="Reflection\IProperty.cs" />
+    <Compile Include="Reflection\IReflectionProvider.cs" />
     <Compile Include="Stubs\ResourceInfo.cs" />
     <Compile Include="Dom\NavigationTarget.cs" />
     <Compile Include="Dom\RegionNode.cs" />
@@ -132,7 +140,6 @@
     <Compile Include="Caching\ICacheManager.cs" />
     <Compile Include="Stubs\ILogger.cs" />
     <Compile Include="Stubs\ILoggerFactory.cs" />
-    <Compile Include="Stubs\IContainer.cs" />
     <Compile Include="Composition\IRegion.cs" />
     <Compile Include="Composition\IRegionUtil.cs" />
     <Compile Include="Composition\IViewToken.cs" />
@@ -148,8 +155,8 @@
     <Compile Include="Expressions\IForestExpressionEvaluator.cs" />
     <Compile Include="Stubs\IViewContext.cs" />
     <Compile Include="Expressions\Literal.cs" />
-    <Compile Include="Stubs\IParameter.cs" />
-    <Compile Include="Stubs\IMethod.cs" />
+    <Compile Include="Reflection\IParameter.cs" />
+    <Compile Include="Reflection\IMethod.cs" />
     <Compile Include="Events\ISubscriptionHandler.cs" />
     <Compile Include="Events\Message.cs" />
     <Compile Include="Events\SubscriptionAttribute.cs" />
@@ -162,9 +169,21 @@
     <Compile Include="ViewDescriptor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Reflection\" />
+    <None Include="build.properties" />
+    <None Include="Forest.nuspec.template">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Forest-Debug.nuspec.template">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(SolutionDir)tools\bump-version.sh $(ProjectDir) "version_revision" &amp;&amp; $(SolutionDir)tools\nu-pack.sh $(ProjectDir) . $(SolutionDir)packed\</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>$(SolutionDir)tools\process-templates.sh $(SolutionDir) $(ProjectDir)</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
