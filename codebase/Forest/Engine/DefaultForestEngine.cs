@@ -73,6 +73,10 @@ namespace Forest.Engine
             }
         }
 
+        public ApplicationState CreateState() { return new ApplicationState(context); }
+
+        public ILayoutTemplate LoadTemplate(string templateName) { return this.context.LayoutTemplateProvider.Load(templateName); }
+
         public ForestResult ExecuteTemplate(ILayoutTemplate template)
         {
             var resolver = new ViewResolver(context, viewLookup);

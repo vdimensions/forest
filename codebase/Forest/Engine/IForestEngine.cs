@@ -25,6 +25,8 @@ namespace Forest.Engine
 {
     public interface IForestEngine
     {
+        ApplicationState CreateState();
+        ILayoutTemplate LoadTemplate(string templateName);
         ForestResult ExecuteTemplate(ILayoutTemplate template);
         IView FindView(IView root, string path);
         IViewNode RenderView(ForestResult forestResult, bool renderAll);

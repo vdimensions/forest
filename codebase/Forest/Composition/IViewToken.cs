@@ -23,6 +23,6 @@ namespace Forest.Composition
         IView ResolveView(Type viewType, string id, object viewModel);
 
         string ID { get; }
-        Type Type { get; }
+        Type ViewType { get; }
     }
 }

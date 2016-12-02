@@ -32,7 +32,7 @@ namespace Forest
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string linkID;
 
-        private Type viewType;
+        private readonly Type viewType;
 
         [Localizable(false)]
         public LinkToAttribute(

@@ -116,20 +116,20 @@ namespace Forest
             action(view);
         }
 
-        internal ILayoutTemplate LoadTemplate(string templateName)
-        {
-            return context.LayoutTemplateProvider.Load(templateName);
-        }
-        internal bool TryLoadTemplate(string templateName, out ILayoutTemplate template)
-        {
-            return context.LayoutTemplateProvider.TryLoad(templateName, out template);
-        }
+//        internal ILayoutTemplate LoadTemplate(string templateName)
+//        {
+//            return context.LayoutTemplateProvider.Load(templateName);
+//        }
+//        internal bool TryLoadTemplate(string templateName, out ILayoutTemplate template)
+//        {
+//            return context.LayoutTemplateProvider.TryLoad(templateName, out template);
+//        }
 
         private readonly IForestContext context;
         private readonly ForestResult result;
         private readonly IViewNode renderedView;
 
-        private ApplicationState(IForestContext context) : this(context, ForestResult.Empty, null) { }
+        internal ApplicationState(IForestContext context) : this(context, ForestResult.Empty, null) { }
         private ApplicationState(IForestContext context, ForestResult result, IViewNode renderedView)
         {
             this.context = context;

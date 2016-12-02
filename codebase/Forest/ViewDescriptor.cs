@@ -49,9 +49,12 @@ namespace Forest
         internal ViewDescriptor(IForestContext context, Type viewType)
         {
             var stringComparer = StringComparer.Ordinal;
-            var methods = context.ReflectionProvider.GetMethods(viewType, BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic);
-            var dictionary = new Dictionary<string, UnboundCommand>(methods.Count(), stringComparer);
-            var subscriptionMethods = new List<SubscriptionInfo>(methods.Count());
+            var methods = context.ReflectionProvider.GetMethods(
+                    viewType, 
+                    BindingFlags.Instance|BindingFlags.Static|BindingFlags.Public|BindingFlags.NonPublic)
+                .ToArray();
+            var dictionary = new Dictionary<string, UnboundCommand>(methods.Length, stringComparer);
+            var subscriptionMethods = new List<SubscriptionInfo>(methods.Length);
             foreach (var method in methods)
             {
                 var commandAttributes = method.GetAttributes<CommandAttribute>();

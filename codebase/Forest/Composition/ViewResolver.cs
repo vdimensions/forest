@@ -43,15 +43,16 @@ namespace Forest.Composition
         {
             presenter = null;
             // TODO: remove ambiguity -- either access view by type or by id. Result false is not very consistent here
+            var viewNumberPrefixIndex = id == null ? -1 : id.LastIndexOf('#');
             var token = id == null 
                 ? viewModel == null ? null : this.viewLookup.Lookup(viewModel.GetType()) 
-                : this.viewLookup.Lookup(id.Substring(0, id.LastIndexOf('#')));
+                : this.viewLookup.Lookup(viewNumberPrefixIndex > 0 ? id.Substring(0, viewNumberPrefixIndex) : id);
             if (token == null)
             {
                 return false;
             }
-            var viewDescriptor = this.context.GetDescriptor(token.Type);
-            var view = token.ResolveView(token.Type, id, viewModel);
+            var viewDescriptor = this.context.GetDescriptor(token.ViewType);
+            var view = token.ResolveView(token.ViewType, id, viewModel);
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
@@ -76,8 +77,8 @@ namespace Forest.Composition
             var id = token.ID;
             var template = container[id] ?? CreateViewTemplateOnTheFly(id);
 
-            var viewDescriptor = this.context.GetDescriptor(token.Type);
-            var view = token.ResolveView(token.Type, id, viewModel);
+            var viewDescriptor = this.context.GetDescriptor(token.ViewType);
+            var view = token.ResolveView(token.ViewType, id, viewModel);
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);

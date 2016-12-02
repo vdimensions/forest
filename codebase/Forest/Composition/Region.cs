@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -35,6 +36,7 @@ namespace Forest.Composition
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly object syncRoot = new object();
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ChronologicalDictionary<string, IView> activeViews;
         #if !DEBUG
@@ -54,7 +56,7 @@ namespace Forest.Composition
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string path;
 
-        private readonly IForestContext context;
+        internal readonly IForestContext context;
 
         public Region(IForestContext context, IRegionTemplate template, ViewResolver resolver) : this(context, template, resolver, StringComparer.Ordinal) { }
         private Region(IForestContext context, IRegionTemplate template, ViewResolver resolver, IEqualityComparer<string> comparer)
@@ -68,6 +70,7 @@ namespace Forest.Composition
         }
 
         [Obsolete]
+        [SuppressMessage("ReSharper", "InconsistentlySynchronizedField")]
         public IView Populate(string id, int? index, object viewModel, bool load)
         {
             IView result;
@@ -111,7 +114,7 @@ namespace Forest.Composition
                 
                 if (!allViews.TryGetValue(realId, out result))
                 {
-                    Presenter presenter = null;
+                    Presenter presenter;
                     if (resolver.TryResolve(id, viewModel, viewTemplate, this, out presenter))
                     {
                         allViews.Add(realId, result = presenter.View);
