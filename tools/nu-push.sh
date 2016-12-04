@@ -1,3 +1,4 @@
+NuPurge.exe ."./packs";
 for file in $(ls ../packs/*.nupkg); do
   nuget push "$file" -s http://localhost/nuget.vdimensions.com/ VDimensions
   echo "----------------"
