@@ -17,7 +17,6 @@ function export_vars() {
     eval "export ${data[0]}=${data[1]}";
   done
   IFS=$' '
-  #read -rsp $'Press [Enter] to continue...\n'
 }
 function print_vars() {
   echo "Environment setup:"
@@ -71,23 +70,23 @@ echo "WORKDIR:  $workdir"
 for props in "$root/build.properties" "$workdir/build.properties"; do
   if [ -e "$props" ]; then
     export_vars "$props";
-    print_vars "$props";
   fi
 done
+print_vars "$root/build.properties";
 
 cd "$workdir"
 echo "Processing files "
 IFS=$'\n'
 if [ "$workdir" == "$root" ]; then
   for file in $(find | grep "build\.properties\.template"); do
-    target=${file%.template};
+    target="${file/\.template/}";
     echo -ne "> $target..."
     substitute "$file" "$target"
     echo " [ok]"
   done
 else
   for file in $(find | grep "\.template"); do
-    target=${file%.template};
+    target="${file/\.template/}";
     echo -ne "> $target..."
     if [ "$(basename $target)" == "build.properties" ]; then 
       echo " [skipped]"

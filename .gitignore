@@ -1,6 +1,12 @@
+# anything
+
+[~-]*
+
 # dirs
 
+**/.archetype-template/
 **/.nuget/
+**/.project-template/
 **/.svn/
 **/.vs/
 **/.vscode/
@@ -16,10 +22,9 @@
 
 *.cproj.user
 *.csproj.user
-*.dbproj.user
-*.desktop
 *.[Dd]ot[Ss]ettings
 *.[Dd]ot[Ss]ettings.user
+*.desktop
 *.fsproj.user
 *.lnk
 *.nproj.user
@@ -30,7 +35,6 @@
 *.[Ss]tyle[Cc]op*
 *.sdf
 *.swp
-*.suo
 *.testsettings
 *.tmp
 *.userprefs
@@ -42,8 +46,3 @@ desktop.ini
 [Ss]tyle[Cc]op.*
 [Tt]humbs.db
 [Uu]pgrade[Ll]og.[Xx][Mm][Ll]
-
-# anything else
-
-[~-]*
-

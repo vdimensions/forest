@@ -1,0 +1,3 @@
+[submodule "submodules/forest-web"]
+	path = submodules/forest-web
+	url = http://git.vdimensions.net/bonobo-git-server/forest-web.git

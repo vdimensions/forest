@@ -78,3 +78,4 @@ eval "$2=\$((\$$2+1))"
 
 rewrite_vars "$workdir/build.properties" "$2"
 unset_vars "$workdir/build.properties";
+echo "done"
