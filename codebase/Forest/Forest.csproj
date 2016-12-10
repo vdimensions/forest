@@ -113,6 +113,11 @@
     <Compile Include="Collections\DictionaryProxy.cs" />
     <None Include="Forest-Debug.nuspec" />
     <None Include="Forest.nuspec" />
+    <None Include="paket-restore.sh" />
+    <None Include="paket-update.sh" />
+    <None Include="paket.dependencies" />
+    <None Include="paket.lock" />
+    <None Include="paket.references" />
     <None Include="Properties\AssemblyInfo.cs.template" />
     <Compile Include="Reflection\DefaultReflectionProvider.cs" />
     <Compile Include="Security\SecurityDomVisitor.cs" />
@@ -184,7 +189,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)tools\bump-version.sh $(ProjectDir) "version_revision" &amp;&amp; $(SolutionDir)tools\nu-pack.sh $(ProjectDir) . $(SolutionDir)packed\</PostBuildEvent>
+    <PostBuildEvent>$(SolutionDir)tools\bump-version.sh $(ProjectDir) "version_revision"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>$(SolutionDir)tools\process-templates.sh $(SolutionDir) $(ProjectDir)</PreBuildEvent>
@@ -196,4 +201,5 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Import Project="packages\VDimensions.Targets.Nuget.Pack\build\VDimensions.Targets.Nuget.Pack.targets" Condition="Exists('packages\VDimensions.Targets.Nuget.Pack\build\VDimensions.Targets.Nuget.Pack.targets')" Label="Paket" />
 </Project>

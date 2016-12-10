@@ -1,0 +1,3 @@
+NUGET
+  remote: http://nuget.vdimensions.net/nuget-repo/nuget
+    VDimensions.Targets.Nuget.Pack (0.0.0.33)
