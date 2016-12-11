@@ -306,7 +306,8 @@ namespace Forest.Engine
             {
                 path = path.Substring(00, path.Length - sep.Length);
             }
-            var viewId = path.Substring(0, path.IndexOf(sep));
+            var sepIx = path.IndexOf(sep);
+            var viewId = sepIx >= 0 ? path.Substring(0, sepIx) : path;
             if (!viewId.Equals(root.ID, comparison))
             {
                 return null;
