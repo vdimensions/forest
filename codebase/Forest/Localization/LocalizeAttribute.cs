@@ -25,26 +25,22 @@ namespace Forest.Localization
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
     public sealed class LocalizeAttribute : Attribute
     {
+        private const string DefaultNameValue = "${@Self}";
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly string bundle;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly string name;
 
         [Localizable(false)]
-        public LocalizeAttribute(string bundle, string name)
+        public LocalizeAttribute(string bundle)
         {
             if (bundle == null)
             {
                 throw new ArgumentNullException("bundle");
             }
-            if (name == null)
-            {
-                throw new ArgumentNullException("name");
-            }
             this.bundle = bundle;
-            this.name = name;
         }
 
         public string Bundle { get { return this.bundle; } }
-        public string Name { get { return this.name; } }
-        public ResourceInfo ResourceInfo { get { return new ResourceInfo(this.bundle, this.name);} }
+        public string Name { get; set; }
+        public ResourceInfo ResourceInfo { get { return new ResourceInfo(bundle, string.IsNullOrEmpty(Name) ? DefaultNameValue : Name);} }
     }
 }

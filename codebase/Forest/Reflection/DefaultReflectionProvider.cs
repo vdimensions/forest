@@ -41,10 +41,9 @@ namespace Forest.Reflection
                 return this.method.GetCustomAttributes(true).OfType<T>();
             }
 
-            public object Invoke(IView view, object message)
-            {
-                return this.method.Invoke(view, new[] {message});
-            }
+            public object Invoke(IView view, object message) { return this.method.Invoke(view, new[] {message}); }
+            public object Invoke(IView view) { return this.method.Invoke(view, null); }
+
 
             public string Name { get { return this.method.Name; } }
         }

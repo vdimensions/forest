@@ -22,6 +22,8 @@ namespace Forest.Reflection
     public interface IMethod
     {
         object Invoke(IView view, object message);
+        object Invoke(IView view);
+
         IParameter[] GetParameters();
         IEnumerable<T> GetAttributes<T>() where T: Attribute;
 

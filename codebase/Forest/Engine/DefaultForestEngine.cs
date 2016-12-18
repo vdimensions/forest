@@ -204,7 +204,7 @@ namespace Forest.Engine
                             var viewID = x.ViewID ?? context.GetDescriptor(x.ViewType).ViewAttribute.ID;
                             if (x.Command == null)
                             {
-                                return new LinkNode(x.LinkID, viewID);
+                                return new LinkNode(x.LinkID, viewID) { Text = x.Text};
                             }
                             return new CommandLinkNode(x.LinkID, template.ID, viewID, x.Command, x.CommandArgument);
                         })

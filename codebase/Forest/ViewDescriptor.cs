@@ -65,7 +65,9 @@ namespace Forest
                     var param = method.GetParameters().SingleOrDefault();
 
                     var m = method;
-                    Func<IView, object, object> invokeAction = (view, o) => m.Invoke(view, o);
+                    var invokeAction = param == null 
+                        ? new Func<IView, object, object>((view, o) => m.Invoke(view))
+                        : (view, o) => m.Invoke(view, o);
 
                     dictionary.Add(
                         key, 

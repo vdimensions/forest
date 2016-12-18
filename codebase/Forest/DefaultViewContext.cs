@@ -45,6 +45,7 @@ namespace Forest
             contextData.Add("@View", () => view.ID);
             contextData.Add("@Self", () => view.ID);
             contextData.Add("@Self.", () => this);
+            contextData.Add("@ViewModel", () => view.ViewModel);
             var parentView = view.Parent;
             if (parentView != null)
             {

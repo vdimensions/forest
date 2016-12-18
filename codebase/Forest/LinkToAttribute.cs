@@ -141,6 +141,6 @@ namespace Forest
             set { linkID = value; }
         }
         public Type ViewType { get { return viewType; } }
-        
-    }
+        public string Text { get; set; }
+}
 }

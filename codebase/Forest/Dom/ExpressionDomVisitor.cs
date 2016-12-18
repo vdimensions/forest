@@ -33,8 +33,10 @@ namespace Forest.Dom
 
         protected override ICommandNode ProcessCommand(ICommandNode command, INodeContext nodeContext)
         {
-            var name = expressionEvaluator.Evaluate(nodeContext.ViewContext, command.Name);
-            return name == null ? command : new CommandNode(name) { Text = command.Text, ToolTip = command.ToolTip, Description = command.Description };
+            var vc = nodeContext.ViewContext;
+            var name = expressionEvaluator.Evaluate(vc, command.Name);
+            var text = command.Text == null ? null : expressionEvaluator.Evaluate(vc, command.Text) ?? command.Text;
+            return name == null ? command : new CommandNode(name) { Text = text, ToolTip = command.ToolTip, Description = command.Description };
         }
 
         protected override ILinkNode ProcessLink(ILinkNode link, INodeContext nodeContext)
@@ -42,7 +44,8 @@ namespace Forest.Dom
             var vc = nodeContext.ViewContext;
             var name = expressionEvaluator.Evaluate(vc, link.Name);
             var template = expressionEvaluator.Evaluate(vc, link.Template) ?? link.Template;
-            return name == null ? link : new LinkNode(name, template) { Text = link.Text, ToolTip = link.ToolTip, Description = link.Description };
+            var text = link.Text == null ? null : expressionEvaluator.Evaluate(vc, link.Text) ?? link.Text;
+            return name == null ? link : new LinkNode(name, template) { Text = text, ToolTip = link.ToolTip, Description = link.Description };
         }
 
         protected override ICommandLinkNode ProcessCommandLink(ICommandLinkNode link, INodeContext nodeContext)
@@ -53,8 +56,9 @@ namespace Forest.Dom
             var template = expressionEvaluator.Evaluate(vc, link.Template) ?? link.Template;
             var command = expressionEvaluator.Evaluate(vc, link.Command) ?? link.Command;
             var commandArgument = expressionEvaluator.Evaluate(vc, link.CommandArgument) ?? link.CommandArgument;
+            var text = link.Text == null ? null : expressionEvaluator.Evaluate(vc, link.Text) ?? link.Text;
             return (name != null) || (command != null) || (commandArgument != null) 
-                ? new CommandLinkNode(name, template, viewID, command, commandArgument) { Text = link.Text, ToolTip = link.ToolTip, Description = link.Description }
+                ? new CommandLinkNode(name, template, viewID, command, commandArgument) { Text = text, ToolTip = link.ToolTip, Description = link.Description }
                 : link;
         }
     }

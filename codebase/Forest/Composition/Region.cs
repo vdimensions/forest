@@ -130,13 +130,17 @@ namespace Forest.Composition
                     }
                 }
 
-                activeViews[realId] = result;
-                result.Refreshed += OnViewRefreshed;
-                var cch = ContentChange;
-                if (cch != null)
+                if (result != null)
                 {
-                    cch(this, result, RegionModificationType.ViewAdded);
+                    activeViews[realId] = result;
+                    result.Refreshed += OnViewRefreshed;
+                    var cch = ContentChange;
+                    if (cch != null)
+                    {
+                        cch(this, result, RegionModificationType.ViewAdded);
+                    }
                 }
+                
                 logger.Debug("View '{0}' has been activated inside region '{1}'", id, Path);
             }
             return result;

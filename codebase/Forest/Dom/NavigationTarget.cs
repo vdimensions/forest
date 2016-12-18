@@ -40,7 +40,7 @@ namespace Forest.Dom
         [Localizable(true)]
         public string Text
         {
-            get { return text; }
+            get { return  text; }
             set { text = value; }
         }
 
