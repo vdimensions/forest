@@ -40,6 +40,7 @@
 *.userprefs
 *.vbproj.user
 *.vsmdi
+*.vym.lock
 *~$*.dot
 browse.VC.db
 desktop.ini
