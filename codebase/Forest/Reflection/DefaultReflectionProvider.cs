@@ -9,7 +9,7 @@ namespace Forest.Reflection
     internal sealed class DefaultReflectionProvider : IReflectionProvider
     {
         private sealed class Parameter : IParameter
-        {
+        {           
             private readonly ParameterInfo parameter;
 
             public Parameter(ParameterInfo parameter)
@@ -18,8 +18,15 @@ namespace Forest.Reflection
             }
 
             public Type Type { get { return this.parameter.ParameterType; } }
-
             public bool IsOptional { get { return this.parameter.IsOptional; } }
+        }
+        
+        internal sealed class VoidParameter : IParameter
+        {           
+            public VoidParameter() { }
+
+            public Type Type { get { return typeof(Void); } }
+            public bool IsOptional { get { return true; } }
         }
 
         private sealed class Method : IMethod
@@ -43,7 +50,6 @@ namespace Forest.Reflection
 
             public object Invoke(IView view, object message) { return this.method.Invoke(view, new[] {message}); }
             public object Invoke(IView view) { return this.method.Invoke(view, null); }
-
 
             public string Name { get { return this.method.Name; } }
         }

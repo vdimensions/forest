@@ -56,7 +56,7 @@ namespace Forest.Composition
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions);
+            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions, this);
 
             var resolvedPresenter = new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)
@@ -82,7 +82,7 @@ namespace Forest.Composition
             var childRegions = template.Regions
                 .Select(x => new Region(context, x, this))
                 .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions);
+            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions, this);
 
             var resolvedPresenter = new Presenter(context, template, view, containingRegion);
             foreach (Region cr in childRegions.Values)

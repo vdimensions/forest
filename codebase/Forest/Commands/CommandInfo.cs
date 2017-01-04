@@ -21,7 +21,7 @@ using Forest.Reflection;
 namespace Forest.Commands
 {
     public class CommandInfo
-    {
+    {       
         private readonly IView rootView;
         private readonly IView targetView;
         private readonly UnboundCommand unboundCommand;
@@ -47,7 +47,7 @@ namespace Forest.Commands
                 : null;
         }
 
-        public IParameter Parameter { get { return unboundCommand != null ? unboundCommand.Parameter : null; } }
+        public IParameter Parameter { get { return unboundCommand != null ? unboundCommand.Parameter : new VoidParameter(); } }
         public string Name { get { return unboundCommand.Name; } }
         public string NavigatesToTemplate { get { return unboundCommand.NavigatesToTemplate; } }
     }

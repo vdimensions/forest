@@ -27,13 +27,16 @@ namespace Forest
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private IViewContext context;
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private IViewLookup viewLookup;
 
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private IRegion containingRegion;
 
-        IViewContext IViewInit.Init(string id, IViewDescriptor descriptor, IRegion containingRegion, IDictionary<string, IRegion> regions)
+        IViewContext IViewInit.Init(string id, IViewDescriptor descriptor, IRegion containingRegion, IDictionary<string, IRegion> regions, IViewLookup viewLookup)
         {
             if (id == null)
             {
@@ -46,6 +49,7 @@ namespace Forest
             this.id = id;
             this.containingRegion = containingRegion;
             this.regions = regions;
+            this.viewLookup = viewLookup;
             return this.context = new DefaultViewContext(descriptor, this);
         }
 

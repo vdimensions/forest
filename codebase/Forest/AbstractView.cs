@@ -193,7 +193,18 @@ namespace Forest
         public event EventHandler Activated;
         public event EventHandler Deactivated;
 
-        public IRegion this[string regionName] { get { return regions.ContainsKey(regionName) ? regions[regionName] : null; } }
+        public IRegion this[string regionName] 
+        { 
+            get 
+            {
+                var region = regions.ContainsKey(regionName) ? regions[regionName] : null;
+                if (region == null) 
+                {
+                    regions[regionName] = 
+                }
+                return region; 
+            } 
+        }
 
         public string ID { get { return this.id; } }
 
