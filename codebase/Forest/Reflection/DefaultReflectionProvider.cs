@@ -25,7 +25,7 @@ namespace Forest.Reflection
         {           
             public VoidParameter() { }
 
-            public Type Type { get { return typeof(Void); } }
+            public Type Type { get { return typeof(void); } }
             public bool IsOptional { get { return true; } }
         }
 

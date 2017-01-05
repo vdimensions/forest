@@ -47,7 +47,7 @@ namespace Forest.Commands
                 : null;
         }
 
-        public IParameter Parameter { get { return unboundCommand != null ? unboundCommand.Parameter : new VoidParameter(); } }
+		public IParameter Parameter { get { return unboundCommand != null ? unboundCommand.Parameter : new DefaultReflectionProvider.VoidParameter(); } }
         public string Name { get { return unboundCommand.Name; } }
         public string NavigatesToTemplate { get { return unboundCommand.NavigatesToTemplate; } }
     }

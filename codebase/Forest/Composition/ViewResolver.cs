@@ -18,6 +18,7 @@ using System.Linq;
 
 using Forest.Composition.Templates;
 using Forest.Engine;
+using System.Collections.Generic;
 
 
 namespace Forest.Composition
@@ -27,10 +28,10 @@ namespace Forest.Composition
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        #if !DEBUG
-        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        #endif
-        private readonly IViewLookup viewLookup;
+		private readonly IViewLookup viewLookup;
+		#if !DEBUG
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+		#endif
         private readonly IForestContext context;
 
         public ViewResolver(IForestContext context, IViewLookup viewLookup)
@@ -53,16 +54,16 @@ namespace Forest.Composition
             }
             var viewDescriptor = this.context.GetDescriptor(token.ViewType);
             var view = token.ResolveView(token.ViewType, id, viewModel);
-            var childRegions = template.Regions
-                .Select(x => new Region(context, x, this))
-                .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions, this);
+			IViewInit viewInit = (IViewInit) view;
+			var childRegions = new Dictionary<string, IRegion> (DefaultForestEngine.StringComparer);
+			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
+			var resolvedPresenter = new Presenter(context, template, view, containingRegion);
+			foreach (Region region in template.Regions.Select(x => viewInit.GetOrCreateRegion(x))) 
+			{
+				region.Presenter = resolvedPresenter;
+				childRegions.Add(region.Name, region);
+			}
 
-            var resolvedPresenter = new Presenter(context, template, view, containingRegion);
-            foreach (Region cr in childRegions.Values)
-            {
-                cr.Presenter = resolvedPresenter;
-            }
             presenter = resolvedPresenter;
             return true;
         }
@@ -79,16 +80,16 @@ namespace Forest.Composition
 
             var viewDescriptor = this.context.GetDescriptor(token.ViewType);
             var view = token.ResolveView(token.ViewType, id, viewModel);
-            var childRegions = template.Regions
-                .Select(x => new Region(context, x, this))
-                .ToDictionary(x => x.Name, x => x as IRegion, DefaultForestEngine.StringComparer);
-            ((IViewInit) view).Init(id, viewDescriptor, containingRegion, childRegions, this);
+			IViewInit viewInit = (IViewInit) view;
+			var childRegions = new Dictionary<string, IRegion> (DefaultForestEngine.StringComparer);
+			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
+			var resolvedPresenter = new Presenter(context, template, view, containingRegion);
+			foreach (Region region in template.Regions.Select(x => viewInit.GetOrCreateRegion(x))) 
+			{
+				region.Presenter = resolvedPresenter;
+				childRegions.Add(region.Name, region);
+			}
 
-            var resolvedPresenter = new Presenter(context, template, view, containingRegion);
-            foreach (Region cr in childRegions.Values)
-            {
-                cr.Presenter = resolvedPresenter;
-            }
             presenter = resolvedPresenter;
             return true;
         }

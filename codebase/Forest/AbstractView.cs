@@ -20,12 +20,42 @@ using System.Linq;
 
 using Forest.Composition;
 using Forest.Events;
+using Forest.Composition.Templates;
 
 
 namespace Forest
 {
     public abstract partial class AbstractView<T> : IView<T> where T: class
-    {
+	{
+		[Serializable]
+		internal sealed class AdHocRegionTemplate : IRegionTemplate
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly string regionName;
+
+			public AdHocRegionTemplate(string regionName)
+			{
+				if (regionName == null)
+				{
+					throw new ArgumentNullException("regionName");
+				}
+				if (regionName.Length == 0)
+				{
+					throw new ArgumentException("Region name cannot be an empty string", "regionName");
+				}
+
+				this.regionName = regionName;
+			}
+
+			public IEnumerator<IViewTemplate> GetEnumerator() { return Enumerable.Empty<IViewTemplate>().GetEnumerator(); }
+			System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator () { return GetEnumerator(); }
+
+			public string RegionName { get { return regionName; } }
+			public RegionLayout Layout { get { return RegionLayout.Default; } }
+			public IViewTemplate this[string key] { get { return null; } }
+		}
+	
+
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
@@ -168,7 +198,7 @@ namespace Forest
             }
             if ((topics == null) || (topics.Length == 0))
             {
-                topics = new[] {string.Empty};
+                topics = new[] { string.Empty };
             }
             var pubCount = 0;
             foreach (var topic in topics.Distinct(StringComparer.Ordinal))
@@ -193,18 +223,7 @@ namespace Forest
         public event EventHandler Activated;
         public event EventHandler Deactivated;
 
-        public IRegion this[string regionName] 
-        { 
-            get 
-            {
-                var region = regions.ContainsKey(regionName) ? regions[regionName] : null;
-                if (region == null) 
-                {
-                    regions[regionName] = 
-                }
-                return region; 
-            } 
-        }
+		public IRegion this[string regionName] { get { return GetOrCreateRegion(new AdHocRegionTemplate(regionName)); } }
 
         public string ID { get { return this.id; } }
 

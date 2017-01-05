@@ -18,16 +18,25 @@ using System.ComponentModel;
 
 using Forest.Composition;
 using Forest.Events;
+using Forest.Composition.Templates;
 
 
 namespace Forest
 {
     internal interface IViewInit
     {
-        IViewContext Init(string id, IViewDescriptor descriptor, IRegion containingRegion, IDictionary<string, IRegion> childRegions);
+		IRegion GetOrCreateRegion(IRegionTemplate regionTemplate);
+		IViewContext Init(
+			IForestContext context, 
+			string id, 
+			IViewDescriptor descriptor, 
+			IRegion containingRegion, 
+			IDictionary<string, IRegion> childRegions, 
+			ViewResolver viewResolver);
         void RegisterEventBus(IEventBus eventBus);
         void OnEventBusReady(IEventBus eventBus);
         void ReleaseEventBus();
+        
 
         IRegion ContainingRegion { get; }
         [Localizable(false)]
