@@ -74,7 +74,7 @@ namespace Forest
 		/// Gets a reference to the <see cref="IRegion">region</see> instance containing this <see cref="IView">view</see>.
 		/// </summary>
 		[Localizable(false)]
-        IRegion ContainingRegion { get; }
+		RegionInfo ContainingRegion { get; }
         
         /// <summary>
         /// Gets a collection of <see cref="IRegion">regions</see> which are defined within this view. 

@@ -106,7 +106,8 @@ namespace Forest.Composition
         /// </summary>
         /// <seealso cref="RegionLayout"/>
         RegionLayout Layout { get; }
-        IDictionary<string, IView> ActiveViews { get; }
+		ViewMap ActiveViews { get; }
+		ViewMap AllViews { get; }
         /// <summary>
         /// Gets a reference to the <see cref="IView">view</see> object that is the logical parent of the current <see cref="IRegion"/>
         /// </summary>

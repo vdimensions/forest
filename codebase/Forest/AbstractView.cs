@@ -223,21 +223,18 @@ namespace Forest
         public event EventHandler Activated;
         public event EventHandler Deactivated;
 
-		public IRegion ContainingRegion { get { return containingRegion; } }
+		public RegionInfo ContainingRegion { get { return new RegionInfo(containingRegion.Name, containingRegion.ActiveViews, containingRegion.AllViews); } }
 
-		public IRegion this[string regionName] { get { return GetOrCreateRegion(new AdHocRegionTemplate(regionName)); } }
-
-        public string ID { get { return this.id; } }
-
-        public IView Parent
-        {
-            get { return containingRegion == null ? null : containingRegion.OwnerView; }
-        }
+        public IView Parent { get { return containingRegion == null ? null : containingRegion.OwnerView; } }
 
         public virtual T ViewModel { get { return viewModel; } }
         object IView.ViewModel { get { return ViewModel; } }
 
-        public IEnumerable<IRegion> Regions { get { return regions.Values; } }
+		public IEnumerable<IRegion> Regions { get { return regions.Values; } }
+
+		public string ID { get { return this.id; } }
+
+		public IRegion this[string regionName] { get { return GetOrCreateRegion(new AdHocRegionTemplate(regionName)); } }
         #endregion
 
         protected virtual void OnLoad() { }
