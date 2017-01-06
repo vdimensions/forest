@@ -20,6 +20,26 @@ using System.Collections.Generic;
 
 namespace Forest.Collections
 {
+	public class ReadOnlyDictionary<TKey, TValue> 
+	{
+		private readonly IDictionary<TKey, TValue> dictionary;
+
+		public ReadOnlyDictionary(IDictionary<TKey, TValue> dictionary)
+		{
+			if (dictionary == null) 
+			{
+			    throw new ArgumentNullException ("dictionary");
+			}
+			this.dictionary = dictionary;
+		}
+
+		public int Count { get { return dictionary.Count; } }
+		public IEnumerable<TKey> Keys { get { return dictionary.Keys; } }
+		public IEnumerable<TValue> Values { get { return dictionary.Values; } }
+
+		public TValue this[TKey key] { get { return dictionary[key]; } }
+	}
+
     [Serializable]
     public abstract class DictionaryProxy<TKey, TValue> : MarshalByRefObject, IDictionary<TKey, TValue>
     {

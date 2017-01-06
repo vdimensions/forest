@@ -176,6 +176,7 @@
     <Compile Include="ViewUtils.cs" />
     <Compile Include="ViewAttribute.cs" />
     <Compile Include="ViewDescriptor.cs" />
+    <Compile Include="RegionInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.properties" />

@@ -223,6 +223,8 @@ namespace Forest
         public event EventHandler Activated;
         public event EventHandler Deactivated;
 
+		public IRegion ContainingRegion { get { return containingRegion; } }
+
 		public IRegion this[string regionName] { get { return GetOrCreateRegion(new AdHocRegionTemplate(regionName)); } }
 
         public string ID { get { return this.id; } }

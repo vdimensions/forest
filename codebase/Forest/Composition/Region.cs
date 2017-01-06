@@ -28,6 +28,10 @@ using Forest.Stubs;
 
 namespace Forest.Composition
 {
+	public sealed class ViewMap : ReadOnlyDictionary<string, IView>
+	{
+	}
+
     [Localizable(false)]
     internal sealed class Region : IRegion, IRegionUtil
     {
@@ -52,6 +56,7 @@ namespace Forest.Composition
         #endif
         private readonly ViewResolver resolver;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		[Obsolete]
         private Presenter presenter;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private string path;
@@ -307,6 +312,7 @@ namespace Forest.Composition
         public IDictionary<string, IView> ActiveViews { get { return new Dictionary<string, IView>(activeViews); } }
         public IView OwnerView { get { return presenter.View; } }
         public string Path { get { return path; } }
+
 		[Obsolete]
         internal Presenter Presenter
         {
