@@ -80,12 +80,11 @@ namespace Forest.Engine
         public ForestResult ExecuteTemplate(ILayoutTemplate template)
         {
             var resolver = new ViewResolver(context, viewLookup);
-            Presenter presenter;
-            if (!resolver.TryResolve(template.Master ?? template.ID, null, template, null, out presenter))
+			IView view;
+			if (!resolver.TryResolve(template.Master ?? template.ID, null, template, null, out view))
             {
                 return ForestResult.Empty;
             }
-            var view = presenter.View;
             if (forestSecurityAdapter.HasAccess(view))
             {
                 ProcessRegions(view, template, forestSecurityAdapter);

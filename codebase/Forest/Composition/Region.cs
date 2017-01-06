@@ -74,12 +74,12 @@ namespace Forest.Composition
         public IView Populate(string id, int? index, object viewModel, bool load)
         {
             IView result;
-            var realId = id;
+            var viewKey = id;
             if (index.HasValue)
             {
-                realId = string.Format("{0}#{1}", realId, index.Value);
+				viewKey = string.Format("{0}#{1}", id, index.Value);
             }
-            var viewTemplate = template[id];
+			var viewTemplate = template[id];
             if (viewTemplate == null)
             {
                 logger.Trace("Region '{0}' did not have explicit definition for child view '{1}'. Creating view template on the fly.", path, id);
@@ -91,8 +91,8 @@ namespace Forest.Composition
                 {
                     // in case we are replacing the viewModel, then we must re-initialize the view
 
-                    var view = allViews[realId];
-                    allViews.Remove(realId);
+                    var view = allViews[viewKey];
+                    allViews.Remove(viewKey);
                     view.Dispose();
                 }
 
@@ -104,20 +104,20 @@ namespace Forest.Composition
                     }
                     if (Layout == RegionLayout.SingleView)
                     {
-                        foreach (var view in allViews.Values)
+                        foreach (var v in allViews.Values)
                         {
-                            view.Dispose();
+                            v.Dispose();
                         }
                         allViews.Clear();
                     }
                 }
                 
-                if (!allViews.TryGetValue(realId, out result))
+                if (!allViews.TryGetValue(viewKey, out result))
                 {
-                    Presenter presenter;
-                    if (resolver.TryResolve(id, viewModel, viewTemplate, this, out presenter))
+					IView view;
+                    if (resolver.TryResolve(id, viewModel, viewTemplate, this, out view))
                     {
-                        allViews.Add(realId, result = presenter.View);
+                        allViews.Add(viewKey, result = view);
                         if (load)
                         {
                             result.Load();
@@ -132,13 +132,9 @@ namespace Forest.Composition
 
                 if (result != null)
                 {
-                    activeViews[realId] = result;
+                    activeViews[viewKey] = result;
                     result.Refreshed += OnViewRefreshed;
-                    var cch = ContentChange;
-                    if (cch != null)
-                    {
-                        cch(this, result, RegionModificationType.ViewAdded);
-                    }
+					OnViewAdded(result);
                 }
                 
                 logger.Debug("View '{0}' has been activated inside region '{1}'", id, Path);
@@ -150,23 +146,23 @@ namespace Forest.Composition
         public IView Populate(object viewModel, int? index, bool load)
         {
             IView result = null;
-            Presenter presenter = null;
-            if (resolver.TryResolve(viewModel.GetType(), template, this, out presenter))
+			IView view = null;
+            if (resolver.TryResolve(viewModel.GetType(), template, this, out view))
             {
-                var id = presenter.View.ID;
-                var realId = id;
+                var id = view.ID;
+                var viewKey = id;
                 if (index.HasValue)
                 {
-                    realId = string.Format("{0}#{1}", realId, index.Value);
+                    viewKey = string.Format("{0}#{1}", viewKey, index.Value);
                 }
                 lock (syncRoot)
                 {
-                    if (allViews.ContainsKey(realId))
+                    if (allViews.ContainsKey(viewKey))
                     {
                         // in case we are replacing the viewModel, then we must re-initialize the view
-                        var view = allViews[realId];
-                        allViews.Remove(realId);
-                        view.Dispose();
+                        var v = allViews[viewKey];
+                        allViews.Remove(viewKey);
+                        v.Dispose();
                     }
 
                     if ((Layout == RegionLayout.OneActiveView) || (Layout == RegionLayout.SingleView))
@@ -177,25 +173,21 @@ namespace Forest.Composition
                         }
                         if (Layout == RegionLayout.SingleView)
                         {
-                            foreach (var view in this.allViews.Values)
+                            foreach (var v in this.allViews.Values)
                             {
-                                view.Dispose();
+                                v.Dispose();
                             }
                             allViews.Clear();
                         }
                     }
-                    allViews.Add(realId, result = presenter.View);
+                    allViews.Add(viewKey, result = view);
                     if (load)
                     {
                         result.Load();
                     }
-                    activeViews[realId] = result;
+                    activeViews[viewKey] = result;
                     result.Refreshed += OnViewRefreshed;
-                    var cch = ContentChange;
-                    if (cch != null)
-                    {
-                        cch(this, result, RegionModificationType.ViewAdded);
-                    }
+					OnViewAdded(result);
                     logger.Debug("View '{0}' has been activated inside region '{1}'", id, Path);
                 }
             }
@@ -226,6 +218,15 @@ namespace Forest.Composition
             }
         }
 
+		void OnViewAdded(IView view)
+		{
+			var cch = ContentChange;
+			if (cch != null)
+			{
+				cch(this, view, RegionModificationType.ViewAdded);
+			}
+		}
+
         public IView ActivateView(string id) { return Populate(id, null, null, true); }
         public IView ActivateView(string id, object viewModel) { return Populate(id, null, viewModel, true); }
         public IView ActivateView(string id, int index, object viewModel)
@@ -236,15 +237,15 @@ namespace Forest.Composition
             }
             return Populate(id, index, viewModel, true);
         }
-        public TView ActivateView<TView>(string id) where TView : IView
+        public TView ActivateView<TView>(string id) where TView: IView
         {
             return (TView) ActivateView(id);
         }
-        public TView ActivateView<TView>(string id, object viewModel) where TView : IView
+        public TView ActivateView<TView>(string id, object viewModel) where TView: IView
         {
             return (TView) ActivateView(id, viewModel);
         }
-        public TView ActivateView<TView>(string id, int index, object viewModel) where TView : IView
+        public TView ActivateView<TView>(string id, int index, object viewModel) where TView: IView
         {
             return (TView) ActivateView(id, index, viewModel);
         }
@@ -302,15 +303,11 @@ namespace Forest.Composition
         public event Action<IRegion, IView, RegionModificationType> ContentChange;
 
         public string Name { get { return template.RegionName; } }
-
         public RegionLayout Layout { get { return template.Layout; } }
-
         public IDictionary<string, IView> ActiveViews { get { return new Dictionary<string, IView>(activeViews); } }
-
         public IView OwnerView { get { return presenter.View; } }
-
         public string Path { get { return path; } }
-
+		[Obsolete]
         internal Presenter Presenter
         {
             set

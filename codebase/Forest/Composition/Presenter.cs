@@ -20,6 +20,7 @@ using Forest.Composition.Templates;
 
 namespace Forest.Composition
 {
+	[System.Obsolete]
     internal sealed class Presenter
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
