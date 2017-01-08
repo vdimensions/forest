@@ -40,8 +40,6 @@ namespace Forest
 
         IRegion ContainingRegion { get; }
         [Localizable(false)]
-        IViewDescriptor Descriptor { get; }
-        [Localizable(false)]
         IViewContext Context { get; }
     }
 }

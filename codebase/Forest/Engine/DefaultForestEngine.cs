@@ -118,7 +118,7 @@ namespace Forest.Engine
                 return ViewNode.NonRendered;
             }
             var viewContext = ((IViewInit) view).Context;
-            var viewDescriptor = ((IViewInit) view).Descriptor;
+            var viewDescriptor = viewContext.Descriptor;
             var viewModel = view.ViewModel;
             var pathPrefix = (containingRegion == null ? string.Empty : containingRegion.Path) + PathSeparator;
             var uniqueViewPath = pathPrefix + (uniqueViewID ?? view.ID);

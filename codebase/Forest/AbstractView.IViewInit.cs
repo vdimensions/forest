@@ -16,7 +16,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 using Forest.Composition;
 using Forest.Events;
@@ -105,7 +104,5 @@ namespace Forest
 
         IRegion IViewInit.ContainingRegion { get { return this.containingRegion; } }
         IViewContext IViewInit.Context { get { return this.viewContext; } }
-        [Obsolete("Use Context.Descriptor instead")]
-        IViewDescriptor IViewInit.Descriptor { get { return this.viewContext.Descriptor; } }
     }
 }
