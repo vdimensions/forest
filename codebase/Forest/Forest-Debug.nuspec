@@ -3,7 +3,7 @@
   <metadata>
     <id>Forest-Debug</id>
     <title>Forest-Debug</title>
-    <version>0.0.0.27</version>
+    <version>0.0.0.28</version>
     <description>Forest debug symbols</description>
     <summary>Forest debug symbols</summary>
     <releaseNotes></releaseNotes>
@@ -18,7 +18,7 @@
     <copyright>Copyright © Virtual Dimensions 2013-2016</copyright>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
     <dependencies>
-      <dependency id="Forest" version="0.0.0.27" />
+      <dependency id="Forest" version="0.0.0.28" />
     </dependencies>
     <frameworkAssemblies>
     </frameworkAssemblies>

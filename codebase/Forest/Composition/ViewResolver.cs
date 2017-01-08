@@ -62,7 +62,7 @@ namespace Forest.Composition
 			foreach (Region region in template.Regions.Select(x => viewInit.GetOrCreateRegion(x))) 
 			{
 				region.Presenter = resolvedPresenter;
-				childRegions.Add(region.Name, region);
+				//childRegions.Add(region.Name, region);
 			}
 
 			view = resolvedPresenter.View;
@@ -89,7 +89,7 @@ namespace Forest.Composition
 			foreach (Region region in template.Regions.Select(x => viewInit.GetOrCreateRegion(x))) 
 			{
 				region.Presenter = resolvedPresenter;
-				childRegions.Add(region.Name, region);
+				//childRegions.Add(region.Name, region);
 			}
 
 			view = resolvedPresenter.View;
