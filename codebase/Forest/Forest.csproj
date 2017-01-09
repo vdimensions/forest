@@ -54,7 +54,6 @@
     <Compile Include="Composition\IAnnouncingViewModel.cs" />
     <Compile Include="Composition\IViewLookup.cs" />
     <Compile Include="Composition\IViewRegistry.cs" />
-    <Compile Include="Composition\Presenter.cs" />
     <Compile Include="Composition\Region.cs" />
     <Compile Include="Composition\RegionAttribute.cs" />
     <Compile Include="Composition\RegionExtensions.cs" />
@@ -179,6 +178,7 @@
     <Compile Include="Composition\RegionInfo.cs" />
     <Compile Include="Composition\ViewMap.cs" />
     <Compile Include="Composition\RegionMap.cs" />
+    <Compile Include="Composition\ViewInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.properties" />

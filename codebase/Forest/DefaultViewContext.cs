@@ -46,10 +46,10 @@ namespace Forest
             contextData.Add("@Self", () => view.ID);
             contextData.Add("@Self.", () => this);
             contextData.Add("@ViewModel", () => view.ViewModel);
-            var parentView = view.Parent;
+            var parentView = view.ContainingRegion.OwnerView;
             if (parentView != null)
             {
-                parentContext = ((IViewInit) parentView).Context;
+                parentContext = ((IViewInit) parentView.View).Context;
                 contextData.Add("@ParentView", () => parentView.ID);
                 contextData.Add("@Parent", () => parentView.ID);
                 contextData.Add("@Parent.", () => parentContext);

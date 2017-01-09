@@ -140,20 +140,20 @@ namespace Forest.Engine
                 }
             }    
             
-            var regionNodes = new Dictionary<string, IRegionNode>(view.Regions.Count(), comparer);
+            var regionNodes = new Dictionary<string, IRegionNode>(view.Regions.Count, comparer);
             foreach (var region in view.Regions) 
             {
                 var childViewNodes = new ChronologicalDictionary<string, IViewNode>(region.ActiveViews.Count, comparer);
                 var renderRegionIfEmpty = false;
-                foreach (var childViewKvp in region.ActiveViews)
+                foreach (var childViewID in region.ActiveViews.Keys)
                 {
-                    var childView = childViewKvp.Value;
+					var childView = region.ActiveViews[childViewID];
                     var node = RenderView(
                         context,
                         childView, 
                         template, 
                         region, 
-                        childViewKvp.Key, 
+                        childViewID, 
                         modifications, 
                         domVisitor, 
                         securityAdapter, 
@@ -169,7 +169,7 @@ namespace Forest.Engine
                     }
                     else
                     {
-                        childViewNodes.Add(childViewKvp.Key, node);
+                        childViewNodes.Add(childViewID, node);
                     }
                 }
                 if (childViewNodes.Count > 0) 

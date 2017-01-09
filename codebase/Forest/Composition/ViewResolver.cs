@@ -43,7 +43,6 @@ namespace Forest.Composition
         private bool DoTryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out IView view)
         {
 			view = null;
-			Presenter presenter = null;
             // TODO: remove ambiguity -- either access view by type or by id. Result false is not very consistent here
             var viewNumberPrefixIndex = id == null ? -1 : id.LastIndexOf('#');
             var token = id == null 
@@ -58,20 +57,17 @@ namespace Forest.Composition
 			IViewInit viewInit = (IViewInit) resolvedView;
 			var childRegions = new Dictionary<string, IRegion> (DefaultForestEngine.StringComparer);
 			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
-			var resolvedPresenter = new Presenter(context, template, resolvedView, containingRegion);
-			foreach (Region region in template.Regions.Select(x => viewInit.GetOrCreateRegion(x))) 
+			foreach (var regionTemplate in template.Regions) 
 			{
-				region.Presenter = resolvedPresenter;
-				//childRegions.Add(region.Name, region);
+				viewInit.GetOrCreateRegion(regionTemplate);
 			}
 
-			view = resolvedPresenter.View;
+			view = resolvedView;
             return true;
         }
 		private bool DoTryResolve(object viewModel, IViewContainer container, IRegion containingRegion, out IView view)
         {
 			view = null;
-			Presenter presenter = null;
             var token = viewModel == null ? null : this.viewLookup.Lookup(viewModel.GetType());
             if (token == null)
             {
@@ -85,14 +81,12 @@ namespace Forest.Composition
 			IViewInit viewInit = (IViewInit) resolvedView;
 			var childRegions = new Dictionary<string, IRegion> (DefaultForestEngine.StringComparer);
 			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
-			var resolvedPresenter = new Presenter(context, template, resolvedView, containingRegion);
-			foreach (Region region in template.Regions.Select(x => viewInit.GetOrCreateRegion(x))) 
+			foreach (var regionTemplate in template.Regions) 
 			{
-				region.Presenter = resolvedPresenter;
-				//childRegions.Add(region.Name, region);
+				viewInit.GetOrCreateRegion(regionTemplate);
 			}
 
-			view = resolvedPresenter.View;
+			view = resolvedView;
             return true;
         }
 

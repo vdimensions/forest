@@ -88,6 +88,7 @@ namespace Forest
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private IDictionary<string, IRegion> regions;
+		private RegionMap regionMap;
 
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -223,14 +224,12 @@ namespace Forest
         public event EventHandler Activated;
         public event EventHandler Deactivated;
 
-		public RegionInfo ContainingRegion { get { return new RegionInfo(containingRegion.Name, containingRegion.ActiveViews, containingRegion.AllViews); } }
-
-        public IView Parent { get { return containingRegion == null ? null : containingRegion.OwnerView; } }
+		public RegionInfo ContainingRegion { get { return containingRegionInfo; } }
 
         public virtual T ViewModel { get { return viewModel; } }
         object IView.ViewModel { get { return ViewModel; } }
 
-		public IEnumerable<IRegion> Regions { get { return regions.Values; } }
+		public RegionMap Regions { get { return regionMap; } }
 
 		public string ID { get { return this.id; } }
 

@@ -16,6 +16,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Text;
 
 using Forest.Composition;
 using Forest.Events;
@@ -37,6 +39,7 @@ namespace Forest
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private IRegion containingRegion;
+		private RegionInfo containingRegionInfo;
         
         private IRegion GetOrCreateRegion(IRegionTemplate regionTemplate) 
         {
@@ -44,7 +47,22 @@ namespace Forest
             var region = regions.ContainsKey(regionName) ? regions[regionName] : null;
             if (region == null) 
             {
-				regions[regionName] = region = new Region(forestContext, regionTemplate, viewResolver);
+				var r = new Region (forestContext, regionTemplate, this, viewResolver);
+				// TODO
+				var ids = new LinkedList<string>();
+				ids.AddFirst (ID);
+				ids.AddFirst(r.Name);
+				ids.AddFirst(r.OwnerView.ID);
+				var p = r.OwnerView.ContainingRegion;
+				while (p != null)
+				{
+					ids.AddFirst(p.Name);
+					ids.AddFirst(p.OwnerView.ID);
+					p = p.OwnerView.ContainingRegion;
+				}
+				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(forestContext.PathSeparator).Append(x)).ToString();
+				// DONE
+				regions[regionName] = region = r;
             }
             return region;
         }
@@ -68,6 +86,7 @@ namespace Forest
             }
             this.id = id;
             this.containingRegion = containingRegion;
+			this.containingRegionInfo = new RegionInfo(containingRegion);
             this.regions = regions;
 			this.viewResolver = viewResolver;
 			this.forestContext = context;

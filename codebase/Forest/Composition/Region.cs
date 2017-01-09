@@ -37,6 +37,9 @@ namespace Forest.Composition
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly object syncRoot = new object();
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		private readonly IView ownerView;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ChronologicalDictionary<string, IView> activeViews;
         #if !DEBUG
@@ -51,22 +54,22 @@ namespace Forest.Composition
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private readonly ViewResolver resolver;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		[Obsolete]
-        private Presenter presenter;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string path;
+        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		//[Obsolete]
+        //private Presenter presenter;
 
         internal readonly IForestContext context;
 
-        public Region(IForestContext context, IRegionTemplate template, ViewResolver resolver) : this(context, template, resolver, StringComparer.Ordinal) { }
-        private Region(IForestContext context, IRegionTemplate template, ViewResolver resolver, IEqualityComparer<string> comparer)
+        public Region(IForestContext context, IRegionTemplate template, IView ownerView, ViewResolver resolver) 
+		    : this(context, template, ownerView, resolver, StringComparer.Ordinal) { }
+        private Region(IForestContext context, IRegionTemplate template, IView ownerView, ViewResolver resolver, IEqualityComparer<string> comparer)
         {
             this.context = context;
             this.logger = context.LoggerFactory.GetLogger<Region>();
             this.activeViews = new ChronologicalDictionary<string, IView>(comparer);
             this.allViews = new ChronologicalDictionary<string, IView>(comparer);
             this.template = template;
+			this.ownerView = ownerView;
             this.resolver = resolver;
         }
 
@@ -83,7 +86,7 @@ namespace Forest.Composition
 			var viewTemplate = template[id];
             if (viewTemplate == null)
             {
-                logger.Trace("Region '{0}' did not have explicit definition for child view '{1}'. Creating view template on the fly.", path, id);
+                logger.Trace("Region '{0}' did not have explicit definition for child view '{1}'. Creating view template on the fly.", Path, id);
                 viewTemplate = CreateViewTemplateOnTheFly(id);
             }
             lock (syncRoot)
@@ -307,27 +310,27 @@ namespace Forest.Composition
         public RegionLayout Layout { get { return template.Layout; } }
 		public ViewMap ActiveViews { get { return new ViewMap(activeViews); } }
 		public ViewMap AllViews { get { return new ViewMap(allViews); } }
-        public IView OwnerView { get { return presenter.View; } }
-        public string Path { get { return path; } }
+        public IView OwnerView { get { return ownerView; } }
+		public string Path { get; internal set; }
 
-		[Obsolete]
-        internal Presenter Presenter
-        {
-            set
-            {
-                var p = value;
-                var ids = new LinkedList<string>();
-                ids.AddFirst(Name);
-                ids.AddFirst(p.View.ID);
-                while (p.Region != null)
-                {
-                    ids.AddFirst(p.Region.Name);
-                    p = ((Region) p.Region).presenter;
-                    ids.AddFirst(p.View.ID);
-                }
-                path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(this.context.PathSeparator).Append(x)).ToString();
-                presenter = value;
-            }
-        }
+		//[Obsolete]
+        //internal Presenter Presenter
+        //{
+        //    set
+        //    {
+        //        var p = value;
+        //        var ids = new LinkedList<string>();
+        //        ids.AddFirst(Name);
+        //        ids.AddFirst(p.View.ID);
+        //        while (p.Region != null)
+        //        {
+        //            ids.AddFirst(p.Region.Name);
+        //            p = ((Region) p.Region).presenter;
+        //            ids.AddFirst(p.View.ID);
+        //        }
+        //        Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(this.context.PathSeparator).Append(x)).ToString();
+        //        presenter = value;
+        //    }
+        //}
     }
 }
