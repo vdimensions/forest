@@ -19,7 +19,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 
 using Forest.Collections;
 using Forest.Composition.Templates;
@@ -308,8 +307,8 @@ namespace Forest.Composition
 
         public string Name { get { return template.RegionName; } }
         public RegionLayout Layout { get { return template.Layout; } }
-		public ViewMap ActiveViews { get { return new ViewMap(activeViews); } }
-		public ViewMap AllViews { get { return new ViewMap(allViews); } }
+		public ViewBag ActiveViews { get { return new ViewBag(activeViews); } }
+		public ViewBag AllViews { get { return new ViewBag(allViews); } }
         public IView OwnerView { get { return ownerView; } }
 		public string Path { get; internal set; }
 

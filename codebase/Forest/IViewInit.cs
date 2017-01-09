@@ -36,9 +36,10 @@ namespace Forest
         void RegisterEventBus(IEventBus eventBus);
         void OnEventBusReady(IEventBus eventBus);
         void ReleaseEventBus();
-        
 
+        [Localizable(false)]
         IRegion ContainingRegion { get; }
+
         [Localizable(false)]
         IViewContext Context { get; }
     }

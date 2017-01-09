@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 
 using Forest.Composition;
@@ -78,7 +77,7 @@ namespace Forest
         /// Gets a collection of <see cref="IRegion">regions</see> which are defined within this view. 
         /// </summary>
         [Localizable(false)]
-        RegionMap Regions { get; }
+        RegionBag Regions { get; }
 
         /// <summary>
         /// Gets a region defined in this view by a region name.

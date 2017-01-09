@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 using System;
-using System.Linq;
+using System.Collections.Generic;
 
 using Forest.Composition.Templates;
 using Forest.Engine;
-using System.Collections.Generic;
 
 
 namespace Forest.Composition
@@ -54,8 +53,8 @@ namespace Forest.Composition
             }
             var viewDescriptor = this.context.GetDescriptor(token.ViewType);
             var resolvedView = token.ResolveView(token.ViewType, id, viewModel);
-			IViewInit viewInit = (IViewInit) resolvedView;
-			var childRegions = new Dictionary<string, IRegion> (DefaultForestEngine.StringComparer);
+            var childRegions = new Dictionary<string, IRegion>(DefaultForestEngine.StringComparer);
+            var viewInit = (IViewInit) resolvedView;
 			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
@@ -78,8 +77,8 @@ namespace Forest.Composition
 
             var viewDescriptor = this.context.GetDescriptor(token.ViewType);
             var resolvedView = token.ResolveView(token.ViewType, id, viewModel);
-			IViewInit viewInit = (IViewInit) resolvedView;
-			var childRegions = new Dictionary<string, IRegion> (DefaultForestEngine.StringComparer);
+            var childRegions = new Dictionary<string, IRegion>(DefaultForestEngine.StringComparer);
+            var viewInit = (IViewInit) resolvedView;
 			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{

@@ -176,8 +176,8 @@
     <Compile Include="ViewAttribute.cs" />
     <Compile Include="ViewDescriptor.cs" />
     <Compile Include="Composition\RegionInfo.cs" />
-    <Compile Include="Composition\ViewMap.cs" />
-    <Compile Include="Composition\RegionMap.cs" />
+    <Compile Include="Composition\ViewBag.cs" />
+    <Compile Include="Composition\RegionBag.cs" />
     <Compile Include="Composition\ViewInfo.cs" />
   </ItemGroup>
   <ItemGroup>

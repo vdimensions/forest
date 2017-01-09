@@ -50,14 +50,13 @@ namespace Forest
 				var r = new Region (forestContext, regionTemplate, this, viewResolver);
 				// TODO
 				var ids = new LinkedList<string>();
-				ids.AddFirst (ID);
-				ids.AddFirst(r.Name);
 				ids.AddFirst(r.OwnerView.ID);
+				ids.AddFirst(r.Name);
 				var p = r.OwnerView.ContainingRegion;
 				while (p != null)
 				{
+                    ids.AddFirst(p.OwnerView.ID);
 					ids.AddFirst(p.Name);
-					ids.AddFirst(p.OwnerView.ID);
 					p = p.OwnerView.ContainingRegion;
 				}
 				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(forestContext.PathSeparator).Append(x)).ToString();
@@ -86,8 +85,9 @@ namespace Forest
             }
             this.id = id;
             this.containingRegion = containingRegion;
-			this.containingRegionInfo = new RegionInfo(containingRegion);
+			this.containingRegionInfo = containingRegion == null ? null : new RegionInfo(containingRegion);
             this.regions = regions;
+            this.regionBag = new RegionBag(regions);
 			this.viewResolver = viewResolver;
 			this.forestContext = context;
             return this.viewContext = new DefaultViewContext(descriptor, this);

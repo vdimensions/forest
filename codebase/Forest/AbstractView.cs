@@ -88,7 +88,7 @@ namespace Forest
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private IDictionary<string, IRegion> regions;
-		private RegionMap regionMap;
+		private RegionBag regionBag;
 
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
@@ -229,7 +229,7 @@ namespace Forest
         public virtual T ViewModel { get { return viewModel; } }
         object IView.ViewModel { get { return ViewModel; } }
 
-		public RegionMap Regions { get { return regionMap; } }
+		public RegionBag Regions { get { return regionBag; } }
 
 		public string ID { get { return this.id; } }
 
