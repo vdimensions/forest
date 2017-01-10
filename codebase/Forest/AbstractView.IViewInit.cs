@@ -48,19 +48,23 @@ namespace Forest
             if (region == null) 
             {
 				var r = new Region (forestContext, regionTemplate, this, viewResolver);
-				// TODO
+
 				var ids = new LinkedList<string>();
 				ids.AddFirst(r.Name);
 				ids.AddFirst(r.OwnerView.ID);
 				var p = r.OwnerView.ContainingRegion;
-				while (p != null)
+				//while (p != null)
+				//{
+				//	ids.AddFirst(p.Name);
+                //    ids.AddFirst(p.OwnerView.ID);
+				//	p = p.OwnerView.ContainingRegion;
+				//}
+				if (p != null) 
 				{
-					ids.AddFirst(p.Name);
-                    ids.AddFirst(p.OwnerView.ID);
-					p = p.OwnerView.ContainingRegion;
+					ids.AddFirst(p.Path);
 				}
 				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(forestContext.PathSeparator).Append(x)).ToString();
-				// DONE
+
 				regions[regionName] = region = r;
             }
             return region;

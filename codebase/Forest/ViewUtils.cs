@@ -34,7 +34,6 @@ namespace Forest
             }
             return DoGetID(viewType);
         }
-
         public static string GetID<T>() where T: IView { return DoGetID(typeof(T)); }
 
         private static string DoGetID(Type viewType)

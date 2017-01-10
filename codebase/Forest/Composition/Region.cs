@@ -41,10 +41,14 @@ namespace Forest.Composition
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ChronologicalDictionary<string, IView> activeViews;
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		private readonly ViewBag activeViewsBag;
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private readonly ChronologicalDictionary<string, IView> allViews;
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		private readonly ViewBag allViewsBag;
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
@@ -53,11 +57,11 @@ namespace Forest.Composition
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
         private readonly ViewResolver resolver;
-        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		//[Obsolete]
-        //private Presenter presenter;
 
-        internal readonly IForestContext context;
+		#if !DEBUG
+		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+		#endif
+		internal readonly IForestContext context;
 
         public Region(IForestContext context, IRegionTemplate template, IView ownerView, ViewResolver resolver) 
 		    : this(context, template, ownerView, resolver, StringComparer.Ordinal) { }
@@ -66,7 +70,9 @@ namespace Forest.Composition
             this.context = context;
             this.logger = context.LoggerFactory.GetLogger<Region>();
             this.activeViews = new ChronologicalDictionary<string, IView>(comparer);
+			this.activeViewsBag = new ViewBag(this.activeViews);
             this.allViews = new ChronologicalDictionary<string, IView>(comparer);
+			this.allViewsBag = new ViewBag(this.allViews);
             this.template = template;
 			this.ownerView = ownerView;
             this.resolver = resolver;
@@ -307,29 +313,9 @@ namespace Forest.Composition
 
         public string Name { get { return template.RegionName; } }
         public RegionLayout Layout { get { return template.Layout; } }
-		public ViewBag ActiveViews { get { return new ViewBag(activeViews); } }
-		public ViewBag AllViews { get { return new ViewBag(allViews); } }
+		public ViewBag ActiveViews { get { return activeViewsBag; } }
+		public ViewBag AllViews { get { return allViewsBag; } }
         public IView OwnerView { get { return ownerView; } }
 		public string Path { get; internal set; }
-
-		//[Obsolete]
-        //internal Presenter Presenter
-        //{
-        //    set
-        //    {
-        //        var p = value;
-        //        var ids = new LinkedList<string>();
-        //        ids.AddFirst(Name);
-        //        ids.AddFirst(p.View.ID);
-        //        while (p.Region != null)
-        //        {
-        //            ids.AddFirst(p.Region.Name);
-        //            p = ((Region) p.Region).presenter;
-        //            ids.AddFirst(p.View.ID);
-        //        }
-        //        Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(this.context.PathSeparator).Append(x)).ToString();
-        //        presenter = value;
-        //    }
-        //}
     }
 }

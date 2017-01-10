@@ -18,20 +18,23 @@ namespace Forest.Composition
 	public sealed class RegionInfo
 	{
 		private readonly string name;
+		private readonly string path;
 		private readonly ViewBag activeViews;
 		private readonly ViewBag allViews;
 		private readonly ViewInfo ownerView;
 
-		internal RegionInfo(IRegion region) : this(region.Name, region.ActiveViews, region.AllViews, region.OwnerView) { }
-	    private RegionInfo(string name, ViewBag activeViews, ViewBag allViews, IView ownerView)
+		internal RegionInfo(IRegion region) : this(region.Name, region.Path, region.ActiveViews, region.AllViews, region.OwnerView) { }
+	    private RegionInfo(string name, string path, ViewBag activeViews, ViewBag allViews, IView ownerView)
 		{
 			this.name = name;
+			this.path = path;
 			this.activeViews = activeViews;
 			this.allViews = allViews;
 			this.ownerView = new ViewInfo(ownerView);
 		}
 		
 		public string Name { get { return name; } }
+		public string Path { get { return path; } }
 		public ViewBag ActiveViews { get { return activeViews; } }
 		public ViewBag AllViews { get { return allViews; } }
 		public ViewInfo OwnerView { get { return ownerView; } }

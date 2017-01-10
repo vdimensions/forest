@@ -109,21 +109,12 @@ namespace Forest
 
         private static void TraverseView(IView view, Action<IView> action)
         {
-            foreach (var activeView in view.Regions.Values.SelectMany(region => region.ActiveViews.Values))
+            foreach (var activeView in view.Regions.SelectMany(region => region.ActiveViews.Values))
             {
                 TraverseView(activeView, action);
             }
             action(view);
         }
-
-//        internal ILayoutTemplate LoadTemplate(string templateName)
-//        {
-//            return context.LayoutTemplateProvider.Load(templateName);
-//        }
-//        internal bool TryLoadTemplate(string templateName, out ILayoutTemplate template)
-//        {
-//            return context.LayoutTemplateProvider.TryLoad(templateName, out template);
-//        }
 
         private readonly IForestContext context;
         private readonly ForestResult result;
@@ -143,7 +134,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("path");
             }
-            if (path == null)
+            if (path.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "path");
             }
@@ -156,7 +147,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("path");
             }
-            if (path == null)
+            if (path.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "path");
             }
@@ -164,7 +155,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("commandName");
             }
-            if (commandName == null)
+            if (commandName.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "commandName");
             }
@@ -177,7 +168,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("path");
             }
-            if (path == null)
+            if (path.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "path");
             }
@@ -185,7 +176,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("commandName");
             }
-            if (commandName == null)
+            if (commandName.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "commandName");
             }
@@ -222,7 +213,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("path");
             }
-            if (path == null)
+            if (path.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "path");
             }
@@ -230,7 +221,7 @@ namespace Forest
             {
                 throw new ArgumentNullException("commandName");
             }
-            if (commandName == null)
+            if (commandName.Length == 0)
             {
                 throw new ArgumentException("Value cannot be an empty string", "commandName");
             }
