@@ -24,7 +24,7 @@ namespace Forest.Composition
 	/// <summary>
 	/// A class that serves as a read-only collection of <see cref="IRegion">region</see> objects.
 	/// </summary>
-	public sealed class RegionBag : ReadOnlyDictionary<string, IRegion>, IEnumerable<IRegion>
+	public sealed class RegionBag : ReadOnlyBag<string, IRegion>, IEnumerable<IRegion>
 	{
 		internal RegionBag(IDictionary<string, IRegion> dictionary) : base(dictionary) { }
 

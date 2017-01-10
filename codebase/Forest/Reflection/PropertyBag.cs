@@ -24,7 +24,7 @@ namespace Forest.Reflection
 	/// <summary>
 	/// A class that serves as a read-only collection of <see cref="IView">view</see> objects. 
 	/// </summary>
-	public sealed class PropertyBag : ReadOnlyDictionary<string, IProperty>, IEnumerable<IProperty>
+	public sealed class PropertyBag : ReadOnlyBag<string, IProperty>, IEnumerable<IProperty>
 	{
 		internal PropertyBag(IDictionary<string, IProperty> dictionary) : base(dictionary) { }
 

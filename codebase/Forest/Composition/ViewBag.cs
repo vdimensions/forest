@@ -24,7 +24,7 @@ namespace Forest.Composition
 	/// <summary>
 	/// A class that serves as a read-only collection of <see cref="IView">view</see> objects. 
 	/// </summary>
-	public sealed class ViewBag : ReadOnlyDictionary<string, IView>, IEnumerable<IView>
+	public sealed class ViewBag : ReadOnlyBag<string, IView>, IEnumerable<IView>
 	{
 		internal ViewBag(IDictionary<string, IView> dictionary) : base(dictionary) { }
 

@@ -15,6 +15,7 @@
  */
 using System;
 
+
 namespace Forest.Composition
 {
     public class RegionEventSubscriber : IDisposable
@@ -39,7 +40,7 @@ namespace Forest.Composition
                 r =>
                 {
                     r.ContentChange += onContentChange;
-                    foreach (var x in r.ActiveViews.Values)
+                    foreach (var x in r.ActiveViews)
                     {
                         x.Refreshed += OnViewRefreshed;
                     }
@@ -61,7 +62,7 @@ namespace Forest.Composition
             foreach (var region in view.Regions)
             {
                 action(region);
-                foreach (var v in region.ActiveViews.Values)
+                foreach (var v in region.ActiveViews)
                 {
                     TraverseRegions(v, action);
                 }
@@ -77,7 +78,7 @@ namespace Forest.Composition
                 r =>
                 {
                     r.ContentChange -= onViewChanged;
-                    foreach (var x in r.ActiveViews.Values)
+                    foreach (var x in r.ActiveViews)
                     {
                         x.Refreshed -= OnViewRefreshed;
                     }

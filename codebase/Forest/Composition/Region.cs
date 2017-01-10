@@ -105,7 +105,7 @@ namespace Forest.Composition
 
                 if ((Layout == RegionLayout.OneActiveView) || (Layout == RegionLayout.SingleView))
                 {
-                    foreach (var av in ActiveViews.Values)
+                    foreach (var av in ActiveViews)
                     {
                         DoDeactivateView(av.ID);
                     }
@@ -174,7 +174,7 @@ namespace Forest.Composition
 
                     if ((Layout == RegionLayout.OneActiveView) || (Layout == RegionLayout.SingleView))
                     {
-                        foreach (var av in ActiveViews.Values)
+                        foreach (var av in ActiveViews)
                         {
                             DoDeactivateView(av.ID);
                         }

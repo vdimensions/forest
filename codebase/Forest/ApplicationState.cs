@@ -109,7 +109,7 @@ namespace Forest
 
         private static void TraverseView(IView view, Action<IView> action)
         {
-            foreach (var activeView in view.Regions.SelectMany(region => region.ActiveViews.Values))
+            foreach (var activeView in view.Regions.SelectMany(region => region.ActiveViews))
             {
                 TraverseView(activeView, action);
             }

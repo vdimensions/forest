@@ -180,6 +180,7 @@
     <Compile Include="Reflection\PropertyBag.cs" />
     <Compile Include="Reflection\IViewDescriptor.cs" />
     <Compile Include="Reflection\ViewDescriptor.cs" />
+    <Compile Include="Collections\ReadOnlyDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.properties" />
