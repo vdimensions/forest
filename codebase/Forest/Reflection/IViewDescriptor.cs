@@ -18,10 +18,9 @@ using System.Collections.Generic;
 
 using Forest.Commands;
 using Forest.Events;
-using Forest.Reflection;
 
 
-namespace Forest
+namespace Forest.Reflection
 {
     public interface IViewDescriptor
     {
@@ -34,6 +33,6 @@ namespace Forest
         ViewAttribute ViewAttribute { get; }
         IEnumerable<LinkToAttribute> LinkToAttributes { get; }
         IList<SubscriptionInfo> SubscriptionMethods { get; }
-        IDictionary<string, IProperty> ViewModelProperties { get; }
+		PropertyBag ViewModelProperties { get; }
     }
 }

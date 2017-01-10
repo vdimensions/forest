@@ -51,11 +51,10 @@ namespace Forest.Composition
             {
                 return false;
             }
-            var viewDescriptor = this.context.GetDescriptor(token.ViewType);
             var resolvedView = token.ResolveView(token.ViewType, id, viewModel);
             var childRegions = new Dictionary<string, IRegion>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
+			viewInit.Init(context, id, containingRegion, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);
@@ -75,11 +74,10 @@ namespace Forest.Composition
             var id = token.ID;
             var template = container[id] ?? CreateViewTemplateOnTheFly(id);
 
-            var viewDescriptor = this.context.GetDescriptor(token.ViewType);
             var resolvedView = token.ResolveView(token.ViewType, id, viewModel);
             var childRegions = new Dictionary<string, IRegion>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(context, id, viewDescriptor, containingRegion, childRegions, this);
+			viewInit.Init(context, id, containingRegion, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);

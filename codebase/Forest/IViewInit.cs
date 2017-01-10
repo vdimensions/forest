@@ -29,7 +29,6 @@ namespace Forest
 		IViewContext Init(
 			IForestContext context, 
 			string id, 
-			IViewDescriptor descriptor, 
 			IRegion containingRegion, 
 			IDictionary<string, IRegion> childRegions, 
 			ViewResolver viewResolver);

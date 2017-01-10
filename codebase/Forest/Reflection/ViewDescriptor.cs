@@ -20,12 +20,12 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 
+using Forest;
 using Forest.Commands;
 using Forest.Events;
-using Forest.Reflection;
 
 
-namespace Forest
+namespace Forest.Reflection
 {
     internal sealed class ViewDescriptor : IViewDescriptor
     {
@@ -44,7 +44,7 @@ namespace Forest
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IList<SubscriptionInfo> subscriptionMethods;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, IProperty> viewModelProperties;
+		private readonly PropertyBag viewModelProperties;
 
         internal ViewDescriptor(IForestContext context, Type viewType)
         {
@@ -103,7 +103,7 @@ namespace Forest
             this.viewAttribute = viewType.GetCustomAttributes(false).OfType<ViewAttribute>().SingleOrDefault();
             this.linkToAttributes = viewType.GetCustomAttributes(true).OfType<LinkToAttribute>().ToArray();
             this.subscriptionMethods = subscriptionMethods;
-            this.viewModelProperties = vmProps;
+			this.viewModelProperties = new PropertyBag(vmProps);
         }
 
         public UnboundCommand GetCommand(IView view, string commandName)
@@ -119,6 +119,6 @@ namespace Forest
         public ViewAttribute ViewAttribute { get { return viewAttribute; } }
         public IEnumerable<LinkToAttribute> LinkToAttributes { get { return linkToAttributes; } }
         public IList<SubscriptionInfo> SubscriptionMethods { get { return subscriptionMethods; } }
-        public IDictionary<string, IProperty> ViewModelProperties { get { return viewModelProperties; } }
+		public PropertyBag ViewModelProperties { get { return viewModelProperties; } }
     }
 }

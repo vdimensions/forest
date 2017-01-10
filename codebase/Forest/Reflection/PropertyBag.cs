@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Copyright 2014 vdimensions.net.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,18 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using Forest.Reflection;
+using System.Collections;
+using System.Collections.Generic;
+
+using Forest.Collections;
 
 
-namespace Forest
+namespace Forest.Reflection
 {
-    public interface IViewContext
-    {
-        string EvaluateExpression(string expression);
+	/// <summary>
+	/// A class that serves as a read-only collection of <see cref="IView">view</see> objects. 
+	/// </summary>
+	public sealed class PropertyBag : ReadOnlyDictionary<string, IProperty>, IEnumerable<IProperty>
+	{
+		internal PropertyBag(IDictionary<string, IProperty> dictionary) : base(dictionary) { }
 
-		IForestContext ForestContext { get; }
-        IViewDescriptor Descriptor { get; }
-
-        object this[string name] { get; }
+        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+		public IEnumerator<IProperty> GetEnumerator() { return Values.GetEnumerator(); }
     }
 }

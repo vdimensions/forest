@@ -133,7 +133,6 @@
     <Compile Include="ForestContext.cs" />
     <Compile Include="IForestContext.cs" />
     <Compile Include="IViewContext.cs" />
-    <Compile Include="IViewDescriptor.cs" />
     <Compile Include="IViewInit.cs" />
     <Compile Include="Presentation\DefaultNodeContext.cs" />
     <Compile Include="Presentation\INodeContext.cs" />
@@ -174,11 +173,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ViewUtils.cs" />
     <Compile Include="ViewAttribute.cs" />
-    <Compile Include="ViewDescriptor.cs" />
     <Compile Include="Composition\RegionInfo.cs" />
     <Compile Include="Composition\ViewBag.cs" />
     <Compile Include="Composition\RegionBag.cs" />
     <Compile Include="Composition\ViewInfo.cs" />
+    <Compile Include="Reflection\PropertyBag.cs" />
+    <Compile Include="Reflection\IViewDescriptor.cs" />
+    <Compile Include="Reflection\ViewDescriptor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.properties" />

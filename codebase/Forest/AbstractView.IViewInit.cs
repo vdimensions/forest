@@ -72,7 +72,6 @@ namespace Forest
         IViewContext IViewInit.Init(
 			IForestContext context, 
 			string id, 
-			IViewDescriptor descriptor, 
 			IRegion containingRegion, 
 			IDictionary<string, IRegion> regions, 
 			ViewResolver viewResolver)
@@ -90,7 +89,7 @@ namespace Forest
 			this.containingRegionInfo = containingRegion == null ? null : new RegionInfo(containingRegion);
 			this.regionBag = new RegionBag(this.regions = regions);
 			this.viewResolver = viewResolver;
-			return this.viewContext = new DefaultViewContext(descriptor, this, context);
+			return this.viewContext = new DefaultViewContext(this, context);
         }
 
         void IViewInit.RegisterEventBus(IEventBus eventBus)

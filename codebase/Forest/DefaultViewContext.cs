@@ -17,6 +17,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Forest.Reflection;
+
 
 namespace Forest
 {
@@ -27,26 +29,22 @@ namespace Forest
         private readonly IDictionary<string, Func<object>> contextData;
 		private readonly IForestContext forestContext;
 
-		public DefaultViewContext(IViewDescriptor descriptor, IView view, IForestContext forestContext)
+		public DefaultViewContext(IView view, IForestContext forestContext)
         {
             if (view == null)
             {
                 throw new ArgumentNullException("view");
             }
-            if (descriptor == null)
-            {
-                throw new ArgumentNullException("descriptor");
-			}
 			if (forestContext == null)
 			{
 				throw new ArgumentNullException("forestContext");
 			}
 			this.forestContext = forestContext;
-            this.descriptor = descriptor;
+			this.descriptor = forestContext.GetDescriptor(view.GetType());
             contextData = descriptor.ViewModelProperties
                 .ToDictionary(
-                    x => x.Key,
-                    x => new Func<object>(() => x.Value.GetValue(view.ViewModel)),
+                    x => x.Name,
+                    x => new Func<object>(() => x.GetValue(view.ViewModel)),
                     StringComparer.Ordinal);
             contextData.Add("@View", () => view.ID);
             contextData.Add("@Self", () => view.ID);
