@@ -25,7 +25,11 @@ using Forest.Composition.Templates;
 
 namespace Forest
 {
-    public abstract partial class AbstractView<T> : IView<T> where T: class
+	/*
+	public abstract class AbstractView
+	{
+	}*/
+	public abstract partial class AbstractView<T> : IView<T> where T: class
 	{
 		[Serializable]
 		internal sealed class AdHocRegionTemplate : IRegionTemplate
