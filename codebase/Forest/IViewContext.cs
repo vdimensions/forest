@@ -19,6 +19,8 @@ namespace Forest
     {
         string EvaluateExpression(string expression);
 
+		IForestContext ForestContext { get; }
+
         IViewDescriptor Descriptor { get; }
         object this[string name] { get; }
     }

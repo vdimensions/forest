@@ -69,10 +69,8 @@ namespace Forest.Composition
         {
             this.context = context;
             this.logger = context.LoggerFactory.GetLogger<Region>();
-            this.activeViews = new ChronologicalDictionary<string, IView>(comparer);
-			this.activeViewsBag = new ViewBag(this.activeViews);
-            this.allViews = new ChronologicalDictionary<string, IView>(comparer);
-			this.allViewsBag = new ViewBag(this.allViews);
+			this.activeViewsBag = new ViewBag(this.activeViews = new ChronologicalDictionary<string, IView>(comparer));
+			this.allViewsBag = new ViewBag(this.allViews = new ChronologicalDictionary<string, IView>(comparer));
             this.template = template;
 			this.ownerView = ownerView;
             this.resolver = resolver;

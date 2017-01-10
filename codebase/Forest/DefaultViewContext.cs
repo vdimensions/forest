@@ -25,8 +25,9 @@ namespace Forest
         private readonly IViewDescriptor descriptor;
         private readonly IViewContext parentContext;
         private readonly IDictionary<string, Func<object>> contextData;
+		private readonly IForestContext forestContext;
 
-        public DefaultViewContext(IViewDescriptor descriptor, IView view)
+		public DefaultViewContext(IViewDescriptor descriptor, IView view, IForestContext forestContext)
         {
             if (view == null)
             {
@@ -35,7 +36,12 @@ namespace Forest
             if (descriptor == null)
             {
                 throw new ArgumentNullException("descriptor");
-            }
+			}
+			if (forestContext == null)
+			{
+				throw new ArgumentNullException("forestContext");
+			}
+			this.forestContext = forestContext;
             this.descriptor = descriptor;
             contextData = descriptor.ViewModelProperties
                 .ToDictionary(
@@ -70,6 +76,7 @@ namespace Forest
             return evaluated != null ? evaluated.ToString() : expression;
         }
 
+		public IForestContext ForestContext { get { return forestContext; } }
         public IViewDescriptor Descriptor { get { return descriptor; } }
 
         public object this[string name]

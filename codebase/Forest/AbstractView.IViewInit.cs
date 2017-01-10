@@ -28,8 +28,6 @@ namespace Forest
 {
     partial class AbstractView<T> : IViewInit where T: class
     {
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private IForestContext forestContext;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private IViewContext viewContext;        
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -47,7 +45,7 @@ namespace Forest
             var region = regions.ContainsKey(regionName) ? regions[regionName] : null;
             if (region == null) 
             {
-				var r = new Region (forestContext, regionTemplate, this, viewResolver);
+				var r = new Region (viewContext.ForestContext, regionTemplate, this, viewResolver);
 
 				var ids = new LinkedList<string>();
 				ids.AddFirst(r.Name);
@@ -63,7 +61,7 @@ namespace Forest
 				{
 					ids.AddFirst(p.Path);
 				}
-				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(forestContext.PathSeparator).Append(x)).ToString();
+				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(viewContext.ForestContext.PathSeparator).Append(x)).ToString();
 
 				regions[regionName] = region = r;
             }
@@ -90,11 +88,9 @@ namespace Forest
             this.id = id;
             this.containingRegion = containingRegion;
 			this.containingRegionInfo = containingRegion == null ? null : new RegionInfo(containingRegion);
-            this.regions = regions;
-            this.regionBag = new RegionBag(regions);
+			this.regionBag = new RegionBag(this.regions = regions);
 			this.viewResolver = viewResolver;
-			this.forestContext = context;
-            return this.viewContext = new DefaultViewContext(descriptor, this);
+			return this.viewContext = new DefaultViewContext(descriptor, this, context);
         }
 
         void IViewInit.RegisterEventBus(IEventBus eventBus)
