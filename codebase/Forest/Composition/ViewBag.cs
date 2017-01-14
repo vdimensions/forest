@@ -30,5 +30,7 @@ namespace Forest.Composition
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
         public IEnumerator<IView> GetEnumerator() { return Values.GetEnumerator(); }
+
+        new public IEnumerable<string> Keys { get { return base.Keys; } } 
     }
 }

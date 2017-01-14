@@ -57,10 +57,10 @@ namespace Forest
                 //    ids.AddFirst(p.OwnerView.ID);
 				//	p = p.OwnerView.ContainingRegion;
 				//}
-				if (p != null) 
-				{
-					ids.AddFirst(p.Path);
-				}
+                if (p != null)
+                {
+                    ids.AddFirst(p.Path.Substring(1));
+                }
 				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(viewContext.ForestContext.PathSeparator).Append(x)).ToString();
 
 				regions[regionName] = region = r;

@@ -46,6 +46,7 @@
     <Compile Include="ApplicationState.cs" />
     <Compile Include="Caching\DefaultCache.cs" />
     <Compile Include="Caching\DefaultCacheManager.cs" />
+    <Compile Include="Collections\ReadOnlyBag.cs" />
     <Compile Include="Commands\CommandAttribute.cs" />
     <Compile Include="Commands\CommandInfo.cs" />
     <Compile Include="Commands\CommandResult.cs" />
@@ -180,7 +181,6 @@
     <Compile Include="Reflection\PropertyBag.cs" />
     <Compile Include="Reflection\IViewDescriptor.cs" />
     <Compile Include="Reflection\ViewDescriptor.cs" />
-    <Compile Include="Collections\ReadOnlyDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.properties" />

@@ -145,9 +145,9 @@ namespace Forest.Engine
             {
                 var childViewNodes = new ChronologicalDictionary<string, IViewNode>(region.ActiveViews.Count, comparer);
                 var renderRegionIfEmpty = false;
-				foreach (var childView in region.ActiveViews)
+				foreach (var childViewID in region.ActiveViews.Keys)
                 {
-					var childViewID = childView.ID;
+					var childView = region.ActiveViews[childViewID];
                     var node = RenderView(
                         context,
                         childView, 

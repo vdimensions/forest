@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
 
@@ -24,7 +23,7 @@ namespace Forest.Collections
 	{
 		private readonly IDictionary<TKey, TValue> dictionary;
 
-		public ReadOnlyBag(IDictionary<TKey, TValue> dictionary)
+	    protected ReadOnlyBag(IDictionary<TKey, TValue> dictionary)
 		{
 			if (dictionary == null) 
 			{
@@ -44,5 +43,4 @@ namespace Forest.Collections
 
 		public TValue this[TKey key] { get { return dictionary[key]; } }
 	}
-    
 }
