@@ -47,22 +47,30 @@ namespace Forest
             {
 				var r = new Region (viewContext.ForestContext, regionTemplate, this, viewResolver);
 
-				var ids = new LinkedList<string>();
-				ids.AddFirst(r.Name);
-				ids.AddFirst(r.OwnerView.ID);
+				//var ids = new LinkedList<string>();
+				//ids.AddFirst(r.Name);
+				//ids.AddFirst(r.OwnerView.ID);
 				var p = r.OwnerView.ContainingRegion;
-				//while (p != null)
-				//{
-				//	ids.AddFirst(p.Name);
-                //    ids.AddFirst(p.OwnerView.ID);
-				//	p = p.OwnerView.ContainingRegion;
-				//}
+				////while (p != null)
+				////{
+				////	ids.AddFirst(p.Name);
+                ////    ids.AddFirst(p.OwnerView.ID);
+				////	p = p.OwnerView.ContainingRegion;
+				////}
+                //if (p != null)
+                //{
+                //    ids.AddFirst(p.Path.Substring(1));
+                //}
+				//r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(viewContext.ForestContext.PathSeparator).Append(x)).ToString();
+                StringBuilder sb = new StringBuilder();
                 if (p != null)
                 {
-                    ids.AddFirst(p.Path.Substring(1));
+                    sb.Append(p.Path);
                 }
-				r.Path = ids.Aggregate(new StringBuilder(), (sb, x) => sb.Append(viewContext.ForestContext.PathSeparator).Append(x)).ToString();
-
+                r.Path = sb
+                    .Append(viewContext.ForestContext.PathSeparator).Append(r.OwnerView.ID)
+                    .Append(viewContext.ForestContext.PathSeparator).Append(r.Name)
+                    .ToString();
 				regions[regionName] = region = r;
             }
             return region;
