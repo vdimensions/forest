@@ -28,6 +28,7 @@ namespace Forest.Localization
         private const string DefaultNameValue = "${@Self}";
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly string bundle;
+        private string name;
 
         [Localizable(false)]
         public LocalizeAttribute(string bundle)
@@ -40,7 +41,13 @@ namespace Forest.Localization
         }
 
         public string Bundle { get { return this.bundle; } }
-        public string Name { get; set; }
-        public ResourceInfo ResourceInfo { get { return new ResourceInfo(bundle, string.IsNullOrEmpty(Name) ? DefaultNameValue : Name);} }
+
+        public string Name
+        {
+            get { return string.IsNullOrEmpty(name) ? DefaultNameValue : name; }
+            set { name = value; }
+        }
+
+        public ResourceInfo ResourceInfo { get { return new ResourceInfo(bundle, Name);} }
     }
 }
