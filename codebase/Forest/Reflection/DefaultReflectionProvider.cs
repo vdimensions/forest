@@ -85,6 +85,9 @@ namespace Forest.Reflection
 
             public string Name { get { return this.property.Name; } }
             public Type MemberType { get { return this.property.PropertyType; } }
+
+            public bool IsReadable { get { return this.property.CanRead; } }
+
             public bool IsWriteable { get { return this.property.CanWrite; } }
         }
 

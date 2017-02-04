@@ -29,6 +29,8 @@ namespace Forest.Reflection
 
         string Name { get; }
         Type MemberType { get; }
+
+        bool IsReadable { get; }
         bool IsWriteable { get; }
     }
 }

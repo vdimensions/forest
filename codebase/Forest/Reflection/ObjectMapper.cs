@@ -36,7 +36,9 @@ namespace Forest.Reflection
         private static T Map<T>(IDictionary<string, object> rawData, string prefix, T target, IReflectionProvider reflectionProvider)
         {
             var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            var objectProperties = reflectionProvider.GetProperties(target.GetType(), flags).ToDictionary(x => x.Name, StringComparer.Ordinal);
+            var objectProperties = reflectionProvider.GetProperties(target.GetType(), flags)
+                .Where(x => x.IsReadable && x.IsWriteable)
+                .ToDictionary(x => x.Name, StringComparer.Ordinal);
             var propertyNames = prefix.Length > 0 
                 ? rawData.Keys.Where(key => key.StartsWith(prefix)).Select(key => key.Substring(prefix.Length))
                 : rawData.Keys;
