@@ -120,6 +120,7 @@
     <None Include="paket.dependencies" />
     <None Include="paket.lock" />
     <None Include="paket.references" />
+    <Content Include="paket.sh" />
     <None Include="Properties\AssemblyInfo.cs.template" />
     <Compile Include="Reflection\DefaultReflectionProvider.cs" />
     <Compile Include="Reflection\IObjectMapper.cs" />

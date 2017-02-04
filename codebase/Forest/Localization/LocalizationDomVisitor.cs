@@ -223,10 +223,11 @@ namespace Forest.Localization
                 object localizedValue;
                 if (!localizationManager.TryGetResource(propertyResKey, culture, out localizedValue))
                 {
-                    this.log.Trace("Could not find suitable resource to set to property '{0}' of type `{1}` using resource key '{2}'. Will now proceed with object deep-scanning.",
+                    this.log.Trace("Could not find suitable resource to set to property '{0}' of type `{1}` using resource key '{2}, {3}'. Will now proceed with object deep-scanning.",
                         property.Name,
                         target.GetType(),
-                        resourceKey);
+                        resourceKey.Bundle,
+                        resourceKey.Key);
                     if ((existingValue == null) || (existingValue is IEnumerable && !((IEnumerable) existingValue).OfType<object>().Any()) || !Localize(localizationManager, propertyResKey, culture, existingValue, context))
                     {
                         continue;
