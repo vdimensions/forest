@@ -123,7 +123,7 @@
     <None Include="Properties\AssemblyInfo.cs.template" />
     <Compile Include="Reflection\DefaultReflectionProvider.cs" />
     <Compile Include="Reflection\IObjectMapper.cs" />
-    <Compile Include="Reflection\ObjectMapper.cs" />
+    <Compile Include="Reflection\DefaultObjectMapper.cs" />
     <Compile Include="Security\SecurityDomVisitor.cs" />
     <Compile Include="Reflection\IProperty.cs" />
     <Compile Include="Reflection\IReflectionProvider.cs" />
