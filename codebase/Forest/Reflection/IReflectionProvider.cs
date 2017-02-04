@@ -12,5 +12,7 @@ namespace Forest.Reflection
         IEnumerable<IProperty> GetProperties(Type type, BindingFlags flags);
 
         IProperty GetProperty(Type type, string name, BindingFlags flags);
+
+        object Instantiate(Type memberType);
     }
 }

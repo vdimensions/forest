@@ -47,5 +47,6 @@ namespace Forest
         string PathSeparator { get; }
         ILocalizationManager LocalizationManager { get; }
         ILayoutTemplateProvider LayoutTemplateProvider { get; }
+        IObjectMapper ObjectMapper { get; }
     }
 }

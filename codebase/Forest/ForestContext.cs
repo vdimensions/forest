@@ -45,6 +45,7 @@ namespace Forest
         private ILoggerFactory loggerFactory;
         private ILocalizationManager localizationManager;
         private ILayoutTemplateProvider layoutTemplateProvider;
+        private IObjectMapper objectMapper = new DefaultObjectMapper();
 
         public ForestContext() : this(new NoOpForestSecurityAdapter()) { }
         public ForestContext(IForestSecurityAdapter securityAdapter)
@@ -182,6 +183,18 @@ namespace Forest
                     throw new ArgumentNullException("value");
                 }
                 this.layoutTemplateProvider = value;
+            }
+        }
+        public IObjectMapper ObjectMapper
+        {
+            get { return objectMapper; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("value");
+                }
+                this.objectMapper = value;
             }
         }
 

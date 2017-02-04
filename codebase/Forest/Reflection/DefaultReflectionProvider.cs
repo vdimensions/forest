@@ -115,5 +115,7 @@ namespace Forest.Reflection
             var prop = type.GetProperty(name, flags);
             return prop == null ? null : new Property(prop);
         }
+
+        public object Instantiate(Type memberType) { return Activator.CreateInstance(memberType); }
     }
 }
