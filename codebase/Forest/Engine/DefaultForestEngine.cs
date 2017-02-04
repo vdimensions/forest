@@ -352,5 +352,10 @@ namespace Forest.Engine
             }
             return null;
         }
+
+        public object MapObject(IDictionary<string, object> rawObject, Type targetType)
+        {
+            return context.ObjectMapper.Map(context.ReflectionProvider, rawObject, targetType);
+        }
     }
 }

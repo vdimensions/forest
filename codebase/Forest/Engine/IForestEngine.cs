@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 
 using Forest.Commands;
@@ -33,5 +35,6 @@ namespace Forest.Engine
         IViewNode RenderView(ForestResult forestResult, IEnumerable<RegionModification> modifications);
         IViewNode RenderView(ForestResult forestResult, IEnumerable<RegionModification> modifications, bool renderAll);
         CommandInfo GetCommand(IView root, string path, string commandName);
+        object MapObject(IDictionary<string, object> rawObject, Type targetType);
     }
 }
