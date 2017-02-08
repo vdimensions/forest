@@ -137,6 +137,23 @@ namespace Forest.Localization
             return workingCommand;
         }
 
+        protected override IResourceNode ProcessResource(IResourceNode resource, INodeContext nodeContext)
+        {
+            var viewModel = nodeContext.View.ViewModel;
+            var attr = viewModel.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
+            if (attr == null)
+            {   //
+                // link is not localizable
+                //
+                return base.ProcessResource(resource, nodeContext);
+            }
+            var workingCommand = PrepareLocalizableInstance(resource);
+            var rm = this.context.LocalizationManager;
+            var ci = CultureInfo.CurrentUICulture;
+            Localize(rm, attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, resource.Name), ci, workingCommand, nodeContext);
+            return workingCommand;
+        }
+
         private bool Localize(ILocalizationManager localizationManager, ResourceInfo resourceKey, CultureInfo culture, object target, INodeContext context)
         {
             var vc = context.ViewContext;

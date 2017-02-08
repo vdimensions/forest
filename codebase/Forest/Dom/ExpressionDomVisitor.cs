@@ -61,5 +61,18 @@ namespace Forest.Dom
                 ? new CommandLinkNode(name, template, viewID, command, commandArgument) { Text = text, ToolTip = link.ToolTip, Description = link.Description }
                 : link;
         }
+
+        protected override IResourceNode ProcessResource(IResourceNode resource, INodeContext nodeContext)
+        {
+            var vc = nodeContext.ViewContext;
+            var category = expressionEvaluator.Evaluate(vc, resource.Category) ?? resource.Category;
+            var bundle = expressionEvaluator.Evaluate(vc, resource.Bundle) ?? resource.Bundle;
+            var name = expressionEvaluator.Evaluate(vc, resource.Name) ?? resource.Name;
+            var text = resource.Text == null ? null : expressionEvaluator.Evaluate(vc, resource.Text) ?? resource.Text;
+            return (name != null) || (category != null) || (bundle != null)
+                ? new ResourceNode(category, bundle, name) { Text = text, ToolTip = resource.ToolTip, Description = resource.Description }
+                : resource;
+
+        }
     }
 }
