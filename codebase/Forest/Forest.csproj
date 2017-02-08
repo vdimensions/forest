@@ -90,6 +90,8 @@
     <Compile Include="Composition\Templates\ViewTemplate.cs" />
     <Compile Include="Composition\Templates\ViewTemplateProxy.cs" />
     <Compile Include="Composition\ViewResolver.cs" />
+    <Compile Include="Dom\IResourceNode.cs" />
+    <Compile Include="Dom\ResourceNode.cs" />
     <Compile Include="Engine\DefaultForestEngine.cs" />
     <Compile Include="DefaultViewContext.cs" />
     <Compile Include="Dom\AbstractDomVisitor.cs" />
@@ -125,6 +127,7 @@
     <Compile Include="Reflection\DefaultReflectionProvider.cs" />
     <Compile Include="Reflection\IObjectMapper.cs" />
     <Compile Include="Reflection\DefaultObjectMapper.cs" />
+    <Compile Include="ResourceAttribute.cs" />
     <Compile Include="Security\SecurityDomVisitor.cs" />
     <Compile Include="Reflection\IProperty.cs" />
     <Compile Include="Reflection\IReflectionProvider.cs" />

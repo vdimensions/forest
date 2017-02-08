@@ -30,6 +30,10 @@ namespace Forest.Dom
             {
                 return Visit((IViewNode) node, nodeContext);
             }
+            if (node is IResourceNode)
+            {
+                return ProcessResource((IResourceNode) node, nodeContext);
+            }
             if (node is ICommandNode)
             {
                 return ProcessCommand((ICommandNode) node, nodeContext);
@@ -47,10 +51,13 @@ namespace Forest.Dom
             var links = node.Links == null ? null : node.Links
                 .Select(x => new KeyValuePair<string, ILinkNode>(x.Key, x.Value is ICommandLinkNode ? ProcessCommandLink((ICommandLinkNode) x.Value, context) : ProcessLink(x.Value, context)))
                 .ToDictionary(x => x.Key, x => x.Value, comparer);
+            var resources = node.Resources == null ? null : node.Resources
+                .Select(x => new KeyValuePair<string, IResourceNode>(x.Key, ProcessResource(x.Value, context)))
+                .ToDictionary(x => x.Key, x => x.Value, comparer);
             var commands = node.Commands == null ? null : node.Commands
                 .Select(x => new KeyValuePair<string, ICommandNode>(x.Key, ProcessCommand(x.Value, context)))
                 .ToDictionary(x => x.Key, x => x.Value, comparer);
-            return new ViewNode(ProcessViewModel(node.Model, context), links, commands, node.Regions);
+            return new ViewNode(ProcessViewModel(node.Model, context), links, resources, commands, node.Regions);
         }
 
         protected virtual object ProcessViewModel(object viewModel, INodeContext nodeContext) { return viewModel; }
@@ -58,6 +65,8 @@ namespace Forest.Dom
         protected virtual ICommandNode ProcessCommand(ICommandNode command, INodeContext nodeContext) { return command; }
 
         protected virtual ILinkNode ProcessLink(ILinkNode link, INodeContext nodeContext) { return link; }
+
+        protected virtual IResourceNode ProcessResource(IResourceNode resource, INodeContext nodeContext) { return resource; }
 
         protected virtual ICommandLinkNode ProcessCommandLink(ICommandLinkNode link, INodeContext nodeContext) { return link; }
     }

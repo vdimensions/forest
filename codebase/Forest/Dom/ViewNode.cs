@@ -24,7 +24,7 @@ namespace Forest.Dom
     [Serializable]
     internal class ViewNode : IViewNode
     {
-        public static readonly ViewNode Empty = new ViewNode(null, null, null, null);
+        public static readonly ViewNode Empty = new ViewNode(null, null, null, null, null);
         public static readonly ViewNode NonRendered = null;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -32,14 +32,22 @@ namespace Forest.Dom
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IDictionary<string, ILinkNode> links;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly IDictionary<string, IResourceNode> resources;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IDictionary<string, ICommandNode> commands;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IDictionary<string, IRegionNode> regions;
 
-        public ViewNode(object model, IDictionary<string, ILinkNode> links, IDictionary<string, ICommandNode> commands, IDictionary<string, IRegionNode> regions)
+        public ViewNode(
+                object model, 
+                IDictionary<string, ILinkNode> links, 
+                IDictionary<string, IResourceNode> resources, 
+                IDictionary<string, ICommandNode> commands, 
+                IDictionary<string, IRegionNode> regions)
         {
             this.model = model;
             this.links = links;
+            this.resources = resources;
             this.commands = commands;
             this.regions = regions;
         }
@@ -49,6 +57,9 @@ namespace Forest.Dom
 
         [Localizable(false)]
         public IDictionary<string, ILinkNode> Links { get { return links; } }
+
+        [Localizable(false)]
+        public IDictionary<string, IResourceNode> Resources { get { return resources; } }
 
         [Localizable(false)]
         public IDictionary<string, ICommandNode> Commands { get { return commands; } }

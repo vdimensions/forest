@@ -189,7 +189,7 @@ namespace Forest.Engine
             {
                 if (regionNodes.Count == 0)
                 {
-                    return containingRegion != null ? ViewNode.Empty : new ViewNode(null, null, null, regionsToRender);
+                    return containingRegion != null ? ViewNode.Empty : new ViewNode(null, null, null, null, regionsToRender);
                 }
                 viewModel = null;
             }
@@ -210,6 +210,11 @@ namespace Forest.Engine
                     .Where(x => view.CanExecuteCommand(x.Name))
                     .ToDictionary(x => x.Name, StringComparer)
                 : null;
+            var resourceLinks = viewModel != null
+                ? viewDescriptor.ResourceAttributes
+                    .Select(x => new ResourceNode(x.Category, x.Bundle, x.Name) as IResourceNode)
+                    .ToDictionary(x => x.Name, StringComparer)
+                : null;
             var commands = viewModel != null
                 ? viewDescriptor.CommandMethods
                     .Where(x => securityAdapter.HasAccess(view, x.Key))
@@ -221,6 +226,7 @@ namespace Forest.Engine
                 new ViewNode(
                     viewModel,
                     (commandLinks != null) && (commandLinks.Count > 0) ? commandLinks : null,
+                    (resourceLinks != null) && (resourceLinks.Count > 0) ? resourceLinks : null,
                     (commands != null) && (commands.Count > 0) ? commands : null,
                     regionsToRender),
                 nodeContext);

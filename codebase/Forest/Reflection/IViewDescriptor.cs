@@ -32,6 +32,7 @@ namespace Forest.Reflection
         IDictionary<string, UnboundCommand> CommandMethods { get; }
         ViewAttribute ViewAttribute { get; }
         IEnumerable<LinkToAttribute> LinkToAttributes { get; }
+        IEnumerable<ResourceAttribute> ResourceAttributes { get; }
         IList<SubscriptionInfo> SubscriptionMethods { get; }
 		PropertyBag ViewModelProperties { get; }
     }

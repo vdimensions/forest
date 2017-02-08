@@ -142,5 +142,5 @@ namespace Forest
         }
         public Type ViewType { get { return viewType; } }
         public string Text { get; set; }
-}
+    }
 }

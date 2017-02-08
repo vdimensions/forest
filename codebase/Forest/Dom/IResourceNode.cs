@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
-
-
 namespace Forest.Dom
 {
-    public interface IViewNode : IDomNode
+    public interface IResourceNode : INavigationTarget, IDomNode
     {
-        object Model { get; }
-        IDictionary<string, ILinkNode> Links { get; }
-        IDictionary<string, IResourceNode> Resources { get; }
-        IDictionary<string, ICommandNode> Commands { get; }
-        IDictionary<string, IRegionNode> Regions { get; }
+        string Category { get; }
+        string Bundle { get; }
     }
 }
