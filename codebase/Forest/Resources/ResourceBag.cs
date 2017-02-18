@@ -16,22 +16,20 @@
 
 using System.Collections;
 using System.Collections.Generic;
-
 using Forest.Collections;
 
-
-namespace Forest.Composition
+namespace Forest.Resources
 {
-	/// <summary>
-	/// A class that serves as a read-only collection of <see cref="IView">view</see> objects. 
-	/// </summary>
-	public sealed class ViewBag : ReadOnlyBag<string, IView>, IEnumerable<IView>
-	{
-		internal ViewBag(IDictionary<string, IView> dictionary) : base(dictionary) { }
+    /// <summary>
+    /// A class that serves as a read-only collection of <see cref="IResource">resource</see> objects. 
+    /// </summary>
+    public sealed class ResourceBag : ReadOnlyBag<string, IResource>, IEnumerable<IResource>
+    {
+        internal ResourceBag(IDictionary<string, IResource> dictionary) : base(dictionary) { }
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
-        public IEnumerator<IView> GetEnumerator() { return Values.GetEnumerator(); }
+        public IEnumerator<IResource> GetEnumerator() { return Values.GetEnumerator(); }
 
-        new public IEnumerable<string> Keys { get { return base.Keys; } } 
+        new public IEnumerable<string> Keys { get { return base.Keys; } }
     }
 }

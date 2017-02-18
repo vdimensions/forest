@@ -15,10 +15,12 @@
  */
 using System.Collections.Generic;
 using System.ComponentModel;
-
+using Forest.Commands;
 using Forest.Composition;
 using Forest.Events;
 using Forest.Composition.Templates;
+using Forest.Links;
+using Forest.Resources;
 
 
 namespace Forest
@@ -30,6 +32,9 @@ namespace Forest
 			IForestContext context, 
 			string id, 
 			IRegion containingRegion, 
+			IDictionary<string, IResource> resources, 
+			IDictionary<string, ILink> links, 
+			IDictionary<string, ICommand> commands, 
 			IDictionary<string, IRegion> childRegions, 
 			ViewResolver viewResolver);
         void RegisterEventBus(IEventBus eventBus);

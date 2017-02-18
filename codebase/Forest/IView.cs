@@ -15,8 +15,10 @@
  */
 using System;
 using System.ComponentModel;
-
+using Forest.Commands;
 using Forest.Composition;
+using Forest.Links;
+using Forest.Resources;
 
 
 namespace Forest
@@ -72,7 +74,11 @@ namespace Forest
 		/// </summary>
 		[Localizable(false)]
 		RegionInfo ContainingRegion { get; }
-        
+
+        ResourceBag Resources { get; }
+        LinkBag Links { get; }
+        CommandBag Commands { get; }
+
         /// <summary>
         /// Gets a collection of <see cref="IRegion">regions</see> which are defined within this view. 
         /// </summary>

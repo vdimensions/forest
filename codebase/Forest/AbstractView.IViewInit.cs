@@ -16,12 +16,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-
+using Forest.Commands;
 using Forest.Composition;
 using Forest.Events;
 using Forest.Composition.Templates;
+using Forest.Links;
+using Forest.Resources;
 
 
 namespace Forest
@@ -81,7 +82,10 @@ namespace Forest
 			IForestContext context, 
 			string id, 
 			IRegion containingRegion, 
-			IDictionary<string, IRegion> regions, 
+			IDictionary<string, IResource> resources,
+            IDictionary<string, ILink> links,
+            IDictionary<string, ICommand> commands,
+			IDictionary<string, IRegion> regions,
 			ViewResolver viewResolver)
         {
             if (id == null)
@@ -92,12 +96,30 @@ namespace Forest
             {
                 throw new ArgumentNullException("regions");
             }
+            this.viewContext = new DefaultViewContext(this, context);
             this.id = id;
             this.containingRegion = containingRegion;
 			this.containingRegionInfo = containingRegion == null ? null : new RegionInfo(containingRegion);
-			this.regionBag = new RegionBag(this.regions = regions);
+            this.resourceBag = new ResourceBag(this.resources = resources);
+            this.linkBag = new LinkBag(this.links = links);
+            this.commandBag = new CommandBag(this.commands = commands);
+            this.regionBag = new RegionBag(this.regions = regions);
 			this.viewResolver = viewResolver;
-			return this.viewContext = new DefaultViewContext(this, context);
+            var descriptor = viewContext.Descriptor;
+            foreach (var resource in descriptor.ResourceAttributes)
+            {
+                AddResource(resource);
+            }
+            foreach (var link in descriptor.LinkToAttributes)
+            {
+                AddLink(link);
+            }
+            foreach (var command in descriptor.CommandMethods.Values)
+            {
+                AddCommand(command);
+            }
+
+            return this.viewContext;
         }
 
         void IViewInit.RegisterEventBus(IEventBus eventBus)

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
-namespace Forest
+namespace Forest.Resources
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
-    public sealed class ResourceAttribute : Attribute
+    public sealed class ResourceAttribute : Attribute, IResource
     {
         private readonly string category;
         private readonly string bundle;

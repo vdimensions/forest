@@ -15,9 +15,12 @@
  */
 using System;
 using System.Collections.Generic;
-
+using Forest.Collections;
+using Forest.Commands;
 using Forest.Composition.Templates;
 using Forest.Engine;
+using Forest.Links;
+using Forest.Resources;
 
 
 namespace Forest.Composition
@@ -53,8 +56,11 @@ namespace Forest.Composition
             }
             var resolvedView = token.ResolveView(token.ViewType, id, viewModel);
             var childRegions = new Dictionary<string, IRegion>(DefaultForestEngine.StringComparer);
+            var resources = new ChronologicalDictionary<string, IResource>(DefaultForestEngine.StringComparer);
+            var links = new ChronologicalDictionary<string, ILink>(DefaultForestEngine.StringComparer);
+            var commands = new ChronologicalDictionary<string, ICommand>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(context, id, containingRegion, childRegions, this);
+			viewInit.Init(context, id, containingRegion, resources, links, commands, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);
@@ -76,8 +82,11 @@ namespace Forest.Composition
 
             var resolvedView = token.ResolveView(token.ViewType, id, viewModel);
             var childRegions = new Dictionary<string, IRegion>(DefaultForestEngine.StringComparer);
+            var resources = new ChronologicalDictionary<string, IResource>(DefaultForestEngine.StringComparer);
+            var links = new ChronologicalDictionary<string, ILink>(DefaultForestEngine.StringComparer);
+            var commands = new ChronologicalDictionary<string, ICommand>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(context, id, containingRegion, childRegions, this);
+			viewInit.Init(context, id, containingRegion, resources, links, commands, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);

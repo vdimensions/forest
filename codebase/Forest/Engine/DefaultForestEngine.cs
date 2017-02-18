@@ -22,6 +22,7 @@ using Forest.Commands;
 using Forest.Composition;
 using Forest.Composition.Templates;
 using Forest.Dom;
+using Forest.Links;
 using Forest.Presentation;
 using Forest.Security;
 
@@ -118,7 +119,7 @@ namespace Forest.Engine
                 return ViewNode.NonRendered;
             }
             var viewContext = ((IViewInit) view).Context;
-            var viewDescriptor = viewContext.Descriptor;
+            //var viewDescriptor = viewContext.Descriptor;
             var viewModel = view.ViewModel;
             var pathPrefix = (containingRegion == null ? string.Empty : containingRegion.Path) + PathSeparator;
             var uniqueViewPath = pathPrefix + (uniqueViewID ?? view.ID);
@@ -195,30 +196,31 @@ namespace Forest.Engine
             }
 
             var commandLinks = viewModel != null
-                ? viewDescriptor.LinkToAttributes
-                    .Where(x => securityAdapter.HasAccess(view, x.LinkID))
-                    .Select<LinkToAttribute, ILinkNode>(
+                ? view.Links
+                    .Select<ILink, ILinkNode>(
                         x =>
                         {
-                            var viewID = x.ViewID ?? context.GetDescriptor(x.ViewType).ViewAttribute.ID;
-                            if (x.Command == null)
+                            if (!string.IsNullOrEmpty(x.Command) && !string.IsNullOrEmpty(x.CommandArgument))
                             {
-                                return new LinkNode(x.LinkID, viewID) { Text = x.Text};
+                                return new CommandLinkNode(x.Name, template.ID, x.Target, x.Command, x.CommandArgument);
                             }
-                            return new CommandLinkNode(x.LinkID, template.ID, viewID, x.Command, x.CommandArgument);
+                            return new LinkNode(x.Name, x.Target) { Text = x.Text, ToolTip = x.ToolTip, Description = x.Description };
                         })
                     .Where(x => view.CanExecuteCommand(x.Name))
                     .ToDictionary(x => x.Name, StringComparer)
                 : null;
             var resourceLinks = viewModel != null
-                ? viewDescriptor.ResourceAttributes
+                ? view.Resources
                     .Select(x => new ResourceNode(x.Category, x.Bundle, x.Name) as IResourceNode)
                     .ToDictionary(x => x.Name, StringComparer)
                 : null;
             var commands = viewModel != null
-                ? viewDescriptor.CommandMethods
-                    .Where(x => securityAdapter.HasAccess(view, x.Key))
-                    .Select(x => new CommandNode(x.Key) as ICommandNode)
+                //? viewDescriptor.CommandMethods
+                ? view.Commands
+                    //.Where(x => securityAdapter.HasAccess(view, x.Key))
+                    .Where(x => securityAdapter.HasAccess(view, x.Name))
+                    //.Select(x => new CommandNode(x.Key) as ICommandNode)
+                    .Select(x => new CommandNode(x.Name) as ICommandNode)
                     .Where(x => view.CanExecuteCommand(x.Name))
                     .ToDictionary(x => x.Name, StringComparer)
                 : null;

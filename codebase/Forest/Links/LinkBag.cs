@@ -20,18 +20,18 @@ using System.Collections.Generic;
 using Forest.Collections;
 
 
-namespace Forest.Composition
+namespace Forest.Links
 {
-	/// <summary>
-	/// A class that serves as a read-only collection of <see cref="IView">view</see> objects. 
-	/// </summary>
-	public sealed class ViewBag : ReadOnlyBag<string, IView>, IEnumerable<IView>
-	{
-		internal ViewBag(IDictionary<string, IView> dictionary) : base(dictionary) { }
+    /// <summary>
+    /// A class that serves as a read-only collection of <see cref="ILink">link</see> objects. 
+    /// </summary>
+    public sealed class LinkBag : ReadOnlyBag<string, ILink>, IEnumerable<ILink>
+    {
+        internal LinkBag(IDictionary<string, ILink> dictionary) : base(dictionary) { }
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
-        public IEnumerator<IView> GetEnumerator() { return Values.GetEnumerator(); }
+        public IEnumerator<ILink> GetEnumerator() { return Values.GetEnumerator(); }
 
-        new public IEnumerable<string> Keys { get { return base.Keys; } } 
+        new public IEnumerable<string> Keys { get { return base.Keys; } }
     }
 }

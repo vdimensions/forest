@@ -22,6 +22,8 @@ using System.Runtime.Serialization;
 
 using Forest.Commands;
 using Forest.Events;
+using Forest.Links;
+using Forest.Resources;
 
 
 namespace Forest.Reflection

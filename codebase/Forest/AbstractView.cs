@@ -17,10 +17,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-
+using Forest.Commands;
 using Forest.Composition;
 using Forest.Events;
 using Forest.Composition.Templates;
+using Forest.Links;
+using Forest.Resources;
 
 
 namespace Forest
@@ -94,9 +96,18 @@ namespace Forest
         private IDictionary<string, IRegion> regions;
 		private RegionBag regionBag;
 
-        #if !DEBUG
+        private IDictionary<string, IResource> resources;
+        private ResourceBag resourceBag;
+
+        private IDictionary<string, ILink> links;
+        private LinkBag linkBag;
+
+        private IDictionary<string, ICommand> commands;
+        private CommandBag commandBag;
+
+#if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        #endif
+#endif
         private IEventBus eventBus;
         private readonly Stack<Message> pendingMessages = new Stack<Message>();
 
@@ -155,6 +166,14 @@ namespace Forest
         }
 
         void IView.Refresh() { Refresh(); }
+
+
+        protected void AddResource(IResource resource) { resources[resource.Name] = resource; }
+
+        protected void AddLink(ILink link) { links[link.Name] = link; }
+
+
+        protected void AddCommand(ICommand command) { commands[command.Name] = command; }
 
         protected void ToggleCommand(string commandName, bool enable)
         {
@@ -233,7 +252,10 @@ namespace Forest
         public virtual T ViewModel { get { return viewModel; } }
         object IView.ViewModel { get { return ViewModel; } }
 
-		public RegionBag Regions { get { return regionBag; } }
+        public ResourceBag Resources { get { return resourceBag; } }
+        public LinkBag Links { get { return linkBag; } }
+        public CommandBag Commands { get { return commandBag; } }
+        public RegionBag Regions { get { return regionBag; } }
 
 		public string ID { get { return this.id; } }
 

@@ -48,9 +48,11 @@
     <Compile Include="Caching\DefaultCacheManager.cs" />
     <Compile Include="Collections\ReadOnlyBag.cs" />
     <Compile Include="Commands\CommandAttribute.cs" />
+    <Compile Include="Commands\CommandBag.cs" />
     <Compile Include="Commands\CommandInfo.cs" />
     <Compile Include="Commands\CommandResult.cs" />
     <Compile Include="Commands\DeferredCommandInfo.cs" />
+    <Compile Include="Commands\ICommand.cs" />
     <Compile Include="Commands\UnboundCommand.cs" />
     <Compile Include="Composition\IAnnouncingViewModel.cs" />
     <Compile Include="Composition\IViewLookup.cs" />
@@ -58,6 +60,12 @@
     <Compile Include="Composition\Region.cs" />
     <Compile Include="Composition\RegionAttribute.cs" />
     <Compile Include="Composition\RegionExtensions.cs" />
+    <Compile Include="Links\ILink.cs" />
+    <Compile Include="Links\Link.cs" />
+    <Compile Include="Links\LinkBag.cs" />
+    <Compile Include="Resources\IResource.cs" />
+    <Compile Include="Resources\Resource.cs" />
+    <Compile Include="Resources\ResourceBag.cs" />
     <Compile Include="Composition\Templates\AbstractLayoutTemplateLoader.cs" />
     <Compile Include="Composition\Templates\DefaultLayoutTemplate.cs" />
     <Compile Include="Composition\Templates\ILayoutContainer.cs" />
@@ -112,7 +120,7 @@
     <Compile Include="Localization\IResourceManager.cs" />
     <Compile Include="Engine\IForestEngine.cs" />
     <Compile Include="ILayoutTemplateProvider.cs" />
-    <Compile Include="LinkToAttribute.cs" />
+    <Compile Include="Links\LinkToAttribute.cs" />
     <Compile Include="Collections\ChronologicalDictionary.cs" />
     <Compile Include="Collections\DictionaryProxy.cs" />
     <None Include="Forest-Debug.nuspec" />
@@ -127,7 +135,7 @@
     <Compile Include="Reflection\DefaultReflectionProvider.cs" />
     <Compile Include="Reflection\IObjectMapper.cs" />
     <Compile Include="Reflection\DefaultObjectMapper.cs" />
-    <Compile Include="ResourceAttribute.cs" />
+    <Compile Include="Resources\ResourceAttribute.cs" />
     <Compile Include="Security\SecurityDomVisitor.cs" />
     <Compile Include="Reflection\IProperty.cs" />
     <Compile Include="Reflection\IReflectionProvider.cs" />
@@ -197,9 +205,7 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)tools\bump-version.sh $(ProjectDir) "version_revision"</PostBuildEvent>

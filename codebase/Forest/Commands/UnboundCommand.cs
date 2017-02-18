@@ -16,13 +16,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+
 using Forest.Composition;
 using Forest.Reflection;
 
 
 namespace Forest.Commands
 {
-    public sealed class UnboundCommand
+    public sealed class UnboundCommand : ICommand
     {
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
