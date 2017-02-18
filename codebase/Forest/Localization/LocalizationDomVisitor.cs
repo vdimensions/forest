@@ -56,14 +56,17 @@ namespace Forest.Localization
 
         public override IViewNode Visit(IViewNode node, INodeContext context)
         {
-            var attr = node.Model.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
-            var rm = this.context.LocalizationManager;
-            var ci = CultureInfo.CurrentUICulture;
-            var key = attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, "Title");
-            object title;
-            if (rm.TryGetResource(key, ci, out title))
+            var attr = node.Model == null ? null : node.Model.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
+            if (attr != null)
             {
-                node.Title = title.ToString();
+                var rm = this.context.LocalizationManager;
+                var ci = CultureInfo.CurrentUICulture;
+                var key = attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, "Title");
+                object title;
+                if (rm.TryGetResource(key, ci, out title))
+                {
+                    node.Title = title.ToString();
+                }
             }
             return base.Visit(node, context);
         }
