@@ -98,7 +98,7 @@ namespace Forest.Engine
 
         public CommandInfo GetCommand(IView root, string path, string commandName)
         {
-            return new CommandInfo(context, root, FindView(root, path), commandName);
+            return new CommandInfo(root, FindView(root, path), commandName);
         }
 
         private static IViewNode RenderView(

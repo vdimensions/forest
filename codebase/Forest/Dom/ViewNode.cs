@@ -53,6 +53,9 @@ namespace Forest.Dom
         }
 
         [Localizable(true)]
+        public string Title { get; set; }
+
+        [Localizable(true)]
         public virtual object Model { get { return model; } }
 
         [Localizable(false)]

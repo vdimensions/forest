@@ -24,14 +24,14 @@ namespace Forest.Commands
     {       
         private readonly IView rootView;
         private readonly IView targetView;
-        private readonly UnboundCommand unboundCommand;
+        private readonly ICommand unboundCommand;
 
-        internal CommandInfo(IForestContext context, IView rootView, IView targetView, string commandName)
+        internal CommandInfo(IView rootView, IView targetView, string commandName)
         {
             this.rootView = rootView;
             this.targetView = targetView;
             var v = targetView ?? rootView;
-            var cmd = context.GetDescriptor(v).GetCommand(v, commandName);
+            var cmd = v.Commands[commandName];
             if (cmd == null)
             {
                 throw new ArgumentException(string.Format("Could not find command '{0}'", commandName), "commandName");
