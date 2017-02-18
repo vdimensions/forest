@@ -20,7 +20,7 @@ namespace Forest.Dom
 {
     public interface IViewNode : IDomNode
     {
-        string Title { get; }
+        string Title { get; set; }
         object Model { get; }
         IDictionary<string, ILinkNode> Links { get; }
         IDictionary<string, IResourceNode> Resources { get; }

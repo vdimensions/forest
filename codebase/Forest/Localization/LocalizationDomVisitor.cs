@@ -54,17 +54,19 @@ namespace Forest.Localization
             this.scanOptions = scanOptions;
         }
 
-        //public override IViewNode Visit(IViewNode node, INodeContext context)
-        //{
-        //    var viewModel = ProcessViewModel(node.Model, context);
-        //    var links = node.Links == null ? null : node.Links
-        //        .Select(x => new KeyValuePair<string, ILinkNode>(x.Key, x.Value is ICommandLinkNode ? ProcessCommandLink((ICommandLinkNode)x.Value, context) : ProcessLink(x.Value, context)))
-        //        .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
-        //    var commands = node.Commands == null ? null : node.Commands
-        //        .Select(x => new KeyValuePair<string, ICommandNode>(x.Key, ProcessCommand(x.Value, context)))
-        //        .ToDictionary(x => x.Key, x => x.Value, StringComparer.Ordinal);
-        //    return new ViewNode(viewModel, links, commands, node.Regions);
-        //}
+        public override IViewNode Visit(IViewNode node, INodeContext context)
+        {
+            var attr = node.Model.GetType().GetCustomAttributes(false).OfType<LocalizeAttribute>().SingleOrDefault();
+            var rm = this.context.LocalizationManager;
+            var ci = CultureInfo.CurrentUICulture;
+            var key = attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, "Title");
+            object title;
+            if (rm.TryGetResource(key, ci, out title))
+            {
+                node.Title = title.ToString();
+            }
+            return base.Visit(node, context);
+        }
 
         protected override object ProcessViewModel(object viewModel, INodeContext nodeContext)
         {
