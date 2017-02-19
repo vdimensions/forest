@@ -60,13 +60,15 @@ namespace Forest.Composition
             var links = new ChronologicalDictionary<string, ILink>(DefaultForestEngine.StringComparer);
             var commands = new ChronologicalDictionary<string, ICommand>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(context, id, containingRegion, resources, links, commands, childRegions, this);
+			viewInit.Init(viewModel, context, id, containingRegion, resources, links, commands, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);
-			}
+            }
 
-			view = resolvedView;
+            viewInit.TriggerInit();
+
+            view = resolvedView;
             return true;
         }
 		private bool DoTryResolve(object viewModel, IViewContainer container, IRegion containingRegion, out IView view)
@@ -86,13 +88,15 @@ namespace Forest.Composition
             var links = new ChronologicalDictionary<string, ILink>(DefaultForestEngine.StringComparer);
             var commands = new ChronologicalDictionary<string, ICommand>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(context, id, containingRegion, resources, links, commands, childRegions, this);
+			viewInit.Init(viewModel, context, id, containingRegion, resources, links, commands, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);
 			}
 
-			view = resolvedView;
+            viewInit.TriggerInit();
+
+            view = resolvedView;
             return true;
         }
 

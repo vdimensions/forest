@@ -26,7 +26,8 @@ namespace Forest
     {
         private static Func<object> CreateEvalFunction(object val)
         {
-            return () => val;
+            var closure = val;
+            return () => closure;
         }
 
         private readonly IViewDescriptor descriptor;

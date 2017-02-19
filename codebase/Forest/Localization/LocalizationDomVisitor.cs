@@ -67,12 +67,6 @@ namespace Forest.Localization
             {
                 var rm = this.context.LocalizationManager;
                 var ci = CultureInfo.CurrentUICulture;
-                //var key = attr.ResourceInfo.ChangeKey("{0}.{1}", context.ViewContext.EvaluateExpression(attr.Name), "Title");
-                //object title;
-                //if (rm.TryGetResource(key, ci, out title))
-                //{
-                //    node.Title = title.ToString();
-                //}
                 var tmpTitle = new TitleLocalizer();
                 if (Localize(rm, attr.ResourceInfo, ci, tmpTitle, context))
                 {

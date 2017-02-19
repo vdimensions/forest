@@ -262,6 +262,8 @@ namespace Forest
 		public IRegion this[string regionName] { get { return GetOrCreateRegion(new AdHocRegionTemplate(regionName)); } }
         #endregion
 
+	    protected virtual void OnInit() { }
+
         protected virtual void OnLoad() { }
 
         protected virtual void OnActivated() { }

@@ -29,6 +29,7 @@ namespace Forest
     {
 		IRegion GetOrCreateRegion(IRegionTemplate regionTemplate);
 		IViewContext Init(
+            object viewModel,
 			IForestContext context, 
 			string id, 
 			IRegion containingRegion, 
@@ -40,6 +41,7 @@ namespace Forest
         void RegisterEventBus(IEventBus eventBus);
         void OnEventBusReady(IEventBus eventBus);
         void ReleaseEventBus();
+        void TriggerInit();
 
         [Localizable(false)]
         IRegion ContainingRegion { get; }
