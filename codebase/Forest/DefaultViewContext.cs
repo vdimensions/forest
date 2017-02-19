@@ -91,7 +91,15 @@ namespace Forest
             }
             set
             {
-                contextData["name"] = CreateEvalFunction(value);
+                if (name == null)
+                {
+                    throw new ArgumentNullException("name");
+                }
+                if (name.Length == 0)
+                {
+                    throw new ArgumentException("Value cannot be empty string", "name");
+                }
+                contextData[name] = CreateEvalFunction(value);
             }
         }
     }
