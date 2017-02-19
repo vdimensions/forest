@@ -24,6 +24,11 @@ namespace Forest
 {
     internal class DefaultViewContext : IViewContext
     {
+        private static Func<object> CreateEvalFunction(object val)
+        {
+            return () => val;
+        }
+
         private readonly IViewDescriptor descriptor;
         private readonly IViewContext parentContext;
         private readonly IDictionary<string, Func<object>> contextData;
@@ -46,17 +51,17 @@ namespace Forest
                     x => x.Name,
                     x => new Func<object>(() => x.GetValue(view.ViewModel)),
                     StringComparer.Ordinal);
-            contextData.Add("@View", () => view.ID);
-            contextData.Add("@Self", () => view.ID);
-            contextData.Add("@Self.", () => this);
-            contextData.Add("@ViewModel", () => view.ViewModel);
+            contextData.Add("@View", CreateEvalFunction(view.ID));
+            contextData.Add("@Self", CreateEvalFunction(view.ID));
+            contextData.Add("@Self.", CreateEvalFunction(this));
+            contextData.Add("@ViewModel", CreateEvalFunction(view.ViewModel));
             var parentView = view.ContainingRegion == null ? null : view.ContainingRegion.OwnerView;
             if (parentView != null)
             {
                 parentContext = ((IViewInit) parentView.View).Context;
-                contextData.Add("@ParentView", () => parentView.ID);
-                contextData.Add("@Parent", () => parentView.ID);
-                contextData.Add("@Parent.", () => parentContext);
+                contextData.Add("@ParentView", CreateEvalFunction(parentView.ID));
+                contextData.Add("@Parent", CreateEvalFunction(parentView.ID));
+                contextData.Add("@Parent.", CreateEvalFunction(parentContext));
             }
         }
 
@@ -83,6 +88,10 @@ namespace Forest
             {
                 Func<object> getter;
                 return contextData.TryGetValue(name, out getter) ? getter() : null;
+            }
+            set
+            {
+                contextData["name"] = CreateEvalFunction(value);
             }
         }
     }

@@ -103,6 +103,7 @@ namespace Forest.Engine
 
         private static IViewNode RenderView(
                 IForestContext context,
+                bool isRoot,
                 IView view, 
                 ILayoutTemplate template,
                 IRegion containingRegion, 
@@ -119,6 +120,12 @@ namespace Forest.Engine
                 return ViewNode.NonRendered;
             }
             var viewContext = ((IViewInit) view).Context;
+            if (isRoot)
+            {
+                var d = new DefaultViewContext(view, context);
+                d["@Self"] = template.ID;
+                viewContext = d;
+            }
             //var viewDescriptor = viewContext.Descriptor;
             var viewModel = view.ViewModel;
             var pathPrefix = (containingRegion == null ? string.Empty : containingRegion.Path) + PathSeparator;
@@ -151,6 +158,7 @@ namespace Forest.Engine
 					var childView = region.ActiveViews[childViewID];
                     var node = RenderView(
                         context,
+                        false,
                         childView, 
                         template, 
                         region, 
@@ -243,6 +251,7 @@ namespace Forest.Engine
         {
             return RenderView(
                 this.context,
+                true,
                 forestResult.View, 
                 forestResult.Template,
                 null, 
@@ -261,6 +270,7 @@ namespace Forest.Engine
             }
             return RenderView(
                 this.context,
+                true,
                 forestResult.View, 
                 forestResult.Template, 
                 null, 
@@ -280,6 +290,7 @@ namespace Forest.Engine
             }
             return RenderView(
                 this.context,
+                true,
                 forestResult.View, 
                 forestResult.Template, 
                 null, 
