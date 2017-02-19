@@ -96,7 +96,9 @@ namespace Forest
             {
                 throw new ArgumentNullException("regions");
             }
-            this.viewContext = new DefaultViewContext(this, context);
+
+            var viewContext = this.viewContext = new DefaultViewContext(this, context);
+
             this.id = id;
             this.containingRegion = containingRegion;
 			this.containingRegionInfo = containingRegion == null ? null : new RegionInfo(containingRegion);
@@ -105,6 +107,7 @@ namespace Forest
             this.commandBag = new CommandBag(this.commands = commands);
             this.regionBag = new RegionBag(this.regions = regions);
 			this.viewResolver = viewResolver;
+
             var descriptor = viewContext.Descriptor;
             foreach (var resource in descriptor.ResourceAttributes)
             {

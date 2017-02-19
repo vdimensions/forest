@@ -57,7 +57,7 @@ namespace Forest.Dom
             var commands = node.Commands == null ? null : node.Commands
                 .Select(x => new KeyValuePair<string, ICommandNode>(x.Key, ProcessCommand(x.Value, context)))
                 .ToDictionary(x => x.Key, x => x.Value, comparer);
-            return new ViewNode(ProcessViewModel(node.Model, context), links, resources, commands, node.Regions);
+            return new ViewNode(ProcessViewModel(node.Model, context), links, resources, commands, node.Regions) { Title = node.Title };
         }
 
         protected virtual object ProcessViewModel(object viewModel, INodeContext nodeContext) { return viewModel; }

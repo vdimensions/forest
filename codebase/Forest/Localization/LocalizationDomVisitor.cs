@@ -34,6 +34,12 @@ namespace Forest.Localization
 {
     public sealed class LocalizationDomVisitor : AbstractDomVisitor
     {
+        private class TitleLocalizer
+        {
+            [Localizable(true)]
+            public string Title { get; set; }
+        }
+
         private readonly ILogger log;
 
         private const string CacheName = "LocalizationNodeVisitorCache";
@@ -61,11 +67,16 @@ namespace Forest.Localization
             {
                 var rm = this.context.LocalizationManager;
                 var ci = CultureInfo.CurrentUICulture;
-                var key = attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, "Title");
-                object title;
-                if (rm.TryGetResource(key, ci, out title))
+                //var key = attr.ResourceInfo.ChangeKey("{0}.{1}", context.ViewContext.EvaluateExpression(attr.Name), "Title");
+                //object title;
+                //if (rm.TryGetResource(key, ci, out title))
+                //{
+                //    node.Title = title.ToString();
+                //}
+                var tmpTitle = new TitleLocalizer();
+                if (Localize(rm, attr.ResourceInfo, ci, tmpTitle, context))
                 {
-                    node.Title = title.ToString();
+                    node.Title = tmpTitle.Title;
                 }
             }
             return base.Visit(node, context);
@@ -138,8 +149,9 @@ namespace Forest.Localization
             var workingCommand = PrepareLocalizableInstance(link);
             var rm = this.context.LocalizationManager;
             var ci = CultureInfo.CurrentUICulture;
-            Localize(rm, attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, link.Name), ci, workingCommand, nodeContext);
-            return workingCommand;
+            return Localize(rm, attr.ResourceInfo.ChangeKey("{0}.{1}", attr.Name, link.Name), ci, workingCommand, nodeContext)
+                ? workingCommand
+                : link;
         }
 
         protected override IResourceNode ProcessResource(IResourceNode resource, INodeContext nodeContext)
