@@ -27,6 +27,7 @@ namespace Forest.Engine
 {
     public partial interface IForestEngine
     {
+		/*
         ApplicationState CreateState();
         ILayoutTemplate LoadTemplate(string templateName);
         ForestResult ExecuteTemplate(ILayoutTemplate template);
@@ -35,6 +36,7 @@ namespace Forest.Engine
         IViewNode RenderView(ForestResult forestResult, IEnumerable<RegionModification> modifications);
         IViewNode RenderView(ForestResult forestResult, IEnumerable<RegionModification> modifications, bool renderAll);
         CommandInfo GetCommand(IView root, string path, string commandName);
-        object MapObject(IDictionary<string, object> rawObject, Type targetType);
+        object MapObject(IDictionary<string, object> rawObject, Type targetType);*/
+		
     }
 }

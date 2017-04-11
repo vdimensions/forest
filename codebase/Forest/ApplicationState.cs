@@ -21,13 +21,14 @@ using Forest.Commands;
 using Forest.Composition;
 using Forest.Composition.Templates;
 using Forest.Dom;
+using Forest.Engine;
 using Forest.Events;
 using Forest.Reflection;
 
 
 namespace Forest
 {
-    public class ApplicationState
+	public class ApplicationState : IApplicationState
     {
         private static readonly object _true = true;
 

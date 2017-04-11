@@ -11,8 +11,6 @@
     <AssemblyName>Forest</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <ProductVersion>12.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -195,6 +193,8 @@
     <Compile Include="Reflection\PropertyBag.cs" />
     <Compile Include="Reflection\IViewDescriptor.cs" />
     <Compile Include="Reflection\ViewDescriptor.cs" />
+    <Compile Include="Engine\IForestEngine.NEW.cs" />
+    <Compile Include="Engine\IApplicationState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="build.properties" />

@@ -1,3 +1,6 @@
 [submodule "submodules/forest-web"]
 	path = submodules/forest-web
 	url = http://git.vdimensions.net/bonobo-git-server/forest-web.git
+[submodule "submodules/electron-edge"]
+	path = submodules/electron-edge
+	url = https://github.com/ivaylo5ev/electron-edge.git
