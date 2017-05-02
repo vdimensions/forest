@@ -1,2 +1,6 @@
-source http://nuget.vdimensions.net/nuget-repo/nuget
-  nuget VDimensions.Targets.Nuget.Pack
+source ../../submodules/mason/dist
+  nuget Mason.Targets.Packager
+  nuget Mason.Targets.Preprocessor
+  nuget Mason.Targets.Verman
+source ../../dist
+  nuget Forest
