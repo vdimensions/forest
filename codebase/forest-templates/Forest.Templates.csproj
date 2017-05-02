@@ -3,17 +3,18 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0D8D9D92-F20D-4B74-BB6E-4E11FDF66C32}</ProjectGuid>
+    <ProjectGuid>{92DA4BF7-0101-4F37-A934-C449C2A2B570}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>Forest.Templates</RootNamespace>
     <AssemblyName>Forest.Templates</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FrameworkShortName>net35</FrameworkShortName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\$(FrameworkShortName)</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -22,7 +23,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>bin\Release\$(FrameworkShortName)</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -68,13 +69,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\Forest\Forest.csproj">
+    <ProjectReference Include="..\forest\Forest.csproj">
       <Project>{3A49DEC2-142A-483E-99BF-42BF26909CFC}</Project>
       <Name>Forest</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Composition\" />
-    <Folder Include="Composition\Templates\" />
   </ItemGroup>
 </Project>
