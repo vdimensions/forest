@@ -1,3 +1,5 @@
 NUGET
-  remote: http://nuget.vdimensions.net/nuget-repo/nuget
-    VDimensions.Targets.Nuget.Pack (0.0.0.33)
+  remote: ../../submodules/mason/dist
+    Mason.Targets.Packager (0.1.1.6)
+    Mason.Targets.Preprocessor (0.1.1.5)
+    Mason.Targets.Verman (0.1.1.6)

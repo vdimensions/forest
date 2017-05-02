@@ -4,3 +4,6 @@
 [submodule "submodules/electron-edge"]
 	path = submodules/electron-edge
 	url = https://github.com/ivaylo5ev/electron-edge.git
+[submodule "submodules/mason"]
+	path = submodules/mason
+	url = https://github.com/ivaylo5ev/mason

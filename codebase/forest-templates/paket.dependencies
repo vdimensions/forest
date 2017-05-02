@@ -1,0 +1,2 @@
+source http://nuget.vdimensions.net/nuget-repo/nuget
+  nuget VDimensions.Targets.Nuget.Pack

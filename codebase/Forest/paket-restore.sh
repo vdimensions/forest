@@ -1,2 +1,2 @@
-./paket.sh restore -v
+./paket.sh restore
 read -rsp "Press [Enter] to quit"

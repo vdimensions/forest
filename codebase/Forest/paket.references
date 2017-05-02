@@ -1,1 +1,3 @@
-VDimensions.Targets.Nuget.Pack
+Mason.Targets.Packager
+Mason.Targets.Preprocessor
+Mason.Targets.Verman
