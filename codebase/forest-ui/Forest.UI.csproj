@@ -47,11 +47,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Controls\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="build.properties" />
-    <None Include="packages.config" />
+    <None Include="mason.properties" />
+    <None Include="paket.dependencies" />
+    <None Include="paket.references" />
     <None Include="Properties\AssemblyInfo.cs.template" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
