@@ -4,7 +4,7 @@
 
 # dirs
 
-**/.archetype-template/
+**/node_modules/
 **/.nuget/
 **/.project-template/
 **/.svn/

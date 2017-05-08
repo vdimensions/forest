@@ -105,9 +105,9 @@ namespace Forest
         private IDictionary<string, ICommand> commands;
         private CommandBag commandBag;
 
-#if !DEBUG
+        #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-#endif
+        #endif
         private IEventBus eventBus;
         private readonly Stack<Message> pendingMessages = new Stack<Message>();
 
