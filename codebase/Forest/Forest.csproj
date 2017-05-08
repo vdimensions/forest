@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\Debug\net40-client\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -197,7 +197,7 @@
     <Compile Include="Reflection\ViewDescriptor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="build.properties" />
+    <None Include="mason.properties" />
     <None Include="Forest.nuspec.template">
       <SubType>Designer</SubType>
     </None>
@@ -205,13 +205,14 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)tools\bump-version.sh $(ProjectDir) "version_revision"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PreBuildEvent>$(SolutionDir)tools\process-templates.sh $(SolutionDir) $(ProjectDir)</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -220,5 +221,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <Import Project="packages\VDimensions.Targets.Nuget.Pack\build\VDimensions.Targets.Nuget.Pack.targets" Condition="Exists('packages\VDimensions.Targets.Nuget.Pack\build\VDimensions.Targets.Nuget.Pack.targets')" Label="Paket" />
+  <Import Project="packages\Mason.Targets.Packager\build\Mason.Targets.Packager.targets" Condition="Exists('packages\Mason.Targets.Packager\build\Mason.Targets.Packager.targets')" Label="Paket" />
+  <Import Project="packages\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
+  <Import Project="packages\Mason.Targets.Verman\build\Mason.Targets.Verman.targets" Condition="Exists('packages\Mason.Targets.Verman\build\Mason.Targets.Verman.targets')" Label="Paket" />
 </Project>

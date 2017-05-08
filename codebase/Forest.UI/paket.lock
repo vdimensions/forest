@@ -1,4 +1,6 @@
 NUGET
+  remote: ../../dist
+    Forest (0.0.1.11)
   remote: ../../submodules/mason/dist
     Mason.Targets.Packager (0.1.1.15)
     Mason.Targets.Preprocessor (0.1.1.12)
