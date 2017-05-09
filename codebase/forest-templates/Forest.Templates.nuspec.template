@@ -9,7 +9,7 @@
     <releaseNotes></releaseNotes>
     <tags>${tags}</tags>
     <!--
-    <projectUrl>https://nuget.org/packages/Axle.Forest.Web.Client</projectUrl>
+    <projectUrl>https://nuget.org/packages/${id}</projectUrl>
     <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
      -->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -40,21 +40,12 @@
     <file src="bin\*\net40\${id}.dll" target="lib\net40" />
     <file src="bin\*\net40\${id}.xml" target="lib\net40" />
 
+    <file src="bin\*\net40-client\${id}.dll" target="lib\net40-client" />
+    <file src="bin\*\net40-client\${id}.xml" target="lib\net40-client" />
+
     <file src="bin\*\net35\${id}.dll" target="lib\net35" />
     <file src="bin\*\net35\${id}.xml" target="lib\net35" />
     
-    <file src="bin\*\net35-Unity Full v3.5\${id}.dll" target="lib\net35-Unity Full v3.5\" />
-    <file src="bin\*\net35-Unity Full v3.5\${id}.xml" target="lib\net35-Unity Full v3.5\" />
-
-    <file src="bin\*\net35-Unity Subset v3.5\${id}.dll" target="lib\net35-Unity Subset v3.5\" />
-    <file src="bin\*\net35-Unity Subset v3.5\${id}.xml" target="lib\net35-Unity Subset v3.5\" />
-
-    <file src="bin\*\net35-Unity Micro v3.5\${id}.dll" target="lib\net35-Unity Micro v3.5" />
-    <file src="bin\*\net35-Unity Micro v3.5\${id}.xml" target="lib\net35-Unity Micro v3.5" />
-
-    <file src="bin\*\net35-Unity Web v3.5\${id}.dll" target="lib\net35-Unity Web v3.5" />
-    <file src="bin\*\net35-Unity Web v3.5\${id}.xml" target="lib\net35-Unity Web v3.5" />
-
     <file src="bin\*\net20\${id}.dll" target="lib\net20" />
     <file src="bin\*\net20\${id}.xml" target="lib\net20" />
   </files>

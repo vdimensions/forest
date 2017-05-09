@@ -9,7 +9,7 @@
     <releaseNotes></releaseNotes>
     <tags>${tags}</tags>
     <!--
-    <projectUrl>https://nuget.org/packages/Axle.Forest.Web.Client</projectUrl>
+    <projectUrl>https://nuget.org/packages/${id}</projectUrl>
     <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
      -->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
@@ -18,7 +18,7 @@
     <copyright>${copyright}</copyright>
     <licenseUrl>${license.url}</licenseUrl>
     <dependencies>
-      <dependency id="Forest" version="${dependencies.version}" />
+      <dependency id="Forest" version="${forest.version}" />
     </dependencies>
     <frameworkAssemblies>
       <frameworkAssembly assemblyName="System" />
