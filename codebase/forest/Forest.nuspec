@@ -1,21 +1,21 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <package >
   <metadata>
     <id>Forest</id>
     <title>Forest</title>
-    <version>0.0.1.9</version>
+    <version>0.0.1.12</version>
     <description>Core library for the Frontend Over REST (a.k.a Forest) framework</description>
     <summary>Core library for the Frontend Over REST (a.k.a Forest) framework</summary>
     <releaseNotes></releaseNotes>
     <tags>Forest</tags>
     <!--
-    <projectUrl>https://nuget.org/packages/Axle.Forest.Web.Client</projectUrl>
+    <projectUrl>https://nuget.org/packages/Forest</projectUrl>
     <iconUrl>https://nuget.org/Content/Images/packageDefaultIcon-50x50.png</iconUrl>
      -->
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <authors>Virtual Dimensions</authors>
     <owners>Virtual Dimensions</owners>
-    <copyright>Copyright © Virtual Dimensions 2013-2016</copyright>
+    <copyright>Copyright © Virtual Dimensions 2013-2017</copyright>
     <licenseUrl>http://opensource.org/licenses/Apache-2.0</licenseUrl>
     <dependencies>
     </dependencies>
@@ -30,31 +30,19 @@
     <references></references>
   </metadata>
   <files>
-    <file src="bin\*\Forest.dll" target="lib" />
-    <file src="bin\*\Forest.xml" target="lib" exclude="bin\*\*.ExternalAnnotations.xml" />
-
     <file src="bin\*\net45\Forest.dll" target="lib\net45" />
-    <file src="bin\*\net45\Forest.xml" target="lib\net45" exclude="bin\*\net45\*.ExternalAnnotations.xml" />
+    <file src="bin\*\net45\Forest.xml" target="lib\net45" />
 
     <file src="bin\*\net40\Forest.dll" target="lib\net40" />
-    <file src="bin\*\net40\Forest.xml" target="lib\net40" exclude="bin\*\net40\*.ExternalAnnotations.xml" />
+    <file src="bin\*\net40\Forest.xml" target="lib\net40" />
+
+    <file src="bin\*\net40-client\Forest.dll" target="lib\net40" />
+    <file src="bin\*\net40-client\Forest.xml" target="lib\net40" />
 
     <file src="bin\*\net35\Forest.dll" target="lib\net35" />
-    <file src="bin\*\net35\Forest.xml" target="lib\net35" exclude="bin\*\net35\*.ExternalAnnotations.xml" />
+    <file src="bin\*\net35\Forest.xml" target="lib\net35" />
     
-    <file src="bin\*\net35-Unity Full v3.5\Forest.dll" target="lib\net35-Unity Full v3.5\" />
-    <file src="bin\*\net35-Unity Full v3.5\Forest.xml" target="lib\net35-Unity Full v3.5\" exclude="bin\*\net35\Forest.ExternalAnnotations.xml" />
-
-    <file src="bin\*\net35-Unity Subset v3.5\Forest.dll" target="lib\net35-Unity Subset v3.5\" />
-    <file src="bin\*\net35-Unity Subset v3.5\Forest.xml" target="lib\net35-Unity Subset v3.5\" exclude="bin\*\net35-Unity Subset v3.5\Forest.ExternalAnnotations.xml" />
-
-    <file src="bin\*\net35-Unity Micro v3.5\Forest.dll" target="lib\net35-Unity Micro v3.5" />
-    <file src="bin\*\net35-Unity Micro v3.5\Forest.xml" target="lib\net35-Unity Micro v3.5" exclude="bin\*\net35-Unity Micro v3.5\Forest.ExternalAnnotations.xml" />
-
-    <file src="bin\*\net35-Unity Web v3.5\Forest.dll" target="lib\net35-Unity Web v3.5" />
-    <file src="bin\*\net35-Unity Web v3.5\Forest.xml" target="lib\net35-Unity Web v3.5" exclude="bin\*\net35-Unity Web v3.5\Forest.ExternalAnnotations.xml" />
-
     <file src="bin\*\net20\Forest.dll" target="lib\net20" />
-    <file src="bin\*\net20\Forest.xml" target="lib\net20" exclude="bin\*\net20\*.ExternalAnnotations.xml" />
+    <file src="bin\*\net20\Forest.xml" target="lib\net20" />
   </files>
 </package>

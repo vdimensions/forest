@@ -1,1 +1,0 @@
-NuPurge.exe ."./packs"

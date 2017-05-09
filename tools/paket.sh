@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+# A wrapper around paket.exe and paket.bootstrapper.exe, located in ./.paket/ directory,
+# relative to the location of this file.
+# The purpose of this file is to allow correct cross-platform invocation of paket 
+
+>>>>>>> master
 EXEC='${0%/*}/../.paket/paket.exe'
 
 if [ ! -f ${EXEC} ]; then
