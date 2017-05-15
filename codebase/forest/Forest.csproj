@@ -159,8 +159,6 @@
     <None Include="paket.sh" />
     <None Include="mason.properties" />
     <None Include="Forest.nuspec.template" />
-    <None Include="Forest-Debug.nuspec.template" />
-    <None Include="Forest-Debug.nuspec" />
     <None Include="Forest.nuspec" />
     <None Include="paket-restore.sh" />
     <None Include="paket-update.sh" />
@@ -168,20 +166,6 @@
     <None Include="paket.lock" />
     <None Include="paket.references" />
     <None Include="Properties\AssemblyInfo.cs.template" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent></PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent></PreBuildEvent>
-    <None Include="mason.properties" />
-    <None Include="Forest.nuspec.template">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Forest-Debug.nuspec.template">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
