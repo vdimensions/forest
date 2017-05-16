@@ -1,20 +1,6 @@
 namespace Forest
-
 open System;
-open System.Collections.Generic;
 
-type [<AutoOpen>] IIndex<'T, 'TKey> =
-    inherit IEnumerable<'T>
-
-    abstract Count          : int with get
-    abstract Keys           : IEnumerable<'TKey> with get
-    abstract Item           : 'TKey -> 'T with get
-
-type [<AutoOpen>] IMutableIndex<'T, 'TKey> =
-    inherit IIndex<'T, 'TKey>
-    abstract member Remove  : key: 'TKey -> IMutableIndex<'T, 'TKey>
-    abstract member Insert  : key: 'TKey -> item: 'T -> IMutableIndex<'T, 'TKey>
-    abstract member Clear   : unit -> IMutableIndex<'T, 'TKey>
 
 type [<AutoOpen>] ICommand =
     abstract ArgumentType   : Type with get
@@ -23,6 +9,7 @@ type [<AutoOpen>] IViewNode =
     abstract Name           : string with get
     abstract ID             : string with get
     //abstract Container      : IRegionNode with get
+    // TODO: IIndex<string, obj> property for the raw data
     abstract Regions        : IIndex<IRegionNode, string> with get
     abstract Commands       : IIndex<ICommand, string> with get
 and [<AutoOpen>] IRegionNode = 
@@ -58,12 +45,11 @@ type IForestEngine =
     abstract member Execute<'T when 'T: (new: unit -> 'T)> : context: IForestContext -> node: IViewNode -> IView<'T>
 
 
-
 type internal IForestContextAware =
     abstract member InitializeContext : context : IForestContext -> unit
 
-type internal IParentRegionAware =
-    abstract member InitializeParentRegion : region : IRegion -> unit
+//type internal IParentRegionAware =
+//    abstract member InitializeParentRegion : region : IRegion -> unit
 
 [<Flags>]
 type internal ViewChange =
@@ -79,12 +65,14 @@ type [<AutoOpen>] View<'T when 'T: (new: unit -> 'T)> () =
     //    member x.InitializeContext ctx =
     //       context <- ctx
     //       ()
-    interface IView<'T> with 
-        member x.Submit context = ()
-        member x.ViewModel 
-            with get () = _viewModel
+    interface IView<'T> with
+        member this.ViewModel
+            with get () : 'T = _viewModel
             and set value =
                 _viewModel <- value
                 _viewChanges <- _viewChanges ||| ViewChange.ViewModel
+    interface IView with
+        member this.Submit context = ()
+        member this.ViewModel: obj = upcast _viewModel
 
 
