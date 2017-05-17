@@ -48,7 +48,7 @@ module internal RawDataTraverser =
         let recurse = cataRawTemplate fView fRegion
         match arg with
         | ViewDict regionsDictionary -> 
-            let regions = new List<IRegionNode>
+            let regions = new List<IRegionNode>()
             for entry in regionsDictionary do
                 let result = recurse region view entry.Key (Region, entry.Value) 
                 match result with
@@ -57,7 +57,7 @@ module internal RawDataTraverser =
             view = BindRegionsToView view regions
             ViewNode (view)
         | RegionDict viewsDictionary -> 
-            let views = new List<IViewNode>
+            let views = new List<IViewNode>()
             for entry in viewsDictionary do
                 let result = recurse region view entry.Key (View, entry.Value)
                 match result with
