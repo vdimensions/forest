@@ -40,6 +40,9 @@ module internal RawDataTraverser =
         | RegionNode of IRegionNode
         | Empty
 
+    // temp:
+    let BindViewsToRegion = fun region views -> region
+    let BindRegionsToView = fun view regions -> view
 
     let rec cataRawTemplate fView fRegion region view name (arg: NodeType*obj) : RawTemplateResult =
         let recurse = cataRawTemplate fView fRegion
@@ -64,7 +67,7 @@ module internal RawDataTraverser =
             region = BindViewsToRegion region views
             RegionNode (region)
         | _ -> Empty
-     
+    
     let parseRawTemplate createView createRegion data = 
         cataRawTemplate createView createRegion null null String.Empty (Region,data)
 
