@@ -5,5 +5,5 @@ open System
 let x = "dsds";;
 System.Console.WriteLine x;;
 
-let t = typedefof<Forest.IForestContext>;;
+let t = typedefof<IForestContext>;;
 System.Console.WriteLine t.FullName;;

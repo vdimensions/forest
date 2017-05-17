@@ -37,11 +37,11 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Index.fs" />
+    <Compile Include="WriteableIndex.fs" />
+    <Compile Include="Forest.fs" />
     <Compile Include="Sdk.fs" />
     <None Include="Script.fsx" />
-    <Compile Include="Index.fs" />
-    <Compile Include="Impl.fs" />
-    <Compile Include="Forest.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Choose>

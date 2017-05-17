@@ -42,4 +42,9 @@
       <Name>Forest.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\forest-core\bin\Debug\Forest.Core.dll">
+      <Link>Forest.Core.dll</Link>
+    </None>
+  </ItemGroup>
 </Project>
