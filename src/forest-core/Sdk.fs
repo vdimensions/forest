@@ -1,5 +1,6 @@
 ﻿namespace Forest.Sdk
 open Forest
+open Forest.Dom
 open System
 open System.Collections.Generic
 
@@ -20,56 +21,56 @@ module internal RawDataTraverser =
         | View
         | Region
 
-    let (|ViewDict|_|) (a: NodeType, b: obj) =
+    let (|ViewMatcher|_|) (a: NodeType, b: obj) =
         match a with 
         | View -> 
             match b with
             | Dictionary d -> Some(d)
             | _ -> None
-        |_ -> None
-    let (|RegionDict|_|) (a: NodeType, b: obj) =
+        | _ -> None
+    let (|RegionMatcher|_|) (a: NodeType, b: obj) =
         match a with 
         | Region -> 
             match b with
             | Dictionary d -> Some(d)
             | _ -> None
-        |_ -> None
+        | _ -> None
 
-    type RawTemplateResult =
+    type ViewOrRegion =
         | ViewNode of IViewNode
         | RegionNode of IRegionNode
         | Empty
 
     // temp:
-    let BindViewsToRegion = fun region views -> region
-    let BindRegionsToView = fun view regions -> view
+    let BindViewsToRegion = fun views region  -> region
+    let BindRegionsToView = fun regions view  -> view
 
-    let rec cataRawTemplate fView fRegion region view name (arg: NodeType*obj) : RawTemplateResult =
-        let recurse = cataRawTemplate fView fRegion
+    let rec internal traverseRawTemplate createView createRegion domIndex region view path name (arg: NodeType*obj) : IDomIndex =
+        let recurse = traverseRawTemplate createView createRegion
         match arg with
-        | ViewDict regionsDictionary -> 
+        | ViewMatcher regionsDictionary -> 
             let regions = new List<IRegionNode>()
             for entry in regionsDictionary do
-                let result = recurse region view entry.Key (Region, entry.Value) 
+                let result = recurse region view (path + "/" +  name) entry.Key (Region, entry.Value) 
                 match result with
                 | RegionNode r -> regions.Add
-            let view: IViewNode = fView name region regions
-            view = BindRegionsToView view regions
+            let view: IViewNode = createView name region regions
+            view = BindRegionsToView regions view 
             ViewNode (view)
-        | RegionDict viewsDictionary -> 
+        | RegionMatcher viewsDictionary -> 
             let views = new List<IViewNode>()
             for entry in viewsDictionary do
-                let result = recurse region view entry.Key (View, entry.Value)
+                let result = recurse region view (path + "/" +  name) entry.Key (View, entry.Value)
                 match result with
                 | ViewNode v -> views.Add          
             let newViews = new AutoIndex<IViewNode, string>(fun a -> a.Name);              
-            let region: IRegionNode = fRegion name view
-            region = BindViewsToRegion region views
+            let region: IRegionNode = createRegion name view
+            region = BindViewsToRegion views region 
             RegionNode (region)
-        | _ -> Empty
+        | _ -> ViewOrRegion.Empty
     
     let parseRawTemplate createView createRegion data = 
-        cataRawTemplate createView createRegion null null String.Empty (Region,data)
+        traverseRawTemplate createView createRegion new DefaultDomIndex() null null String.Empty String.Empty (Region,data)
 
         
 

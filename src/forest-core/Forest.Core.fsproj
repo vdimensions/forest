@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Name>Forest.Core</Name>
@@ -6,12 +6,11 @@
     <RootNamespace>Forest</RootNamespace>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7CBDBFBD-F8FD-4C48-AF8E-0D77923DDF42}</ProjectGuid>
+    <ProjectGuid>7cbdbfbd-f8fd-4c48-af8e-0d77923ddf42</ProjectGuid>
     <OutputType>Library</OutputType>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,6 +38,8 @@
   <ItemGroup>
     <Compile Include="Index.fs" />
     <Compile Include="WriteableIndex.fs" />
+    <Compile Include="Path.fs" />
+    <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="Sdk.fs" />
     <None Include="Script.fsx" />
