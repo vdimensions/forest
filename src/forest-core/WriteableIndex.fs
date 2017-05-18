@@ -1,64 +1,42 @@
 ﻿namespace Forest
-open System
-open System.Collections
 open System.Collections.Generic
 open System.Linq
 
 [<Sealed>]
-type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer : IEqualityComparer<'TKey>, comparer: IComparer<'TKey>) = class
+type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer : IEqualityComparer<'TKey>, comparer: IComparer<'TKey>) =
     inherit AbstractWriteableIndex<'T, 'TKey, WriteableIndex<'T, 'TKey> >()
     new(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer: IEqualityComparer<'TKey>) = WriteableIndex(map, eqComparer, Comparer<'TKey>.Default)
     new(map : Map<ComparisonAdapter<'TKey>, 'T>) = WriteableIndex(map, EqualityComparer<'TKey>.Default)
-    new(map : Map<ComparisonAdapter<'TKey>, 'T>) = WriteableIndex(map, EqualityComparer<'TKey>.Default)
     new(eqComparer : IEqualityComparer<'TKey>, comparer: IComparer<'TKey>) = WriteableIndex(Map.empty, eqComparer, comparer)
     new() = WriteableIndex(Map.empty, EqualityComparer<'TKey>.Default, Comparer<'TKey>.Default)
-    // TODO: support comparer
-    //new(comparer: IEqualityComparer<'TKey>) = WriteableIndex(new Map<'TKey, 'T, comparer>())
     override this.Contains item = (upcast map: IDictionary<ComparisonAdapter<'TKey>, 'T>).Values.Contains item
-    override this.ContainsKey key = 
-        let actualKey = new ComparisonAdapter<'TKey>(key, comparer, eqComparer)
-        map.ContainsKey actualKey
-    override this.Insert k v = 
-        let actualKey = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
-        new WriteableIndex<'T, 'TKey>(map.Add(actualKey,v), eqComparer, comparer)
-    override this.Remove k = 
-        let actualKey = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
-        new WriteableIndex<'T, 'TKey>(map.Remove(actualKey), eqComparer, comparer)
+    override this.ContainsKey key = map.ContainsKey (new ComparisonAdapter<'TKey>(key, comparer, eqComparer))
+    override this.Insert k v = new WriteableIndex<'T, 'TKey>(map.Add(new ComparisonAdapter<'TKey>(k, comparer, eqComparer), v), eqComparer, comparer)
+    override this.Remove k = new WriteableIndex<'T, 'TKey>(map.Remove(new ComparisonAdapter<'TKey>(k, comparer, eqComparer)), eqComparer, comparer)
     override this.Clear () = new WriteableIndex<'T, 'TKey>(eqComparer, comparer)
-
     override this.GetEnumerator () = (upcast map: IDictionary<ComparisonAdapter<'TKey>, 'T>).Values.GetEnumerator()
     override this.Count = map.Count
-    override this.Keys with get () = 
+    override this.Keys = 
         let keys = (upcast map: IDictionary<ComparisonAdapter<'TKey>, 'T>).Keys
-        let keySelector = fun (k) -> k.Value
+        let keySelector = (fun (k: ComparisonAdapter<'TKey>) -> k.Value)
         keys.Select(keySelector)
-    override this.Item with get k = 
-        let actualKey = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
-        map.[actualKey]
-end
+    override this.Item with get k = map.[new ComparisonAdapter<'TKey>(k, comparer, eqComparer)]
 
 [<Sealed>]
 type AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =
-    inherit IndexProxy<'T, 'TKey, AutoIndex<'T, 'TKey>>(ix)
+    inherit IndexProxy<'T, 'TKey, AutoIndex<'T, 'TKey>>(ix, (fun x -> new AutoIndex<'T, 'TKey>(keyFn, x)))
     //new(keyFn: 'T -> 'TKey) = AutoIndex(keyFn, new WriteableIndex<'T, 'TKey>())
-    override this.Resolve x = new AutoIndex<'T, 'TKey>(keyFn, x)
     member this.Remove item = 
         let key: 'TKey = keyFn item
-        let res = ix.Remove key
-        this.Resolve res
+        new AutoIndex<'T, 'TKey>(keyFn, (ix.Remove key))
     member this.Add item = 
         let key: 'TKey = keyFn item
-        let res = ix.Insert key item 
-        this.Resolve res
+        new AutoIndex<'T, 'TKey>(keyFn, (ix.Insert key item))
     interface IAutoIndex<'T, 'TKey> with
         member x.Add item = 
             let key: 'TKey = keyFn item
-            let res = ix.Insert key item 
-            upcast x.Resolve res : IAutoIndex<'T, 'TKey>
+            upcast new AutoIndex<'T, 'TKey>(keyFn, (ix.Insert key item)) : IAutoIndex<'T, 'TKey>
         member x.Remove item = 
             let key: 'TKey = keyFn item
-            let res = ix.Remove key 
-            upcast x.Resolve res : IAutoIndex<'T, 'TKey>
-        member x.Remove (key: 'TKey) = 
-            let res = ix.Renove key
-            upcast x.Resolve res : IAutoIndex<'T, 'TKey>
+            upcast new AutoIndex<'T, 'TKey>(keyFn, (ix.Remove key )) : IAutoIndex<'T, 'TKey>
+        member x.Remove (key: 'TKey) = upcast new AutoIndex<'T, 'TKey>(keyFn, (ix.Remove key)) : IAutoIndex<'T, 'TKey>

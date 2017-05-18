@@ -3,6 +3,9 @@ open System
 open System.Collections
 open System.Collections.Generic;
 
+[<Struct>]
+[<CustomComparison>]
+[<CustomEquality>]
 type ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComparer: IEqualityComparer<'T>) =
     new(value) = ComparisonAdapter(value, Comparer<'T>.Default, EqualityComparer<'T>.Default)
     member this.CompareTo (cmp: IComparer<'T>, v: 'T) = cmp.Compare(v, value)
@@ -12,7 +15,7 @@ type ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComparer: IEqua
         if (o :? Comparison<'T>) then this.CompareTo(downcast o: ComparisonAdapter<'T>)
         else if (o :? 'T) then this.CompareTo(downcast o: 'T)
         else if (o :? IComparable) then ((downcast o: IComparable)).CompareTo(value)
-        else raise (new NotSupportedException())
+        else raise (NotSupportedException ())
     member this.Equals (c: ComparisonAdapter<'T>): bool = c.Equals(eqComparer, value)
     member this.Equals (cmp: IEqualityComparer<'T>, v: 'T): bool = cmp.Equals(v, value)
     member this.Equals (v: 'T): bool = eqComparer.Equals(v, value)
@@ -71,18 +74,17 @@ type AbstractWriteableIndex<'T, 'TKey, 'R  when 'R:> IWriteableIndex<'T, 'TKey >
     interface IEnumerable with member x.GetEnumerator () = upcast x.GetEnumerator(): IEnumerator
 
 [<AbstractClass>]
-type IndexProxy<'T, 'TKey, 'R when 'R :> IndexProxy<'T, 'TKey, 'R>>(target: IWriteableIndex<'T, 'TKey>) =
-    abstract member Resolve: IWriteableIndex<'T, 'TKey> -> 'R
+type IndexProxy<'T, 'TKey, 'R when 'R :> IndexProxy<'T, 'TKey, 'R>>(target: IWriteableIndex<'T, 'TKey>, resolve: IWriteableIndex<'T, 'TKey> -> 'R) =
     abstract member Contains: 'T -> bool
     default this.Contains item =  target.Contains item
     abstract member ContainsKey: 'TKey -> bool
     default this.ContainsKey key =  target.ContainsKey key
     abstract member Insert: 'TKey -> 'T -> 'R
-    default this.Insert k v =  this.Resolve (target.Insert k v)
+    default this.Insert k v =  resolve (target.Insert k v)
     abstract member Remove: 'TKey -> 'R
-    default this.Remove k =  this.Resolve (target.Remove k)
+    default this.Remove k =  resolve (target.Remove k)
     abstract member Clear: unit -> 'R
-    default this.Clear () =  this.Resolve (target.Clear ())
+    default this.Clear () =  resolve (target.Clear ())
     abstract member GetEnumerator: unit -> IEnumerator<'T>
     default this.GetEnumerator() = target.GetEnumerator()
     abstract Count: int with get

@@ -3,7 +3,7 @@ open System;
 open Forest.Dom
 
 
-
+[<Obsolete>]
 type [<AutoOpen>] IRegistry = 
     abstract member Register<'T>    : name: string -> model: 'T -> IRegistry
     abstract member Unregister      : name: string -> IRegistry
@@ -47,9 +47,9 @@ type internal IForestContextAware =
 
 [<Flags>]
 type internal ViewChange =
-    | None          = 0b00
-    | ViewModel     = 0b01
-    | RegionState   = 0b10
+| None          = 0b00
+| ViewModel     = 0b01
+| RegionState   = 0b10
 
 [<AbstractClass>]
 type [<AutoOpen>] View<'T when 'T: (new: unit -> 'T)> () =
