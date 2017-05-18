@@ -1,13 +1,9 @@
 ﻿namespace Forest.Sdk
 open Forest
 open Forest.Dom
-open System
 open System.Collections.Generic
 
-type ForestNode = | IViewNode | IRegionNode
-
 module internal RawDataTraverser =
-
     let (|EmptyCollection|_|) (collection: ICollection<'a>) = if (collection.Count = 0) then Some collection else None
     let (|Dictionary|_|) (v: obj) =  if (v :? IDictionary<string, obj>) then Some (v :?> IDictionary<string, obj>) else None
 
@@ -47,7 +43,7 @@ module internal RawDataTraverser =
                 // TODO: check view
                 let node: IDomNode = upcast new ViewNode(path.Append(entry.Key), entry.Key, null, null)
                 changedDom <- changedDom.Add node
-                changedDom <- recurse dom node.Path (node.Type, entry.Value)
+                changedDom <- recurse changedDom node.Path (node.Type, entry.Value)
                 ()
             changedDom
         | _ -> changedDom

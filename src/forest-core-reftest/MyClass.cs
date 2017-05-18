@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Forest;
+using Forest.Dom;
 
 namespace Forest1.RefTest
 {
@@ -12,6 +13,7 @@ namespace Forest1.RefTest
         }
 
         IViewNode node;
+        Path.Path[] p;
 
     }
 }
