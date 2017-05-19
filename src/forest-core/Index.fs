@@ -35,7 +35,7 @@ type [<AutoOpen>] IIndex<'T, 'TKey> =
     abstract member ContainsKey: key: 'TKey -> bool
     abstract Count: int with get
     abstract Keys: IEnumerable<'TKey> with get
-    abstract Item: 'TKey -> 'T with get
+    abstract Item: 'TKey -> Option<'T> with get
 
 type [<AutoOpen>] IWriteableIndex<'T, 'TKey> =
     inherit IIndex<'T, 'TKey>
@@ -50,7 +50,7 @@ type [<AutoOpen>] IAutoIndex<'T, 'TKey> =
     abstract member Add: item: 'T -> IAutoIndex<'T, 'TKey> 
 
 [<AbstractClass>]
-type AbstractWriteableIndex<'T, 'TKey, 'R  when 'R:> IWriteableIndex<'T, 'TKey >>() = 
+type AbstractWriteableIndex<'T, 'TKey, 'R  when 'R:> IWriteableIndex<'T, 'TKey >>() as self = 
     abstract member Contains: 'T -> bool
     abstract member ContainsKey: 'TKey -> bool
     abstract member Insert: 'TKey -> 'T -> 'R
@@ -59,17 +59,17 @@ type AbstractWriteableIndex<'T, 'TKey, 'R  when 'R:> IWriteableIndex<'T, 'TKey >
     abstract member GetEnumerator: unit -> IEnumerator<'T>
     abstract Count: int with get
     abstract Keys: IEnumerable<'TKey> with get
-    abstract Item: 'TKey -> 'T with get
+    abstract Item: 'TKey -> Option<'T> with get
     interface IWriteableIndex<'T, 'TKey> with
         member x.Insert k v = upcast x.Insert k v : IWriteableIndex<'T, 'TKey>
         member x.Remove k = upcast x.Remove k : IWriteableIndex<'T, 'TKey>
         member x.Clear () = upcast x.Clear () : IWriteableIndex<'T, 'TKey>
     interface IIndex<'T, 'TKey> with
-        member x.Contains item = x.Contains item
-        member x.ContainsKey k = x.ContainsKey k
-        member x.Count = x.Count
-        member x.Keys with get () = x.Keys
-        member x.Item with get k = x.[k]
+        member x.Contains item = self.Contains item
+        member x.ContainsKey k = self.ContainsKey k
+        member x.Count = self.Count
+        member x.Keys with get () = self.Keys
+        member x.Item with get k = self.[k]
     interface IEnumerable<'T> with member x.GetEnumerator () = x.GetEnumerator()
     interface IEnumerable with member x.GetEnumerator () = upcast x.GetEnumerator(): IEnumerator
 
@@ -91,7 +91,7 @@ type IndexProxy<'T, 'TKey, 'R when 'R :> IndexProxy<'T, 'TKey, 'R>>(target: IWri
     default this.Count with get() = target.Count
     abstract Keys: IEnumerable<'TKey> with get
     default this.Keys with get() = target.Keys
-    abstract Item: 'TKey -> 'T with get
+    abstract Item: 'TKey -> Option<'T> with get
     default this.Item with get k = target.[k]
     //member protected this.Target with get () = target
     interface IWriteableIndex<'T, 'TKey> with

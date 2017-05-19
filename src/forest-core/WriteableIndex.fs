@@ -20,7 +20,12 @@ type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqCompar
         let keys = (upcast map: IDictionary<ComparisonAdapter<'TKey>, 'T>).Keys
         let keySelector = (fun (k: ComparisonAdapter<'TKey>) -> k.Value)
         keys.Select(keySelector)
-    override this.Item with get k = map.[new ComparisonAdapter<'TKey>(k, comparer, eqComparer)]
+    override this.Item 
+        with get k = 
+            let key = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
+            if (map.ContainsKey(key)) then Some map.[key]
+            else None
+
 
 [<Sealed>]
 type AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =

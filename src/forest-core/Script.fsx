@@ -1,10 +1,44 @@
 #r "bin/Debug/Forest.Core.dll"
+#r "System.Core"
+#r "System"
+#r "System.Numerics"
+#r "System.Runtime.Serialization"
 open Forest
 open Forest.Dom
+open Forest.Sdk
 open System
+open System.Collections.Generic
+open System.IO
+open System.Runtime.Serialization
+open System.Runtime.Serialization.Json
+open System.Text
 
-let x = "dsds";;
-System.Console.WriteLine x;;
+/// Object to Json 
+let internal toJson<'T> (myObj:'T) =   
+    use ms = new MemoryStream() 
+    (new DataContractJsonSerializer(typeof<'T>)).WriteObject(ms, myObj) 
+    Encoding.UTF8.GetString(ms.ToArray()) 
 
-let t = typedefof<IForestContext>;;
-System.Console.WriteLine t.FullName;;
+/// Object from Json 
+let internal fromJson<'T> (jsonString: string) : 'T =  
+    use ms = new MemoryStream(Encoding.UTF8.GetBytes(jsonString)) 
+    let obj = (new DataContractJsonSerializer(typeof<'T>)).ReadObject(ms) 
+    obj :?> 'T
+
+let jsonFile = "/home/islavov/Projects/forest/src/forest-core/exampleTemplateDefinition.json"
+
+[<DataContract>]
+[<Serializable>]
+type JsonData() = inherit Dictionary<string, JsonData>()
+
+let rawTemplateStructureFromJson = upcast new Dictionary<string, obj>(): IDictionary<string, obj>
+let add (key: string) (target: IDictionary<string, obj>) = target.Add(key, new Dictionary<string, obj>()); target
+let get (key: string) (target: IDictionary<string, obj>) = downcast target.[key] : IDictionary<string, obj>
+
+rawTemplateStructureFromJson 
+|> add "rootView" |> get "rootView"
+|> add "contentRegion" |> get "contentRegion"
+|> add "view1"
+|> add "view2" |> get "view1" |> add "emptyRegion"
+
+let result = Forest.Sdk.RawDataTraverser.ParseTemplateStructure(rawTemplateStructureFromJson)

@@ -3,8 +3,8 @@ open Forest
 open Forest.Dom
 open System.Collections.Generic
 
-module internal RawDataTraverser =
-    let (|EmptyCollection|_|) (collection: ICollection<'a>) = if (collection.Count = 0) then Some collection else None
+module RawDataTraverser =
+    //let (|EmptyCollection|_|) (collection: ICollection<'a>) = if (collection.Count = 0) then Some collection else None
     let (|Dictionary|_|) (v: obj) =  if (v :? IDictionary<string, obj>) then Some (v :?> IDictionary<string, obj>) else None
 
     let (|ViewMatcher|_|) (a: DomNodeType, b: obj) =
@@ -32,23 +32,27 @@ module internal RawDataTraverser =
         | ViewMatcher regionsDictionary -> 
             for entry in regionsDictionary do
                 let name = entry.Key
-                let node: IDomNode = upcast new RegionNode(path.Append(entry.Key), entry.Key)
+                printf "Node name %s" name
+                let path = path.Append(name);
+                let node = upcast new RegionNode(path, name): IDomNode
                 changedDom <- changedDom.Add node
-                changedDom <- recurse changedDom node.Path (node.Type, entry.Value)
+                changedDom <- recurse changedDom path (node.Type, entry.Value)
                 ()
             changedDom
         | RegionMatcher viewsDictionary -> 
             for entry in viewsDictionary do
                 let name = entry.Key
+                printf "Node name %s" name
+                let path = path.Append(name);
                 // TODO: check view
-                let node: IDomNode = upcast new ViewNode(path.Append(entry.Key), entry.Key, null, null)
+                let node = upcast new ViewNode(path, name, null, null): IDomNode
                 changedDom <- changedDom.Add node
-                changedDom <- recurse changedDom node.Path (node.Type, entry.Value)
+                changedDom <- recurse changedDom path (node.Type, entry.Value)
                 ()
             changedDom
         | _ -> changedDom
     
-    let parseRawTemplate data = traverseRawTemplate (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
+    let ParseTemplateStructure data = traverseRawTemplate (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
 
         
 

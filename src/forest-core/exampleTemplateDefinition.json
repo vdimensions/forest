@@ -1,0 +1,12 @@
+﻿{
+  "rootView": {
+    "contentRegion": {
+      "view#1": {
+      },
+      "view#2": {
+        "regionInView2ThatIsEmpty": {
+        }
+      }
+    }
+  }
+}

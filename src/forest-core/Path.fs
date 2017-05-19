@@ -37,8 +37,12 @@ module Path =
                     else segment |> newSegments.Add
                 new Path(Enumerable.ToArray(Enumerable.Reverse(newSegments)))
         member this.Append (segment: string) = 
+            match segment with
+            | null -> nullArg "segment"
+            | _ -> ()
+
             let mutable i:int = 0
-            let array: string[] = Array.concat [ this.segments ; [|segment|] ]
+            let array: string[] = Array.concat [ this.Segments ; [|segment|] ]
             new Path(array)
         override this.ToString () = 
             let sb = new StringBuilder()

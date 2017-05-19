@@ -32,7 +32,7 @@ type [<AutoOpen>] IDomIndex =
     abstract member Clear: unit -> IDomIndex
     abstract member Count: int with get
     abstract member Paths: IEnumerable<Path> with get
-    abstract member Item: Path -> IIndex<IDomNode, string> with get
+    abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
 
 [<AbstractClass>]
 type [<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
@@ -44,7 +44,7 @@ type [<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self 
     abstract member ContainsPath: path: Path -> bool 
     abstract member Count: int with get
     abstract member Paths: IEnumerable<Path>
-    abstract member Item: Path -> IIndex<IDomNode, string> with get
+    abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
     interface IDomIndex with
         member this.Add node = upcast self.Add node : IDomIndex
         member this.Insert path node = upcast self.Insert path node : IDomIndex
@@ -55,17 +55,17 @@ type [<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self 
         member this.Paths = self.Paths
         member this.Item with get path = self.[path]
 
-
 type [<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
     new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path>())
     override this.Add node = this.Insert node.Path.Parent node
     override this.Insert path node =
-       let mutable nodeIndex = index.[path]
-       if (box nodeIndex = null) then 
-           nodeIndex <- new AutoIndex<IDomNode, string>((fun x -> x.Name), (upcast new WriteableIndex<IDomNode, string>(comparer, comparer): IWriteableIndex<IDomNode, string>))
-           ()
+       let mutable nodeIndex: IAutoIndex<IDomNode, string> = 
+           upcast new AutoIndex<IDomNode, string>((fun x -> x.Name), (upcast new WriteableIndex<IDomNode, string>(comparer, comparer): IWriteableIndex<IDomNode, string>))
+       match index.[path] with
+       | Some ni -> nodeIndex <- ni
+       | None -> ()
        nodeIndex <- nodeIndex.Add node
        let newIndex = index.Remove(path).Insert path nodeIndex
        new DefaultDomIndex(newIndex)
@@ -77,15 +77,20 @@ type [<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, st
         let path = node.Path
         let parentPath = path.Parent
         let nodeIndex = index.[parentPath];
-        if (box nodeIndex <> null) then
-            if (nodeIndex.Count > 0) then new DefaultDomIndex((index.Remove parentPath).Insert parentPath nodeIndex)
+        match nodeIndex with
+        | Some ni ->
+            if (ni.Count > 0) then new DefaultDomIndex((index.Remove parentPath).Insert parentPath (ni.Remove node))
             else this.Remove(parentPath)
-        else this
+        | None -> this
     override this.Clear () = new DefaultDomIndex(index.Clear())
     override this.ContainsPath path = index.ContainsKey path
     override this.Count = index.Count
     override this.Paths = index.Keys
-    override this.Item with get k = upcast index.[k]: IIndex<IDomNode, string>
+    override this.Item 
+        with get k =
+            match index.[k] with
+            | Some x -> Some (upcast x: IIndex<IDomNode, string>)
+            | None -> None
 
 type internal ViewNode(path: Path, name: string, viewType: Type, viewModelType: Type) as self =
     member this.Name with get () = name
