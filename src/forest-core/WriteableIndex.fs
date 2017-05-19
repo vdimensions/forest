@@ -23,9 +23,12 @@ type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqCompar
     override this.Item 
         with get k = 
             let key = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
-            if (map.ContainsKey(key)) then Some map.[key]
+            if (map.ContainsKey(key)) then 
+                 let value = map.[key]
+                 match (box value) with
+                 | null -> None // never return nulls
+                 | _ -> Some value
             else None
-
 
 [<Sealed>]
 type AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =

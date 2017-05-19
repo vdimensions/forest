@@ -20,40 +20,32 @@ module Path =
         }
         internal new([<ParamArray>]segs: string[]) = { segments = segs }
         member this.AsCanonical () =
-            if (this.IsEmpty) then
-                this
-            else
+            if (this.IsEmpty = false) then
                 let cmp = StringComparer.Ordinal;
                 let newSegments: List<string> = new List<string>(this.segments.Length)
                 let mutable segsToSkip = 0
                 for segment in this.segments.Reverse() do
                     if (cmp.Equals(segment, ".")) then ()
-                    else if (cmp.Equals(segment, "..")) then 
-                        segsToSkip <- (segsToSkip + 1)
-                        ()
-                    else if (segsToSkip > 0) then
-                        segsToSkip <- (segsToSkip - 1)
-                        ()
+                    else if (cmp.Equals(segment, "..")) then segsToSkip <- (segsToSkip + 1)
+                    else if (segsToSkip > 0) then segsToSkip <- (segsToSkip - 1)
                     else segment |> newSegments.Add
-                new Path(Enumerable.ToArray(Enumerable.Reverse(newSegments)))
+                new Path(newSegments |> Enumerable.Reverse |> Enumerable.ToArray)
+            else this
         member this.Append (segment: string) = 
             match segment with
             | null -> nullArg "segment"
-            | _ -> ()
-
-            let mutable i:int = 0
-            let array: string[] = Array.concat [ this.Segments ; [|segment|] ]
-            new Path(array)
+            | _    -> new Path(Array.concat [ this.Segments; [|segment|] ])
         override this.ToString () = 
-            let sb = new StringBuilder()
-            for segment:string in this.Segments do
-                sb.Append(Separator).Append(segment) |> ignore
-                ()
-            sb.ToString()
+            let s = this.Segments
+            if (s.Length > 0) then
+                let sb = new StringBuilder()
+                for segment in s do sb.Append(Separator).Append(segment) |> ignore
+                sb.ToString()
+            else (Separator.ToString())
         override this.Equals o = StringComparer.Ordinal.Equals(this.ToString(), o.ToString())
         override this.GetHashCode () = this.ToString().GetHashCode()
         member this.IsEmpty with get () = (this.segments = null || this.segments.Length = 0)
         member this.Segments with get () = if (this.IsEmpty) then [||] else this.segments
-        member this.Parent with get () = if (this.IsEmpty) then Path.Empty else new Path(Enumerable.ToArray(Enumerable.Take(this.segments, this.segments.Length-1)))
+        member this.Parent with get () = if (this.IsEmpty) then Path.Empty else new Path(Enumerable.Take(this.segments, this.segments.Length-1) |> Enumerable.ToArray)
         interface IEquatable<Path> with member this.Equals p = StringComparer.Ordinal.Equals(p.ToString(), this.ToString())
         interface IComparable<Path> with member this.CompareTo p = StringComparer.Ordinal.Compare(this.ToString(), p.ToString())

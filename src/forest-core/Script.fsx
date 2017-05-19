@@ -42,3 +42,7 @@ rawTemplateStructureFromJson
 |> add "view2" |> get "view1" |> add "emptyRegion"
 
 let result = Forest.Sdk.RawDataTraverser.ParseTemplateStructure(rawTemplateStructureFromJson)
+printf "dom index contains %i root nodes \n" result.Count
+for path in result.Paths do printf "Key: %s\n" (path.ToString())
+
+printf "%s\n\n\n\n\n\n\n\n" "\n"
