@@ -2,8 +2,7 @@
 open System.Collections.Generic
 open System.Linq
 
-[<Sealed>]
-type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer : IEqualityComparer<'TKey>, comparer: IComparer<'TKey>) =
+type [<Sealed>] WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer : IEqualityComparer<'TKey>, comparer: IComparer<'TKey>) =
     inherit AbstractWriteableIndex<'T, 'TKey, WriteableIndex<'T, 'TKey> >()
     new(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer: IEqualityComparer<'TKey>) = WriteableIndex(map, eqComparer, Comparer<'TKey>.Default)
     new(map : Map<ComparisonAdapter<'TKey>, 'T>) = WriteableIndex(map, EqualityComparer<'TKey>.Default)
@@ -30,8 +29,7 @@ type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqCompar
                  | _ -> Some value
             else None
 
-[<Sealed>]
-type AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =
+type [<Sealed>] AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =
     inherit IndexProxy<'T, 'TKey, AutoIndex<'T, 'TKey>>(ix, (fun x -> new AutoIndex<'T, 'TKey>(keyFn, x)))
     //new(keyFn: 'T -> 'TKey) = AutoIndex(keyFn, new WriteableIndex<'T, 'TKey>())
     member this.Remove item = 

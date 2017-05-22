@@ -14,6 +14,7 @@ module Path =
     [<CustomComparison>]
     type Path = 
         static member Empty = new Path()
+        static member (@@) (path:Path, p:string): Path = path.Append(p)
         val segments: string[]
         new(raw: string) = { 
             segments = (if (false = String.IsNullOrEmpty(raw)) then raw.Split([|Separator|], StringSplitOptions.RemoveEmptyEntries) else null)

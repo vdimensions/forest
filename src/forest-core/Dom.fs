@@ -34,8 +34,7 @@ type [<AutoOpen>] IDomIndex =
     abstract member Paths: IEnumerable<Path> with get
     abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
 
-[<AbstractClass>]
-type [<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
+type [<AbstractClass>][<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
     abstract member Add: node: IDomNode -> 'T
     abstract member Insert: path: Path -> node: IDomNode -> 'T
     abstract member Remove: path: Path -> 'T
@@ -55,7 +54,7 @@ type [<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self 
         member this.Paths = self.Paths
         member this.Item with get path = self.[path]
 
-type [<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) =
+type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
     new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path>())
@@ -92,7 +91,7 @@ type [<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, st
             | Some x -> Some (upcast x: IIndex<IDomNode, string>)
             | None -> None
 
-type internal ViewNode(path: Path, name: string, viewType: Type, viewModelType: Type) as self =
+type [<Sealed>] internal ViewNode(path: Path, name: string, viewType: Type, viewModelType: Type) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ImplementationType with get () = viewType
@@ -106,7 +105,7 @@ type internal ViewNode(path: Path, name: string, viewType: Type, viewModelType: 
         member this.Path = self.Path
         member this.Type = DomNodeType.View
 
-type internal RegionNode(path: Path, name: string) as self =
+type [<Sealed>] internal RegionNode(path: Path, name: string) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     interface IRegionNode
@@ -115,7 +114,7 @@ type internal RegionNode(path: Path, name: string) as self =
         member this.Path = self.Path
         member this.Type = DomNodeType.Region
 
-type internal CommandNode(path: Path, name: string, argumentType: Type) as self = 
+type [<Sealed>] internal CommandNode(path: Path, name: string, argumentType: Type) as self = 
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ArgumentType with get () = argumentType

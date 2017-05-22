@@ -44,11 +44,11 @@ rawTemplateStructureFromJson
 let result = Forest.Sdk.RawDataTraverser.ParseTemplateStructure(rawTemplateStructureFromJson)
 printf "dom index contains %i root nodes \n" result.Count
 for path in result.Paths do 
-    printf "+-[%s]\n" (path.ToString())
+    //printf "+-[%s]\n" (path.ToString())
     let item = result.[path]
     match item with
     | None -> ()
-    | Some node -> for x in node do Console.WriteLine("  +-[%{0}]@%{1}", x.Name, x.Path)
+    | Some node -> for x in node do Console.WriteLine("  +-[{0}]", x.Path)
    
 
 printf "%s\n\n\n\n\n\n\n\n" "\n"
