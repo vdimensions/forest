@@ -32,17 +32,17 @@ module RawDataTraverser =
         | ViewMatcher regionsDictionary -> 
             for entry in regionsDictionary do
                 let name = entry.Key
+                let path = path.Append(name)
                 let node = upcast new RegionNode(path, name): IDomNode
-                printf "Node path: %s and name %s and type: Region\n" (path.ToString()) name
-                changedDom <- recurse (changedDom.Add node) (path.Append(name)) (node.Type, entry.Value)
+                changedDom <- recurse (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | RegionMatcher viewsDictionary -> 
             for entry in viewsDictionary do
                 let name = entry.Key
+                let path = path.Append(name)
                 // TODO: obtain view metadata
                 let node = upcast new ViewNode(path, name, null, null): IDomNode
-                printf "Node path: %s and name %s and type: View\n" (path.ToString()) name
-                changedDom <- recurse (changedDom.Add node) (path.Append(name)) (node.Type, entry.Value)
+                changedDom <- recurse (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | _ -> changedDom
     

@@ -34,12 +34,14 @@ module Path =
         member this.Append (segment: string) = 
             match segment with
             | null -> nullArg "segment"
-            | _    -> new Path(Array.concat [ this.Segments; [|segment|] ])
+            | str  -> 
+                let concatenated: string = String.Concat(this.ToString(), Separator.ToString(), str)
+                new Path(concatenated)
         override this.ToString () = 
-            let s = this.Segments
+            let s:string[] = this.Segments
             if (s.Length > 0) then
                 let sb = new StringBuilder()
-                for segment in s do sb.Append(Separator).Append(segment) |> ignore
+                for segment:string in s do sb.Append(Separator).Append(segment) |> ignore
                 sb.ToString()
             else (Separator.ToString())
         override this.Equals o = StringComparer.Ordinal.Equals(this.ToString(), o.ToString())
