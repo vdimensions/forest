@@ -29,7 +29,7 @@ type AbstractViewRegistry() =
         | _ -> 
             let metadata = this.GetTypeMetadata t
             match metadata with
-            | None -> invalidArg "t" "The specified type does not implement"
+            | None -> invalidArg "t" "The specified type does not implement View"
             | Some metadata -> storage.[metadata.Name] <- metadata
             this
     member this.Register<'T when 'T:> IView> () = 
@@ -38,9 +38,10 @@ type AbstractViewRegistry() =
 type [<Sealed>] ViewRegistry() = 
     inherit AbstractViewRegistry()
     override this.GetTypeMetadata t =
+        match t with | null -> nullArg "t" | _ -> ()
         let inline objHasType ty obj = (obj.GetType() = ty)
         let getAttributes : MemberInfo -> seq<'a> = 
-            fun (mi:MemberInfo) ->
+            fun (mi: MemberInfo) ->
                 let getAttributesInternal = 
                     mi.GetCustomAttributes 
                     >> Seq.filter(objHasType typeof<'a>) 
@@ -60,10 +61,10 @@ type [<Sealed>] ViewRegistry() =
                 match mi with
                 | mi when mi.ReturnType = typeof<Void> && parameters.Length = 1 -> 
                     let metadata = a |> Seq.map (fun ca -> CommandMetadata(ca.Name, parameters.[0].ParameterType))
-                    Some (metadata)
+                    Result.Success (metadata)
                 | _ -> 
                     let message = String.Format("The method `{0}` cannot be used as command, but has `{1}`.", mi.Name, typeof<CommandAttribute>.FullName)
-                    Failure (Error.CommandMethodHasInvalidSignature, message)
+                    Result.Failure (Error.CommandMethodHasInvalidSignature, message)
             let commandMetadata = 
                 getMethods 
                 >> Seq.map (fun x -> getCommandMethod(x), x)
@@ -72,10 +73,10 @@ type [<Sealed>] ViewRegistry() =
                 >> Seq.concat
                 >> Seq.toArray
 
-            Success (new TypeMetadata(name, t, commandMetadata()))
-        | _ -> 
+            Result.Success (new TypeMetadata(name, t, commandMetadata()))
+        | None -> 
             let message = String.Format("The specified type does not have a '{0}' applied.", typeof<ViewAttribute>.FullName)
-            Failure (Error.NoViewAttribute, message)
+            Result.Failure (Error.NoViewAttribute, message)
 
 
 
