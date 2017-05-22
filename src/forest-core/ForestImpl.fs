@@ -4,6 +4,10 @@ open System.Reflection
 open System.Collections.Generic
 open Forest.Dom
 
+type [<AutoOpen>] Error = 
+| NoViewAttribute
+| CommandMethodHasInvalidSignature
+
 type CommandMetadata(name: string, argType: Type) = 
     member this.Name with get() = name
     member this.ArgumentType with get() = argType
@@ -13,13 +17,11 @@ type TypeMetadata(name: string, viewType: Type, commands: CommandMetadata[]) =
     member this.ViewType with get() = viewType
     member this.Commands with get() = upcast commands: IEnumerable<CommandMetadata>
 
-
-
 [<AbstractClass>]
 type AbstractViewRegistry() = 
     let storage: IDictionary<string, TypeMetadata> = upcast new Dictionary<string, TypeMetadata>(StringComparer.Ordinal)
 
-    abstract member GetTypeMetadata: t: Type -> Option<TypeMetadata>
+    abstract member GetTypeMetadata: t: Type -> Result<TypeMetadata, Error>
 
     member this.Register (t: Type) = 
         match t with
@@ -37,21 +39,43 @@ type [<Sealed>] ViewRegistry() =
     inherit AbstractViewRegistry()
     override this.GetTypeMetadata t =
         let inline objHasType ty obj = (obj.GetType() = ty)
-        let hasAttr : MemberInfo -> Option<'a> = fun mi ->
-            mi.GetCustomAttributes(true)
-            |> Seq.tryFind(objHasType typeof<'a>)
-            |> Option.map(fun attr -> (downcast attr : 'a))
+        let getAttributes : MemberInfo -> seq<'a> = 
+            fun (mi:MemberInfo) ->
+                let getAttributesInternal = 
+                    mi.GetCustomAttributes 
+                    >> Seq.filter(objHasType typeof<'a>) 
+                    >> Seq.map(fun attr -> (downcast attr : 'a)) 
+                getAttributesInternal(true)
 
-        let attr: Option<ViewAttribute> = hasAttr t 
-        let name = match attr with | Some a -> a.Name | _ -> String.Empty
-        let commandMethods = 
-            t.GetMethods(BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public)
-            |> List.map (fun x -> let r: Option<CommandAttribute> = hasAttr x; r)
-            |> List.filter (fun x -> match x with | None: false | Some data when data -> data)
+        let inline getCommandMethod (methodInfo: MethodInfo): seq<CommandAttribute> = 
+            getAttributes (upcast methodInfo: MemberInfo)
 
-        ()
-            
-        
+        let attr: Option<ViewAttribute> = (getAttributes t) |> Seq.tryPick Some
+        match attr with 
+        | Some attr -> 
+            let name = attr.Name
+            let inline getMethods () = t.GetMethods (BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public)
+            let inline createParameter (a: seq<CommandAttribute>, mi: MethodInfo) =
+                let parameters = mi.GetParameters()
+                match mi with
+                | mi when mi.ReturnType = typeof<Void> && parameters.Length = 1 -> 
+                    let metadata = a |> Seq.map (fun ca -> CommandMetadata(ca.Name, parameters.[0].ParameterType))
+                    Some (metadata)
+                | _ -> 
+                    let message = String.Format("The method `{0}` cannot be used as command, but has `{1}`.", mi.Name, typeof<CommandAttribute>.FullName)
+                    Failure (Error.CommandMethodHasInvalidSignature, message)
+            let commandMetadata = 
+                getMethods 
+                >> Seq.map (fun x -> getCommandMethod(x), x)
+                >> Seq.map createParameter
+                >> Seq.choose id
+                >> Seq.concat
+                >> Seq.toArray
+
+            Success (new TypeMetadata(name, t, commandMetadata()))
+        | _ -> 
+            let message = String.Format("The specified type does not have a '{0}' applied.", typeof<ViewAttribute>.FullName)
+            Failure (Error.NoViewAttribute, message)
 
 
 
