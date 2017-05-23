@@ -4,30 +4,28 @@ open System.Collections.Generic
 open System.Reflection
 open Forest.Dom
 
-[<Obsolete>]
-type IRegistry = 
-    [<Obsolete>]abstract member Register<'T>    : name: string -> model: 'T -> IRegistry
-    [<Obsolete>]abstract member Unregister      : name: string -> IRegistry
-    abstract member Lookup          : name: string -> IViewNode
 
+[<Interface>]
 type IViewRegistry = 
-    abstract member Resolve: viewNode: IViewNode -> IView
-    abstract member Resolve: name: string -> IView
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
-and IView =
+    abstract member Resolve: viewNode: IViewNode -> IView
+    abstract member Resolve: name: string -> IView
+and [<Interface>] IView =
     abstract Regions: IIndex<string, IRegion> with get
     abstract ViewModel: obj
-and IRegion =
+and [<Interface>] IRegion =
     abstract Views: IIndex<string, IView> with get
-and IForestRuntime =
+and [<Interface>] IForestRuntime =
     abstract Registry: IViewRegistry with get
 
+[<Interface>]
 type IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
     abstract ViewModel: 'T with get, set
 
 // interal functionality needed by the forest engine
+[<Interface>]
 type internal IViewInternal =
     inherit IView
     //abstract member ExchangeViewModel : model : 'T -> IView<'T>
@@ -72,10 +70,3 @@ type AbstractView<'T when 'T: (new: unit -> 'T)> () =
     //interface IView with
     //    member this.Submit context = ()
     //    member this.ViewModel: obj = upcast _viewModel
-
-
-
-type ViewRegistryError = 
-| ViewError of View.Error
-| CommandError of Command.Error
-

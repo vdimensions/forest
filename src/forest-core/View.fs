@@ -8,6 +8,7 @@ type ViewAttribute(name: string) = inherit ForestNodeAttribute(name)
 
 [<RequireQualifiedAccessAttribute>]
 module View = 
+    [<Sealed>]
     type Metadata(name: string, viewType: Type, commands: Command.Metadata[]) = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
