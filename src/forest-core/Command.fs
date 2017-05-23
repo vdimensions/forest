@@ -14,6 +14,6 @@ module Command =
         member this.ArgumentType with get() = argType
 
     type Error =
-    | NonVoidReturnType of MethodInfo
-    | MoreThanOneArgument of MethodInfo
-    | MultipleErrors of Error[]
+        | NonVoidReturnType of MethodInfo
+        | MoreThanOneArgument of MethodInfo
+        | MultipleErrors of Error[]

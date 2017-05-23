@@ -1,12 +1,9 @@
 namespace Forest
 open System;
-open System.Collections.Generic
-open System.Reflection
 open Forest.Dom
 
 
-[<Interface>]
-type IViewRegistry = 
+type [<Interface>] IViewRegistry = 
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: viewNode: IViewNode -> IView
@@ -33,25 +30,23 @@ type internal IViewInternal =
     /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
     /// </summary>
     /// <param name="context">
-    /// The <see cref="IForestContext" /> instance to manage the state of the current view.
+    /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
     /// </param>
     abstract member Submit: context : IForestRuntime -> unit
 
-type IForestEngine =
+type [<Interface>] IForestEngine =
     abstract member Execute<'T when 'T: (new: unit -> 'T)> : rt: IForestRuntime -> node: IViewNode -> IView<'T>
 
-
+[<Interface>]
 type internal IForestContextAware =
     abstract member InitializeContext : rt : IForestRuntime -> unit
 
-//type internal IParentRegionAware =
-//    abstract member InitializeParentRegion : region : IRegion -> unit
 
 [<Flags>]
 type internal ViewChange =
-| None          = 0b00
-| ViewModel     = 0b01
-| RegionState   = 0b10
+    | None          = 0b00
+    | ViewModel     = 0b01
+    | RegionState   = 0b10
 
 [<AbstractClass>]
 type AbstractView<'T when 'T: (new: unit -> 'T)> () =

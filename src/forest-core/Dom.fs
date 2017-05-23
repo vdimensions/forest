@@ -14,17 +14,19 @@ type [<AutoOpen>] IDomNode =
     abstract Path: Path.T with get
     abstract Type: DomNodeType with get
 
-type [<AutoOpen>] ICommandNode =
+[<Interface>]
+type ICommandNode =
     inherit IDomNode
     abstract ArgumentType: Type with get
 
-type [<AutoOpen>] IViewNode = 
+type [<Interface>] IViewNode = 
     inherit IDomNode
     abstract ImplementationType: Type with get
     abstract ViewModelType: Type with get
-and [<AutoOpen>] IRegionNode = inherit IDomNode
+and [<Interface>] IRegionNode = inherit IDomNode
 
-type [<AutoOpen>] IDomIndex =
+[<Interface>]
+type IDomIndex =
     abstract member Add: node: IDomNode -> IDomIndex
     abstract member Remove: node: IDomNode -> IDomIndex
     abstract member Remove: path: Path.T -> IDomIndex
@@ -34,7 +36,9 @@ type [<AutoOpen>] IDomIndex =
     abstract member Paths: IEnumerable<Path.T> with get
     abstract member Item: Path.T -> Option<IIndex<IDomNode, string>> with get
 
-type [<AbstractClass>][<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
+[<AbstractClass>]
+[<AutoOpen>]
+type AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
     abstract member Add: node: IDomNode -> 'T
     abstract member Insert: path: Path.T -> node: IDomNode -> 'T
     abstract member Remove: path: Path.T -> 'T
@@ -54,7 +58,9 @@ type [<AbstractClass>][<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomInde
         member this.Paths = self.Paths
         member this.Item with get path = self.[path]
 
-type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T>) =
+[<Sealed>]
+[<AutoOpen>]
+type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T>) =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
     new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path.T>())
@@ -62,12 +68,9 @@ type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<ID
     override this.Insert path node =
        let mutable nodeIndex: IAutoIndex<IDomNode, string> = 
            upcast new AutoIndex<IDomNode, string>((fun x -> x.Name), (upcast new WriteableIndex<IDomNode, string>(comparer, comparer): IWriteableIndex<IDomNode, string>))
-       match index.[path] with
-       | Some ni -> nodeIndex <- ni
-       | None -> ()
+       match index.[path] with | Some ni -> nodeIndex <- ni | None -> ()
        nodeIndex <- nodeIndex.Add node
-       let newIndex = index.Remove(path).Insert path nodeIndex
-       new DefaultDomIndex(newIndex)
+       new DefaultDomIndex((index.Remove(path).Insert path nodeIndex))
 
     override this.Remove (path: Path.T) = 
        let newIndex = index.Remove path
@@ -90,7 +93,9 @@ type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<ID
             | Some x -> Some (upcast x: IIndex<IDomNode, string>)
             | None -> None
 
-type [<Sealed>] internal ViewNode(path: Path.T, name: string, viewType: Type, viewModelType: Type) as self =
+
+[<Sealed>]
+type internal ViewNode(path: Path.T, name: string, viewType: Type, viewModelType: Type) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ImplementationType with get () = viewType
@@ -104,7 +109,8 @@ type [<Sealed>] internal ViewNode(path: Path.T, name: string, viewType: Type, vi
         member this.Path = self.Path
         member this.Type = DomNodeType.View
 
-type [<Sealed>] internal RegionNode(path: Path.T, name: string) as self =
+[<Sealed>]
+type internal RegionNode(path: Path.T, name: string) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     interface IRegionNode
@@ -113,7 +119,8 @@ type [<Sealed>] internal RegionNode(path: Path.T, name: string) as self =
         member this.Path = self.Path
         member this.Type = DomNodeType.Region
 
-type [<Sealed>] internal CommandNode(path: Path.T, name: string, argumentType: Type) as self = 
+[<Sealed>]
+type internal CommandNode(path: Path.T, name: string, argumentType: Type) as self = 
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ArgumentType with get () = argumentType

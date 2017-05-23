@@ -2,29 +2,33 @@
 open System
 open System.Collections.Generic
 
+
 [<AttributeUsage(AttributeTargets.Class)>]
 [<Sealed>]
 type ViewAttribute(name: string) = 
     inherit ForestNodeAttribute(name)
     member val AutowireCommands = false with get, set
 
+
 [<RequireQualifiedAccessAttribute>]
 module View = 
+    let inline private isNotNull argName obj = match obj with | null -> nullArg argName | _ -> obj
+
     [<Sealed>]
-    type Metadata(name: string, viewType: Type, commands: Command.Metadata[]) = 
+    type Metadata(name: string, viewType: Type, commands: IEnumerable<Command.Metadata>) = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
-        member this.Commands with get() = upcast commands: IEnumerable<Command.Metadata>
+        member this.Commands with get() = commands
 
     type Error = 
-    | ViewAttributeMissing of Type
-    | ViewTypeIsAbstract of Type
+        | ViewAttributeMissing of Type
+        | ViewTypeIsAbstract of Type
 
     type AbstractViewException(message: string, inner: exn) =
-        inherit Exception(message, inner)
+        inherit Exception(isNotNull "message" message, inner)
         new (message: string) = AbstractViewException(message, null)
 
     type ViewAttributeMissingException(viewType: Type, inner: exn) =
-        inherit AbstractViewException(String.Format("View type {0} is an interface or abstract class.", viewType.FullName), inner)
-        new (viewType: Type) = ViewAttributeMissingException(viewType, null)
+        inherit AbstractViewException(String.Format("View type {0} is an interface or abstract class.", (isNotNull "viewType" viewType).FullName), inner)
+        new (viewType: Type) = ViewAttributeMissingException((isNotNull "viewType" viewType), null)
 

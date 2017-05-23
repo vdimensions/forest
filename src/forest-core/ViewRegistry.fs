@@ -6,11 +6,11 @@ open System.Collections.Generic
 
 
 type ViewRegistryError = 
-| ViewError of View.Error
-| CommandError of Command.Error
+    | ViewError of View.Error
+    | CommandError of Command.Error
 
-
-type [<AbstractClass>] AbstractViewRegistry() as this = 
+[<AbstractClass>]
+type AbstractViewRegistry() as this = 
     let storage: IDictionary<string, View.Metadata> = upcast new Dictionary<string, View.Metadata>(StringComparer.Ordinal)
 
     abstract member GetViewMetadata: t: Type -> Result<View.Metadata, ViewRegistryError>
@@ -31,9 +31,9 @@ type [<AbstractClass>] AbstractViewRegistry() as this =
     default this.ResolveCommandError ce =
         // TODO
         match ce with
-        | Command.Error.MoreThanOneArgument t -> upcast new InvalidOperationException()
-        | Command.Error.NonVoidReturnType t -> upcast new InvalidOperationException()
-        | Command.Error.MultipleErrors t -> upcast new InvalidOperationException()
+        | Command.Error.MoreThanOneArgument mi -> upcast new InvalidOperationException()
+        | Command.Error.NonVoidReturnType mi -> upcast new InvalidOperationException()
+        | Command.Error.MultipleErrors e -> upcast new InvalidOperationException()
 
     member this.Register (t: Type) = 
         match t with
@@ -45,7 +45,6 @@ type [<AbstractClass>] AbstractViewRegistry() as this =
             | Failure e -> raise (e |> this.ResolveError)
             this
     member this.Register<'T when 'T:> IView> () = this.Register typeof<'T>
-
     member this.Resolve (viewNode: IViewNode) = 
         match box viewNode with | null -> nullArg "viewNode" | _ -> ()
         this.Resolve (viewNode.Name)
@@ -54,27 +53,27 @@ type [<AbstractClass>] AbstractViewRegistry() as this =
         let viewMetadata = storage.[name]
         match (box viewMetadata) with | null -> invalidArg "name" "No such view was registered" | _ -> ()
         viewMetadata |> this.InstantiateView 
-
+    
     interface IViewRegistry with
         member x.Register t = upcast this.Register t : IViewRegistry
         member x.Register<'T when 'T:> IView> () = upcast this.Register<'T>() : IViewRegistry
         member x.Resolve (name: string) = this.Resolve name
         member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
 
-
-type [<Sealed>] ViewRegistry(container: IContainer) = 
+[<Sealed>]
+type ViewRegistry(container: IContainer) = 
     inherit AbstractViewRegistry()
     override this.GetViewMetadata t =
         match t with | null -> nullArg "t" | _ -> ()
         let inline isOfType ty obj = (obj.GetType() = ty)
-        let inline getAttributes (mi: MemberInfo) : seq<'a> =
+        let inline getAttributes(mi: 'MI when 'MI :> MemberInfo) : seq<'a> =
             let getAttributesInternal = 
                 mi.GetCustomAttributes 
                 >> Seq.filter(isOfType typeof<'a>) 
                 >> Seq.map(fun attr -> (downcast attr : 'a)) 
             getAttributesInternal(true)
         let inline getCommandAttribs (methodInfo: MethodInfo): seq<CommandAttribute> = 
-            getAttributes (upcast methodInfo: MemberInfo)
+            getAttributes methodInfo
 
         let attr: Option<ViewAttribute> = (getAttributes t) |> Seq.tryPick Some
         match attr with 

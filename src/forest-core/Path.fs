@@ -4,7 +4,6 @@ open System.Collections.Generic;
 open System.Linq
 open System.Text
 
-[<RequireQualifiedAccessAttribute>]
 module Path =
     [<Literal>]
     let Separator: char = '/'
@@ -14,15 +13,14 @@ module Path =
     [<CustomComparison>]
     type T = 
         static member internal Empty = T()
-        static member (@@) (path:T, p:string): T = 
-            path.Append(p)
+        static member (@@) (path:T, p:string): T = path.Append(p)
         val private segments: string[]
         new(raw: string) = { 
             segments = (if (false = String.IsNullOrEmpty(raw)) then raw.Split([|Separator|], StringSplitOptions.RemoveEmptyEntries) else null)
         }
         internal new([<ParamArray>]segs: string[]) = { segments = segs }
         member this.AsCanonical () =
-            if (this.IsEmpty = false) then
+            if (not this.IsEmpty) then
                 let cmp = StringComparer.Ordinal;
                 let newSegments: List<string> = new List<string>(this.segments.Length)
                 let mutable segsToSkip = 0
@@ -31,14 +29,12 @@ module Path =
                     else if (cmp.Equals(segment, "..")) then segsToSkip <- (segsToSkip + 1)
                     else if (segsToSkip > 0) then segsToSkip <- (segsToSkip - 1)
                     else segment |> newSegments.Add
-                new T(newSegments |> Enumerable.Reverse |> Enumerable.ToArray)
+                T(newSegments |> Enumerable.Reverse |> Enumerable.ToArray)
             else this
         member this.Append (segment: string) = 
             match segment with
             | null -> nullArg "segment"
-            | str  -> 
-                let concatenated: string = String.Concat(this.ToString(), Separator.ToString(), str)
-                new T(concatenated)
+            | str  -> T((String.Concat(this.ToString(), Separator.ToString(), str)))
         override this.ToString () = 
             let s:string[] = this.Segments
             if (s.Length > 0) then
@@ -53,6 +49,20 @@ module Path =
         member this.Parent with get () = if (this.IsEmpty) then T.Empty else new T(Enumerable.Take(this.segments, this.segments.Length-1) |> Enumerable.ToArray)
         interface IEquatable<T> with member this.Equals p = StringComparer.Ordinal.Equals(p.ToString(), this.ToString())
         interface IComparable<T> with member this.CompareTo p = StringComparer.Ordinal.Compare(this.ToString(), p.ToString())
+        static member (../) (path:T, cnt: uint32) = 
+            let uLen = uint32 path.Segments.Length
+            match cnt with
+                | 0u -> Some path
+                | cnt when (uLen <= cnt) -> None
+                | _ ->
+                    let mutable result: T = path
+                    let mutable tmpCnt = cnt
+                    while (tmpCnt > 0u) do 
+                        result <- result.Parent
+                        tmpCnt <- (tmpCnt - 1u)
+                    Some result
+
+
 
     let Empty = T.Empty
 

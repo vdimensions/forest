@@ -2,10 +2,11 @@
 
 
 [<AutoOpen>]
-module Railway =
-    type [<AutoOpen>] Result<'T, 'E> = 
-    | Success of 'T
-    | Failure of 'E
+module Rop =
+
+    type Result<'T, 'E> = 
+        | Success of 'T
+        | Failure of 'E
 
     let bind switchFn twoTrackInput =
         match twoTrackInput with

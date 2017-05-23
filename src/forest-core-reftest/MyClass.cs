@@ -13,7 +13,7 @@ namespace Forest1.RefTest
         }
 
         IViewNode node;
-        Path.Path[] p;
+        Path.T[] p;
 
     }
 }

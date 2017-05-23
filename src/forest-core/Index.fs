@@ -1,5 +1,4 @@
 namespace Forest
-open System
 open System.Collections
 open System.Collections.Generic;
 
@@ -17,17 +16,17 @@ type IIndex<'T, 'TKey> =
 [<Interface>]
 type IWriteableIndex<'T, 'TKey> =
     inherit IIndex<'T, 'TKey>
-    abstract member Remove: key: 'TKey -> IWriteableIndex<'T, 'TKey>
-    abstract member Insert: key: 'TKey -> item: 'T -> IWriteableIndex<'T, 'TKey>
     abstract member Clear: unit -> IWriteableIndex<'T, 'TKey>
+    abstract member Insert: key: 'TKey -> item: 'T -> IWriteableIndex<'T, 'TKey>
+    abstract member Remove: key: 'TKey -> IWriteableIndex<'T, 'TKey>
 
 [<AutoOpen>]
 [<Interface>]
 type IAutoIndex<'T, 'TKey> =
     inherit IWriteableIndex<'T, 'TKey>
+    abstract member Add: item: 'T -> IAutoIndex<'T, 'TKey> 
     abstract member Remove: key: 'TKey -> IAutoIndex<'T, 'TKey> 
     abstract member Remove: item: 'T -> IAutoIndex<'T, 'TKey> 
-    abstract member Add: item: 'T -> IAutoIndex<'T, 'TKey> 
 
 [<AbstractClass>]
 type AbstractWriteableIndex<'T, 'TKey, 'R  when 'R:> IWriteableIndex<'T, 'TKey >>() as self = 

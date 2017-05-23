@@ -30,31 +30,6 @@
     <WarningLevel>3</WarningLevel>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Railway.fs" />
-    <Compile Include="ComparisonAdapter.fs" />
-    <Compile Include="Index.fs" />
-    <Compile Include="WriteableIndex.fs" />
-    <Compile Include="Path.fsi" />
-    <Compile Include="Path.fs" />
-    <Compile Include="Dom.fs" />
-    <Compile Include="ForestNodeAttribute.fs" />
-    <Compile Include="Command.fs" />
-    <Compile Include="View.fs" />
-    <Compile Include="Forest.fs" />
-    <Compile Include="Container.fs" />
-    <Compile Include="ViewRegistry.fs" />
-    <Compile Include="ForestImpl.fs" />
-    <Compile Include="Sdk.fs" />
-    <None Include="Script.fsx" />
-    <None Include="exampleTemplateDefinition.json" />
-  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Choose>
     <When Condition="Exists('$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\FSharp\Microsoft.FSharp.Targets')">
@@ -1380,6 +1355,28 @@
     </When>
   </Choose>
   <ItemGroup>
-    <Folder Include="Dom\" />
+    <Compile Include="Rop.fs" />
+    <Compile Include="ComparisonAdapter.fs" />
+    <Compile Include="Index.fs" />
+    <Compile Include="WriteableIndex.fs" />
+    <Compile Include="Path.fsi" />
+    <Compile Include="Path.fs" />
+    <Compile Include="Dom.fs" />
+    <Compile Include="ForestNodeAttribute.fs" />
+    <Compile Include="Command.fs" />
+    <Compile Include="View.fs" />
+    <Compile Include="Forest.fs" />
+    <Compile Include="Container.fs" />
+    <Compile Include="ViewRegistry.fs" />
+    <Compile Include="ForestImpl.fs" />
+    <Compile Include="Sdk.fs" />
+    <None Include="Script.fsx" />
+    <None Include="exampleTemplateDefinition.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
   </ItemGroup>
 </Project>
