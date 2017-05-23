@@ -1,21 +1,16 @@
 namespace Forest
 open System;
+open System.Collections.Generic
+open System.Reflection
 open Forest.Dom
 
-type [<AbstractClass>] ForestNodeAttribute(name: string) =
-    inherit Attribute()
-    member this.Name with get() = name
-
-type [<AttributeUsage(AttributeTargets.Class)>] ViewAttribute(name: string) = inherit ForestNodeAttribute(name)
-type [<AttributeUsage(AttributeTargets.Method)>] CommandAttribute(name: string) = inherit ForestNodeAttribute(name)
-
 [<Obsolete>]
-type [<AutoOpen>] IRegistry = 
+type IRegistry = 
     [<Obsolete>]abstract member Register<'T>    : name: string -> model: 'T -> IRegistry
     [<Obsolete>]abstract member Unregister      : name: string -> IRegistry
     abstract member Lookup          : name: string -> IViewNode
 
-type [<AutoOpen>] IViewRegistry = 
+type IViewRegistry = 
     abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
     abstract member Register: t: Type -> IViewRegistry
@@ -23,12 +18,12 @@ type [<AutoOpen>] IViewRegistry =
 and IView =
     abstract Regions: IIndex<string, IRegion> with get
     abstract ViewModel: obj
-and [<AutoOpen>] IRegion =
+and IRegion =
     abstract Views: IIndex<string, IView> with get
-and [<AutoOpen>] IForestRuntime =
+and IForestRuntime =
     abstract Registry: IViewRegistry with get
 
-type [<AutoOpen>] IView<'T when 'T: (new: unit -> 'T)> =
+type IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
     abstract ViewModel: 'T with get, set
 
@@ -60,7 +55,8 @@ type internal ViewChange =
 | ViewModel     = 0b01
 | RegionState   = 0b10
 
-type [<AbstractClass>][<AutoOpen>] View<'T when 'T: (new: unit -> 'T)> () =
+[<AbstractClass>]
+type AbstractView<'T when 'T: (new: unit -> 'T)> () =
     let mutable _viewModel : 'T  = new 'T()
     let mutable _viewChanges : ViewChange = ViewChange.None
     //interface IForestContextAware with
@@ -77,4 +73,9 @@ type [<AbstractClass>][<AutoOpen>] View<'T when 'T: (new: unit -> 'T)> () =
     //    member this.Submit context = ()
     //    member this.ViewModel: obj = upcast _viewModel
 
+
+
+type ViewRegistryError = 
+| ViewError of View.Error
+| CommandError of Command.Error
 

@@ -19,7 +19,7 @@ module RawDataTraverser =
     //type ViewOrRegion = | ViewNode of IViewNode | RegionNode of IRegionNode | Empty
 
     // temp:
-    let rec internal traverseRawTemplate (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
+    let rec internal traverseRawTemplate (dom: IDomIndex) (path: Path.T) (arg: DomNodeType*obj) : IDomIndex =
         let recurse = traverseRawTemplate 
         let mutable changedDom = dom
         match arg with

@@ -1,11 +1,11 @@
 ﻿namespace Forest
 
-type [<AutoOpen>] Result<'T, 'TError> = 
-| Success of 'T
-| Failure of 'TError
 
 [<AutoOpen>]
 module Railway =
+    type [<AutoOpen>] Result<'T, 'E> = 
+    | Success of 'T
+    | Failure of 'E
 
     let bind switchFn twoTrackInput =
         match twoTrackInput with

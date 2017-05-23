@@ -38,10 +38,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Railway.fs" />
+    <Compile Include="ComparisonAdapter.fs" />
     <Compile Include="Index.fs" />
     <Compile Include="WriteableIndex.fs" />
+    <Compile Include="Path.fsi" />
     <Compile Include="Path.fs" />
     <Compile Include="Dom.fs" />
+    <Compile Include="ForestNodeAttribute.fs" />
+    <Compile Include="Command.fs" />
+    <Compile Include="View.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="ForestImpl.fs" />
     <Compile Include="Sdk.fs" />
@@ -1372,4 +1377,7 @@
       </ItemGroup>
     </When>
   </Choose>
+  <ItemGroup>
+    <Folder Include="Dom\" />
+  </ItemGroup>
 </Project>

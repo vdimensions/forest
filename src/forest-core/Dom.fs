@@ -11,7 +11,7 @@ type [<AutoOpen>] DomNodeType =
 
 type [<AutoOpen>] IDomNode =
     abstract Name: string with get
-    abstract Path: Path with get
+    abstract Path: Path.T with get
     abstract Type: DomNodeType with get
 
 type [<AutoOpen>] ICommandNode =
@@ -27,37 +27,37 @@ and [<AutoOpen>] IRegionNode = inherit IDomNode
 type [<AutoOpen>] IDomIndex =
     abstract member Add: node: IDomNode -> IDomIndex
     abstract member Remove: node: IDomNode -> IDomIndex
-    abstract member Remove: path: Path -> IDomIndex
-    abstract member Insert: path: Path -> node: IDomNode -> IDomIndex
+    abstract member Remove: path: Path.T -> IDomIndex
+    abstract member Insert: path: Path.T -> node: IDomNode -> IDomIndex
     abstract member Clear: unit -> IDomIndex
     abstract member Count: int with get
-    abstract member Paths: IEnumerable<Path> with get
-    abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
+    abstract member Paths: IEnumerable<Path.T> with get
+    abstract member Item: Path.T -> Option<IIndex<IDomNode, string>> with get
 
 type [<AbstractClass>][<AutoOpen>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
     abstract member Add: node: IDomNode -> 'T
-    abstract member Insert: path: Path -> node: IDomNode -> 'T
-    abstract member Remove: path: Path -> 'T
+    abstract member Insert: path: Path.T -> node: IDomNode -> 'T
+    abstract member Remove: path: Path.T -> 'T
     abstract member Remove: node: IDomNode -> 'T
     abstract member Clear: unit -> 'T
-    abstract member ContainsPath: path: Path -> bool 
+    abstract member ContainsPath: path: Path.T -> bool 
     abstract member Count: int with get
-    abstract member Paths: IEnumerable<Path>
-    abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
+    abstract member Paths: IEnumerable<Path.T>
+    abstract member Item: Path.T -> Option<IIndex<IDomNode, string>> with get
     interface IDomIndex with
         member this.Add node = upcast self.Add node : IDomIndex
         member this.Insert path node = upcast self.Insert path node : IDomIndex
-        member this.Remove (path:Path) = upcast self.Remove path : IDomIndex
+        member this.Remove (path:Path.T) = upcast self.Remove path : IDomIndex
         member this.Remove (node:IDomNode) = upcast self.Remove node : IDomIndex
         member this.Clear () = upcast self.Clear () : IDomIndex
         member this.Count = self.Count
         member this.Paths = self.Paths
         member this.Item with get path = self.[path]
 
-type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) =
+type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T>) =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
-    new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path>())
+    new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path.T>())
     override this.Add node = this.Insert node.Path.Parent node
     override this.Insert path node =
        let mutable nodeIndex: IAutoIndex<IDomNode, string> = 
@@ -69,7 +69,7 @@ type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<ID
        let newIndex = index.Remove(path).Insert path nodeIndex
        new DefaultDomIndex(newIndex)
 
-    override this.Remove (path: Path) = 
+    override this.Remove (path: Path.T) = 
        let newIndex = index.Remove path
        new DefaultDomIndex(newIndex)
     override this.Remove (node: IDomNode) = 
@@ -91,7 +91,7 @@ type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<ID
             | Some x -> Some (upcast x: IIndex<IDomNode, string>)
             | None -> None
 
-type [<Sealed>] internal ViewNode(path: Path, name: string, viewType: Type, viewModelType: Type) as self =
+type [<Sealed>] internal ViewNode(path: Path.T, name: string, viewType: Type, viewModelType: Type) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ImplementationType with get () = viewType
@@ -105,7 +105,7 @@ type [<Sealed>] internal ViewNode(path: Path, name: string, viewType: Type, view
         member this.Path = self.Path
         member this.Type = DomNodeType.View
 
-type [<Sealed>] internal RegionNode(path: Path, name: string) as self =
+type [<Sealed>] internal RegionNode(path: Path.T, name: string) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     interface IRegionNode
@@ -114,7 +114,7 @@ type [<Sealed>] internal RegionNode(path: Path, name: string) as self =
         member this.Path = self.Path
         member this.Type = DomNodeType.Region
 
-type [<Sealed>] internal CommandNode(path: Path, name: string, argumentType: Type) as self = 
+type [<Sealed>] internal CommandNode(path: Path.T, name: string, argumentType: Type) as self = 
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ArgumentType with get () = argumentType

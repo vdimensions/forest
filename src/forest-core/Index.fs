@@ -3,33 +3,9 @@ open System
 open System.Collections
 open System.Collections.Generic;
 
-[<Struct>]
-[<CustomComparison>]
-[<CustomEquality>]
-type ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComparer: IEqualityComparer<'T>) =
-    new(value) = ComparisonAdapter(value, Comparer<'T>.Default, EqualityComparer<'T>.Default)
-    member this.CompareTo (cmp: IComparer<'T>, v: 'T) = cmp.Compare(v, value)
-    member this.CompareTo (v: 'T) = this.CompareTo(comparer, v)
-    member this.CompareTo (c: ComparisonAdapter<'T>) = c.CompareTo(comparer, value)
-    member this.CompareTo (o: obj) = 
-        if (o :? Comparison<'T>) then this.CompareTo(downcast o: ComparisonAdapter<'T>)
-        else if (o :? 'T) then this.CompareTo(downcast o: 'T)
-        else if (o :? IComparable) then ((downcast o: IComparable)).CompareTo(value)
-        else raise (NotSupportedException ())
-    member this.Equals (c: ComparisonAdapter<'T>): bool = c.Equals(eqComparer, value)
-    member this.Equals (cmp: IEqualityComparer<'T>, v: 'T): bool = cmp.Equals(v, value)
-    member this.Equals (v: 'T): bool = eqComparer.Equals(v, value)
-    override this.Equals (o: obj): bool =
-        if (o :? Comparison<'T>) then this.Equals(downcast o: ComparisonAdapter<'T>)
-        else if (o :? 'T) then this.Equals(downcast o: 'T)
-        else false
-    override this.GetHashCode () = eqComparer.GetHashCode value
-    member this.Value with get () = value
-    interface IEquatable<'T> with member this.Equals other = this.Equals(eqComparer, other)
-    interface IComparable<'T> with member this.CompareTo other = this.CompareTo(comparer, other)
-    interface IComparable with member this.CompareTo o = this.CompareTo o
-
-type [<AutoOpen>] IIndex<'T, 'TKey> =
+[<AutoOpen>]
+[<Interface>]
+type IIndex<'T, 'TKey> =
     inherit IEnumerable<'T>
     abstract member Contains: item: 'T -> bool
     abstract member ContainsKey: key: 'TKey -> bool
@@ -37,13 +13,17 @@ type [<AutoOpen>] IIndex<'T, 'TKey> =
     abstract Keys: IEnumerable<'TKey> with get
     abstract Item: 'TKey -> Option<'T> with get
 
-type [<AutoOpen>] IWriteableIndex<'T, 'TKey> =
+[<AutoOpen>]
+[<Interface>]
+type IWriteableIndex<'T, 'TKey> =
     inherit IIndex<'T, 'TKey>
     abstract member Remove: key: 'TKey -> IWriteableIndex<'T, 'TKey>
     abstract member Insert: key: 'TKey -> item: 'T -> IWriteableIndex<'T, 'TKey>
     abstract member Clear: unit -> IWriteableIndex<'T, 'TKey>
 
-type [<AutoOpen>] IAutoIndex<'T, 'TKey> =
+[<AutoOpen>]
+[<Interface>]
+type IAutoIndex<'T, 'TKey> =
     inherit IWriteableIndex<'T, 'TKey>
     abstract member Remove: key: 'TKey -> IAutoIndex<'T, 'TKey> 
     abstract member Remove: item: 'T -> IAutoIndex<'T, 'TKey> 
