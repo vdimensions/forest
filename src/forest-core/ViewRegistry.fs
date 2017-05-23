@@ -92,12 +92,30 @@ type [<Sealed>] ViewRegistry(container: IContainer) =
                         | _ -> typeof<Void>
                     let metadata = a |> Seq.map (fun ca -> Command.Metadata(ca.Name, parameterType, mi))
                     Success (metadata)
-                    
-            let commandMetadata = 
-                getMethods 
-                >> Seq.map (fun x -> (x |> getCommandAttribs), x)
-                >> Seq.map createCommandMetadata
 
+            let autowireCommands = attr.AutowireCommands
+            let commandMetadata = 
+                if autowireCommands then
+                    getMethods 
+                    >> Seq.map (fun x -> (x |> getCommandAttribs), x)
+                    >> Seq.map createCommandMetadata
+                else
+                    let inline isCommandMethod (mi: MethodInfo) = 
+                        let returnType = mi.ReturnType
+                        let parameters = mi.GetParameters()
+                        returnType = typeof<Void> && parameters.Length = 1
+
+                    let inline createFakeCommand mi =
+                        let hasCommandAttrs = mi |> getCommandAttribs |> Seq.isEmpty
+                        if (hasCommandAttrs) then None
+                        else 
+                            let p = mi.GetParameters()
+                            let result = [|Command.Metadata(mi.Name, p.[0].ParameterType, mi)|] |> Seq.map id
+                            Some (Success result)
+                    getMethods
+                    >> Seq.filter isCommandMethod                            
+                    >> Seq.map createFakeCommand
+                    >> Seq.choose id
 
             let name = attr.Name
             let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public

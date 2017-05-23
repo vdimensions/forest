@@ -4,7 +4,9 @@ open System.Collections.Generic
 
 [<AttributeUsage(AttributeTargets.Class)>]
 [<Sealed>]
-type ViewAttribute(name: string) = inherit ForestNodeAttribute(name)
+type ViewAttribute(name: string) = 
+    inherit ForestNodeAttribute(name)
+    member val AutowireCommands = false with get, set
 
 [<RequireQualifiedAccessAttribute>]
 module View = 
