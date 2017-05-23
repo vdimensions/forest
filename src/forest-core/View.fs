@@ -20,11 +20,11 @@ module View =
     | ViewAttributeMissing of Type
     | ViewTypeIsAbstract of Type
 
-    type AbstractViewException(message: string) =
-        inherit Exception(message)
+    type AbstractViewException(message: string, inner: exn) =
+        inherit Exception(message, inner)
+        new (message: string) = AbstractViewException(message, null)
 
-    type ViewAttributeMissingException(viewType: Type) =
-        inherit AbstractViewException(
-            String.Format("View type {0} is an interface or abstract class.", viewType.FullName))
-        
+    type ViewAttributeMissingException(viewType: Type, inner: exn) =
+        inherit AbstractViewException(String.Format("View type {0} is an interface or abstract class.", viewType.FullName), inner)
+        new (viewType: Type) = ViewAttributeMissingException(viewType, null)
 

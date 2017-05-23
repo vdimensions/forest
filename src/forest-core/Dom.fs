@@ -77,10 +77,9 @@ type [<Sealed>][<AutoOpen>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<ID
         let parentPath = path.Parent
         let nodeIndex = index.[parentPath];
         match nodeIndex with
-        | Some ni ->
-            if (ni.Count > 0) then new DefaultDomIndex((index.Remove parentPath).Insert parentPath (ni.Remove node))
-            else this.Remove(parentPath)
-        | None -> this
+        | Some ni when ni.Count > 0 -> new DefaultDomIndex((index.Remove parentPath).Insert parentPath (ni.Remove node))
+        | Some ni when ni.Count = 0 -> this.Remove(parentPath)
+        | _ -> this
     override this.Clear () = new DefaultDomIndex(index.Clear())
     override this.ContainsPath path = index.ContainsKey path
     override this.Count = index.Count
