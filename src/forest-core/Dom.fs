@@ -5,11 +5,11 @@ open System.Collections.Generic
 
 
 type [<AutoOpen>] DomNodeType = 
-| Region  = 0b00
-| View    = 0b01
-| Command = 0b10
+    | Region  = 0b00
+    | View    = 0b01
+    | Command = 0b10
 
-type [<AutoOpen>] IDomNode =
+type IDomNode =
     abstract Name: string with get
     abstract Path: Path.T with get
     abstract Type: DomNodeType with get
@@ -60,11 +60,11 @@ type AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
 
 [<Sealed>]
 [<AutoOpen>]
-type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T>) =
+type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T>) as self =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
     new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path.T>())
-    override this.Add node = this.Insert node.Path.Parent node
+    override this.Add node = self.Insert node.Path.Parent node
     override this.Insert path node =
        let mutable nodeIndex: IAutoIndex<IDomNode, string> = 
            upcast new AutoIndex<IDomNode, string>((fun x -> x.Name), (upcast new WriteableIndex<IDomNode, string>(comparer, comparer): IWriteableIndex<IDomNode, string>))
@@ -81,7 +81,7 @@ type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T
         let nodeIndex = index.[parentPath];
         match nodeIndex with
         | Some ni when ni.Count > 0 -> new DefaultDomIndex((index.Remove parentPath).Insert parentPath (ni.Remove node))
-        | Some ni when ni.Count = 0 -> this.Remove(parentPath)
+        | Some ni when ni.Count = 0 -> self.Remove(parentPath)
         | _ -> this
     override this.Clear () = new DefaultDomIndex(index.Clear())
     override this.ContainsPath path = index.ContainsKey path
@@ -124,7 +124,7 @@ type internal CommandNode(path: Path.T, name: string, argumentType: Type) as sel
     member this.Name with get () = name
     member this.Path with get () = path
     member this.ArgumentType with get () = argumentType
-    interface ICommandNode with member this.ArgumentType = this.ArgumentType
+    interface ICommandNode with member this.ArgumentType = self.ArgumentType
     interface IDomNode with
         member this.Name = self.Name
         member this.Path = self.Path

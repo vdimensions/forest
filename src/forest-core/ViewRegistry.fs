@@ -94,7 +94,7 @@ type ViewRegistry(container: IContainer) =
 
             let autowireCommands = attr.AutowireCommands
             let commandMetadata = 
-                if autowireCommands then
+                if not autowireCommands then
                     getMethods 
                     >> Seq.map (fun x -> (x |> getCommandAttribs), x)
                     >> Seq.map createCommandMetadata
@@ -106,11 +106,11 @@ type ViewRegistry(container: IContainer) =
 
                     let inline createFakeCommand mi =
                         let hasCommandAttrs = mi |> getCommandAttribs |> Seq.isEmpty
-                        if (hasCommandAttrs) then None
-                        else 
+                        if (hasCommandAttrs) then 
                             let p = mi.GetParameters()
                             let result = [|Command.Metadata(mi.Name, p.[0].ParameterType, mi)|] |> Seq.map id
                             Some (Success result)
+                        else None                            
                     getMethods
                     >> Seq.filter isCommandMethod                            
                     >> Seq.map createFakeCommand
