@@ -89,7 +89,7 @@ type ViewRegistry(container: IContainer) =
                 | _ -> 
                     let parameterType = 
                         match parameters with
-                        | parameters when parameters.Length > 0 -> parameters.[0].ParameterType
+                        | [|param|] -> param.ParameterType
                         | _ -> typeof<Void>
                     let metadata = a |> Seq.map (fun ca -> Command.Metadata(ca.Name, parameterType, mi))
                     Success (metadata)
@@ -133,8 +133,7 @@ type ViewRegistry(container: IContainer) =
                 |> Seq.toArray
 
             match errorList with
-            | list when list.Length > 0 -> Failure ((Command.Error.MultipleErrors list) |> ViewRegistryError.CommandError)
-            | _ -> 
+            | [||] -> 
                 let metadataArray = 
                     commandMetadataResults 
                     |> Seq.map (fun item -> match item with | Success data -> Some data | Failure _ -> None)
@@ -142,6 +141,8 @@ type ViewRegistry(container: IContainer) =
                     |> Seq.concat
                     |> Seq.toArray
                 Success (View.Metadata(name, t, metadataArray))
+            | _ -> Failure ((Command.Error.MultipleErrors errorList) |> ViewRegistryError.CommandError)
+
         | None -> Failure ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)
 
     override this.InstantiateView viewMetadata = container.Resolve viewMetadata
