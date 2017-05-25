@@ -15,6 +15,7 @@ module View =
     let inline private isNotNull argName obj = match obj with | null -> nullArg argName | _ -> obj
 
     [<Sealed>]
+    // TODO: argument verfication
     type Metadata(name: string, viewType: Type, commands: IEnumerable<Command.Metadata>) = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType

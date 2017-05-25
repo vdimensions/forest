@@ -25,15 +25,15 @@ type AbstractViewRegistry() as this =
     default this.ResolveViewError ve =
         // TODO
         match ve with
-        | View.Error.ViewAttributeMissing t -> upcast new InvalidOperationException()
-        | View.Error.ViewTypeIsAbstract t -> upcast new InvalidOperationException()
+        | View.Error.ViewAttributeMissing t -> upcast InvalidOperationException()
+        | View.Error.ViewTypeIsAbstract t -> upcast InvalidOperationException()
     abstract member ResolveCommandError: ce: Command.Error -> Exception
     default this.ResolveCommandError ce =
         // TODO
         match ce with
-        | Command.Error.MoreThanOneArgument mi -> upcast new InvalidOperationException()
-        | Command.Error.NonVoidReturnType mi -> upcast new InvalidOperationException()
-        | Command.Error.MultipleErrors e -> upcast new InvalidOperationException()
+        | Command.Error.MoreThanOneArgument mi -> upcast InvalidOperationException()
+        | Command.Error.NonVoidReturnType mi -> upcast InvalidOperationException()
+        | Command.Error.MultipleErrors e -> upcast InvalidOperationException()
 
     member this.Register (t: Type) = 
         match t with
@@ -50,9 +50,11 @@ type AbstractViewRegistry() as this =
         this.Resolve (viewNode.Name)
     member this.Resolve (name: string) = 
         match name with | null -> nullArg "name" | _ -> ()
-        let viewMetadata = storage.[name]
-        match (box viewMetadata) with | null -> invalidArg "name" "No such view was registered" | _ -> ()
-        viewMetadata |> this.InstantiateView 
+        let viewMetadataResult = storage.TryGetValue name
+        match viewMetadataResult with 
+        | (false, _) -> invalidArg "name" "No such view was registered" 
+        | (true, viewMetadata) -> viewMetadata |> this.InstantiateView 
+        
     
     interface IViewRegistry with
         member x.Register t = upcast this.Register t : IViewRegistry
@@ -65,8 +67,8 @@ type ViewRegistry(container: IContainer) =
     inherit AbstractViewRegistry()
     override this.GetViewMetadata t =
         match t with | null -> nullArg "t" | _ -> ()
-        let inline isOfType ty obj = (obj.GetType() = ty)
-        let inline getAttributes(mi: 'MI when 'MI :> MemberInfo) : seq<'a> =
+        let inline isOfType t obj = (obj.GetType() = t)
+        let inline getAttributes(mi: 'M when 'M :> MemberInfo) : seq<'a> =
             let getAttributesInternal = 
                 mi.GetCustomAttributes 
                 >> Seq.filter(isOfType typeof<'a>) 
@@ -108,7 +110,7 @@ type ViewRegistry(container: IContainer) =
                         let hasCommandAttrs = mi |> getCommandAttribs |> Seq.isEmpty
                         if (hasCommandAttrs) then 
                             let p = mi.GetParameters()
-                            let result = [|Command.Metadata(mi.Name, p.[0].ParameterType, mi)|] |> Seq.map id
+                            let result = [Command.Metadata(mi.Name, p.[0].ParameterType, mi)] |> Seq.map id
                             Some (Success result)
                         else None                            
                     getMethods

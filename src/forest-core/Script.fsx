@@ -42,13 +42,8 @@ rawTemplateStructureFromJson
 |> add "view1"
 |> add "view2" |> get "view1" |> add "emptyRegion"
 
-let result = Forest.Sdk.RawDataTraverser.ParseTemplateStructure(rawTemplateStructureFromJson)
-printf "dom index contains %i root nodes \n" result.Count
-for path in result.Paths do 
-    let item = result.[path]
-    match item with
-    | None -> ()
-    | Some node -> for x in node do Console.WriteLine("  +-[{0}]", x.Path)
+
+/////////////////////////////////////////////////////////
 
 [<Sealed>]
 type MyViewModel() = class end
@@ -61,14 +56,20 @@ type MyView() as self =
     interface IView with
         member this.Regions with get() = raise (new System.NotImplementedException())
         member this.ViewModel with get() = upcast self.ViewModel
-    
-   
-type DummyContainer() =
-    interface IContainer with 
-        member this.Resolve m = 
-            raise (new System.NotImplementedException())
 
-let registry = new ViewRegistry(DummyContainer())
-registry.Register<MyView>()
+let rt = new DefaultForestRuntime()   
+rt.Registry.Register<MyView>()
+
+/////////////////////////////////////////////////////////
+
+let result = Forest.Sdk.RawDataTraverser.ParseTemplateStructure(rt, rawTemplateStructureFromJson)
+printf "dom index contains %i root nodes \n" result.Count
+for path in result.Paths do 
+    let item = result.[path]
+    match item with
+    | None -> ()
+    | Some node -> for x in node do Console.WriteLine("  +-[{0}]", x.Path)
+
+
 ;;
 ;;

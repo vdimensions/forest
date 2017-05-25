@@ -8,7 +8,9 @@ type CommandAttribute(name: string) = inherit ForestNodeAttribute(name)
 
 [<RequireQualifiedAccessAttribute>]
 module Command = 
+
     [<Sealed>]
+    // TODO: argument verfication
     type Metadata(name: string, argType: Type, mi: MethodInfo) = 
         member this.Name with get() = name
         member this.ArgumentType with get() = argType

@@ -19,7 +19,7 @@ module RawDataTraverser =
     //type ViewOrRegion = | ViewNode of IViewNode | RegionNode of IRegionNode | Empty
 
     // temp:
-    let rec internal traverseRawTemplate (dom: IDomIndex) (path: Path.T) (arg: DomNodeType*obj) : IDomIndex =
+    let rec internal traverseRawTemplate (rt: IForestRuntime) (dom: IDomIndex) (path: Path.T) (arg: DomNodeType*obj) : IDomIndex =
         let recurse = traverseRawTemplate 
         let mutable changedDom = dom
         match arg with
@@ -28,7 +28,7 @@ module RawDataTraverser =
                 let name = entry.Key
                 let path = path @@ name
                 let node = upcast new RegionNode(path, name): IDomNode
-                changedDom <- recurse (changedDom.Add node) path (node.Type, entry.Value)
+                changedDom <- recurse rt (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | RegionMatcher viewsDictionary -> 
             for entry in viewsDictionary do
@@ -36,11 +36,12 @@ module RawDataTraverser =
                 let path = path @@ name
                 // TODO: obtain view metadata
                 let node = upcast new ViewNode(path, name, null, null): IDomNode
-                changedDom <- recurse (changedDom.Add node) path (node.Type, entry.Value)
+                changedDom <- recurse rt (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | _ -> changedDom
     
-    let ParseTemplateStructure data = traverseRawTemplate (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
+    let ParseTemplateStructure (rt, data) = 
+        traverseRawTemplate rt (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
 
         
 
