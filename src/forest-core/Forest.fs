@@ -8,6 +8,7 @@ type [<Interface>] IViewRegistry =
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
+    abstract member GetViewMetadata: name: string -> IViewMetadata option
 and [<Interface>] IView =
     abstract Regions: IIndex<string, IRegion> with get
     abstract ViewModel: obj
@@ -35,6 +36,7 @@ type internal IViewInternal =
     abstract member Submit: context : IForestRuntime -> unit
 
 type [<Interface>] IForestEngine =
+    abstract member CreateDomIndex: rt: IForestRuntime -> data: obj -> IDomIndex
     abstract member Execute<'T when 'T: (new: unit -> 'T)> : rt: IForestRuntime -> node: IViewNode -> IView<'T>
 
 [<Interface>]
@@ -49,19 +51,23 @@ type internal ViewChange =
     | RegionState   = 0b10
 
 [<AbstractClass>]
-type AbstractView<'T when 'T: (new: unit -> 'T)> () =
+type AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     let mutable _viewModel : 'T  = new 'T()
     let mutable _viewChanges : ViewChange = ViewChange.None
-    //interface IForestContextAware with
+    //interface IViewInternal with
     //    member x.InitializeContext ctx =
     //       context <- ctx
     //       ()
-    //interface IView<'T> with
-    //    member this.ViewModel
-    //        with get () : 'T = _viewModel
-    //        and set value =
-    //            _viewModel <- value
-    //            _viewChanges <- _viewChanges ||| ViewChange.ViewModel
-    //interface IView with
-    //    member this.Submit context = ()
-    //    member this.ViewModel: obj = upcast _viewModel
+    member this.ViewModel
+        with get ():'T = _viewModel
+        and set (v: 'T) = _viewModel <- v
+
+    interface IView<'T> with
+        member this.ViewModel
+            with get() = self.ViewModel
+            and set v = 
+                self.ViewModel <- v
+                _viewChanges <- _viewChanges ||| ViewChange.ViewModel
+    interface IView with
+        member this.Regions with get() = raise (System.NotImplementedException())
+        member this.ViewModel with get() = upcast self.ViewModel

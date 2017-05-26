@@ -3,23 +3,27 @@ open Forest
 open Forest.Dom
 open System.Collections.Generic
 
-module RawDataTraverser =
-    //let (|EmptyCollection|_|) (collection: ICollection<'a>) = if (collection.Count = 0) then Some collection else None
-    let internal (|Dictionary|_|) (v: obj) =  if (v :? IDictionary<string, obj>) then Some (v :?> IDictionary<string, obj>) else None
 
-    let internal (|ViewMatcher|_|) (a: DomNodeType, b: obj) =
+//[<AbstractClass>]
+//type AbstractForestEngine =
+//    interface IForestEngine with
+//        member x.Execute ctx node =
+//            ()
+
+[<Sealed>]
+type DefaultForestEngine() = 
+    let (|Dictionary|_|) (v: obj) =  if (v :? IDictionary<string, obj>) then Some (v :?> IDictionary<string, obj>) else None
+
+    let (|ViewMatcher|_|) (a: DomNodeType, b: obj) =
         match a with 
         | DomNodeType.View -> match b with | Dictionary d -> Some(d) | _ -> None
         | _ -> None
-    let internal (|RegionMatcher|_|) (a: DomNodeType, b: obj) =
+    let (|RegionMatcher|_|) (a: DomNodeType, b: obj) =
         match a with 
         | DomNodeType.Region -> match b with | Dictionary d -> Some(d) | _ -> None
         | _ -> None
 
-    //type ViewOrRegion = | ViewNode of IViewNode | RegionNode of IRegionNode | Empty
-
-    // temp:
-    let rec internal traverseRawTemplate (rt: IForestRuntime) (dom: IDomIndex) (path: Path.T) (arg: DomNodeType*obj) : IDomIndex =
+    let rec traverseRawTemplate (rt: IForestRuntime) (dom: IDomIndex) (path: Path.T) (arg: DomNodeType*obj) : IDomIndex =
         let recurse = traverseRawTemplate 
         let mutable changedDom = dom
         match arg with
@@ -34,19 +38,16 @@ module RawDataTraverser =
             for entry in viewsDictionary do
                 let name = entry.Key
                 let path = path @@ name
-                // TODO: obtain view metadata
-                let node = upcast new ViewNode(path, name, null, null): IDomNode
+                let metadata = rt.Registry.GetViewMetadata name
+                let (vt, vmt) =
+                    match metadata with
+                    | Some m -> (m.ViewType, m.ViewModelType)
+                    // TODO: ERROR
+                    | None -> (null, null)
+                let node = upcast new ViewNode(path, name, vt, vmt): IDomNode
                 changedDom <- recurse rt (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | _ -> changedDom
-    
-    let ParseTemplateStructure (rt, data) = 
+
+    member this.CreateIndex (rt: IForestRuntime, data: obj): IDomIndex = 
         traverseRawTemplate rt (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
-
-        
-
-//[<AbstractClass>]
-//type AbstractForestEngine =
-//    interface IForestEngine with
-//        member x.Execute ctx node =
-//            ()

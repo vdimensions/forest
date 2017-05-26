@@ -50,12 +50,9 @@
     <Folder Include="Controls\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="mason.properties" />
     <None Include="paket-restore.sh" />
     <None Include="paket-update.sh" />
-    <None Include="paket.dependencies" />
     <None Include="paket.lock" />
-    <None Include="paket.references" />
     <Content Include="paket.sh" />
     <None Include="Properties\AssemblyInfo.cs.template" />
   </ItemGroup>

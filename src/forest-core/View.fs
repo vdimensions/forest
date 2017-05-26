@@ -1,6 +1,7 @@
 ﻿namespace Forest
 open System
 open System.Collections.Generic
+open System.Linq
 
 
 [<AttributeUsage(AttributeTargets.Class)>]
@@ -9,6 +10,12 @@ type ViewAttribute(name: string) =
     inherit ForestNodeAttribute(name)
     member val AutowireCommands = false with get, set
 
+[<Interface>]
+type IViewMetadata = 
+    abstract Name: string with get
+    abstract ViewType: Type with get
+    abstract ViewModelType: Type with get
+    abstract Commands: IEnumerable<ICommandMetadata> with get
 
 [<RequireQualifiedAccessAttribute>]
 module View = 
@@ -16,14 +23,21 @@ module View =
 
     [<Sealed>]
     // TODO: argument verfication
-    type Metadata(name: string, viewType: Type, commands: IEnumerable<Command.Metadata>) = 
+    type Metadata(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Metadata>) as self = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
+        member this.ViewModelType with get() = viewModelType
         member this.Commands with get() = commands
+        interface IViewMetadata with
+            member this.Name = self.Name
+            member this.ViewType = self.ViewType
+            member this.ViewModelType = self.ViewModelType
+            member this.Commands = self.Commands.Cast<ICommandMetadata>()
 
     type Error = 
         | ViewAttributeMissing of Type
         | ViewTypeIsAbstract of Type
+        | NonGenericView of Type
 
     type AbstractViewException(message: string, inner: exn) =
         inherit Exception(isNotNull "message" message, inner)
