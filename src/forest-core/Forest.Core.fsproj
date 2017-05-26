@@ -1361,17 +1361,17 @@
     <Compile Include="WriteableIndex.fs" />
     <Compile Include="Path.fsi" />
     <Compile Include="Path.fs" />
-    <Compile Include="Dom.fs" />
     <Compile Include="ForestNodeAttribute.fs" />
     <Compile Include="Command.fs" />
     <Compile Include="View.fs" />
+    <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="Container.fs" />
     <Compile Include="ViewRegistry.fs" />
     <Compile Include="ForestImpl.fs" />
+    <Compile Include="DefaultForestEngine.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
-    <Compile Include="DefaultForestEngine.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

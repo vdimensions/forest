@@ -21,8 +21,7 @@ type ICommandNode =
 
 type [<Interface>] IViewNode = 
     inherit IDomNode
-    abstract ImplementationType: Type with get
-    abstract ViewModelType: Type with get
+    abstract Metadata: IViewMetadata with get
 and [<Interface>] IRegionNode = inherit IDomNode
 
 [<Interface>]
@@ -72,9 +71,7 @@ type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T
        nodeIndex <- nodeIndex.Add node
        new DefaultDomIndex((index.Remove(path).Insert path nodeIndex))
 
-    override this.Remove (path: Path.T) = 
-       let newIndex = index.Remove path
-       new DefaultDomIndex(newIndex)
+    override this.Remove (path: Path.T) = new DefaultDomIndex((index.Remove path))
     override this.Remove (node: IDomNode) = 
         let path = node.Path
         let parentPath = path.Parent
@@ -95,17 +92,14 @@ type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path.T
 
 
 [<Sealed>]
-type internal ViewNode(path: Path.T, name: string, viewType: Type, viewModelType: Type) as self =
-    member this.Name with get () = name
+type internal ViewNode(path: Path.T, metadata: IViewMetadata) as self =
+    member this.Metadata with get () = metadata
     member this.Path with get () = path
-    member this.ImplementationType with get () = viewType
-    member this.ViewModelType with get () = viewModelType
     //member this.Regions with get () = dom[path]
     interface IViewNode with
-        member this.ImplementationType = self.ImplementationType
-        member this.ViewModelType = self.ViewModelType
+        member this.Metadata = self.Metadata
     interface IDomNode with
-        member this.Name = self.Name
+        member this.Name = self.Metadata.Name
         member this.Path = self.Path
         member this.Type = DomNodeType.View
 

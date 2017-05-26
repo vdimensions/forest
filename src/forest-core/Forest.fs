@@ -1,6 +1,6 @@
 namespace Forest
-open System;
 open Forest.Dom
+open System;
 
 
 type [<Interface>] IViewRegistry = 
@@ -22,11 +22,10 @@ type IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
     abstract ViewModel: 'T with get, set
 
-// interal functionality needed by the forest engine
+// internal functionality needed by the forest engine
 [<Interface>]
 type internal IViewInternal =
     inherit IView
-    //abstract member ExchangeViewModel : model : 'T -> IView<'T>
     /// <summary>
     /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
     /// </summary>

@@ -39,12 +39,12 @@ type DefaultForestEngine() =
                 let name = entry.Key
                 let path = path @@ name
                 let metadata = rt.Registry.GetViewMetadata name
-                let (vt, vmt) =
+                let node = 
                     match metadata with
-                    | Some m -> (m.ViewType, m.ViewModelType)
+                    | Some m -> upcast new ViewNode(path, m): IDomNode
                     // TODO: ERROR
-                    | None -> (null, null)
-                let node = upcast new ViewNode(path, name, vt, vmt): IDomNode
+                    | None -> upcast new ViewNode(path, View.Metadata(name, null, null, null)): IDomNode
+                
                 changedDom <- recurse rt (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | _ -> changedDom
