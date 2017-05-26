@@ -1,21 +1,36 @@
 namespace Forest
 open Forest.Dom
 open System;
+open System.Collections.Generic
 
-
-type [<Interface>] IViewRegistry = 
+type IViewRegistry = interface
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
     abstract member GetViewMetadata: name: string -> IViewMetadata option
-and [<Interface>] IView =
+end 
+
+and IView = interface
+    abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
     abstract Regions: IIndex<string, IRegion> with get
     abstract ViewModel: obj
-and [<Interface>] IRegion =
-    abstract Views: IIndex<string, IView> with get
-and [<Interface>] IForestRuntime =
+end 
+
+and IRegion = interface 
+    abstract Views: IIndex<string, IView> with get 
+end 
+
+and IViewModelStateRepository = interface
+    abstract member SuspendState: Path*obj -> unit 
+    abstract member SuspendState: v:IView -> unit
+    abstract member ResumeState: path: Path -> obj
+end 
+
+and IForestRuntime = interface
     abstract Registry: IViewRegistry with get
+
+end
 
 [<Interface>]
 type IView<'T when 'T: (new: unit -> 'T)> =
@@ -32,7 +47,7 @@ type internal IViewInternal =
     /// <param name="context">
     /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
     /// </param>
-    abstract member Submit: context : IForestRuntime -> unit
+    abstract member Submit: runtime: IForestRuntime -> unit
 
 type [<Interface>] IForestEngine =
     abstract member CreateDomIndex: rt: IForestRuntime -> data: obj -> IDomIndex
@@ -45,28 +60,28 @@ type internal IForestContextAware =
 
 [<Flags>]
 type internal ViewChange =
-    | None          = 0b00
-    | ViewModel     = 0b01
-    | RegionState   = 0b10
+    | ViewModel
 
 [<AbstractClass>]
 type AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     let mutable _viewModel : 'T  = new 'T()
-    let mutable _viewChanges : ViewChange = ViewChange.None
-    //interface IViewInternal with
-    //    member x.InitializeContext ctx =
-    //       context <- ctx
-    //       ()
+    let _viewChangeLog: ICollection<ViewChange> = upcast LinkedList<ViewChange>()
+    member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
+        ()
     member this.ViewModel
         with get ():'T = _viewModel
         and set (v: 'T) = _viewModel <- v
 
+    interface IViewInternal with
+        member x.Submit rt =
+           ()
     interface IView<'T> with
         member this.ViewModel
             with get() = self.ViewModel
             and set v = 
                 self.ViewModel <- v
-                _viewChanges <- _viewChanges ||| ViewChange.ViewModel
+                _viewChangeLog.Add ViewChange.ViewModel
     interface IView with
+        member this.Publish (m, t) : unit = self.Publish (m, t)
         member this.Regions with get() = raise (System.NotImplementedException())
         member this.ViewModel with get() = upcast self.ViewModel

@@ -23,7 +23,7 @@ type DefaultForestEngine() =
         | DomNodeType.Region -> match b with | Dictionary d -> Some(d) | _ -> None
         | _ -> None
 
-    let rec traverseRawTemplate (rt: IForestRuntime) (dom: IDomIndex) (path: Path.T) (arg: DomNodeType*obj) : IDomIndex =
+    let rec traverseRawTemplate (rt: IForestRuntime) (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
         let recurse = traverseRawTemplate 
         let mutable changedDom = dom
         match arg with

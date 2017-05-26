@@ -1359,7 +1359,6 @@
     <Compile Include="ComparisonAdapter.fs" />
     <Compile Include="Index.fs" />
     <Compile Include="WriteableIndex.fs" />
-    <Compile Include="Path.fsi" />
     <Compile Include="Path.fs" />
     <Compile Include="ForestNodeAttribute.fs" />
     <Compile Include="Command.fs" />

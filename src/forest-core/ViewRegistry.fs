@@ -25,8 +25,8 @@ type AbstractViewRegistry() as this =
     abstract member ResolveViewError: ve: View.Error -> Exception
     default this.ResolveViewError ve =
         match ve with
-        | View.Error.ViewAttributeMissing t -> upcast ArgumentException("t", String.Format("The type `{0}` must be annotated with a `{}`", t.FullName, typeof<ViewAttribute>.FullName))
-        | View.Error.ViewTypeIsAbstract t -> upcast ArgumentException("t", String.Format("The type `{0}` cannot be registered as a view because it is an abstract class or an interface. ", t.FullName))
+        | View.Error.ViewAttributeMissing t -> upcast View.ViewAttributeMissingException(t)
+        | View.Error.ViewTypeIsAbstract t -> upcast View.ViewTypeIsAbstractException(t)
         | View.Error.NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
 
     abstract member ResolveCommandError: ce: Command.Error -> Exception
@@ -99,8 +99,7 @@ type ViewRegistry(container: IContainer) =
                 |> Seq.tryHead
             match viewModelTypeOption with
             | Some viewModelType ->
-                let inline getMethods (f) = 
-                    t.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
+                let inline getMethods (f) = t.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
                 let inline createCommandMetadata (a: seq<CommandAttribute>, mi: MethodInfo) =
                     let parameters = mi.GetParameters()
                     match mi with
@@ -122,9 +121,7 @@ type ViewRegistry(container: IContainer) =
                         >> Seq.map createCommandMetadata
                     else
                         let inline isCommandMethod (mi: MethodInfo) = 
-                            let returnType = mi.ReturnType
-                            let parameters = mi.GetParameters()
-                            returnType = typeof<Void> && parameters.Length = 1
+                            mi.ReturnType = typeof<Void> && mi.GetParameters().Length = 1
 
                         let inline createFakeCommand mi =
                             let hasCommandAttrs = mi |> getCommandAttribs |> Seq.isEmpty
@@ -142,14 +139,14 @@ type ViewRegistry(container: IContainer) =
                 let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
                 let commandMetadataResults = commandMetadata(flags)
                 // helper function to collect the errors that may have occured when looking commands up
-                let inline failuresSelector a = match a with | Failure b -> Some b | _ -> None
+                let inline commandLookupFaulures a = match a with | Failure b -> Some b | _ -> None
                 // get the list of command lookup errors
-                let errorList = 
+                let failedCommandLookups = 
                     commandMetadataResults 
-                    |> Seq.choose failuresSelector
+                    |> Seq.choose commandLookupFaulures
                     |> Seq.toArray
 
-                match errorList with
+                match failedCommandLookups with
                 | [||] -> 
                     let inline successesSelector a = 
                         match a with 
@@ -162,7 +159,7 @@ type ViewRegistry(container: IContainer) =
                         |> Seq.concat
                         |> Seq.toArray
                     Success (View.Metadata(name, t, viewModelType, metadataArray))
-                | _ -> Failure ((Command.Error.MultipleErrors errorList) |> ViewRegistryError.CommandError)
+                | _ -> Failure ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
             | None -> Failure ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
         | None -> Failure ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)
 
