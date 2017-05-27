@@ -17,7 +17,7 @@ type IDomNode =
 [<Interface>]
 type ICommandNode =
     inherit IDomNode
-    abstract ArgumentType: Type with get
+    abstract Metadata: ICommandMetadata with get
 
 type [<Interface>] IViewNode = 
     inherit IDomNode
@@ -36,7 +36,6 @@ type IDomIndex =
     abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
 
 [<AbstractClass>]
-[<AutoOpen>]
 type AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
     abstract member Add: node: IDomNode -> 'T
     abstract member Insert: path: Path -> node: IDomNode -> 'T
@@ -58,7 +57,6 @@ type AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
         member this.Item with get path = self.[path]
 
 [<Sealed>]
-[<AutoOpen>]
 type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) as self =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
@@ -84,11 +82,7 @@ type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>)
     override this.ContainsPath path = index.ContainsKey path
     override this.Count = index.Count
     override this.Paths = index.Keys
-    override this.Item 
-        with get k =
-            match index.[k] with
-            | Some x -> Some (upcast x: IIndex<IDomNode, string>)
-            | None -> None
+    override this.Item with get k = index.[k] |> Option.map (fun x -> upcast x)
 
 
 [<Sealed>]
@@ -114,12 +108,12 @@ type internal RegionNode(path: Path, name: string) as self =
         member this.Type = DomNodeType.Region
 
 [<Sealed>]
-type internal CommandNode(path: Path, name: string, argumentType: Type) as self = 
-    member this.Name with get () = name
+type internal CommandNode(path: Path, metadata: ICommandMetadata) as self = 
+    member this.Metadata with get () = metadata
     member this.Path with get () = path
-    member this.ArgumentType with get () = argumentType
-    interface ICommandNode with member this.ArgumentType = self.ArgumentType
+    interface ICommandNode with 
+        member this.Metadata = self.Metadata
     interface IDomNode with
-        member this.Name = self.Name
+        member this.Name = self.Metadata.Name
         member this.Path = self.Path
         member this.Type = DomNodeType.Command

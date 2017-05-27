@@ -10,12 +10,12 @@ type ViewRegistryError =
     | CommandError of Command.Error
 
 [<AbstractClass>]
-type AbstractViewRegistry() as this = 
+type AbstractViewRegistry(container: IContainer) as this = 
     let storage: IDictionary<string, View.Metadata> = upcast new Dictionary<string, View.Metadata>(StringComparer.Ordinal)
 
     abstract member GetViewMetadata: t: Type -> Result<View.Metadata, ViewRegistryError>
 
-    abstract member InstantiateView: metadata: View.Metadata -> IView
+    member this.InstantiateView viewMetadata = container.Resolve viewMetadata
 
     member this.ResolveError (e: ViewRegistryError): Exception = 
         match e with
@@ -45,7 +45,7 @@ type AbstractViewRegistry() as this =
             match metadata with
             | Success metadata -> storage.[metadata.Name] <- metadata
             | Failure e -> raise (e |> this.ResolveError)
-            this
+            upcast this: IViewRegistry
     member this.Register<'T when 'T:> IView> () = this.Register typeof<'T>
 
     member this.Resolve (viewNode: IViewNode) = 
@@ -64,15 +64,15 @@ type AbstractViewRegistry() as this =
         | (false, _) -> None  
             
     interface IViewRegistry with
-        member x.Register t = upcast this.Register t : IViewRegistry
-        member x.Register<'T when 'T:> IView> () = upcast this.Register<'T>() : IViewRegistry
+        member x.Register t = this.Register t
+        member x.Register<'T when 'T:> IView> () = this.Register<'T>()
         member x.Resolve (name: string) = this.Resolve name
         member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
         member x.GetViewMetadata name = this.GetViewMetadata name
 
 [<Sealed>]
-type ViewRegistry(container: IContainer) = 
-    inherit AbstractViewRegistry()
+type DefaultViewRegistry(container: IContainer) = 
+    inherit AbstractViewRegistry(container)
     override this.GetViewMetadata t =
         match t with | null -> nullArg "t" | _ -> ()
         let inline isOfType t obj = (obj.GetType() = t)
@@ -162,5 +162,3 @@ type ViewRegistry(container: IContainer) =
                 | _ -> Failure ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
             | None -> Failure ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
         | None -> Failure ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)
-
-    override this.InstantiateView viewMetadata = container.Resolve viewMetadata

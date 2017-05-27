@@ -53,14 +53,15 @@ type MyView() = class
     inherit AbstractView<MyViewModel>()
     member this.SampleCommand (x: int) = ()
 end
-
-let rt = new DefaultForestRuntime()   
-rt.Registry.Register<MyView>()
+let container = DefaultContainer()
+let viewRegistry = DefaultViewRegistry(container)
+let ctx = new DefaultForestContext(viewRegistry)   
+ctx.Registry.Register<MyView>()
 
 /////////////////////////////////////////////////////////
 
 let engine = DefaultForestEngine()
-let index = engine.CreateIndex(rt, rawTemplateStructureFromJson)
+let index = engine.CreateIndex(ctx, rawTemplateStructureFromJson)
 printf "dom index contains %i root nodes \n" index.Count
 for path in index.Paths do
     match index.[path] with

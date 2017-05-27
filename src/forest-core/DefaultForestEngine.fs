@@ -23,7 +23,7 @@ type DefaultForestEngine() =
         | DomNodeType.Region -> match b with | Dictionary d -> Some(d) | _ -> None
         | _ -> None
 
-    let rec traverseRawTemplate (rt: IForestRuntime) (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
+    let rec traverseRawTemplate (ctx: IForestContext) (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
         let recurse = traverseRawTemplate 
         let mutable changedDom = dom
         match arg with
@@ -32,22 +32,22 @@ type DefaultForestEngine() =
                 let name = entry.Key
                 let path = path @@ name
                 let node = upcast new RegionNode(path, name): IDomNode
-                changedDom <- recurse rt (changedDom.Add node) path (node.Type, entry.Value)
+                changedDom <- recurse ctx (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | RegionMatcher viewsDictionary -> 
             for entry in viewsDictionary do
                 let name = entry.Key
                 let path = path @@ name
-                let metadata = rt.Registry.GetViewMetadata name
+                let metadata = ctx.Registry.GetViewMetadata name
                 let node = 
                     match metadata with
                     | Some m -> upcast new ViewNode(path, m): IDomNode
                     // TODO: ERROR
                     | None -> upcast new ViewNode(path, View.Metadata(name, null, null, null)): IDomNode
                 
-                changedDom <- recurse rt (changedDom.Add node) path (node.Type, entry.Value)
+                changedDom <- recurse ctx (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | _ -> changedDom
 
-    member this.CreateIndex (rt: IForestRuntime, data: obj): IDomIndex = 
-        traverseRawTemplate rt (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
+    member this.CreateIndex (ctx: IForestContext, data: obj): IDomIndex = 
+        traverseRawTemplate ctx (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)

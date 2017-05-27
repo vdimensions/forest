@@ -3,34 +3,26 @@ open Forest.Dom
 open System;
 open System.Collections.Generic
 
-type IViewRegistry = interface
+type [<Interface>] IViewRegistry =
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
     abstract member GetViewMetadata: name: string -> IViewMetadata option
-end 
-
-and IView = interface
+and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
     abstract Regions: IIndex<string, IRegion> with get
     abstract ViewModel: obj
-end 
-
-and IRegion = interface 
+and [<Interface>] IRegion = 
     abstract Views: IIndex<string, IView> with get 
-end 
-
-and IViewModelStateRepository = interface
+and [<Interface>] IViewModelStateRepository = 
     abstract member SuspendState: Path*obj -> unit 
     abstract member SuspendState: v:IView -> unit
     abstract member ResumeState: path: Path -> obj
-end 
-
-and IForestRuntime = interface
+and [<Interface>] IForestContext =
     abstract Registry: IViewRegistry with get
-
-end
+and [<Interface>] IContainer = 
+    abstract member Resolve: vm: IViewMetadata -> IView
 
 [<Interface>]
 type IView<'T when 'T: (new: unit -> 'T)> =
@@ -47,15 +39,15 @@ type internal IViewInternal =
     /// <param name="context">
     /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
     /// </param>
-    abstract member Submit: runtime: IForestRuntime -> unit
+    abstract member Submit: ctx: IForestContext -> unit
 
 type [<Interface>] IForestEngine =
-    abstract member CreateDomIndex: rt: IForestRuntime -> data: obj -> IDomIndex
-    abstract member Execute<'T when 'T: (new: unit -> 'T)> : rt: IForestRuntime -> node: IViewNode -> IView<'T>
+    abstract member CreateDomIndex: ctx: IForestContext -> data: obj -> IDomIndex
+    abstract member Execute: rt: IForestContext -> node: IViewNode -> IView
 
 [<Interface>]
 type internal IForestContextAware =
-    abstract member InitializeContext : rt : IForestRuntime -> unit
+    abstract member InitializeContext: ctx: IForestContext -> unit
 
 
 [<Flags>]

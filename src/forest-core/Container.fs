@@ -3,13 +3,9 @@ open System
 open System.Reflection
 
 
-[<Interface>]
-type IContainer = 
-    abstract member Resolve: vm: View.Metadata -> IView
-
 [<Sealed>]
 type DefaultContainer() as self = 
-    member this.Resolve (vm : View.Metadata) : IView = 
+    member this.Resolve (vm : IViewMetadata) : IView = 
         let flags = BindingFlags.Public|||BindingFlags.Instance
         let constructors = 
             vm.ViewType.GetConstructors(flags) 

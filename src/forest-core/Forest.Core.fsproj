@@ -1366,8 +1366,9 @@
     <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="Container.fs" />
-    <Compile Include="ViewRegistry.fs" />
-    <Compile Include="ForestImpl.fs" />
+    <Compile Include="DefaultViewRegistry.fs" />
+    <Compile Include="DefaultForestContext.fs" />
+    <Compile Include="ForestState.fs" />
     <Compile Include="DefaultForestEngine.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
