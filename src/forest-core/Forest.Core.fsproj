@@ -1355,6 +1355,7 @@
     </When>
   </Choose>
   <ItemGroup>
+    <Compile Include="NullHandling.fs" />
     <Compile Include="Rop.fs" />
     <Compile Include="ComparisonAdapter.fs" />
     <Compile Include="Index.fs" />
@@ -1374,7 +1375,6 @@
     <Compile Include="DefaultForestEngine.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
-    <Compile Include="NullHandling.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

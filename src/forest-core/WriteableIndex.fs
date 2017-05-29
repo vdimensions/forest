@@ -25,10 +25,7 @@ type WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqCompar
         with get k = 
             let key = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
             if (map.ContainsKey(key)) then 
-                 let value = map.[key]
-                 match (box value) with
-                 | null -> None // never return nulls
-                 | _ -> Some value
+                 null2opt map.[key]
             else None
 
 

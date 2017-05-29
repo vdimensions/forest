@@ -17,11 +17,11 @@ namespace Forest.Events
 open Forest
 open System
 open System.Collections.Generic
-open System.Linq
+
 
 module EventBus = 
 
-    type [<Sealed>] private EventBus() as self = 
+    type [<Sealed>] private T() as self = 
 
         //[<ThreadStatic>]
         //[<DefaultValue>]
@@ -43,7 +43,7 @@ module EventBus =
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
 
         let subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
-            not (Object.ReferenceEquals (sender, subscription.Receiver))
+            not (obj.ReferenceEquals (sender, subscription.Receiver))
 
         member private this.InvokeMatchingSubscriptions<'M> (sender:IView, message: 'M, topicSubscriptionHandlers: IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             let inline isForMessageType (x: Type): bool = 
@@ -75,7 +75,7 @@ module EventBus =
                         self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
 
-        member this.Subscribe (subscriptionHandler: ISubscriptionHandler, topic: string) : EventBus =
+        member this.Subscribe (subscriptionHandler: ISubscriptionHandler, topic: string) : T =
             match null2opt subscriptionHandler with | None -> nullArg "subscriptionHandler" | _ -> ()
             match null2opt topic with | None -> nullArg "topic" | _ -> ()
             let topicSubscriptionHandlers = 
@@ -95,7 +95,8 @@ module EventBus =
             subscriptionList.Add subscriptionHandler
             this
 
-        member this.Unsubscribe (receiver: IView) : EventBus =
+        member this.Unsubscribe (receiver: IView) : T =
+            match null2opt receiver with | None -> nullArg "receiver" | _ -> ()
             for topicSubscriptionHandlers in _subscriptions.Values |> Seq.collect (fun x -> x.Values) do
                 for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (subscribersFilter receiver) do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
@@ -108,3 +109,5 @@ module EventBus =
             member this.Unsubscribe receiver = upcast self.Unsubscribe receiver
 
         interface IDisposable with member this.Dispose () : unit = self.Dispose(true)
+
+    let Create () : IEventBus = upcast new T()

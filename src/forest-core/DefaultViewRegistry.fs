@@ -38,8 +38,8 @@ type AbstractViewRegistry(container: IContainer) as this =
         | Command.Error.MultipleErrors e -> upcast InvalidOperationException()
 
     member this.Register (t: Type) = 
-        match t with
-        | null -> nullArg "t"
+        match null2opt t with
+        | None -> nullArg "t"
         | _ -> 
             let metadata = this.GetViewMetadata t
             match metadata with
@@ -49,10 +49,10 @@ type AbstractViewRegistry(container: IContainer) as this =
     member this.Register<'T when 'T:> IView> () = this.Register typeof<'T>
 
     member this.Resolve (viewNode: IViewNode) = 
-        match box viewNode with | null -> nullArg "viewNode" | _ -> ()
+        match null2opt viewNode with | None -> nullArg "viewNode" | _ -> ()
         this.Resolve (viewNode.Name)
     member this.Resolve (name: string) = 
-        match name with | null -> nullArg "name" | _ -> ()
+        match null2opt name with | None -> nullArg "name" | _ -> ()
         let viewMetadataResult = storage.TryGetValue name
         match viewMetadataResult with 
         | (false, _) -> invalidArg "name" "No such view was registered" 
@@ -74,7 +74,7 @@ type AbstractViewRegistry(container: IContainer) as this =
 type DefaultViewRegistry(container: IContainer) = 
     inherit AbstractViewRegistry(container)
     override this.GetViewMetadata t =
-        match t with | null -> nullArg "t" | _ -> ()
+        match null2opt t with | None -> nullArg "t" | _ -> ()
         let inline isOfType t obj = (obj.GetType() = t)
         let inline getAttributes(mi: 'M when 'M :> MemberInfo) : seq<'a> =
             let getAttributesInternal = 

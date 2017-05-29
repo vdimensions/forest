@@ -29,9 +29,9 @@ type Path =
             Path(newSegments |> Enumerable.Reverse |> Enumerable.ToArray)
         else this
     member this.Append (segment: string) = 
-        match segment with
-        | null -> nullArg "segment"
-        | str  -> Path((String.Concat(this.ToString(), Path.Separator.ToString(), str)))
+        match null2opt segment with
+        | None -> nullArg "segment"
+        | Some str  -> Path((String.Concat(this.ToString(), Path.Separator.ToString(), str)))
     override this.ToString () = 
         let s:string[] = this.Segments
         if (s.Length > 0) then
