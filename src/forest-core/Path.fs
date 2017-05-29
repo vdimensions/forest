@@ -58,4 +58,3 @@ type Path =
                     result <- result.Parent
                     tmpCnt <- (tmpCnt - 1u)
                 Some result
-

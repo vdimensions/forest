@@ -1366,12 +1366,15 @@
     <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="Container.fs" />
+    <Compile Include="EventBusTypes.fs" />
+    <Compile Include="EventBus.fs" />
     <Compile Include="DefaultViewRegistry.fs" />
     <Compile Include="DefaultForestContext.fs" />
     <Compile Include="ForestState.fs" />
     <Compile Include="DefaultForestEngine.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
+    <Compile Include="NullHandling.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

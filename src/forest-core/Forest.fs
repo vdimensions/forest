@@ -52,7 +52,7 @@ type internal IForestContextAware =
 
 [<Flags>]
 type internal ViewChange =
-    | ViewModel
+    | ViewModel // of something
 
 [<AbstractClass>]
 type AbstractView<'T when 'T: (new: unit -> 'T)> () as self =

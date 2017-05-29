@@ -12,7 +12,7 @@ open System.Collections.Generic
 
 [<Sealed>]
 type DefaultForestEngine() = 
-    let (|Dictionary|_|) (v: obj) =  if (v :? IDictionary<string, obj>) then Some (v :?> IDictionary<string, obj>) else None
+    let (|Dictionary|_|) (v: obj) = if (v :? IDictionary<string, obj>) then Some (v :?> IDictionary<string, obj>) else None
 
     let (|ViewMatcher|_|) (a: DomNodeType, b: obj) =
         match a with 
