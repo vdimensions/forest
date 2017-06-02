@@ -11,7 +11,7 @@ type ViewAttribute(name: string) =
     member val AutowireCommands = false with get, set
 
 [<Interface>]
-type IViewMetadata = 
+type IViewDescriptor = 
     abstract Name: string with get
     abstract ViewType: Type with get
     abstract ViewModelType: Type with get
@@ -23,12 +23,12 @@ module View =
 
     [<Sealed>]
     // TODO: argument verfication
-    type Metadata(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Metadata>) as self = 
+    type Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Metadata>) as self = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
         member this.ViewModelType with get() = viewModelType
         member this.Commands with get() = commands
-        interface IViewMetadata with
+        interface IViewDescriptor with
             member this.Name = self.Name
             member this.ViewType = self.ViewType
             member this.ViewModelType = self.ViewModelType

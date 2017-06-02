@@ -11,9 +11,9 @@ type ViewRegistryError =
 
 [<AbstractClass>]
 type AbstractViewRegistry(container: IContainer) as this = 
-    let storage: IDictionary<string, View.Metadata> = upcast new Dictionary<string, View.Metadata>(StringComparer.Ordinal)
+    let storage: IDictionary<string, View.Descriptor> = upcast new Dictionary<string, View.Descriptor>(StringComparer.Ordinal)
 
-    abstract member GetViewMetadata: t: Type -> Result<View.Metadata, ViewRegistryError>
+    abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
 
     member this.InstantiateView viewMetadata = container.Resolve viewMetadata
 
@@ -60,7 +60,7 @@ type AbstractViewRegistry(container: IContainer) as this =
 
     member this.GetViewMetadata name = 
         match (storage.TryGetValue name) with
-        | (true, metadata) -> Some (upcast metadata : IViewMetadata)
+        | (true, metadata) -> Some (upcast metadata : IViewDescriptor)
         | (false, _) -> None  
             
     interface IViewRegistry with
@@ -158,7 +158,7 @@ type DefaultViewRegistry(container: IContainer) =
                         |> Seq.choose id
                         |> Seq.concat
                         |> Seq.toArray
-                    Success (View.Metadata(name, t, viewModelType, metadataArray))
+                    Success (View.Descriptor(name, t, viewModelType, metadataArray))
                 | _ -> Failure ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
             | None -> Failure ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
         | None -> Failure ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)

@@ -1366,6 +1366,7 @@
     <Compile Include="View.fs" />
     <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
+    <Compile Include="Region.fs" />
     <Compile Include="Container.fs" />
     <Compile Include="EventBusTypes.fs" />
     <Compile Include="EventBus.fs" />
@@ -1373,6 +1374,7 @@
     <Compile Include="DefaultForestContext.fs" />
     <Compile Include="ForestState.fs" />
     <Compile Include="DefaultForestEngine.fs" />
+    <Compile Include="Example.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
   </ItemGroup>

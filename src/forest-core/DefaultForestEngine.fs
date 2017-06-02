@@ -1,4 +1,4 @@
-﻿namespace Forest.Sdk
+﻿namespace Forest
 open Forest
 open Forest.Dom
 open System.Collections.Generic
@@ -43,7 +43,7 @@ type DefaultForestEngine() =
                     match metadata with
                     | Some m -> upcast new ViewNode(path, m): IDomNode
                     // TODO: ERROR
-                    | None -> upcast new ViewNode(path, View.Metadata(name, null, null, null)): IDomNode
+                    | None -> upcast new ViewNode(path, View.Descriptor(name, null, null, null)): IDomNode
                 
                 changedDom <- recurse ctx (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
@@ -51,3 +51,20 @@ type DefaultForestEngine() =
 
     member this.CreateIndex (ctx: IForestContext, data: obj): IDomIndex = 
         traverseRawTemplate ctx (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
+
+    //let traverseDom
+
+    member this.Execute (cxt: IForestContext, domIndex: IDomIndex) : IDomIndex = 
+        for path in domIndex.Paths do
+            match domIndex.[path] with
+            | Some item ->
+                match item with 
+                | :? IViewNode as view -> ()
+                | :? IRegionNode as region -> ()
+            | None -> ()
+
+        Unchecked.defaultof<IDomIndex>
+
+    //let rec materializeDomIndex(ctx: IForestContex, domIndex: IDomIndex) = 
+
+

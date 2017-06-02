@@ -21,7 +21,7 @@ type ICommandNode =
 
 type [<Interface>] IViewNode = 
     inherit IDomNode
-    abstract Metadata: IViewMetadata with get
+    abstract Metadata: IViewDescriptor with get
 and [<Interface>] IRegionNode = inherit IDomNode
 
 [<Interface>]
@@ -86,7 +86,7 @@ type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>)
 
 
 [<Sealed>]
-type internal ViewNode(path: Path, metadata: IViewMetadata) as self =
+type internal ViewNode(path: Path, metadata: IViewDescriptor) as self =
     member this.Metadata with get () = metadata
     member this.Path with get () = path
     //member this.Regions with get () = dom[path]

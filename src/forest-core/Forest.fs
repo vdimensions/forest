@@ -8,13 +8,14 @@ type [<Interface>] IViewRegistry =
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
-    abstract member GetViewMetadata: name: string -> IViewMetadata option
+    abstract member GetViewMetadata: name: string -> IViewDescriptor option
 and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
-    abstract Regions: IIndex<string, IRegion> with get
+    abstract Regions: IIndex<IRegion, string> with get
     abstract ViewModel: obj
 and [<Interface>] IRegion = 
-    abstract Views: IIndex<string, IView> with get 
+    abstract Views: IIndex<IView, string> with get 
+    abstract Name: string with get
 and [<Interface>] IViewModelStateRepository = 
     abstract member SuspendState: Path*obj -> unit 
     abstract member SuspendState: v:IView -> unit
@@ -22,7 +23,7 @@ and [<Interface>] IViewModelStateRepository =
 and [<Interface>] IForestContext =
     abstract Registry: IViewRegistry with get
 and [<Interface>] IContainer = 
-    abstract member Resolve: vm: IViewMetadata -> IView
+    abstract member Resolve: vm: IViewDescriptor -> IView
 
 [<Interface>]
 type IView<'T when 'T: (new: unit -> 'T)> =
@@ -48,7 +49,6 @@ type [<Interface>] IForestEngine =
 [<Interface>]
 type internal IForestContextAware =
     abstract member InitializeContext: ctx: IForestContext -> unit
-
 
 [<Flags>]
 type internal ViewChange =
@@ -77,3 +77,6 @@ type AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
         member this.Publish (m, t) : unit = self.Publish (m, t)
         member this.Regions with get() = raise (System.NotImplementedException())
         member this.ViewModel with get() = upcast self.ViewModel
+
+
+//

@@ -5,7 +5,7 @@ open System.Reflection
 
 [<Sealed>]
 type DefaultContainer() as self = 
-    member this.Resolve (vm : IViewMetadata) : IView = 
+    member this.Resolve (vm : IViewDescriptor) : IView = 
         let flags = BindingFlags.Public|||BindingFlags.Instance
         let constructors = 
             vm.ViewType.GetConstructors(flags) 
