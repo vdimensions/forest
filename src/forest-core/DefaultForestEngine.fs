@@ -60,7 +60,10 @@ type DefaultForestEngine() =
             | Some item ->
                 match item with 
                 | :? IViewNode as view -> ()
-                | :? IRegionNode as region -> ()
+                | :? IRegionNode as region -> 
+                    //let r = new Region.T()
+                    //
+                    ()
             | None -> ()
 
         Unchecked.defaultof<IDomIndex>
