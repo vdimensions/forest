@@ -11,12 +11,14 @@ module Region =
         member this.Views with get(): IIndex<IView, string> = views
         member this.UpdateIndex(ctx: IForestContext, domIndex: IDomIndex) : unit = 
             // TODO: scan the passed in dom index and create/remove child views accordingly
-            let regionNode = 
-                match domIndex.[path] with
-                | Some domNode -> match domNode with | :? IRegionNode as rn -> Some rn | _ -> None
-                | None -> None
-
-            ()
+            match domIndex.[path] with
+            | Some domNode -> 
+                match domNode with 
+                | :? IRegionNode as regionNode ->
+                    // TODO: sync view contents
+                    ()
+                | _ -> ()
+            | None -> ()
         interface IRegion with
             member this.Name = self.Name
             member this.Views = self.Views

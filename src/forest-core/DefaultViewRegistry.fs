@@ -15,7 +15,10 @@ type AbstractViewRegistry(container: IContainer) as this =
 
     abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
 
-    member this.InstantiateView viewMetadata = container.Resolve viewMetadata
+    member this.InstantiateView viewMetadata = 
+        let instance = container.Resolve viewMetadata
+        // TODO: Inject ViewState
+        instance
 
     member this.ResolveError (e: ViewRegistryError): Exception = 
         match e with

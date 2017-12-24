@@ -12,7 +12,7 @@ open System.Runtime.Serialization.Json
 open System.Text
 open Forest
 open Forest.Dom
-open Forest.Sdk
+//open Forest.Sdk
 
 
 /// Object to Json 
@@ -66,7 +66,4 @@ printf "dom index contains %i root nodes \n" index.Count
 for path in index.Paths do
     match index.[path] with
     | None -> ()
-    | Some node -> for x in node do Console.WriteLine("  +-[{0}]", x.Path)
-
-
-
+    | Some node -> for x in node do printf"  +-[%s] \n" (x.Path.ToString())
