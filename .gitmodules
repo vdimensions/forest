@@ -4,3 +4,6 @@
 [submodule "submodules/mason"]
 	path = submodules/mason
 	url = https://github.com/ivaylo5ev/mason
+[submodule "submodules/msbuild-dotnet-multitargeting"]
+	path = submodules/msbuild-dotnet-multitargeting
+	url = https://github.com/virtual-dimensions/msbuild-dotnet-multitargeting.git
