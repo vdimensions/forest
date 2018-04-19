@@ -6,13 +6,9 @@ namespace Forest.Caching
 {
     internal sealed class DefaultCache : ICache
     {
-        private readonly ConcurrentDictionary<object, WeakReference> cache = new ConcurrentDictionary<object, WeakReference>(); 
+        private readonly ConcurrentDictionary<object, WeakReference> _cache = new ConcurrentDictionary<object, WeakReference>(); 
 
-        public bool Delete(object key)
-        {
-            WeakReference unused;
-            return cache.TryRemove(key, out unused);
-        }
+        public bool Delete(object key) => _cache.TryRemove(key, out var _);
 
         private WeakReference EnsureCachedValue(object key, WeakReference existing, object value)
         {
@@ -22,23 +18,23 @@ namespace Forest.Caching
 
         public ICache Add(object key, object value)
         {
-            cache.AddOrUpdate(key, new WeakReference(value), (k, wr) => EnsureCachedValue(k, wr, value));
+            _cache.AddOrUpdate(key, new WeakReference(value), (k, wr) => EnsureCachedValue(k, wr, value));
             return this;
         }
-        public ICache Add<T>(object key, T value) { return Add(key, value); }
+        public ICache Add<T>(object key, T value) { return Add(key, (object) value); }
 
-        public object GetOrAdd(object key, object valueToAdd) { return GetOrAdd<object>(key, valueToAdd); }
-        public object GetOrAdd(object key, Func<object> valueFactory) { return GetOrAdd<object>(key, valueFactory); }
+        public object GetOrAdd(object key, object valueToAdd) => GetOrAdd<object>(key, valueToAdd);
+        public object GetOrAdd(object key, Func<object> valueFactory) => GetOrAdd<object>(key, valueFactory);
 
         public T GetOrAdd<T>(object key, T valueToAdd)
         {
-            var result = cache.GetOrAdd(key, k => new WeakReference(valueToAdd));
+            var result = _cache.GetOrAdd(key, k => new WeakReference(valueToAdd));
             var val = result.Target;
             return result.IsAlive ? (T) val : default(T);
         }
         public T GetOrAdd<T>(object key, Func<T> valueFactory)
         {
-            var result = cache.GetOrAdd(
+            var result = _cache.GetOrAdd(
                 key,
                 k =>
                 {
@@ -53,8 +49,7 @@ namespace Forest.Caching
         {
             get
             {
-                WeakReference wr;
-                if (!cache.TryGetValue(key, out wr))
+                if (!_cache.TryGetValue(key, out var wr))
                 {
                     return null;
                 }
@@ -63,7 +58,7 @@ namespace Forest.Caching
             }
             set
             {
-                cache.AddOrUpdate(
+                _cache.AddOrUpdate(
                     key,
                     k => new WeakReference(value),
                     (k, wr) => EnsureCachedValue(k, wr, value));

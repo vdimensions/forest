@@ -39,9 +39,9 @@ namespace Forest.Presentation
             this.path = path;
         }
 
-        public ILayoutTemplate Template { get { return this.template; } }
-        public IView View { get { return this.view; } }
-        public IViewContext ViewContext { get { return this.viewContext; } }
-        public string Path { get { return this.path; } }
+        public ILayoutTemplate Template => this.template;
+        public IView View => this.view;
+        public IViewContext ViewContext => this.viewContext;
+        public string Path => this.path;
     }
 }

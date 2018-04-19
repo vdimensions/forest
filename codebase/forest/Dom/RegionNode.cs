@@ -26,23 +26,23 @@ namespace Forest.Dom
     internal class RegionNode : IRegionNode
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
-        private readonly IDictionary<string, IViewNode> views;
+        private readonly IDictionary<string, IViewNode> _views;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string name;
+        private readonly string _name;
 
         public RegionNode(string name, IDictionary<string, IViewNode> views)
         {
-            this.name = name;
-            this.views = views;
+            _name = name;
+            _views = views;
         }
         public RegionNode(string name) : this(name, null) { }
 
-        public IEnumerator<KeyValuePair<string, IViewNode>> GetEnumerator() { return this.views.GetEnumerator(); }
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        public IEnumerator<KeyValuePair<string, IViewNode>> GetEnumerator() => _views.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         [Localizable(false)]
-        public string Name { get { return this.name; } }
+        public string Name => _name;
 
-        public IViewNode this[string viewID] { get { return this.views[viewID]; } }
+        public IViewNode this[string viewID] => _views[viewID];
     }
 }

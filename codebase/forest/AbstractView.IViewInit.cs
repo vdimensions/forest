@@ -79,11 +79,11 @@ namespace Forest
         {
             if (id == null)
             {
-                throw new ArgumentNullException("id");
+                throw new ArgumentNullException(nameof(id));
             }
             if (regions == null)
             {
-                throw new ArgumentNullException("regions");
+                throw new ArgumentNullException(nameof(regions));
             }
 
             this.id = id;
@@ -127,7 +127,7 @@ namespace Forest
         {
             if (eventBus == null)
             {
-                throw new ArgumentNullException("eventBus");
+                throw new ArgumentNullException(nameof(eventBus));
             }
             OnEventBusReady(this.eventBus = eventBus);
         }
@@ -141,7 +141,7 @@ namespace Forest
             eventBus = null;
         }
 
-        IRegion IViewInit.ContainingRegion { get { return this.containingRegion; } }
-        IViewContext IViewInit.Context { get { return this.viewContext; } }
+        IRegion IViewInit.ContainingRegion => this.containingRegion;
+        IViewContext IViewInit.Context => this.viewContext;
     }
 }

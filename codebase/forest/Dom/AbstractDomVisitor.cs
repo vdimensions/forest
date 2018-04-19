@@ -26,22 +26,18 @@ namespace Forest.Dom
     {
         public IDomNode Visit(IDomNode node, INodeContext nodeContext)
         {
-            if (node is IViewNode)
+            switch (node)
             {
-                return Visit((IViewNode) node, nodeContext);
+                case IViewNode viewNode:
+                    return Visit(viewNode, nodeContext);
+                case IResourceNode resourceNode:
+                    return ProcessResource(resourceNode, nodeContext);
+                case ICommandNode commandNode:
+                    return ProcessCommand(commandNode, nodeContext);
+                case ILinkNode linkNode:
+                    return ProcessLink(linkNode, nodeContext);
             }
-            if (node is IResourceNode)
-            {
-                return ProcessResource((IResourceNode) node, nodeContext);
-            }
-            if (node is ICommandNode)
-            {
-                return ProcessCommand((ICommandNode) node, nodeContext);
-            }
-            if (node is ILinkNode)
-            {
-                return ProcessLink((ILinkNode) node, nodeContext);
-            }
+
             return node;
         }
 
@@ -60,14 +56,14 @@ namespace Forest.Dom
             return new ViewNode(ProcessViewModel(node.Model, context), links, resources, commands, node.Regions) { Title = node.Title };
         }
 
-        protected virtual object ProcessViewModel(object viewModel, INodeContext nodeContext) { return viewModel; }
+        protected virtual object ProcessViewModel(object viewModel, INodeContext nodeContext) => viewModel;
 
-        protected virtual ICommandNode ProcessCommand(ICommandNode command, INodeContext nodeContext) { return command; }
+        protected virtual ICommandNode ProcessCommand(ICommandNode command, INodeContext nodeContext) => command;
 
-        protected virtual ILinkNode ProcessLink(ILinkNode link, INodeContext nodeContext) { return link; }
+        protected virtual ILinkNode ProcessLink(ILinkNode link, INodeContext nodeContext) => link;
 
-        protected virtual IResourceNode ProcessResource(IResourceNode resource, INodeContext nodeContext) { return resource; }
+        protected virtual IResourceNode ProcessResource(IResourceNode resource, INodeContext nodeContext) => resource;
 
-        protected virtual ICommandLinkNode ProcessCommandLink(ICommandLinkNode link, INodeContext nodeContext) { return link; }
+        protected virtual ICommandLinkNode ProcessCommandLink(ICommandLinkNode link, INodeContext nodeContext) => link;
     }
 }

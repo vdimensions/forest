@@ -28,7 +28,7 @@ namespace Forest.Reflection
 	{
 		internal PropertyBag(IDictionary<string, IProperty> dictionary) : base(dictionary) { }
 
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
-		public IEnumerator<IProperty> GetEnumerator() { return Values.GetEnumerator(); }
-    }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	    public IEnumerator<IProperty> GetEnumerator() => Values.GetEnumerator();
+	}
 }

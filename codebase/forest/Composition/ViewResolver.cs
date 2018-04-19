@@ -31,16 +31,16 @@ namespace Forest.Composition
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-		private readonly IViewLookup viewLookup;
+		private readonly IViewLookup _viewLookup;
 		#if !DEBUG
 		[System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
 		#endif
-        private readonly IForestContext context;
+        private readonly IForestContext _context;
 
         public ViewResolver(IForestContext context, IViewLookup viewLookup)
         {
-            this.context = context;
-            this.viewLookup = viewLookup;
+            _context = context;
+            _viewLookup = viewLookup;
         }
 
         private bool DoTryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out IView view)
@@ -49,8 +49,8 @@ namespace Forest.Composition
             // TODO: remove ambiguity -- either access view by type or by id. Result false is not very consistent here
             var viewNumberPrefixIndex = id == null ? -1 : id.LastIndexOf('#');
             var token = id == null 
-                ? viewModel == null ? null : this.viewLookup.Lookup(viewModel.GetType()) 
-                : this.viewLookup.Lookup(viewNumberPrefixIndex > 0 ? id.Substring(0, viewNumberPrefixIndex) : id);
+                ? viewModel == null ? null : this._viewLookup.Lookup(viewModel.GetType()) 
+                : _viewLookup.Lookup(viewNumberPrefixIndex > 0 ? id.Substring(0, viewNumberPrefixIndex) : id);
             if (token == null)
             {
                 return false;
@@ -61,7 +61,7 @@ namespace Forest.Composition
             var links = new ChronologicalDictionary<string, ILink>(DefaultForestEngine.StringComparer);
             var commands = new ChronologicalDictionary<string, ICommand>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(viewModel, context, id, containingRegion, resources, links, commands, childRegions, this);
+			viewInit.Init(viewModel, _context, id, containingRegion, resources, links, commands, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);
@@ -75,7 +75,7 @@ namespace Forest.Composition
 		private bool DoTryResolve(object viewModel, IViewContainer container, IRegion containingRegion, out IView view)
         {
 			view = null;
-            var token = viewModel == null ? null : this.viewLookup.Lookup(viewModel.GetType());
+            var token = viewModel == null ? null : this._viewLookup.Lookup(viewModel.GetType());
             if (token == null)
             {
                 return false;
@@ -89,7 +89,7 @@ namespace Forest.Composition
             var links = new ChronologicalDictionary<string, ILink>(DefaultForestEngine.StringComparer);
             var commands = new ChronologicalDictionary<string, ICommand>(DefaultForestEngine.StringComparer);
             var viewInit = (IViewInit) resolvedView;
-			viewInit.Init(viewModel, context, id, containingRegion, resources, links, commands, childRegions, this);
+			viewInit.Init(viewModel, _context, id, containingRegion, resources, links, commands, childRegions, this);
 			foreach (var regionTemplate in template.Regions) 
 			{
 				viewInit.GetOrCreateRegion(regionTemplate);
@@ -104,7 +104,7 @@ namespace Forest.Composition
         private IViewTemplate CreateViewTemplateOnTheFly(string id)
         {
             ILayoutTemplate t;
-            if (context.LayoutTemplateProvider.TryLoad(id, out t))
+            if (_context.LayoutTemplateProvider.TryLoad(id, out t))
             {
                 return t;
             }
@@ -121,25 +121,24 @@ namespace Forest.Composition
             {
                 throw new ArgumentException("View ID must not be an empty string", "id");
             }
-            IView view;
-            if (DoTryResolve(id, viewModel, template, containingRegion, out view))
+            if (DoTryResolve(id, viewModel, template, containingRegion, out var view))
             {
                 return view;
             }
-            throw new ArgumentException(string.Format("Unable to resolve view for id '{0}'.", id), "id");
+            throw new ArgumentException(string.Format("Unable to resolve view for id '{0}'.", id), nameof(id));
         }
         public IView Resolve(object viewModel, IViewContainer template, IRegion containingRegion)
         {
             if (viewModel == null)
             {
-                throw new ArgumentNullException("viewModel");
+                throw new ArgumentNullException(nameof(viewModel));
             }
 			IView view;
             if (DoTryResolve(viewModel, template, containingRegion, out view))
             {
                 return view;
             }
-            throw new ArgumentException(string.Format("Unable to resolve view for view model of type `{0}`.", viewModel.GetType()), "viewModel");
+            throw new ArgumentException(string.Format("Unable to resolve view for view model of type `{0}`.", viewModel.GetType()), nameof(viewModel));
         }
 
 		public bool TryResolve(string id, object viewModel, IViewTemplate template, IRegion containingRegion, out IView view)
@@ -150,7 +149,7 @@ namespace Forest.Composition
             }
             if (id.Length == 0)
             {
-                throw new ArgumentException("View ID must not be an empty string", "id");
+                throw new ArgumentException("View ID must not be an empty string", nameof(id));
             }
             return DoTryResolve(id, viewModel, template, containingRegion, out view);
         }
@@ -158,7 +157,7 @@ namespace Forest.Composition
         {
             if (viewModel == null)
             {
-                throw new ArgumentNullException("viewModel");
+                throw new ArgumentNullException(nameof(viewModel));
             }
             return DoTryResolve(viewModel, template, containingRegion, out view);
         }

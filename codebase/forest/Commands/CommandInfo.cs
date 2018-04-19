@@ -22,33 +22,27 @@ namespace Forest.Commands
 {
     public class CommandInfo
     {       
-        private readonly IView rootView;
-        private readonly IView targetView;
-        private readonly ICommand unboundCommand;
+        private readonly IView _rootView;
+        private readonly IView _targetView;
+        private readonly ICommand _unboundCommand;
 
         internal CommandInfo(IView rootView, IView targetView, string commandName)
         {
-            this.rootView = rootView;
-            this.targetView = targetView;
+            _rootView = rootView;
+            _targetView = targetView;
             var v = targetView ?? rootView;
             var cmd = v.Commands[commandName];
-            if (cmd == null)
-            {
-                throw new ArgumentException(string.Format("Could not find command '{0}'", commandName), "commandName");
-            }
-            unboundCommand = cmd;
+            _unboundCommand = cmd ?? throw new ArgumentException(string.Format("Could not find command '{0}'", commandName), nameof(commandName));
         }
 
         public CommandResult Invoke(object arg)
         {
             var argument = arg;
-            return unboundCommand != null 
-                ? unboundCommand.Invoke(rootView, targetView, argument) 
-                : null;
+            return _unboundCommand?.Invoke(_rootView, _targetView, argument);
         }
 
-		public IParameter Parameter { get { return unboundCommand != null ? unboundCommand.Parameter : new DefaultReflectionProvider.VoidParameter(); } }
-        public string Name { get { return unboundCommand.Name; } }
-        public string NavigatesToTemplate { get { return unboundCommand.NavigatesToTemplate; } }
+		public IParameter Parameter => _unboundCommand != null ? _unboundCommand.Parameter : new DefaultReflectionProvider.VoidParameter();
+        public string Name => _unboundCommand.Name;
+        public string NavigatesToTemplate => _unboundCommand.NavigatesToTemplate;
     }
 }

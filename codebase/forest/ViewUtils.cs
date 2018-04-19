@@ -25,12 +25,12 @@ namespace Forest
         {
             if (viewType == null)
             {
-                throw new ArgumentNullException("viewType");
+                throw new ArgumentNullException(nameof(viewType));
             }
             var typeofView = typeof(IView);
             if (!typeofView.IsAssignableFrom(viewType))
             {
-                throw new ArgumentException(string.Format("The provided type must implement `{0}`", typeofView.FullName), "viewType");
+                throw new ArgumentException(string.Format("The provided type must implement `{0}`", typeofView.FullName), nameof(viewType));
             }
             return DoGetID(viewType);
         }

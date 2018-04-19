@@ -10,101 +10,90 @@ namespace Forest.Reflection
     {
         private sealed class Parameter : IParameter
         {           
-            private readonly ParameterInfo parameter;
+            private readonly ParameterInfo _parameter;
 
             public Parameter(ParameterInfo parameter)
             {
-                this.parameter = parameter;
+                _parameter = parameter;
             }
 
-            public Type Type { get { return this.parameter.ParameterType; } }
-            public bool IsOptional { get { return this.parameter.IsOptional; } }
+            public Type Type => _parameter.ParameterType;
+            public bool IsOptional => _parameter.IsOptional;
         }
         
         internal sealed class VoidParameter : IParameter
         {           
             public VoidParameter() { }
 
-            public Type Type { get { return typeof(void); } }
-            public bool IsOptional { get { return true; } }
+            public Type Type => typeof(void);
+            public bool IsOptional => true;
         }
 
         private sealed class Method : IMethod
         {
-            private readonly MethodInfo method;
+            private readonly MethodInfo _method;
 
             public Method(MethodInfo method)
             {
-                this.method = method;
+                _method = method;
             }
 
             public IParameter[] GetParameters()
             {
-                return this.method.GetParameters().Select(x => new Parameter(x)).ToArray();
+                return _method.GetParameters().Select(x => new Parameter(x)).ToArray();
             }
 
             public IEnumerable<T> GetAttributes<T>() where T: Attribute
             {
-                return this.method.GetCustomAttributes(true).OfType<T>();
+                return _method.GetCustomAttributes(true).OfType<T>();
             }
 
-            public object Invoke(IView view, object message) { return this.method.Invoke(view, new[] {message}); }
-            public object Invoke(IView view) { return this.method.Invoke(view, null); }
+            public object Invoke(IView view, object message) => _method.Invoke(view, new[] {message});
+            public object Invoke(IView view) => _method.Invoke(view, null);
 
-            public string Name { get { return this.method.Name; } }
+            public string Name => _method.Name;
         }
 
         private sealed class Property : IProperty
         {
-            private readonly PropertyInfo property;
+            private readonly PropertyInfo _property;
 
             public Property(PropertyInfo property)
             {
-                this.property = property;
+                _property = property;
             }
 
-            public T[] GetAttributes<T>() where T: Attribute
-            {
-                return this.property.GetCustomAttributes(true).OfType<T>().ToArray();
-            }
+            public T[] GetAttributes<T>() where T: Attribute => _property.GetCustomAttributes(true).OfType<T>().ToArray();
 
-            public Attribute[] GetAttributes()
-            {
-                return this.property.GetCustomAttributes(true).OfType<Attribute>().ToArray();
-            }
+            public Attribute[] GetAttributes() => _property.GetCustomAttributes(true).OfType<Attribute>().ToArray();
 
-            public object GetValue(object target)
-            {
-                return this.property.GetValue(target, null);
-            }
+            public object GetValue(object target) => _property.GetValue(target, null);
 
-            public void SetValue(object target, object value)
-            {
-                this.property.SetValue(target, value, null);
-            }
+            public void SetValue(object target, object value) => _property.SetValue(target, value, null);
 
-            public string Name { get { return this.property.Name; } }
-            public Type MemberType { get { return this.property.PropertyType; } }
+            public string Name => _property.Name;
 
-            public bool IsReadable { get { return this.property.CanRead; } }
+            public Type MemberType => _property.PropertyType;
 
-            public bool IsWriteable { get { return this.property.CanWrite; } }
+            public bool IsReadable => _property.CanRead;
+
+            public bool IsWriteable => _property.CanWrite;
         }
 
         public IEnumerable<IMethod> GetMethods(Type type, BindingFlags flags)
         {
             if (type == null)
             {
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
             }
-            return type.GetMethods(flags).Select(x => new Method(x));
+            return type.GetMethods(flags).Select(x => new Method(x)).Cast<IMethod>();
         }
 
         public IEnumerable<IProperty> GetProperties(Type type, BindingFlags flags)
         {
             if (type == null)
             {
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
             }
             return type.GetProperties(flags).Select(x => new Property(x)).ToArray();
         }
@@ -113,12 +102,12 @@ namespace Forest.Reflection
         {
             if (type == null)
             {
-                throw new ArgumentNullException("type");
+                throw new ArgumentNullException(nameof(type));
             }
             var prop = type.GetProperty(name, flags);
             return prop == null ? null : new Property(prop);
         }
 
-        public object Instantiate(Type memberType) { return Activator.CreateInstance(memberType); }
+        public object Instantiate(Type memberType) => Activator.CreateInstance(memberType);
     }
 }

@@ -13,11 +13,11 @@ namespace Forest.Reflection
         {
             if (reflectionProvider == null)
             {
-                throw new ArgumentNullException("reflectionProvider");
+                throw new ArgumentNullException(nameof(reflectionProvider));
             }
             if (rawData == null)
             {
-                throw new ArgumentNullException("rawData");
+                throw new ArgumentNullException(nameof(rawData));
             }
             return Map(reflectionProvider, rawData, reflectionProvider.Instantiate(targetType));
         }
@@ -25,19 +25,18 @@ namespace Forest.Reflection
         {
             if (reflectionProvider == null)
             {
-                throw new ArgumentNullException("reflectionProvider");
+                throw new ArgumentNullException(nameof(reflectionProvider));
             }
             if (rawData == null)
             {
-                throw new ArgumentNullException("rawData");
+                throw new ArgumentNullException(nameof(rawData));
             }
             return (T) Map(rawData, string.Empty, target, reflectionProvider);
         }
 
         private static object Map(IDictionary<string, object> rawData, string prefix, object target, IReflectionProvider reflectionProvider)
         {
-            object result;
-            if (TryGetPrimitive(target.GetType(), target, out result))
+            if (TryGetPrimitive(target.GetType(), target, out var result))
             {
                 return result;
             }
@@ -50,8 +49,7 @@ namespace Forest.Reflection
                 : rawData.Keys;
             foreach (var propertyName in propertyNames)
             {
-                IProperty property;
-                if (objectProperties.TryGetValue(propertyName, out property))
+                if (objectProperties.TryGetValue(propertyName, out var property))
                 {
                     var propertyValue = property.GetValue(target) ?? reflectionProvider.Instantiate(property.MemberType);
                     property.SetValue(target, Map(rawData, string.Format("{0}{1}.", prefix, propertyName), propertyValue, reflectionProvider));
@@ -81,130 +79,130 @@ namespace Forest.Reflection
             switch (type.Name)
             {
                 case "Boolean":
-                    if (raw is bool)
+                    if (raw is bool boolValue)
                     {
-                        result = (bool) raw;
+                        result = boolValue;
                         return true;
                     }
-                    bool boolResult;
-                    if (bool.TryParse(raw.ToString(), out boolResult))
+
+                    if (bool.TryParse(raw.ToString(), out var boolResult))
                     {
                         result = boolResult;
                         return true;
                     }
                     break;
                 case "Byte":
-                    if (raw is byte)
+                    if (raw is byte byteValue)
                     {
-                        result = (byte) raw;
+                        result = byteValue;
                         return true;
                     }
-                    byte byteResult;
-                    if (byte.TryParse(raw.ToString(), out byteResult))
+
+                    if (byte.TryParse(raw.ToString(), out var byteResult))
                     {
                         result = byteResult;
                         return true;
                     }
                     break;
                 case "Int16":
-                    if (raw is short)
+                    if (raw is short shortValue)
                     {
-                        result = (short) raw;
+                        result = shortValue;
                         return true;
                     }
-                    short shortResult;
-                    if (short.TryParse(raw.ToString(), out shortResult))
+
+                    if (short.TryParse(raw.ToString(), out var shortResult))
                     {
                         result = shortResult;
                         return true;
                     }
                     break;
                 case "Int32":
-                    if (raw is int)
+                    if (raw is int intValue)
                     {
-                        result = (int) raw;
+                        result = intValue;
                         return true;
                     }
-                    int intResult;
-                    if (int.TryParse(raw.ToString(), out intResult))
+
+                    if (int.TryParse(raw.ToString(), out var intResult))
                     {
                         result = intResult;
                         return true;
                     }
                     break;
                 case "Int64":
-                    if (raw is long)
+                    if (raw is long longValue)
                     {
-                        result = (long) raw;
+                        result = longValue;
                         return true;
                     }
-                    long longResult;
-                    if (long.TryParse(raw.ToString(), out longResult))
+
+                    if (long.TryParse(raw.ToString(), out var longResult))
                     {
                         result = longResult;
                         return true;
                     }
                     break;
                 case "UInt16":
-                    if (raw is ushort)
+                    if (raw is ushort ushortValue)
                     {
-                        result = (ushort)raw;
+                        result = ushortValue;
                         return true;
                     }
-                    ushort ushortResult;
-                    if (ushort.TryParse(raw.ToString(), out ushortResult))
+
+                    if (ushort.TryParse(raw.ToString(), out var ushortResult))
                     {
                         result = ushortResult;
                         return true;
                     }
                     break;
                 case "UInt32":
-                    if (raw is uint)
+                    if (raw is uint uintValue)
                     {
-                        result = (uint)raw;
+                        result = uintValue;
                         return true;
                     }
-                    uint uintResult;
-                    if (uint.TryParse(raw.ToString(), out uintResult))
+
+                    if (uint.TryParse(raw.ToString(), out var uintResult))
                     {
                         result = uintResult;
                         return true;
                     }
                     break;
                 case "UInt64":
-                    if (raw is ulong)
+                    if (raw is ulong ulongValue)
                     {
-                        result = (ulong)raw;
+                        result = ulongValue;
                         return true;
                     }
-                    ulong ulongResult;
-                    if (ulong.TryParse(raw.ToString(), out ulongResult))
+
+                    if (ulong.TryParse(raw.ToString(), out var ulongResult))
                     {
                         result = ulongResult;
                         return true;
                     }
                     break;
                 case "Single":
-                    if (raw is float)
+                    if (raw is float floatValue)
                     {
-                        result = (float)raw;
+                        result = floatValue;
                         return true;
                     }
-                    float floatResult;
-                    if (float.TryParse(raw.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.CurrentUICulture, out floatResult))
+
+                    if (float.TryParse(raw.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.CurrentUICulture, out var floatResult))
                     {
                         result = floatResult;
                         return true;
                     }
                     break;
                 case "Double":
-                    if (raw is double)
+                    if (raw is double doubleValue)
                     {
-                        result = (double)raw;
+                        result = doubleValue;
                         return true;
                     }
-                    double doubleResult;
-                    if (double.TryParse(raw.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.CurrentUICulture, out doubleResult))
+
+                    if (double.TryParse(raw.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.CurrentUICulture, out var doubleResult))
                     {
                         result = doubleResult;
                         return true;
@@ -212,61 +210,61 @@ namespace Forest.Reflection
                     break;
 
                 case "Decimal":
-                    if (raw is decimal)
+                    if (raw is decimal decimalValue)
                     {
-                        result = (decimal)raw;
+                        result = decimalValue;
                         return true;
                     }
-                    decimal decimalResult;
-                    if (decimal.TryParse(raw.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.CurrentUICulture, out decimalResult))
+
+                    if (decimal.TryParse(raw.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.CurrentUICulture, out var decimalResult))
                     {
                         result = decimalResult;
                         return true;
                     }
                     break;
                 case "Char":
-                    if (raw is char)
+                    if (raw is char c)
                     {
-                        result = (char)raw;
+                        result = c;
                         return true;
                     }
-                    char charResult;
-                    if (char.TryParse(raw.ToString(), out charResult))
+
+                    if (char.TryParse(raw.ToString(), out var charResult))
                     {
                         result = charResult;
                         return true;
                     }
                     break;
                 case "DateTime":
-                    if (raw is DateTime)
+                    if (raw is DateTime time)
                     {
-                        result = (DateTime)raw;
+                        result = time;
                         return true;
                     }
-                    DateTime dateTimeResult;
-                    if (DateTime.TryParse(raw.ToString(), out dateTimeResult))
+
+                    if (DateTime.TryParse(raw.ToString(), out var dateTimeResult))
                     {
                         result = dateTimeResult;
                         return true;
                     }
                     break;
                 case "TimeSpan":
-                    if (raw is TimeSpan)
+                    if (raw is TimeSpan span)
                     {
-                        result = (TimeSpan)raw;
+                        result = span;
                         return true;
                     }
-                    TimeSpan timeSpanResult;
-                    if (TimeSpan.TryParse(raw.ToString(), out timeSpanResult))
+
+                    if (TimeSpan.TryParse(raw.ToString(), out var timeSpanResult))
                     {
                         result = timeSpanResult;
                         return true;
                     }
                     break;
                 case "Guid":
-                    if (raw is Guid)
+                    if (raw is Guid guid)
                     {
-                        result = (Guid)raw;
+                        result = guid;
                         return true;
                     }
                     Guid guidResult;

@@ -32,8 +32,8 @@ namespace Forest.Resources
             this.name = name;
         }
 
-        public string Category { get { return category; } }
-        public string Bundle { get { return bundle; } }
-        public string Name { get { return name; } }
+        public string Category => category;
+        public string Bundle => bundle;
+        public string Name => name;
     }
 }

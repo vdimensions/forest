@@ -29,16 +29,12 @@ namespace Forest
         [Localizable(false)]
         public ViewAttribute(string id)
         {
-            if (id == null)
-            {
-                throw new ArgumentNullException("id");
-            }
-            this.id = id;
+            this.id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
         /// <summary>
         /// Gets a unique identifier for the decorated view object.
         /// </summary>
-        public string ID { get { return id; } }
+        public string ID => id;
     }
 }

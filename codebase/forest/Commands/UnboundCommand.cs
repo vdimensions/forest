@@ -28,56 +28,56 @@ namespace Forest.Commands
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly Func<IView, object, object> invocation;
+        private readonly Func<IView, object, object> _invocation;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IParameter parameter;
+        private readonly IParameter _parameter;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string commandName;
+        private readonly string _commandName;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly bool causesRefresh;
+        private readonly bool _causesRefresh;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string navigatesToTemplate;
+        private readonly string _navigatesToTemplate;
 
         public UnboundCommand(string commandName, Func<IView, object, object> invocation, IParameter parameter, bool causesRefresh, string navigatesToTemplate)
         {
-            this.commandName = commandName;
-            this.invocation = invocation;
-            this.parameter = parameter;
-            this.causesRefresh = causesRefresh;
-            this.navigatesToTemplate = navigatesToTemplate;
+            _commandName = commandName;
+            _invocation = invocation;
+            _parameter = parameter;
+            _causesRefresh = causesRefresh;
+            _navigatesToTemplate = navigatesToTemplate;
         }
 
         public CommandResult Invoke(IView rootView, IView targetView, object argument)
         {
             if (rootView == null)
             {
-                throw new ArgumentNullException("rootView");
+                throw new ArgumentNullException(nameof(rootView));
             }
             if (targetView == null)
             {
-                throw new ArgumentNullException("targetView");
+                throw new ArgumentNullException(nameof(targetView));
             }
 
             IEnumerable<RegionModification> modifications;
             object returnValue;
             using (var tracker = new RegionModificationsTracker(rootView))
             {
-                returnValue = invocation(targetView, argument);
-                if (causesRefresh)
+                returnValue = _invocation(targetView, argument);
+                if (_causesRefresh)
                 {
                     targetView.Refresh();
                 }
                 modifications = tracker.Modifications;
             }
-            return new CommandResult(returnValue, modifications, navigatesToTemplate);
+            return new CommandResult(returnValue, modifications, _navigatesToTemplate);
         }
 
-        public IParameter Parameter { get { return parameter; } }
-        public string Name { get { return commandName; } }
-        public string NavigatesToTemplate { get { return navigatesToTemplate; } }
+        public IParameter Parameter => _parameter;
+        public string Name => _commandName;
+        public string NavigatesToTemplate => _navigatesToTemplate;
     }
 }

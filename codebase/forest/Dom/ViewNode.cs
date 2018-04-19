@@ -28,15 +28,15 @@ namespace Forest.Dom
         public static readonly ViewNode NonRendered = null;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly object model;
+        private readonly object _model;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, ILinkNode> links;
+        private readonly IDictionary<string, ILinkNode> _links;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, IResourceNode> resources;
+        private readonly IDictionary<string, IResourceNode> _resources;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, ICommandNode> commands;
+        private readonly IDictionary<string, ICommandNode> _commands;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, IRegionNode> regions;
+        private readonly IDictionary<string, IRegionNode> _regions;
 
         public ViewNode(
                 object model, 
@@ -45,29 +45,29 @@ namespace Forest.Dom
                 IDictionary<string, ICommandNode> commands, 
                 IDictionary<string, IRegionNode> regions)
         {
-            this.model = model;
-            this.links = links;
-            this.resources = resources;
-            this.commands = commands;
-            this.regions = regions;
+            _model = model;
+            _links = links;
+            _resources = resources;
+            _commands = commands;
+            _regions = regions;
         }
 
         [Localizable(true)]
         public string Title { get; set; }
 
         [Localizable(true)]
-        public virtual object Model { get { return model; } }
+        public virtual object Model => _model;
 
         [Localizable(false)]
-        public IDictionary<string, ILinkNode> Links { get { return links; } }
+        public IDictionary<string, ILinkNode> Links => _links;
 
         [Localizable(false)]
-        public IDictionary<string, IResourceNode> Resources { get { return resources; } }
+        public IDictionary<string, IResourceNode> Resources => _resources;
 
         [Localizable(false)]
-        public IDictionary<string, ICommandNode> Commands { get { return commands; } }
+        public IDictionary<string, ICommandNode> Commands => _commands;
 
         [Localizable(false)]
-        public IDictionary<string, IRegionNode> Regions { get { return regions; } }
+        public IDictionary<string, IRegionNode> Regions => _regions;
     }
 }

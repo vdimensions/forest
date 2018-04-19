@@ -25,13 +25,13 @@ namespace Forest.Dom
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)]
-        private readonly string viewID;
+        private readonly string _viewID;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)] 
-        private readonly string command;
+        private readonly string _command;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)] 
-        private readonly string commandArgument;
+        private readonly string _commandArgument;
 
         public CommandLinkNode(
             string name, 
@@ -42,40 +42,40 @@ namespace Forest.Dom
         {
             if (name == null)
             {
-                throw new ArgumentNullException("name");
+                throw new ArgumentNullException(nameof(name));
             }
             if (viewID == null)
             {
-                throw new ArgumentNullException("viewID");
+                throw new ArgumentNullException(nameof(viewID));
             }
             if (viewID.Length == 0)
             {
-                throw new ArgumentException("Value cannot be empty string", "viewID");
+                throw new ArgumentException("Value cannot be empty string", nameof(viewID));
             }
             if (command == null)
             {
-                throw new ArgumentNullException("command");
+                throw new ArgumentNullException(nameof(command));
             }
             if (command.Length == 0)
             {
-                throw new ArgumentException("Value cannot be empty string", "command");
+                throw new ArgumentException("Value cannot be empty string", nameof(command));
             }
             if (commandArgument == null)
             {
-                throw new ArgumentNullException("commandArgument");
+                throw new ArgumentNullException(nameof(commandArgument));
             }
             if (commandArgument.Length == 0)
             {
-                throw new ArgumentException("Value cannot be empty string", "commandArgument");
+                throw new ArgumentException("Value cannot be empty string", nameof(commandArgument));
             }
 
-            this.viewID = viewID;
-            this.command = command;
-            this.commandArgument = commandArgument;
+            _viewID = viewID;
+            _command = command;
+            _commandArgument = commandArgument;
         }
 
-        public string ViewID { get { return viewID; } }
-        public string Command { get { return command; } }
-        public string CommandArgument { get { return commandArgument; } }
+        public string ViewID => _viewID;
+        public string Command => _command;
+        public string CommandArgument => _commandArgument;
     }
 }

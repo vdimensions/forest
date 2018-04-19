@@ -26,17 +26,13 @@ namespace Forest.Dom
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)] 
-        private readonly string template;
+        private readonly string _template;
 
         public LinkNode(string name, string template) : base(name)
         {
-            if (template == null)
-            {
-                throw new ArgumentNullException("template");
-            }
-            this.template = template;
+            _template = template ?? throw new ArgumentNullException(nameof(template));
         }
         
-        public string Template { get { return template; } }
+        public string Template => _template;
     }
 }

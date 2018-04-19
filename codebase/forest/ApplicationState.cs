@@ -133,11 +133,11 @@ namespace Forest
         {
             if (path == null)
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
             if (path.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "path");
+                throw new ArgumentException("Value cannot be an empty string", nameof(path));
             }
             return context.Engine.FindView(result.View, path);
         }
@@ -146,19 +146,19 @@ namespace Forest
         {
             if (path == null)
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
             if (path.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "path");
+                throw new ArgumentException("Value cannot be an empty string", nameof(path));
             }
             if (commandName == null)
             {
-                throw new ArgumentNullException("commandName");
+                throw new ArgumentNullException(nameof(commandName));
             }
             if (commandName.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "commandName");
+                throw new ArgumentException("Value cannot be an empty string", nameof(commandName));
             }
             return context.Engine.GetCommand(result.View, path, commandName).Parameter;
         }
@@ -167,19 +167,19 @@ namespace Forest
         {
             if (path == null)
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
             if (path.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "path");
+                throw new ArgumentException("Value cannot be an empty string", nameof(path));
             }
             if (commandName == null)
             {
-                throw new ArgumentNullException("commandName");
+                throw new ArgumentNullException(nameof(commandName));
             }
             if (commandName.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "commandName");
+                throw new ArgumentException("Value cannot be an empty string", nameof(commandName));
             }
             var command = context.Engine.GetCommand(result.View, path, commandName);
             Func<CommandInfo, CommandResult> resolveFn =
@@ -212,19 +212,19 @@ namespace Forest
         {
             if (path == null)
             {
-                throw new ArgumentNullException("path");
+                throw new ArgumentNullException(nameof(path));
             }
             if (path.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "path");
+                throw new ArgumentException("Value cannot be an empty string", nameof(path));
             }
             if (commandName == null)
             {
-                throw new ArgumentNullException("commandName");
+                throw new ArgumentNullException(nameof(commandName));
             }
             if (commandName.Length == 0)
             {
-                throw new ArgumentException("Value cannot be an empty string", "commandName");
+                throw new ArgumentException("Value cannot be an empty string", nameof(commandName));
             }
             var command = context.Engine.GetCommand(result.View, path, commandName);
             return Execute(
@@ -234,10 +234,9 @@ namespace Forest
                 new DeferredCommandInfo(command, c => c.Invoke(argument)));
         }
 
-        public ApplicationState NavigateTo(string templateName) { return Execute(context, templateName, this, null); }
+        public ApplicationState NavigateTo(string templateName) => Execute(context, templateName, this, null);
 
-        public ForestResult Result { get { return result; } }
-        public IViewNode RenderedView { get { return renderedView; } }
-
+        public ForestResult Result => result;
+        public IViewNode RenderedView => renderedView;
     }
 }

@@ -26,7 +26,7 @@ namespace Forest.Collections
     {
         protected IDictionary<TKey, TValue> Target;
 
-        protected DictionaryProxy(IDictionary<TKey, TValue> target) { this.Target = target; }
+        protected DictionaryProxy(IDictionary<TKey, TValue> target) { Target = target; }
 
         #region Implementation of IEnumerable
         /// <summary>Returns an enumerator that iterates through the collection.</summary>

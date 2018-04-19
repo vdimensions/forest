@@ -24,28 +24,28 @@ namespace Forest.Commands
     public sealed class CommandAttribute : Attribute
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string name;
+        private readonly string _name;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool causesRefresh = true;
+        private bool _causesRefresh = true;
 
         public CommandAttribute() : this(null) {}
         public CommandAttribute(string name)
         {
-            if ((name != null) && name.Length == 0)
+            if (name != null && name.Length == 0)
             {
-                throw new ArgumentException("Command name cannot be an empty string", "name");
+                throw new ArgumentException("Command name cannot be an empty string", nameof(name));
             }
-            this.name = name;
+            _name = name;
         }
 
         [DefaultValue(null)]
-        public string Name { get { return name; } }
+        public string Name => _name;
 
         [DefaultValue(true)]
         public bool CausesRefresh
         {
-            get { return  causesRefresh; }
-            set { causesRefresh = value; }
+            get => _causesRefresh;
+            set => _causesRefresh = value;
         }
 
         public string NavigatesTo { get; set; }

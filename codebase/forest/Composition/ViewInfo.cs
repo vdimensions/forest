@@ -17,28 +17,28 @@ namespace Forest.Composition
 {
 	public sealed class ViewInfo
 	{
-		private readonly string id;
-		private readonly object viewModel;
-		private readonly RegionBag regions;
-		private readonly RegionInfo containingRegion;
-		private readonly IView view;
+		private readonly string _id;
+		private readonly object _viewModel;
+		private readonly RegionBag _regions;
+		private readonly RegionInfo _containingRegion;
+		private readonly IView _view;
 
 		internal ViewInfo(IView view) : this(view.ID, view.ViewModel, view.Regions, view.ContainingRegion) 
 		{
-			this.view = view;
+			_view = view;
 		}
 		private ViewInfo(string id, object viewModel, RegionBag regions, RegionInfo containingRegion)
 		{
-			this.id = id;
-			this.viewModel = viewModel;
-			this.regions = regions;
-			this.containingRegion = containingRegion;
+			_id = id;
+			_viewModel = viewModel;
+			_regions = regions;
+			_containingRegion = containingRegion;
 		}
 
-		public string ID { get { return this.id; } }
-		public object ViewModel { get { return viewModel; } }
-		public RegionBag Regions { get { return this.regions; } }
-		public RegionInfo ContainingRegion { get { return this.containingRegion; } }
-		internal IView View { get { return view; } }
+		public string ID => _id;
+	    public object ViewModel => _viewModel;
+	    public RegionBag Regions => _regions;
+	    public RegionInfo ContainingRegion => _containingRegion;
+	    internal IView View => _view;
 	}
 }

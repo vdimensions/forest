@@ -22,21 +22,21 @@ namespace Forest.Commands
     public sealed class CommandResult
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IEnumerable<RegionModification> regionModifications;
+        private readonly IEnumerable<RegionModification> _regionModifications;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly object returnValue;
+        private readonly object _returnValue;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string navigateTo;
+        private readonly string _navigateTo;
 
         public CommandResult(object returnValue, IEnumerable<RegionModification> regionModifications, string navigateTo)
         {
-            this.returnValue = returnValue;
-            this.regionModifications = regionModifications;
-            this.navigateTo = navigateTo;
+            _returnValue = returnValue;
+            _regionModifications = regionModifications;
+            _navigateTo = navigateTo;
         }
 
-        public object ReturnValue { get { return returnValue; } }
-        public IEnumerable<RegionModification> RegionModifications { get { return regionModifications; } }
-        public string NavigateTo { get { return navigateTo; } }
+        public object ReturnValue => _returnValue;
+        public IEnumerable<RegionModification> RegionModifications => _regionModifications;
+        public string NavigateTo => _navigateTo;
     }
 }

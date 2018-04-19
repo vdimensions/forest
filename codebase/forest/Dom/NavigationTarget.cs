@@ -22,40 +22,40 @@ namespace Forest.Dom
     public abstract class NavigationTarget : INavigationTarget
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string name;
+        private readonly string _name;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string text;
+        private string _text;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string toolTip;
+        private string _toolTip;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string description;
+        private string _description;
 
         protected NavigationTarget(string name)
         {
-            this.name = name;
+            _name = name;
         }
 
-        public string Name { get { return name; } }
+        public string Name => _name;
 
         [Localizable(true)]
         public string Text
         {
-            get { return  text; }
-            set { text = value; }
+            get => _text;
+            set => _text = value;
         }
 
         [Localizable(true)]
         public string ToolTip
         {
-            get { return  toolTip; }
-            set { toolTip = value; }
+            get => _toolTip;
+            set => _toolTip = value;
         }
 
         [Localizable(true)]
         public string Description
         {
-            get { return  description; }
-            set { description = value; }
+            get => _description;
+            set => _description = value;
         }
     }
 }

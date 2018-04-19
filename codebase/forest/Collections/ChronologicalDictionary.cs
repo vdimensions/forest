@@ -35,21 +35,21 @@ namespace Forest.Collections
         internal struct ChronologicalKey<TKey> : IEquatable<ChronologicalKey<TKey>>
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly TKey key;
+            private readonly TKey _key;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private readonly long timestamp;
+            private readonly long _timestamp;
 
             public ChronologicalKey(TKey key, DateTime dateTime) : this()
             {
-                this.key = key;
-                this.timestamp = dateTime.Ticks;
+                _key = key;
+                _timestamp = dateTime.Ticks;
             }
 
-            public override int GetHashCode() { return this.key.GetHashCode(); }
+            public override int GetHashCode() { return this._key.GetHashCode(); }
             public bool Equals(ChronologicalKey<TKey> other) { return Equals(this.Key, other.Key); }
 
-            public TKey Key { get { return this.key; } }
-            public long Timestamp { get { return this.timestamp; } }
+            public TKey Key => _key;
+            public long Timestamp => _timestamp;
         }
 
         [Serializable]
@@ -66,19 +66,15 @@ namespace Forest.Collections
             public ChronologicalKeyEqualityComparer() : this(EqualityComparer<TKey>.Default) { }
             public ChronologicalKeyEqualityComparer(IEqualityComparer<TKey> keyComparer)
             {
-                if (keyComparer == null)
-                {
-                    throw new ArgumentNullException("keyComparer");
-                }
-                this.keyComparer = keyComparer;
+                this.keyComparer = keyComparer ?? throw new ArgumentNullException(nameof(keyComparer));
             }
 
             public bool Equals(ChronologicalKey<TKey> x, ChronologicalKey<TKey> y)
             {
-                return this.keyComparer.Equals(x.Key, y.Key);
+                return keyComparer.Equals(x.Key, y.Key);
             }
 
-            public int GetHashCode(ChronologicalKey<TKey> obj) { return this.keyComparer.GetHashCode(obj.Key); }
+            public int GetHashCode(ChronologicalKey<TKey> obj) => keyComparer.GetHashCode(obj.Key);
         }
 
         [Serializable]
@@ -86,11 +82,11 @@ namespace Forest.Collections
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             [NonSerialized]
-            private readonly ICollection<KeyValuePair<ChronologicalKey<TKey>, TValue>> collection;
+            private readonly ICollection<KeyValuePair<ChronologicalKey<TKey>, TValue>> _collection;
 
             private TimestampDictionary(IDictionary<ChronologicalKey<TKey>, TValue> dictionary) : base(dictionary)
             {
-                this.collection = this;
+                _collection = this;
             }
             public TimestampDictionary() : this(
                 new Dictionary<ChronologicalKey<TKey>, TValue>(new ChronologicalKeyEqualityComparer<TKey>())) { }
@@ -104,7 +100,7 @@ namespace Forest.Collections
             #region Serialization Support
             internal TimestampDictionary(SerializationInfo serializationInfo, StreamingContext streamingContext) : base(serializationInfo, streamingContext)
             {
-                this.collection = this;
+                this._collection = this;
             }
             void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
             {
@@ -114,7 +110,7 @@ namespace Forest.Collections
 
             private IEnumerable<KeyValuePair<TKey, TValue>> Enumerate()
             {
-                return this.collection
+                return this._collection
                     .OrderBy(x => x.Key, new ChronologicalKeyComparer<TKey>())
                     .Select(x => new KeyValuePair<TKey, TValue>(x.Key.Key, x.Value));
             }
@@ -128,14 +124,14 @@ namespace Forest.Collections
             {
                 var k = new ChronologicalKey<TKey>(item.Key, DateTime.UtcNow);
                 var kvp = new KeyValuePair<ChronologicalKey<TKey>, TValue>(k, item.Value);
-                this.collection.Add(kvp);
+                this._collection.Add(kvp);
             }
 
             bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
             {
                 var k = new ChronologicalKey<TKey>(item.Key, DateTime.UtcNow);
                 var kvp = new KeyValuePair<ChronologicalKey<TKey>, TValue>(k, item.Value);
-                return this.collection.Contains(kvp);
+                return this._collection.Contains(kvp);
             }
 
             void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -147,10 +143,10 @@ namespace Forest.Collections
             {
                 var k = new ChronologicalKey<TKey>(item.Key, DateTime.UtcNow);
                 var kvp = new KeyValuePair<ChronologicalKey<TKey>, TValue>(k, item.Value);
-                return this.collection.Remove(kvp);
+                return this._collection.Remove(kvp);
             }
 
-            bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly { get { return this.collection.IsReadOnly; } }
+            bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly { get { return this._collection.IsReadOnly; } }
             #endregion
 
             #region Implementation of IDictionary<TKey,TValue>

@@ -43,11 +43,11 @@ namespace Forest
 			{
 				if (regionName == null)
 				{
-					throw new ArgumentNullException("regionName");
+					throw new ArgumentNullException(nameof(regionName));
 				}
 				if (regionName.Length == 0)
 				{
-					throw new ArgumentException("Region name cannot be an empty string", "regionName");
+					throw new ArgumentException("Region name cannot be an empty string", nameof(regionName));
 				}
 
 				this.regionName = regionName;
@@ -118,7 +118,7 @@ namespace Forest
         {
             if (viewModel == null)
             {
-                throw new ArgumentNullException("viewModel");
+                throw new ArgumentNullException(nameof(viewModel));
             }
             this.viewModel = viewModel;
         }

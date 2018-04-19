@@ -1,33 +1,29 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <TargetFrameworks>net35;net45</TargetFrameworks>
+  </PropertyGroup>
+  <Import Project="../../submodules/msbuild-dotnet-multitargeting/src/MultitargetingFrameworkSupport.targets" />
+  <PropertyGroup>
     <ProjectGuid>{3A49DEC2-142A-483E-99BF-42BF26909CFC}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Forest</RootNamespace>
     <AssemblyName>Forest</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <RootNamespace>$(AssemblyName)</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\net40-client\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <DefineConstants>DEBUG;TRACE;$(FrameworkSymbols)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <DefineConstants>TRACE;$(FrameworkSymbols)</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -37,123 +33,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AbstractView.cs" />
-    <Compile Include="AbstractView.IViewInit.cs" />
-    <Compile Include="ApplicationState.cs" />
-    <Compile Include="Caching\DefaultCache.cs" />
-    <Compile Include="Caching\DefaultCacheManager.cs" />
-    <Compile Include="Collections\ReadOnlyBag.cs" />
-    <Compile Include="Commands\CommandAttribute.cs" />
-    <Compile Include="Commands\CommandBag.cs" />
-    <Compile Include="Commands\CommandInfo.cs" />
-    <Compile Include="Commands\CommandResult.cs" />
-    <Compile Include="Commands\DeferredCommandInfo.cs" />
-    <Compile Include="Commands\ICommand.cs" />
-    <Compile Include="Commands\UnboundCommand.cs" />
-    <Compile Include="Composition\IAnnouncingViewModel.cs" />
-    <Compile Include="Composition\IViewLookup.cs" />
-    <Compile Include="Composition\IViewRegistry.cs" />
-    <Compile Include="Composition\Region.cs" />
-    <Compile Include="Composition\RegionAttribute.cs" />
-    <Compile Include="Composition\RegionExtensions.cs" />
-    <Compile Include="Links\ILink.cs" />
-    <Compile Include="Links\Link.cs" />
-    <Compile Include="Links\LinkBag.cs" />
-    <Compile Include="Resources\IResource.cs" />
-    <Compile Include="Resources\Resource.cs" />
-    <Compile Include="Resources\ResourceBag.cs" />
-    <Compile Include="Composition\ViewResolver.cs" />
-    <Compile Include="Dom\IResourceNode.cs" />
-    <Compile Include="Dom\ResourceNode.cs" />
-    <Compile Include="Engine\DefaultForestEngine.cs" />
-    <Compile Include="DefaultViewContext.cs" />
-    <Compile Include="Dom\AbstractDomVisitor.cs" />
-    <Compile Include="Dom\CommandNode.cs" />
-    <Compile Include="Dom\CommandLinkNode.cs" />
-    <Compile Include="Dom\ExpressionDomVisitor.cs" />
-    <Compile Include="Dom\DomVisitorChain.cs" />
-    <Compile Include="Dom\ICommand.cs" />
-    <Compile Include="Dom\ICommandLinkNode.cs" />
-    <Compile Include="Dom\IDomNode.cs" />
-    <Compile Include="Dom\ILinkNode.cs" />
-    <Compile Include="Dom\INavigationTarget.cs" />
-    <Compile Include="Dom\INodeVisitor.cs" />
-    <Compile Include="Dom\INodeVisitorRegistry.cs" />
-    <Compile Include="Dom\IRegionNode.cs" />
-    <Compile Include="Dom\IViewNode.cs" />
-    <Compile Include="Dom\LinkNode.cs" />
-    <Compile Include="Localization\IResourceManager.cs" />
-    <Compile Include="Engine\IForestEngine.cs" />
-    <Compile Include="Links\LinkToAttribute.cs" />
-    <Compile Include="Collections\ChronologicalDictionary.cs" />
-    <Compile Include="Collections\DictionaryProxy.cs" />
-    <Compile Include="Reflection\DefaultReflectionProvider.cs" />
-    <Compile Include="Reflection\IObjectMapper.cs" />
-    <Compile Include="Reflection\DefaultObjectMapper.cs" />
-    <Compile Include="Resources\ResourceAttribute.cs" />
-    <Compile Include="Security\SecurityDomVisitor.cs" />
-    <Compile Include="Reflection\IProperty.cs" />
-    <Compile Include="Reflection\IReflectionProvider.cs" />
-    <Compile Include="Stubs\ResourceInfo.cs" />
-    <Compile Include="Dom\NavigationTarget.cs" />
-    <Compile Include="Dom\RegionNode.cs" />
-    <Compile Include="Dom\ViewNode.cs" />
-    <Compile Include="Events\IEventBusAttribute.cs" />
-    <Compile Include="ForestResult.cs" />
-    <Compile Include="ForestContext.cs" />
-    <Compile Include="IForestContext.cs" />
-    <Compile Include="IViewContext.cs" />
-    <Compile Include="IViewInit.cs" />
-    <Compile Include="Presentation\DefaultNodeContext.cs" />
-    <Compile Include="Presentation\INodeContext.cs" />
-    <Compile Include="Localization\LocalizationDomVisitor.cs" />
-    <Compile Include="Localization\LocalizeAttribute.cs" />
-    <Compile Include="Localization\LocalizedPropertyInfo.cs" />
-    <Compile Include="Presentation\RenderMode.cs" />
-    <Compile Include="Security\IForestSecurityAdapter.cs" />
-    <Compile Include="Security\NoOpForestSecurityAdapter.cs" />
-    <Compile Include="Caching\ICache.cs" />
-    <Compile Include="Caching\ICacheManager.cs" />
-    <Compile Include="Stubs\ILogger.cs" />
-    <Compile Include="Stubs\ILoggerFactory.cs" />
-    <Compile Include="Composition\IRegion.cs" />
-    <Compile Include="Composition\IRegionUtil.cs" />
-    <Compile Include="Composition\IViewToken.cs" />
-    <Compile Include="Composition\RegionEventSubscriber.cs" />
-    <Compile Include="Composition\RegionModification.cs" />
-    <Compile Include="Composition\RegionModificationsTracker.cs" />
-    <Compile Include="Composition\RegionModificationType.cs" />
-    <Compile Include="Composition\RegionLayout.cs" />
-    <Compile Include="Events\EventBus.cs" />
-    <Compile Include="Events\IEventBus.cs" />
-    <Compile Include="Expressions\SimpleExpressionEvaluator.cs" />
-    <Compile Include="Expressions\IExpression.cs" />
-    <Compile Include="Expressions\IForestExpressionEvaluator.cs" />
-    <Compile Include="Stubs\IViewContext.cs" />
-    <Compile Include="Expressions\Literal.cs" />
-    <Compile Include="Reflection\IParameter.cs" />
-    <Compile Include="Reflection\IMethod.cs" />
-    <Compile Include="Events\ISubscriptionHandler.cs" />
-    <Compile Include="Events\Message.cs" />
-    <Compile Include="Events\SubscriptionAttribute.cs" />
-    <Compile Include="Events\SubscriptionExecutionException.cs" />
-    <Compile Include="Events\SubscriptionHandler.cs" />
-    <Compile Include="Events\SubscriptionInfo.cs" />
-    <Compile Include="IView.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ViewUtils.cs" />
-    <Compile Include="ViewAttribute.cs" />
-    <Compile Include="Composition\RegionInfo.cs" />
-    <Compile Include="Composition\ViewBag.cs" />
-    <Compile Include="Composition\RegionBag.cs" />
-    <Compile Include="Composition\ViewInfo.cs" />
-    <Compile Include="Reflection\PropertyBag.cs" />
-    <Compile Include="Reflection\IViewDescriptor.cs" />
-    <Compile Include="Reflection\ViewDescriptor.cs" />
-    <Compile Include="Engine\IForestEngine.NEW.cs" />
-    <Compile Include="Engine\IApplicationState.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="paket.sh" />
@@ -167,22 +46,6 @@
     <None Include="paket.references" />
     <None Include="Properties\AssemblyInfo.cs.template" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
   <Import Project="packages\Mason.Targets.Packager\build\Mason.Targets.Packager.targets" Condition="Exists('packages\Mason.Targets.Packager\build\Mason.Targets.Packager.targets')" Label="Paket" />
   <Import Project="packages\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project="packages\Mason.Targets.Verman\build\Mason.Targets.Verman.targets" Condition="Exists('packages\Mason.Targets.Verman\build\Mason.Targets.Verman.targets')" Label="Paket" />

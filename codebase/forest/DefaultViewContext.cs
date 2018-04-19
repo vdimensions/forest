@@ -39,11 +39,11 @@ namespace Forest
         {
             if (view == null)
             {
-                throw new ArgumentNullException("view");
+                throw new ArgumentNullException(nameof(view));
             }
 			if (forestContext == null)
 			{
-				throw new ArgumentNullException("forestContext");
+				throw new ArgumentNullException(nameof(forestContext));
 			}
 			this.forestContext = forestContext;
 			this.descriptor = forestContext.GetDescriptor(view.GetType());
@@ -56,7 +56,7 @@ namespace Forest
             contextData.Add("@Self", CreateEvalFunction(view.ID));
             contextData.Add("@Self.", CreateEvalFunction(this));
             contextData.Add("@ViewModel", CreateEvalFunction(view.ViewModel));
-            var parentView = view.ContainingRegion == null ? null : view.ContainingRegion.OwnerView;
+            var parentView = view.ContainingRegion?.OwnerView;
             if (parentView != null)
             {
                 parentContext = ((IViewInit) parentView.View).Context;
@@ -70,18 +70,18 @@ namespace Forest
         {
             if (expression == null)
             {
-                throw new ArgumentNullException("expression");
+                throw new ArgumentNullException(nameof(expression));
             }
             if (expression.Length == 0)
             {
-                throw new ArgumentException("Value cannot be empty string", "expression");
+                throw new ArgumentException("Value cannot be empty string", nameof(expression));
             }
             var evaluated = this[expression];
-            return evaluated != null ? evaluated.ToString() : expression;
+            return evaluated?.ToString() ?? expression;
         }
 
-		public IForestContext ForestContext { get { return forestContext; } }
-        public IViewDescriptor Descriptor { get { return descriptor; } }
+		public IForestContext ForestContext => forestContext;
+        public IViewDescriptor Descriptor => descriptor;
 
         public object this[string name]
         {
@@ -94,11 +94,11 @@ namespace Forest
             {
                 if (name == null)
                 {
-                    throw new ArgumentNullException("name");
+                    throw new ArgumentNullException(nameof(name));
                 }
                 if (name.Length == 0)
                 {
-                    throw new ArgumentException("Value cannot be empty string", "name");
+                    throw new ArgumentException("Value cannot be empty string", nameof(name));
                 }
                 contextData[name] = CreateEvalFunction(value);
             }

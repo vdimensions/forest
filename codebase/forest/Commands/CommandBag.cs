@@ -11,9 +11,9 @@ namespace Forest.Commands
     {
         internal CommandBag(IDictionary<string, ICommand> dictionary) : base(dictionary) { }
 
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
-        public IEnumerator<ICommand> GetEnumerator() { return Values.GetEnumerator(); }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        public IEnumerator<ICommand> GetEnumerator() => Values.GetEnumerator();
 
-        new public IEnumerable<string> Keys { get { return base.Keys; } }
+        new public IEnumerable<string> Keys => base.Keys;
     }
 }

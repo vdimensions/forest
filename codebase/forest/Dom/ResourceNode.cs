@@ -26,25 +26,18 @@ namespace Forest.Dom
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)] 
-        private readonly string category;
+        private readonly string _category;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         [Localizable(false)]
-        private readonly string bundle;
+        private readonly string _bundle;
 
         public ResourceNode(string category, string bundle, string name) : base(name)
         {
-            if (category == null)
-            {
-                throw new ArgumentNullException("category");
-            }
-            if (bundle == null)
-            {
-                throw new ArgumentNullException("bundle");
-            }
-            this.bundle = bundle;
+            _bundle = bundle ?? throw new ArgumentNullException(nameof(bundle));
+            _category = category ?? throw new ArgumentNullException(nameof(category));
         }
         
-        public string Category { get { return category; } }
-        public string Bundle { get { return bundle; } }
+        public string Category => _category;
+        public string Bundle => _bundle;
     }
 }

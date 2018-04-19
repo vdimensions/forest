@@ -24,16 +24,16 @@ namespace Forest.Dom
 {
     internal sealed class DomVisitorChain : IDomVisitor, IDomVisitorRegistry
     {
-        private readonly IList<IDomVisitor> nodeVisitors = new List<IDomVisitor>();
+        private readonly IList<IDomVisitor> _nodeVisitors = new List<IDomVisitor>();
 
         public void Clear()
         {
-            nodeVisitors.Clear();
+            _nodeVisitors.Clear();
         }
 
         IDomVisitorRegistry IDomVisitorRegistry.Register(IDomVisitor domVisitor)
         {
-            nodeVisitors.Add(domVisitor);
+            _nodeVisitors.Add(domVisitor);
             return this;
         }
 
@@ -42,7 +42,7 @@ namespace Forest.Dom
             bool contains;
             do
             {
-                contains = nodeVisitors.Remove(domVisitor);
+                contains = _nodeVisitors.Remove(domVisitor);
             }
             while (contains);
             return this;
@@ -51,11 +51,11 @@ namespace Forest.Dom
         [Obsolete]
         IViewNode IDomVisitor.Visit(IViewNode node, INodeContext nodeContext)
         {
-            return nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, nodeContext));
+            return _nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, nodeContext));
         }
         IDomNode IDomVisitor.Visit(IDomNode node, INodeContext nodeContext)
         {
-            return nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, nodeContext));
+            return _nodeVisitors.Aggregate(node, (current, nodeVisitor) => nodeVisitor.Visit(current, nodeContext));
         }
     }
 }

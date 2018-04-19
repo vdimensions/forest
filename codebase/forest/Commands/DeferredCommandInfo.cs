@@ -19,22 +19,15 @@ namespace Forest.Commands
 {
     internal class DeferredCommandInfo
     {
-        private readonly CommandInfo command;
-        private readonly Func<CommandInfo, CommandResult> deferredInvoke;
+        private readonly CommandInfo _command;
+        private readonly Func<CommandInfo, CommandResult> _deferredInvoke;
 
         internal DeferredCommandInfo(CommandInfo command, Func<CommandInfo, CommandResult> deferredInvoke)
         {
-            if (command == null)
-            {
-                throw new ArgumentNullException("command");
-            }
-            this.command = command;
-            this.deferredInvoke = deferredInvoke;
+            _command = command ?? throw new ArgumentNullException(nameof(command));
+            _deferredInvoke = deferredInvoke;
         }
 
-        public CommandResult Invoke(IView view)
-        {
-            return deferredInvoke != null ? deferredInvoke(command) : null;
-        }
+        public CommandResult Invoke(IView view) => _deferredInvoke?.Invoke(_command);
     }
 }

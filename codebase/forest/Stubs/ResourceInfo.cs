@@ -51,7 +51,7 @@ namespace Forest.Stubs
 
         public override int GetHashCode() { return bundle.GetHashCode()^key.GetHashCode(); }
 
-        public string Bundle { get { return bundle ?? string.Empty; } }
-        public string Key { get { return key ?? string.Empty; } }
+        public string Bundle => bundle ?? string.Empty;
+        public string Key => key ?? string.Empty;
     }
 }

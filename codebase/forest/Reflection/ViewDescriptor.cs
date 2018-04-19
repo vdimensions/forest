@@ -31,23 +31,23 @@ namespace Forest.Reflection
     internal sealed class ViewDescriptor : IViewDescriptor
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly Type viewType;
+        private readonly Type _viewType;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly Type viewModelType;
+        private readonly Type _viewModelType;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly bool dismissViewModel;
+        private readonly bool _dismissViewModel;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IDictionary<string, UnboundCommand> commandMethods;
+        private readonly IDictionary<string, UnboundCommand> _commandMethods;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ViewAttribute viewAttribute;
+        private readonly ViewAttribute _viewAttribute;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IEnumerable<LinkToAttribute> linkToAttributes;
+        private readonly IEnumerable<LinkToAttribute> _linkToAttributes;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IList<SubscriptionInfo> subscriptionMethods;
+        private readonly IList<SubscriptionInfo> _subscriptionMethods;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private readonly PropertyBag viewModelProperties;
+		private readonly PropertyBag _viewModelProperties;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IEnumerable<ResourceAttribute> resourceAttributes;
+        private readonly IEnumerable<ResourceAttribute> _resourceAttributes;
 
         internal ViewDescriptor(IForestContext context, Type viewType)
         {
@@ -92,38 +92,34 @@ namespace Forest.Reflection
                 .Where(x => x.IsGenericType && typeof(IView<>).Equals(x.GetGenericTypeDefinition()))
                 .Select(x => x.GetGenericArguments()[0])
                 .SingleOrDefault();
-            var viewModelProperty = context.ReflectionProvider.GetProperty(viewType, "ViewModel", BindingFlags.Instance| BindingFlags.Public);
+            var viewModelProperty = context.ReflectionProvider.GetProperty(viewType, "ViewModel", BindingFlags.Instance|BindingFlags.Public);
             var vmProps = context.ReflectionProvider.GetProperties(vmType, BindingFlags.Instance|BindingFlags.Public)
                 .ToDictionary(x => x.Name, x => x, stringComparer);
 
-            this.viewType = viewType;
-            this.viewModelType = vmType;
-            this.dismissViewModel = 
+            _viewType = viewType;
+            _viewModelType = vmType;
+            _dismissViewModel = 
                    viewModelProperty.GetAttributes<IgnoreDataMemberAttribute>().Any()
                 || viewModelProperty.GetAttributes<NonSerializedAttribute>().Any()
                 || !vmProps.Any();
-            this.commandMethods = dictionary;
-            this.viewAttribute = viewType.GetCustomAttributes(false).OfType<ViewAttribute>().SingleOrDefault();
-            this.linkToAttributes = viewType.GetCustomAttributes(true).OfType<LinkToAttribute>().ToArray();
-            this.resourceAttributes = viewType.GetCustomAttributes(true).OfType<ResourceAttribute>().ToArray();
-            this.subscriptionMethods = subscriptionMethods;
-			this.viewModelProperties = new PropertyBag(vmProps);
+            _commandMethods = dictionary;
+            _viewAttribute = viewType.GetCustomAttributes(false).OfType<ViewAttribute>().SingleOrDefault();
+            _linkToAttributes = viewType.GetCustomAttributes(true).OfType<LinkToAttribute>().ToArray();
+            _resourceAttributes = viewType.GetCustomAttributes(true).OfType<ResourceAttribute>().ToArray();
+            _subscriptionMethods = subscriptionMethods;
+			_viewModelProperties = new PropertyBag(vmProps);
         }
 
-        public UnboundCommand GetCommand(IView view, string commandName)
-        {
-            UnboundCommand method;
-            return CommandMethods.TryGetValue(commandName, out method) ? method : null;
-        }
+        public UnboundCommand GetCommand(IView view, string commandName) => CommandMethods.TryGetValue(commandName, out var method) ? method : null;
 
-        public Type ViewType { get { return viewType; } }
-        public Type ViewModelType { get { return viewModelType; } }
-        public bool DismissViewModel { get { return dismissViewModel; } }
-        public IDictionary<string, UnboundCommand> CommandMethods { get { return commandMethods; } }
-        public ViewAttribute ViewAttribute { get { return viewAttribute; } }
-        public IEnumerable<LinkToAttribute> LinkToAttributes { get { return linkToAttributes; } }
-        public IEnumerable<ResourceAttribute> ResourceAttributes { get { return resourceAttributes; } }
-        public IList<SubscriptionInfo> SubscriptionMethods { get { return subscriptionMethods; } }
-		public PropertyBag ViewModelProperties { get { return viewModelProperties; } }
+        public Type ViewType => _viewType;
+        public Type ViewModelType => _viewModelType;
+        public bool DismissViewModel => _dismissViewModel;
+        public IDictionary<string, UnboundCommand> CommandMethods => _commandMethods;
+        public ViewAttribute ViewAttribute => _viewAttribute;
+        public IEnumerable<LinkToAttribute> LinkToAttributes => _linkToAttributes;
+        public IEnumerable<ResourceAttribute> ResourceAttributes => _resourceAttributes;
+        public IList<SubscriptionInfo> SubscriptionMethods => _subscriptionMethods;
+        public PropertyBag ViewModelProperties => _viewModelProperties;
     }
 }
