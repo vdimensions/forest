@@ -1,2 +1,2 @@
-PAKET='../../tools/paket.sh'
-$PAKET "$@"
+PAKET='.paket/paket.sh'
+$PAKET $@

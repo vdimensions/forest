@@ -17,13 +17,13 @@ namespace Forest.Expressions
 {
     internal sealed class Literal : IExpression
     {
-        private readonly string value;
+        private readonly string _value;
 
         public Literal (string value)
         {
-            this.value = value;
+            _value = value;
         }
 
-        string IExpression.Evaluate() { return this.value; }
+        string IExpression.Evaluate() => _value;
     }
 }

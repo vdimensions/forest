@@ -110,13 +110,13 @@ namespace Forest.Collections
 
             private IEnumerable<KeyValuePair<TKey, TValue>> Enumerate()
             {
-                return this._collection
+                return _collection
                     .OrderBy(x => x.Key, new ChronologicalKeyComparer<TKey>())
                     .Select(x => new KeyValuePair<TKey, TValue>(x.Key.Key, x.Value));
             }
 
             #region Implementation of IEnumerable<KeyValuePair<TKey,TValue>>
-            IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() { return Enumerate().GetEnumerator(); }
+            IEnumerator<KeyValuePair<TKey, TValue>> IEnumerable<KeyValuePair<TKey, TValue>>.GetEnumerator() => Enumerate().GetEnumerator();
             #endregion
 
             #region Implementation of ICollection<KeyValuePair<TKey,TValue>>
@@ -124,14 +124,14 @@ namespace Forest.Collections
             {
                 var k = new ChronologicalKey<TKey>(item.Key, DateTime.UtcNow);
                 var kvp = new KeyValuePair<ChronologicalKey<TKey>, TValue>(k, item.Value);
-                this._collection.Add(kvp);
+                _collection.Add(kvp);
             }
 
             bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
             {
                 var k = new ChronologicalKey<TKey>(item.Key, DateTime.UtcNow);
                 var kvp = new KeyValuePair<ChronologicalKey<TKey>, TValue>(k, item.Value);
-                return this._collection.Contains(kvp);
+                return _collection.Contains(kvp);
             }
 
             void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -143,10 +143,10 @@ namespace Forest.Collections
             {
                 var k = new ChronologicalKey<TKey>(item.Key, DateTime.UtcNow);
                 var kvp = new KeyValuePair<ChronologicalKey<TKey>, TValue>(k, item.Value);
-                return this._collection.Remove(kvp);
+                return _collection.Remove(kvp);
             }
 
-            bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly { get { return this._collection.IsReadOnly; } }
+            bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => _collection.IsReadOnly;
             #endregion
 
             #region Implementation of IDictionary<TKey,TValue>
@@ -190,10 +190,10 @@ namespace Forest.Collections
             }
 
             new private ICollection<TKey> Keys { get { return Enumerate().Select(key => key.Key).ToArray(); } }
-            ICollection<TKey> IDictionary<TKey, TValue>.Keys { get { return this.Keys; } }
+            ICollection<TKey> IDictionary<TKey, TValue>.Keys => Keys;
 
             new private ICollection<TValue> Values { get { return Enumerate().Select(x => x.Value).ToArray(); } }
-            ICollection<TValue> IDictionary<TKey, TValue>.Values { get { return this.Values; } }
+            ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
             #endregion
         }
 

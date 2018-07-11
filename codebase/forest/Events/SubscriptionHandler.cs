@@ -19,29 +19,18 @@ namespace Forest.Events
 {
     internal class SubscriptionHandler : ISubscriptionHandler
     {
-        private readonly IView view;
-        private readonly SubscriptionInfo subscription;
+        private readonly IView _view;
+        private readonly SubscriptionInfo _subscription;
 
         public SubscriptionHandler(IView view, SubscriptionInfo subscription)
         {
-            if (view == null)
-            {
-                throw new ArgumentNullException("view");
-            }
-            if (subscription == null)
-            {
-                throw new ArgumentNullException("subscription");
-            }
-            this.view = view;
-            this.subscription = subscription;
+            _view = view ?? throw new ArgumentNullException(nameof(view));
+            _subscription = subscription ?? throw new ArgumentNullException(nameof(subscription));
         }
 
-        public void Invoke(object arg)
-        {
-            subscription.Invoke(view, arg);
-        }
+        public void Invoke(object arg) => _subscription.Invoke(_view, arg);
 
-        public Type MessageType { get { return subscription.MessageType; } }
-        public IView Receiver { get { return view; } }
+        public Type MessageType => _subscription.MessageType;
+        public IView Receiver => _view;
     }
 }

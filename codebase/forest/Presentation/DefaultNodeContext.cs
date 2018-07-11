@@ -23,25 +23,25 @@ namespace Forest.Presentation
     internal class DefaultNodeContext : INodeContext
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ILayoutTemplate template;
+        private readonly ILayoutTemplate _template;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IView view;
+        private readonly IView _view;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IViewContext viewContext;
+        private readonly IViewContext _viewContext;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string path;
+        private readonly string _path;
 
         public DefaultNodeContext(ILayoutTemplate template, IView view, IViewContext viewContext, string path)
         {
-            this.template = template;
-            this.view = view;
-            this.viewContext = viewContext;
-            this.path = path;
+            this._template = template;
+            this._view = view;
+            this._viewContext = viewContext;
+            this._path = path;
         }
 
-        public ILayoutTemplate Template => this.template;
-        public IView View => this.view;
-        public IViewContext ViewContext => this.viewContext;
-        public string Path => this.path;
+        public ILayoutTemplate Template => _template;
+        public IView View => _view;
+        public IViewContext ViewContext => _viewContext;
+        public string Path => _path;
     }
 }

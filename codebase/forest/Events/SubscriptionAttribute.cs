@@ -27,16 +27,15 @@ namespace Forest.Events
     public sealed class SubscriptionAttribute : Attribute, IEventBusAttribute
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private string topic;
+        private string _topic = string.Empty;
 
         /// <summary>
         /// The communication topic associated with the current subscription.
         /// </summary>
-        [DefaultValue("")]
         public string Topic
         {
-            get { return topic ?? string.Empty; }
-            set { topic = value; }
+            get => _topic ?? string.Empty;
+            set => _topic = value;
         }
     }
 }

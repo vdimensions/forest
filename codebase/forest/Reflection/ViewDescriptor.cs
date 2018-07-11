@@ -92,7 +92,7 @@ namespace Forest.Reflection
                 .Where(x => x.IsGenericType && typeof(IView<>).Equals(x.GetGenericTypeDefinition()))
                 .Select(x => x.GetGenericArguments()[0])
                 .SingleOrDefault();
-            var viewModelProperty = context.ReflectionProvider.GetProperty(viewType, "ViewModel", BindingFlags.Instance|BindingFlags.Public);
+            var viewModelProperty = context.ReflectionProvider.GetProperty(viewType, nameof(IView.ViewModel), BindingFlags.Instance|BindingFlags.Public);
             var vmProps = context.ReflectionProvider.GetProperties(vmType, BindingFlags.Instance|BindingFlags.Public)
                 .ToDictionary(x => x.Name, x => x, stringComparer);
 

@@ -32,7 +32,7 @@ namespace Forest.Events
 
         public static EventBus Get()
         {
-            var existing = _staticEventBus == null ? null : _staticEventBus.Target as EventBus;
+            var existing = _staticEventBus?.Target as EventBus;
             if (existing == null)
             {
                 _staticEventBus = new WeakReference(existing = new EventBus());
@@ -56,36 +56,36 @@ namespace Forest.Events
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private readonly ITopicSubscriptionCollection subscriptions;
+        private readonly ITopicSubscriptionCollection _subscriptions;
 
         #if !DEBUG
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
         #endif
-        private volatile int usageCount = 0;
+        private volatile int _usageCount = 0;
 
         private EventBus()
         {
-            subscriptions = new TopicSubscriptionCollection(StringComparer.Ordinal);
+            _subscriptions = new TopicSubscriptionCollection(StringComparer.Ordinal);
         }
 
         private EventBus IncreaseUsageCount()
         {
-            usageCount++;
+            _usageCount++;
             return this;
         }
 
         public void Dispose()
         {
-            if (--usageCount > 0)
+            if (--_usageCount > 0)
             {
                 return;
             }
 
-            foreach (var value in subscriptions.Values)
+            foreach (var value in _subscriptions.Values)
             {
                 value.Clear();
             }
-            subscriptions.Clear();
+            _subscriptions.Clear();
 
             var exiting = _staticEventBus.Target;
             if (ReferenceEquals(exiting, this))
@@ -99,15 +99,14 @@ namespace Forest.Events
         {
             if (message == null)
             {
-                throw new ArgumentNullException("message");
+                throw new ArgumentNullException(nameof(message));
             }
             var subscribersFound = 0;
             if (topics.Length > 0)
             {
-                foreach (var topic in topics)
+                for (var i = 0; i < topics.Length; i++)
                 {
-                    ISubscriptionCollection topicSubscriptionHandlers;
-                    if (subscriptions.TryGetValue(topic, out topicSubscriptionHandlers))
+                    if (_subscriptions.TryGetValue(topics[i], out var topicSubscriptionHandlers))
                     {
                         subscribersFound += InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers);
                     }
@@ -115,7 +114,7 @@ namespace Forest.Events
             }
             else
             {
-                foreach (var topicSubscriptionHandlers in subscriptions.Values)
+                foreach (var topicSubscriptionHandlers in _subscriptions.Values)
                 {
                     subscribersFound += InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers);
                 }
@@ -141,21 +140,19 @@ namespace Forest.Events
         {
             if (topic == null)
             {
-                throw new ArgumentNullException("topic");
+                throw new ArgumentNullException(nameof(topic));
             }
             if (subscriptionHandler == null)
             {
-                throw new ArgumentNullException("subscriptionHandler");
+                throw new ArgumentNullException(nameof(subscriptionHandler));
             }
 
-            ISubscriptionCollection topicSubscriptionHandlers;
-            if (!subscriptions.TryGetValue(topic, out topicSubscriptionHandlers))
+            if (!_subscriptions.TryGetValue(topic, out var topicSubscriptionHandlers))
             {
-                subscriptions.Add(topic, topicSubscriptionHandlers = new SubscriptionCollection());
+                _subscriptions.Add(topic, topicSubscriptionHandlers = new SubscriptionCollection());
             }
 
-            ICollection<ISubscriptionHandler> subscriptionList;
-            if (!topicSubscriptionHandlers.TryGetValue(subscriptionHandler.MessageType, out subscriptionList))
+            if (!topicSubscriptionHandlers.TryGetValue(subscriptionHandler.MessageType, out var subscriptionList))
             {
                 topicSubscriptionHandlers.Add(subscriptionHandler.MessageType, subscriptionList = new List<ISubscriptionHandler>());
             }
@@ -166,7 +163,7 @@ namespace Forest.Events
 
         public IEventBus Unsubscribe(IView receiver)
         {
-            foreach (var topicSubscriptionHandlers in subscriptions.Values.SelectMany(x => x.Values))
+            foreach (var topicSubscriptionHandlers in _subscriptions.Values.SelectMany(x => x.Values))
             {
                 foreach (var subscriptionHandler in topicSubscriptionHandlers.Where(x => ReferenceEquals(x.Receiver, receiver)).ToArray())
                 {

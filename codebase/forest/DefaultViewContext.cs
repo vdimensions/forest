@@ -30,10 +30,10 @@ namespace Forest
             return () => closure;
         }
 
-        private readonly IViewDescriptor descriptor;
-        private readonly IViewContext parentContext;
-        private readonly IDictionary<string, Func<object>> contextData;
-		private readonly IForestContext forestContext;
+        private readonly IViewDescriptor _descriptor;
+        private readonly IViewContext _parentContext;
+        private readonly IDictionary<string, Func<object>> _contextData;
+		private readonly IForestContext _forestContext;
 
 		public DefaultViewContext(IView view, IForestContext forestContext)
         {
@@ -41,28 +41,25 @@ namespace Forest
             {
                 throw new ArgumentNullException(nameof(view));
             }
-			if (forestContext == null)
-			{
-				throw new ArgumentNullException(nameof(forestContext));
-			}
-			this.forestContext = forestContext;
-			this.descriptor = forestContext.GetDescriptor(view.GetType());
-            contextData = descriptor.ViewModelProperties
+
+            this._forestContext = forestContext ?? throw new ArgumentNullException(nameof(forestContext));
+			this._descriptor = forestContext.GetDescriptor(view.GetType());
+            _contextData = _descriptor.ViewModelProperties
                 .ToDictionary(
                     x => x.Name,
                     x => new Func<object>(() => x.GetValue(view.ViewModel)),
                     StringComparer.Ordinal);
-            contextData.Add("@View", CreateEvalFunction(view.ID));
-            contextData.Add("@Self", CreateEvalFunction(view.ID));
-            contextData.Add("@Self.", CreateEvalFunction(this));
-            contextData.Add("@ViewModel", CreateEvalFunction(view.ViewModel));
+            _contextData.Add("@View", CreateEvalFunction(view.ID));
+            _contextData.Add("@Self", CreateEvalFunction(view.ID));
+            _contextData.Add("@Self.", CreateEvalFunction(this));
+            _contextData.Add("@ViewModel", CreateEvalFunction(view.ViewModel));
             var parentView = view.ContainingRegion?.OwnerView;
             if (parentView != null)
             {
-                parentContext = ((IViewInit) parentView.View).Context;
-                contextData.Add("@ParentView", CreateEvalFunction(parentView.ID));
-                contextData.Add("@Parent", CreateEvalFunction(parentView.ID));
-                contextData.Add("@Parent.", CreateEvalFunction(parentContext));
+                _parentContext = ((IViewInit) parentView.View).Context;
+                _contextData.Add("@ParentView", CreateEvalFunction(parentView.ID));
+                _contextData.Add("@Parent", CreateEvalFunction(parentView.ID));
+                _contextData.Add("@Parent.", CreateEvalFunction(_parentContext));
             }
         }
 
@@ -80,15 +77,15 @@ namespace Forest
             return evaluated?.ToString() ?? expression;
         }
 
-		public IForestContext ForestContext => forestContext;
-        public IViewDescriptor Descriptor => descriptor;
+		public IForestContext ForestContext => _forestContext;
+        public IViewDescriptor Descriptor => _descriptor;
 
         public object this[string name]
         {
             get
             {
                 Func<object> getter;
-                return contextData.TryGetValue(name, out getter) ? getter() : null;
+                return _contextData.TryGetValue(name, out getter) ? getter() : null;
             }
             set
             {
@@ -100,7 +97,7 @@ namespace Forest
                 {
                     throw new ArgumentException("Value cannot be empty string", nameof(name));
                 }
-                contextData[name] = CreateEvalFunction(value);
+                _contextData[name] = CreateEvalFunction(value);
             }
         }
     }

@@ -24,17 +24,17 @@ namespace Forest
     public sealed class ViewAttribute : Attribute
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string id;
+        private readonly string _id;
 
         [Localizable(false)]
         public ViewAttribute(string id)
         {
-            this.id = id ?? throw new ArgumentNullException(nameof(id));
+            _id = id ?? throw new ArgumentNullException(nameof(id));
         }
 
         /// <summary>
         /// Gets a unique identifier for the decorated view object.
         /// </summary>
-        public string ID => id;
+        public string ID => _id;
     }
 }

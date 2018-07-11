@@ -26,25 +26,25 @@ namespace Forest
         public static readonly ForestResult Empty = new ForestResult();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly ILayoutTemplate template;
+        private readonly ILayoutTemplate _template;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IView view;
+        private readonly IView _view;
 
         internal ForestResult(ILayoutTemplate template, IView view)
         {
-            this.template = template;
-            this.view = view;
+            this._template = template;
+            _view = view;
         }
 
         public static bool operator ==(ForestResult left, ForestResult right) { return left.Equals(right); }
         public static bool operator !=(ForestResult left, ForestResult right) { return !(left == right); }
 
         public override bool Equals(object obj) { return obj is ForestResult && Equals((ForestResult) obj); }
-        public bool Equals(ForestResult other) { return ReferenceEquals(this.template, other.template) && ReferenceEquals(this.view, other.view); }
+        public bool Equals(ForestResult other) { return ReferenceEquals(_template, other._template) && ReferenceEquals(_view, other._view); }
 
-        public override int GetHashCode() { return this.template.GetHashCode()^this.view.GetHashCode(); }
+        public override int GetHashCode() { return _template.GetHashCode()^_view.GetHashCode(); }
 
-        public ILayoutTemplate Template { get { return this.template; } }
-        internal IView View { get { return this.view; } }
+        public ILayoutTemplate Template => _template;
+        internal IView View => _view;
     }
 }

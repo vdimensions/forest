@@ -5,11 +5,11 @@ namespace Forest.Security
 {
     public sealed class SecurityDomVisitor : AbstractDomVisitor
     {
-        private readonly IForestContext context;
+        private readonly IForestContext _context;
 
         public SecurityDomVisitor(IForestContext context)
         {
-            this.context = context;
+            _context = context;
         }
     }
 }

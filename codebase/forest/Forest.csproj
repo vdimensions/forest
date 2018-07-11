@@ -39,8 +39,6 @@
     <None Include="mason.properties" />
     <None Include="Forest.nuspec.template" />
     <None Include="Forest.nuspec" />
-    <None Include="paket-restore.sh" />
-    <None Include="paket-update.sh" />
     <None Include="paket.dependencies" />
     <None Include="paket.lock" />
     <None Include="paket.references" />
@@ -49,4 +47,5 @@
   <Import Project="packages\Mason.Targets.Packager\build\Mason.Targets.Packager.targets" Condition="Exists('packages\Mason.Targets.Packager\build\Mason.Targets.Packager.targets')" Label="Paket" />
   <Import Project="packages\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project="packages\Mason.Targets.Verman\build\Mason.Targets.Verman.targets" Condition="Exists('packages\Mason.Targets.Verman\build\Mason.Targets.Verman.targets')" Label="Paket" />
+  <Import Project=".paket\Paket.Restore.targets" />
 </Project>

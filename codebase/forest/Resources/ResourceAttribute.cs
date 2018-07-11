@@ -21,6 +21,7 @@ namespace Forest.Resources
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
     public sealed class ResourceAttribute : Attribute, IResource
     {
+        [Obsolete]
         private readonly string category;
         private readonly string bundle;
         private readonly string name;
@@ -32,6 +33,7 @@ namespace Forest.Resources
             this.name = name;
         }
 
+        [Obsolete]
         public string Category { get { return category; } }
         public string Bundle { get { return bundle; } }
         public string Name { get { return name; } }

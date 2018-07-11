@@ -25,17 +25,18 @@ namespace Forest.Events
     internal class Message
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly object payload;
+        private readonly object _payload;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string topic;
+        private readonly string _topic;
 
         public Message(object payload, string topic)
         {
-            this.payload = payload;
-            this.topic = topic;
+            _payload = payload;
+            _topic = topic;
         }
 
-        public object Payload {  get { return this.payload; } }
-        public string Topic {  get { return this.topic; } }
+        public object Payload => _payload;
+        public string Topic => _topic;
     }
 }

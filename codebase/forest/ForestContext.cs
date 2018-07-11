@@ -50,18 +50,14 @@ namespace Forest
         public ForestContext() : this(new NoOpForestSecurityAdapter()) { }
         public ForestContext(IForestSecurityAdapter securityAdapter)
         {
-            if (securityAdapter == null)
-            {
-                throw new ArgumentNullException("securityAdapter");
-            }
-            this.securityAdapter = securityAdapter;
+            this.securityAdapter = securityAdapter ?? throw new ArgumentNullException(nameof(securityAdapter));
         }
 
         public IViewDescriptor GetDescriptor(Type viewType)
         {
             if (viewType == null)
             {
-                throw new ArgumentNullException("viewType");
+                throw new ArgumentNullException(nameof(viewType));
             }
             return viewDescriptors.GetOrAdd(viewType, new ViewDescriptor(this, viewType));
         }
@@ -74,7 +70,7 @@ namespace Forest
         {
             if (view == null)
             {
-                throw new ArgumentNullException("view");
+                throw new ArgumentNullException(nameof(view));
             }
             var viewType = view.GetType();
             return viewDescriptors.GetOrAdd(viewType, new ViewDescriptor(this, viewType));
@@ -84,7 +80,7 @@ namespace Forest
         {
             if (viewLookup == null)
             {
-                throw new ArgumentNullException("viewLookup");
+                throw new ArgumentNullException(nameof(viewLookup));
             }
             var engineExistsMessage = "A forest engine instance has aready been created for this context";
             if (engine != null)
@@ -109,95 +105,53 @@ namespace Forest
             domVisitorRegistry.Clear();
         }
 
-        public IDomVisitorRegistry DomVisitorRegistry { get { return domVisitorRegistry; } }
-        public IForestSecurityAdapter SecurityAdapter { get { return securityAdapter; } }
-        public IForestEngine Engine { get { return engine; } }
+        public IDomVisitorRegistry DomVisitorRegistry => domVisitorRegistry;
+        public IForestSecurityAdapter SecurityAdapter => securityAdapter;
+        public IForestEngine Engine => engine;
         public IReflectionProvider ReflectionProvider
         {
-            get { return reflectionProvider; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                reflectionProvider = value;
-            }
+            get => reflectionProvider;
+            set => reflectionProvider = value ?? throw new ArgumentNullException(nameof(value));
         }
         public IForestExpressionEvaluator ExpressionEvaluator
         {
-            get { return this.expressionEvaluator; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                this.expressionEvaluator = value;
-            }
+            get => expressionEvaluator;
+            set => expressionEvaluator = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         public ICacheManager CacheManager
         {
-            get { return this.cacheManager; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                this.cacheManager = value;
-            }
+            get => cacheManager;
+            set => cacheManager = value ?? throw new ArgumentNullException(nameof(value));
         }
         public ILoggerFactory LoggerFactory
         {
-            get { return this.loggerFactory; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                this.loggerFactory = value;
-            }
+            get => loggerFactory;
+            set => loggerFactory = value ?? throw new ArgumentNullException(nameof(value));
         }
         public ILocalizationManager LocalizationManager
         {
-            get { return this.localizationManager; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                this.localizationManager = value;
-            }
+            get => localizationManager;
+            set => localizationManager = value ?? throw new ArgumentNullException(nameof(value));
         }
         public ILayoutTemplateProvider LayoutTemplateProvider
         {
-            get { return this.layoutTemplateProvider; }
+            get => this.layoutTemplateProvider;
             set
             {
                 if (value == null)
                 {
-                    throw new ArgumentNullException("value");
+                    throw new ArgumentNullException(nameof(value));
                 }
                 this.layoutTemplateProvider = value;
             }
         }
         public IObjectMapper ObjectMapper
         {
-            get { return objectMapper; }
-            set
-            {
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                this.objectMapper = value;
-            }
+            get => objectMapper;
+            set => objectMapper = value ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public string PathSeparator { get { return _PathSeparator; } }
+        public string PathSeparator => _PathSeparator;
     }
 }

@@ -25,43 +25,43 @@ namespace Forest.Events
     public class SubscriptionInfo
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IMethod subscriptionMethod;
+        private readonly IMethod _subscriptionMethod;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly Type messageType;
+        private readonly Type _messageType;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly IEnumerable<string> topics;
+        private readonly IList<string> _topics;
 
         public SubscriptionInfo(IMethod subscriptionMethod, params string[] topics)
         {
             if (subscriptionMethod == null)
             {
-                throw new ArgumentNullException("subscriptionMethod");
+                throw new ArgumentNullException(nameof(subscriptionMethod));
             }
             var parameters = subscriptionMethod.GetParameters();
             if (parameters.Length == 0)
             {
-                throw new ArgumentException("Cannot use parameterless method for event subscription.", "subscriptionMethod");
+                throw new ArgumentException("Cannot use parameterless method for event subscription.", nameof(subscriptionMethod));
             }
-            this.subscriptionMethod = subscriptionMethod;
-            this.messageType = parameters[0].Type;
-            this.topics = topics;
+            _subscriptionMethod = subscriptionMethod;
+            _messageType = parameters[0].Type;
+            _topics = topics;
         }
 
         public void Invoke(IView view, object message)
         {
             try
             {
-                subscriptionMethod.Invoke(view, message);
+                _subscriptionMethod.Invoke(view, message);
             }
             catch (Exception e)
             {
-                throw new SubscriptionExecutionException(string.Format("Error executing subscription method '{0}'", subscriptionMethod.Name), e);
+                throw new SubscriptionExecutionException(string.Format("Error executing subscription method '{0}'", _subscriptionMethod.Name), e);
             }
         }
 
-        public Type MessageType { get { return messageType; } }
-        public IEnumerable<string> Topics { get { return topics; } }
+        public Type MessageType => _messageType;
+        public IList<string> Topics => _topics;
     }
 }

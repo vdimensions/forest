@@ -25,33 +25,33 @@ namespace Forest.Stubs
         public static readonly ResourceInfo Empty = new ResourceInfo();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string bundle;
+        private readonly string _bundle;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string key;
+        private readonly string _key;
 
         public ResourceInfo(string bundle, string key) : this()
         {
-            this.key = key;
-            this.bundle = bundle;
+            _key = key;
+            _bundle = bundle;
         }
 
         public ResourceInfo ChangeKey(string format, params object[] args)
         {
             return args.Length == 0
-                ? new ResourceInfo(bundle, format)
-                : new ResourceInfo(bundle, string.Format(format, args));
+                ? new ResourceInfo(_bundle, format)
+                : new ResourceInfo(_bundle, string.Format(format, args));
         }
 
-        public override bool Equals(object other) { return other is ResourceInfo && Equals((ResourceInfo) other); }
+        public override bool Equals(object other) { return other is ResourceInfo info && Equals(info); }
         public bool Equals(ResourceInfo other)
         {
             var comparer = StringComparer.Ordinal;
-            return comparer.Equals(other.bundle, bundle) && comparer.Equals(other.key, key);
+            return comparer.Equals(other._bundle, _bundle) && comparer.Equals(other._key, _key);
         }
 
-        public override int GetHashCode() { return bundle.GetHashCode()^key.GetHashCode(); }
+        public override int GetHashCode() { return _bundle.GetHashCode()^_key.GetHashCode(); }
 
-        public string Bundle => bundle ?? string.Empty;
-        public string Key => key ?? string.Empty;
+        public string Bundle => _bundle ?? string.Empty;
+        public string Key => _key ?? string.Empty;
     }
 }

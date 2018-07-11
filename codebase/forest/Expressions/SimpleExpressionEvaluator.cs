@@ -45,15 +45,15 @@ namespace Forest.Expressions
         {
             if (context == null)
             {
-                throw new ArgumentNullException("context");
+                throw new ArgumentNullException(nameof(context));
             }
             if (expression == null)
             {
-                throw new ArgumentNullException("expression");
+                throw new ArgumentNullException(nameof(expression));
             }
             if (expression.Length == 0)
             {
-                throw new ArgumentException("Expression cannot be an empty string", "expression");
+                throw new ArgumentException("Expression cannot be an empty string", nameof(expression));
             }
             return DoEvaluate(context, expression);
         }
@@ -67,14 +67,16 @@ namespace Forest.Expressions
             }
             var caretIndex = 0;
             IList<string> expressions = new List<string>();
-            foreach (Match match in matches)
+            for (var i = 0; i < matches.Count; i++)
             {
+                var match = matches[i];
                 expressions.Add(expression.Substring(caretIndex, match.Index));
                 var unwrappedExpression = match.Value.Substring(0, match.Value.Length - 1).Substring(2);
                 var exprValue = DoEvaluate(context, unwrappedExpression);
                 expressions.Add(exprValue);
                 caretIndex = match.Index + match.Length;
             }
+
             if (caretIndex < expression.Length - 1)
             {
                 expressions.Add(expression.Substring(caretIndex));

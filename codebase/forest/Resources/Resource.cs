@@ -21,19 +21,21 @@ namespace Forest.Resources
     [Serializable]
     public class Resource : IResource
     {
-        private readonly string category;
-        private readonly string bundle;
-        private readonly string name;
+        [Obsolete]
+        private readonly string _category;
+        private readonly string _bundle;
+        private readonly string _name;
 
         public Resource(string category, string bundle, string name)
         {
-            this.category = category;
-            this.bundle = bundle;
-            this.name = name;
+            _category = category;
+            _bundle = bundle;
+            _name = name;
         }
 
-        public string Category => category;
-        public string Bundle => bundle;
-        public string Name => name;
+        [Obsolete]
+        public string Category => _category;
+        public string Bundle => _bundle;
+        public string Name => _name;
     }
 }

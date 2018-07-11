@@ -40,7 +40,7 @@ namespace Forest.Reflection
             {
                 return result;
             }
-            var flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             var objectProperties = reflectionProvider.GetProperties(target.GetType(), flags)
                 .Where(x => x.IsReadable && x.IsWriteable)
                 .ToDictionary(x => x.Name, StringComparer.Ordinal);
@@ -267,8 +267,8 @@ namespace Forest.Reflection
                         result = guid;
                         return true;
                     }
-                    Guid guidResult;
-                    if (Guid.TryParse(raw.ToString(), out guidResult))
+
+                    if (Guid.TryParse(raw.ToString(), out var guidResult))
                     {
                         result = guidResult;
                         return true;

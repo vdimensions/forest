@@ -45,7 +45,7 @@ namespace Forest.Dom
         {
             var comparer = StringComparer.Ordinal;
             var links = node.Links == null ? null : node.Links
-                .Select(x => new KeyValuePair<string, ILinkNode>(x.Key, x.Value is ICommandLinkNode ? ProcessCommandLink((ICommandLinkNode) x.Value, context) : ProcessLink(x.Value, context)))
+                .Select(x => new KeyValuePair<string, ILinkNode>(x.Key, x.Value is ICommandLinkNode linkNode ? ProcessCommandLink(linkNode, context) : ProcessLink(x.Value, context)))
                 .ToDictionary(x => x.Key, x => x.Value, comparer);
             var resources = node.Resources == null ? null : node.Resources
                 .Select(x => new KeyValuePair<string, IResourceNode>(x.Key, ProcessResource(x.Value, context)))
