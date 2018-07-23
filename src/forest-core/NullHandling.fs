@@ -1,5 +1,4 @@
 ﻿namespace Forest
-open System
 
 [<AutoOpen>]
 module internal Null =

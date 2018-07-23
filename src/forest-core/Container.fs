@@ -3,8 +3,7 @@ open System
 open System.Reflection
 
 
-[<Sealed>]
-type DefaultContainer() as self = 
+type [<Sealed>] DefaultContainer() as self = 
     member this.Resolve (vm : IViewDescriptor) : IView = 
         let flags = BindingFlags.Public|||BindingFlags.Instance
         let constructors = 

@@ -27,7 +27,6 @@ type DefaultForestEngine() =
         | _ -> None
 
     let rec traverseRawTemplate (ctx: IForestContext) (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
-        let recurse = traverseRawTemplate 
         let mutable changedDom = dom
         match arg with
         | ViewMatcher regionsDictionary -> 
@@ -35,7 +34,7 @@ type DefaultForestEngine() =
                 let name = entry.Key
                 let path = path @@ name
                 let node = upcast new RegionNode(path, name): IDomNode
-                changedDom <- recurse ctx (changedDom.Add node) path (node.Type, entry.Value)
+                changedDom <- traverseRawTemplate ctx (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | RegionMatcher viewsDictionary -> 
             for entry in viewsDictionary do
@@ -48,7 +47,7 @@ type DefaultForestEngine() =
                     // TODO: ERROR
                     | None -> upcast new ViewNode(path, View.Descriptor(name, null, null, null)): IDomNode
                 
-                changedDom <- recurse ctx (changedDom.Add node) path (node.Type, entry.Value)
+                changedDom <- traverseRawTemplate ctx (changedDom.Add node) path (node.Type, entry.Value)
             changedDom
         | _ -> changedDom
 

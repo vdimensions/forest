@@ -44,7 +44,7 @@ module View =
         new (message: string) = AbstractViewException(message, null)
 
     type ViewAttributeMissingException(viewType: Type, inner: exn) =
-        inherit AbstractViewException(String.Format("The type `{0}` must be annotated with a `{}`", viewType.FullName, typeof<ViewAttribute>.FullName), inner)
+        inherit AbstractViewException(String.Format("The type `{0}` must be annotated with a `{1}`", viewType.FullName, typeof<ViewAttribute>.FullName), inner)
         new (viewType: Type) = ViewAttributeMissingException((isNotNull "viewType" viewType), null)
 
     type ViewTypeIsAbstractException(viewType: Type, inner: exn) =

@@ -124,7 +124,7 @@ type DefaultViewRegistry(container: IContainer) =
                         >> Seq.map createCommandMetadata
                     else
                         let inline isCommandMethod (mi: MethodInfo) = 
-                            mi.ReturnType = typeof<Void> && mi.GetParameters().Length = 1
+                            not mi.IsStatic && mi.ReturnType = typeof<Void> && mi.GetParameters().Length = 1
 
                         let inline createFakeCommand mi =
                             let hasCommandAttrs = mi |> getCommandAttribs |> Seq.isEmpty

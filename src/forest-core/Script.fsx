@@ -1,4 +1,4 @@
-#r "bin/Debug/Forest.Core.dll"
+#r "bin/Debug/net45/Forest.Core.dll"
 #r "System.Core"
 #r "System"
 #r "System.Numerics"
@@ -45,8 +45,7 @@ rawTemplateStructureFromJson
 
 /////////////////////////////////////////////////////////
 
-[<Sealed>]
-type MyViewModel() = class end
+type [<Sealed>] MyViewModel() = class end
 
 [<View("MyView", AutowireCommands = true)>]
 type MyView() = class

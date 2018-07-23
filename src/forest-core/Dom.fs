@@ -9,23 +9,41 @@ type [<AutoOpen>] DomNodeType =
     | View    = 0b01
     | Command = 0b10
 
-type IDomNode =
+
+type [<Interface>] IDomNode =
     abstract Name: string with get
     abstract Path: Path with get
     abstract Type: DomNodeType with get
 
-[<Interface>]
-type ICommandNode =
+
+type [<Interface>] ICommandNode =
     inherit IDomNode
     abstract Metadata: ICommandMetadata with get
 
+/// <summary>
+/// An interface representing the <see cref="IDomIndex">dom index</see> entry for a forest view.
+/// </summary>
+/// <seealso cref="IDomIndex"/>
+/// <seealso cref="IDomNode"/>
+/// <seealso cref="IView"/>
 type [<Interface>] IViewNode = 
     inherit IDomNode
     abstract Metadata: IViewDescriptor with get
+/// <summary>
+/// An interface representing the <see cref="IDomIndex">dom index</see> entry for a forest region.
+/// </summary>
+/// <seealso cref="IDomIndex"/>
+/// <seealso cref="IDomNode"/>
+/// <seealso cref="IRegion"/>
 and [<Interface>] IRegionNode = inherit IDomNode
 
-[<Interface>]
-type IDomIndex =
+/// <summary>
+/// An interface representing forest's Dom Index. The dom index is a container for
+/// the elements composing the UI of a forest application, each organized by its <see cref="Path" >path</see>
+/// within the view/region structure.
+/// </summary>
+/// <seealso cref="Path"/>
+type [<Interface>] IDomIndex =
     abstract member Add: node: IDomNode -> IDomIndex
     abstract member Remove: node: IDomNode -> IDomIndex
     abstract member Remove: path: Path -> IDomIndex
@@ -35,8 +53,7 @@ type IDomIndex =
     abstract member Paths: IEnumerable<Path> with get
     abstract member Item: Path -> Option<IIndex<IDomNode, string>> with get
 
-[<AbstractClass>]
-type AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
+type [<AbstractClass>] AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
     abstract member Add: node: IDomNode -> 'T
     abstract member Insert: path: Path -> node: IDomNode -> 'T
     abstract member Remove: path: Path -> 'T
@@ -56,8 +73,7 @@ type AbstractDomIndex<'T when 'T:> AbstractDomIndex<'T>>() as self =
         member this.Paths = self.Paths
         member this.Item with get path = self.[path]
 
-[<Sealed>]
-type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) as self =
+type [<Sealed>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>) as self =
     inherit AbstractDomIndex<DefaultDomIndex>()
     let comparer = StringComparer.Ordinal
     new() = new DefaultDomIndex(new WriteableIndex<IAutoIndex<IDomNode, string>, Path>())
@@ -85,8 +101,7 @@ type DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, string>, Path>)
     override this.Item with get k = index.[k] |> Option.map (fun x -> upcast x)
 
 
-[<Sealed>]
-type internal ViewNode(path: Path, metadata: IViewDescriptor) as self =
+type [<Sealed>] internal ViewNode(path: Path, metadata: IViewDescriptor) as self =
     member this.Metadata with get () = metadata
     member this.Path with get () = path
     //member this.Regions with get () = dom[path]
@@ -97,8 +112,7 @@ type internal ViewNode(path: Path, metadata: IViewDescriptor) as self =
         member this.Path = self.Path
         member this.Type = DomNodeType.View
 
-[<Sealed>]
-type internal RegionNode(path: Path, name: string) as self =
+type [<Sealed>] internal RegionNode(path: Path, name: string) as self =
     member this.Name with get () = name
     member this.Path with get () = path
     interface IRegionNode
@@ -107,8 +121,7 @@ type internal RegionNode(path: Path, name: string) as self =
         member this.Path = self.Path
         member this.Type = DomNodeType.Region
 
-[<Sealed>]
-type internal CommandNode(path: Path, metadata: ICommandMetadata) as self = 
+type [<Sealed>] internal CommandNode(path: Path, metadata: ICommandMetadata) as self = 
     member this.Metadata with get () = metadata
     member this.Path with get () = path
     interface ICommandNode with 

@@ -7,3 +7,6 @@
 [submodule "submodules/msbuild-dotnet-multitargeting"]
 	path = submodules/msbuild-dotnet-multitargeting
 	url = https://github.com/virtual-dimensions/msbuild-dotnet-multitargeting.git
+[submodule "submodules/btw"]
+	path = submodules/btw
+	url = https://github.com/virtual-dimensions/btw.git
