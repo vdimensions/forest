@@ -433,6 +433,6 @@ NUGET
 GROUP build
 NUGET
   remote: ../../submodules/mason/dist
-    Mason.Targets.Packager (0.1.1.26)
-    Mason.Targets.Preprocessor (0.1.1.13)
-    Mason.Targets.Verman (0.1.1.13)
+    Mason.Targets.Packager (0.2.0.41)
+    Mason.Targets.Preprocessor (0.2.0.78)
+    Mason.Targets.Verman (0.2.0.49)

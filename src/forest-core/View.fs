@@ -5,13 +5,11 @@ open System.Linq
 
 
 [<AttributeUsage(AttributeTargets.Class)>]
-[<Sealed>]
-type ViewAttribute(name: string) = 
+type [<Sealed>] ViewAttribute(name: string) = 
     inherit ForestNodeAttribute(name)
     member val AutowireCommands = false with get, set
 
-[<Interface>]
-type IViewDescriptor = 
+type [<Interface>] IViewDescriptor = 
     abstract Name: string with get
     abstract ViewType: Type with get
     abstract ViewModelType: Type with get
@@ -21,9 +19,8 @@ type IViewDescriptor =
 module View = 
     let inline private isNotNull argName obj = match obj with | null -> nullArg argName | _ -> obj
 
-    [<Sealed>]
     // TODO: argument verfication
-    type Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Metadata>) as self = 
+    type [<Sealed>] Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Metadata>) as self = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
         member this.ViewModelType with get() = viewModelType

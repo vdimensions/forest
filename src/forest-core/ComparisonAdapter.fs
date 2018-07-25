@@ -2,10 +2,9 @@
 open System
 open System.Collections.Generic
 
-[<Struct>]
 [<CustomComparison>]
 [<CustomEquality>]
-type ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComparer: IEqualityComparer<'T>) =
+type [<Struct>] ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComparer: IEqualityComparer<'T>) =
     new(value) = ComparisonAdapter(value, Comparer<'T>.Default, EqualityComparer<'T>.Default)
     member this.CompareTo (cmp: IComparer<'T>, v: 'T) = cmp.Compare(v, value)
     member this.CompareTo (v: 'T) = this.CompareTo(comparer, v)

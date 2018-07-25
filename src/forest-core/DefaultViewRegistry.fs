@@ -9,8 +9,7 @@ type ViewRegistryError =
     | ViewError of View.Error
     | CommandError of Command.Error
 
-[<AbstractClass>]
-type AbstractViewRegistry(container: IContainer) as this = 
+type [<AbstractClass>] AbstractViewRegistry(container: IContainer) as this = 
     let storage: IDictionary<string, View.Descriptor> = upcast new Dictionary<string, View.Descriptor>(StringComparer.Ordinal)
 
     abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
@@ -73,8 +72,7 @@ type AbstractViewRegistry(container: IContainer) as this =
         member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
         member x.GetViewMetadata name = this.GetViewMetadata name
 
-[<Sealed>]
-type DefaultViewRegistry(container: IContainer) = 
+type [<Sealed>] DefaultViewRegistry(container: IContainer) = 
     inherit AbstractViewRegistry(container)
     override this.GetViewMetadata t =
         match null2opt t with | None -> nullArg "t" | _ -> ()

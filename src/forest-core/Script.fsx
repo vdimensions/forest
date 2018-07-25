@@ -52,9 +52,7 @@ type MyView() = class
     inherit AbstractView<MyViewModel>()
     member this.SampleCommand (x: int) = ()
 end
-let container = DefaultContainer()
-let viewRegistry = DefaultViewRegistry(container)
-let ctx = new DefaultForestContext(viewRegistry)   
+let ctx = new DefaultForestContext(DefaultViewRegistry(DefaultContainer()))   
 ctx.Registry.Register<MyView>()
 
 /////////////////////////////////////////////////////////

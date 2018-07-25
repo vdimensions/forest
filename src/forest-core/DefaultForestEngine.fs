@@ -10,8 +10,7 @@ open System.Collections.Generic
 //        member x.Execute ctx node =
 //            ()
 
-[<Sealed>]
-type DefaultForestEngine() = 
+type [<Sealed>] DefaultForestEngine() = 
     let (|Dictionary|_|) (v: obj) = 
         if (v :? IDictionary<string, obj>) 
         then Some (v :?> IDictionary<string, obj>) 

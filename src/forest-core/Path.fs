@@ -4,10 +4,9 @@ open System.Collections.Generic;
 open System.Linq
 open System.Text
 
-[<Struct>]
 [<CustomEquality>]
 [<CustomComparison>]
-type Path = 
+type [<Struct>] Path = 
     static member Separator: char = '/'
     static member internal Empty = Path()
     static member (@@) (path:Path, p:string): Path = path.Append(p)

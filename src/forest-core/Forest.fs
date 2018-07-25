@@ -25,14 +25,12 @@ and [<Interface>] IForestContext =
 and [<Interface>] IContainer = 
     abstract member Resolve: vm: IViewDescriptor -> IView
 
-[<Interface>]
-type IView<'T when 'T: (new: unit -> 'T)> =
+type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
     abstract ViewModel: 'T with get, set
 
 // internal functionality needed by the forest engine
-[<Interface>]
-type internal IViewInternal =
+type [<Interface>] internal IViewInternal =
     inherit IView
     /// <summary>
     /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
@@ -46,16 +44,14 @@ type [<Interface>] IForestEngine =
     abstract member CreateDomIndex: ctx: IForestContext -> data: obj -> IDomIndex
     abstract member Execute: ctx: IForestContext -> node: IViewNode -> IView
 
-[<Interface>]
-type internal IForestContextAware =
+type [<Interface>] internal IForestContextAware =
     abstract member InitializeContext: ctx: IForestContext -> unit
 
 [<Flags>]
 type internal ViewChange =
     | ViewModel // of something
 
-[<AbstractClass>]
-type AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
+type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     let mutable _viewModel : 'T  = new 'T()
     let _viewChangeLog: ICollection<ViewChange> = upcast LinkedList<ViewChange>()
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
