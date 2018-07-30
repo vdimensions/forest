@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45;net46;</TargetFrameworks>
   </PropertyGroup>
-  <Import Project="../../submodules/msbuild-dotnet-multitargeting/src/MultitargetingFrameworkSupport.targets" />
+  <Import Project="../../../../submodules/msbuild-dotnet-multitargeting/src/MultitargetingFrameworkSupport.targets" />
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PlatformTarget>AnyCPU</PlatformTarget>

@@ -58,17 +58,19 @@ type [<Sealed>] DefaultForestEngine() =
     member this.Execute (cxt: IForestContext, domIndex: IDomIndex) : IDomIndex = 
         for path in domIndex.Paths do
             match domIndex.[path] with
-            | Some item ->
-                match item with 
-                | :? IViewNode as view ->
-                    // TODO: process commands
-                    // TODO: update viewState
-                    // TODO: update domIndex
-                    ()
-                | :? IRegionNode as region -> 
-                    //let r = new Region.T()
-                    //
-                    ()
+            | Some x ->
+                for item in x do
+                    match item with
+                    | :? IViewNode as view ->
+                        // TODO: process commands
+                        // TODO: update viewState
+                        // TODO: update domIndex
+                        ()
+                    | :? IRegionNode as region -> 
+                        //let r = new Region.T()
+                        //
+                        ()
+                    | _ -> ()
             | None -> ()
 
         Unchecked.defaultof<IDomIndex>

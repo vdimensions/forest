@@ -1,6 +1,6 @@
 NUGET
   remote: https://www.nuget.org/api/v2
-    FSharp.Core (4.5.1)
+    FSharp.Core (4.5.2)
       System.Collections (>= 4.0.11) - restriction: && (< net45) (>= netstandard1.6) (< netstandard2.0)
       System.Console (>= 4.0) - restriction: && (< net45) (>= netstandard1.6) (< netstandard2.0)
       System.Diagnostics.Debug (>= 4.0.11) - restriction: && (< net45) (>= netstandard1.6) (< netstandard2.0)
@@ -432,7 +432,7 @@ NUGET
 
 GROUP build
 NUGET
-  remote: ../../submodules/mason/dist
+  remote: ../../../../submodules/mason/dist
     Mason.Targets.Packager (0.2.0.41)
     Mason.Targets.Preprocessor (0.2.0.78)
     Mason.Targets.Verman (0.2.0.49)

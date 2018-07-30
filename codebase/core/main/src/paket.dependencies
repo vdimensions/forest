@@ -2,7 +2,7 @@ source https://nuget.org/api/v2
   nuget FSharp.Core
 
 group build
-  source ../../submodules/mason/dist
+  source ../../../../submodules/mason/dist
     nuget Mason.Targets.Packager
     nuget Mason.Targets.Preprocessor
     nuget Mason.Targets.Verman
