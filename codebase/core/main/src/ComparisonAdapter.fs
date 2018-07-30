@@ -10,7 +10,7 @@ type [<Struct>] ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComp
     member this.CompareTo (v: 'T) = this.CompareTo(comparer, v)
     member this.CompareTo (c: ComparisonAdapter<'T>) = c.CompareTo(comparer, value)
     member this.CompareTo (o: obj) = 
-        if (o :? Comparison<'T>) then this.CompareTo(downcast o: ComparisonAdapter<'T>)
+        if (o :? ComparisonAdapter<'T>) then this.CompareTo(downcast o: ComparisonAdapter<'T>)
         else if (o :? 'T) then this.CompareTo(downcast o: 'T)
         else if (o :? IComparable) then ((downcast o: IComparable)).CompareTo(value)
         else raise (NotSupportedException ())
@@ -18,7 +18,7 @@ type [<Struct>] ComparisonAdapter<'T>(value: 'T, comparer: IComparer<'T>, eqComp
     member this.Equals (cmp: IEqualityComparer<'T>, v: 'T): bool = cmp.Equals(v, value)
     member this.Equals (v: 'T): bool = eqComparer.Equals(v, value)
     override this.Equals (o: obj): bool =
-        if (o :? Comparison<'T>) then this.Equals(downcast o: ComparisonAdapter<'T>)
+        if (o :? ComparisonAdapter<'T>) then this.Equals(downcast o: ComparisonAdapter<'T>)
         else if (o :? 'T) then this.Equals(downcast o: 'T)
         else false
     override this.GetHashCode () = eqComparer.GetHashCode value

@@ -62,11 +62,13 @@ type [<Sealed>] DefaultForestEngine() =
                 for item in x do
                     match item with
                     | :? IViewNode as view ->
+                        let viewPath = path @@ view.Name
                         // TODO: process commands
                         // TODO: update viewState
                         // TODO: update domIndex
                         ()
                     | :? IRegionNode as region -> 
+                        let regionPath = path @@ region.Name
                         //let r = new Region.T()
                         //
                         ()

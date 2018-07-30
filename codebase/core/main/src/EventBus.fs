@@ -29,8 +29,8 @@ module EventBus =
 
         //static member Get: unit -> EventBus = 
         //    let existing = 
-        //        match EventBus._staticEventBus with
-        //        | null -> None
+        //        match null2opt EventBus._staticEventBus with
+        //        | None -> None
         //        | wr -> Some (downcast wr.Target : EventBus)
         //    match existing with 
         //    | None -> 

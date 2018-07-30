@@ -16,6 +16,7 @@
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="doc.txt" />
     <Compile Include="NullHandling.fs" />
     <Compile Include="Rop.fs" />
     <Compile Include="ComparisonAdapter.fs" />

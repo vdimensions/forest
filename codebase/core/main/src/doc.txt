@@ -1,0 +1,27 @@
+﻿IViewRegistry
+
+  Keeps the state of the application configuration for resolving views and instantiating view models. 
+  Does not hold application state like view instances.
+  Can be shared accross sessions.
+  Cannot be shared across machines.
+
+IDomIndex
+
+  Keeps the state of the dom structure for the currently visible view of the application.
+  Does not hold application state such as view instances.
+  Strictly per-session.
+  Can be shared accross machines.
+
+IViewModelStateRepository -> IViewState
+
+  Keeps the current state of the instantiated viewmodels.
+  Does hold application state.
+  Strictly per-session.
+  Can be shared across machines.
+
+*ViewModel*
+
+  Represents view model state
+  Does hold application state.
+  Strictly per-session.
+  Can be shared across machines.
