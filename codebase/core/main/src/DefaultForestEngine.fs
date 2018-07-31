@@ -1,6 +1,8 @@
 ﻿namespace Forest
+
 open Forest
 open Forest.Dom
+
 open System.Collections.Generic
 
 
@@ -81,3 +83,6 @@ type [<Sealed>] DefaultForestEngine() =
     //let rec materializeDomIndex(ctx: IForestContex, domIndex: IDomIndex) = 
 
 
+module ForestEngine =
+    type Operation =
+        | AddView of View.Path

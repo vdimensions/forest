@@ -1,7 +1,10 @@
 namespace Forest
+
 open Forest.Dom
+
 open System;
 open System.Collections.Generic
+
 
 type [<Interface>] IViewRegistry =
     abstract member Register: t: Type -> IViewRegistry
@@ -24,21 +27,45 @@ and [<Interface>] IForestContext =
     abstract Registry: IViewRegistry with get
 and [<Interface>] IViewFactory = 
     abstract member Resolve: vm: IViewDescriptor -> IView
-
-type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
-    inherit IView
-    abstract ViewModel: 'T with get, set
-
-// internal functionality needed by the forest engine
-type [<Interface>] internal IViewInternal =
-    inherit IView
+/// <summary>
+/// An interface representing a Forest event bus
+/// </summary>
+and [<Interface>] IEventBus = 
     /// <summary>
-    /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
+    /// Publishes a message trough the event bus
     /// </summary>
-    /// <param name="context">
-    /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
+    /// <typeparam name="T">
+    /// The type of the message being pushed.
+    /// </typeparam>
+    /// <param name="sender">
+    /// The <see cref="IView">view</see> instance that is sending the message.
     /// </param>
-    abstract member Submit: ctx: IForestContext -> unit
+    /// <param name="message">
+    /// The object representing the message.
+    /// </param>
+    /// <param name="topics">
+    /// A list of topics names referring to the topics the message will be sent to.
+    /// <para>
+    /// Use of empty string value <c>""</c> will cause the message to be received by all subscribers for the 
+    /// given message type that did not specify topic name during subscription.
+    /// </para>
+    /// <para>
+    /// Use of empty list will cause the message to be broadcast to all subscribers regardless of their subscription topic.
+    /// </para>
+    /// </param>
+    /// <returns>
+    /// A <see cref="bool">boolean</see> value indicating whether the message has been sent to a valid topic.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="sender"/> is <c>null</c>
+    /// </exception>
+    abstract member Publish<'M> : sender: IView * message: 'M * [<ParamArray>] topics: string[] -> unit;
+    abstract member Subscribe: subscriptionHandler: ISubscriptionHandler -> topic: string -> IEventBus
+    abstract member Unsubscribe : sender: IView -> IEventBus
+and [<Interface>] ISubscriptionHandler =
+    abstract member Invoke: arg: obj -> unit;
+    abstract MessageType: Type with get
+    abstract Receiver: IView with get
 
 type [<Interface>] IForestEngine =
     abstract member CreateDomIndex: ctx: IForestContext -> data: obj -> IDomIndex
@@ -50,26 +77,3 @@ type [<Interface>] internal IForestContextAware =
 [<Flags>]
 type internal ViewChange =
     | ViewModel // of something
-
-type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
-    let mutable _viewModel : 'T  = new 'T()
-    let _viewChangeLog: ICollection<ViewChange> = upcast LinkedList<ViewChange>()
-    member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
-        ()
-    member this.ViewModel
-        with get ():'T = _viewModel
-        and set (v: 'T) = _viewModel <- v
-
-    interface IViewInternal with
-        member x.Submit rt =
-           ()
-    interface IView<'T> with
-        member this.ViewModel
-            with get() = self.ViewModel
-            and set v = 
-                self.ViewModel <- v
-                _viewChangeLog.Add ViewChange.ViewModel
-    interface IView with
-        member this.Publish (m, t) : unit = self.Publish (m, t)
-        member this.Regions with get() = raise (System.NotImplementedException())
-        member this.ViewModel with get() = upcast self.ViewModel

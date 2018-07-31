@@ -1,27 +1,35 @@
 ﻿namespace Forest
 
-open Forest.Null
+open Forest.NullHandling
 
 open System
 open System.Collections.Generic
 open System.Linq
 
-
-[<AttributeUsage(AttributeTargets.Class)>]
-type [<Sealed>] ViewAttribute(name: string) = 
-    inherit ForestNodeAttribute(name)
-    member val AutowireCommands = false with get, set
-
-type [<Interface>] IViewDescriptor = 
-    abstract Name: string with get
-    abstract ViewType: Type with get
-    abstract ViewModelType: Type with get
-    abstract Commands: IEnumerable<ICommandDescriptor> with get
+type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
+    inherit IView
+    abstract ViewModel: 'T with get, set
 
 [<RequireQualifiedAccessAttribute>]
 module View = 
 
-    // TODO: argument verfication
+    // internal functionality needed by the forest engine
+    type [<Interface>] internal IViewInternal =
+        inherit IView
+        /// <summary>
+        /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
+        /// </summary>
+        /// <param name="context">
+        /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
+        /// </param>
+        abstract member Submit: ctx: IForestContext -> unit
+
+        abstract EventBus: IEventBus with get, set
+
+    type Path(name: string) =
+        member this.Name with get() = name
+
+    // TODO: argument verification
     type [<Sealed>] Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Descriptor>) as self = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
@@ -49,4 +57,31 @@ module View =
     type ViewTypeIsAbstractException(viewType: Type, inner: exn) =
         inherit AbstractViewException(String.Format("Cannot instantiate view from type `{0}` because it is an interface or an abstract class.", (isNotNull "viewType" viewType).FullName), inner)
         new (viewType: Type) = ViewTypeIsAbstractException((isNotNull "viewType" viewType), null)
+
+    type [<AbstractClass>] Base<'T when 'T: (new: unit -> 'T)> () as self =
+        let mutable _viewModel : 'T  = new 'T()
+        let mutable _eventBus: IEventBus = Unchecked.defaultof<IEventBus>
+        let _viewChangeLog: ICollection<ViewChange> = upcast LinkedList<ViewChange>()
+        member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
+            _eventBus.Publish(self, message, topics)
+        member this.ViewModel
+            with get ():'T = _viewModel
+            and set (v: 'T) = _viewModel <- v
+
+        interface IViewInternal with
+            member this.Submit rt =
+               ()
+            member this.EventBus 
+                with get() = _eventBus
+                and set value = _eventBus <- (isNotNull "value" value)
+        interface IView<'T> with
+            member this.ViewModel
+                with get() = self.ViewModel
+                and set v = 
+                    self.ViewModel <- v
+                    _viewChangeLog.Add ViewChange.ViewModel
+        interface IView with
+            member this.Publish (m, t) : unit = self.Publish (m, t)
+            member this.Regions with get() = raise (System.NotImplementedException())
+            member this.ViewModel with get() = upcast self.ViewModel
 

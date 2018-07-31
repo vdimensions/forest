@@ -16,6 +16,7 @@
 **/obj/
 **/out/
 **/packages/
+**/paket-files/
 **/target/
 
 # files

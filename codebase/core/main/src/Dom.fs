@@ -1,5 +1,7 @@
 ﻿namespace Forest.Dom
+
 open Forest
+
 open System
 open System.Collections.Generic
 

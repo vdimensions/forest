@@ -25,12 +25,12 @@
     <Compile Include="Path.fs" />
     <Compile Include="ForestNodeAttribute.fs" />
     <Compile Include="Command.fs" />
-    <Compile Include="View.fs" />
+    <Compile Include="ViewAttribute.fs" />
     <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
+    <Compile Include="View.fs" />
     <Compile Include="Region.fs" />
     <Compile Include="DefaultViewFactory.fs" />
-    <Compile Include="EventBusTypes.fs" />
     <Compile Include="EventBus.fs" />
     <Compile Include="DefaultViewRegistry.fs" />
     <Compile Include="DefaultForestContext.fs" />

@@ -11,7 +11,7 @@ type [<Interface>] ICommandDescriptor =
 
 [<RequireQualifiedAccessAttribute>]
 module Command = 
-    // TODO: argument verfication
+    // TODO: argument verification
     type [<Sealed>] Descriptor(name: string, argType: Type, mi: MethodInfo) as self = 
         member this.Name with get() = name
         member this.ArgumentType with get() = argType
