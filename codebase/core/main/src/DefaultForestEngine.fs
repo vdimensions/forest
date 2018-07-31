@@ -62,7 +62,8 @@ type [<Sealed>] DefaultForestEngine() =
                 for item in x do
                     match item with
                     | :? IViewNode as view ->
-                        let viewPath = path @@ view.Name
+                        let parentPathContentCount = "0"
+                        let viewPath = (((path @@ "#") @@ parentPathContentCount) @@ "#") @@ view.Name
                         // TODO: process commands
                         // TODO: update viewState
                         // TODO: update domIndex

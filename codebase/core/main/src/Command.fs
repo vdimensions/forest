@@ -5,17 +5,17 @@ open System.Reflection
 [<AttributeUsage(AttributeTargets.Method)>]
 type [<Sealed>] CommandAttribute(name: string) = inherit ForestNodeAttribute(name)
 
-type [<Interface>] ICommandMetadata = 
+type [<Interface>] ICommandDescriptor = 
     abstract Name: string with get
     abstract ArgumentType: Type with get
 
 [<RequireQualifiedAccessAttribute>]
 module Command = 
     // TODO: argument verfication
-    type [<Sealed>] Metadata(name: string, argType: Type, mi: MethodInfo) as self = 
+    type [<Sealed>] Descriptor(name: string, argType: Type, mi: MethodInfo) as self = 
         member this.Name with get() = name
         member this.ArgumentType with get() = argType
-        interface ICommandMetadata with
+        interface ICommandDescriptor with
             member this.Name = self.Name
             member this.ArgumentType = self.ArgumentType
 

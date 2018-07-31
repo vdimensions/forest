@@ -12,7 +12,7 @@ IDomIndex
   Strictly per-session.
   Can be shared accross machines.
 
-IViewModelStateRepository -> IViewState
+IViewState
 
   Keeps the current state of the instantiated viewmodels.
   Does hold application state.
@@ -25,3 +25,5 @@ IViewModelStateRepository -> IViewState
   Does hold application state.
   Strictly per-session.
   Can be shared across machines.
+
+IForestState

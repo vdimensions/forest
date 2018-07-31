@@ -33,7 +33,7 @@ namespace Forest.Tests
             var x = Add(Get(Add(Get(Add(rawTemplateStructureFromJson, "rootView"), "rootView"), "contentRegion"), "contentRegion"), "MyView");
             Add(Get(Add(x, "view2"), "view2"), "emptyRegion");
 
-            var ctx = new DefaultForestContext(new DefaultViewRegistry(new DefaultContainer()));
+            var ctx = new DefaultForestContext(new DefaultViewRegistry(new DefaultViewFactory()));
             var engine = new DefaultForestEngine();
             var index = engine.CreateIndex(ctx, rawTemplateStructureFromJson);
 

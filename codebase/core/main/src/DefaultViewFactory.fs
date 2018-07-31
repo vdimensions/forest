@@ -3,7 +3,7 @@ open System
 open System.Reflection
 
 
-type [<Sealed>] DefaultContainer() as self = 
+type [<Sealed>] DefaultViewFactory() as self = 
     member this.Resolve (vm : IViewDescriptor) : IView = 
         let flags = BindingFlags.Public|||BindingFlags.Instance
         let constructors = 
@@ -14,5 +14,5 @@ type [<Sealed>] DefaultContainer() as self =
         | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable construcrtor", vm.ViewType.FullName)))
         | head::_ -> downcast head.Invoke([||]) : IView
         
-    interface IContainer with member this.Resolve m = self.Resolve m
+    interface IViewFactory with member this.Resolve m = self.Resolve m
 

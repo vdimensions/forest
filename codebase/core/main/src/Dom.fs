@@ -7,18 +7,11 @@ open System.Collections.Generic
 type [<AutoOpen>] DomNodeType = 
     | Region  = 0b00
     | View    = 0b01
-    | Command = 0b10
-
 
 type [<Interface>] IDomNode =
     abstract Name: string with get
     abstract Path: Path with get
     abstract Type: DomNodeType with get
-
-
-type [<Interface>] ICommandNode =
-    inherit IDomNode
-    abstract Metadata: ICommandMetadata with get
 
 /// <summary>
 /// An interface representing the <see cref="IDomIndex">dom index</see> entry for a forest view.
@@ -28,7 +21,7 @@ type [<Interface>] ICommandNode =
 /// <seealso cref="IView"/>
 type [<Interface>] IViewNode = 
     inherit IDomNode
-    abstract Metadata: IViewDescriptor with get
+    abstract Descriptor: IViewDescriptor with get
 /// <summary>
 /// An interface representing the <see cref="IDomIndex">dom index</see> entry for a forest region.
 /// </summary>
@@ -101,14 +94,14 @@ type [<Sealed>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, stri
     override this.Item with get k = index.[k] |> Option.map (fun x -> upcast x)
 
 
-type [<Sealed>] internal ViewNode(path: Path, metadata: IViewDescriptor) as self =
-    member this.Metadata with get () = metadata
+type [<Sealed>] internal ViewNode(path: Path, descriptor: IViewDescriptor) as self =
+    member this.Descriptor with get () = descriptor
     member this.Path with get () = path
     //member this.Regions with get () = dom[path]
     interface IViewNode with
-        member this.Metadata = self.Metadata
+        member this.Descriptor = self.Descriptor
     interface IDomNode with
-        member this.Name = self.Metadata.Name
+        member this.Name = self.Descriptor.Name
         member this.Path = self.Path
         member this.Type = DomNodeType.View
 
@@ -120,13 +113,3 @@ type [<Sealed>] internal RegionNode(path: Path, name: string) as self =
         member this.Name = self.Name
         member this.Path = self.Path
         member this.Type = DomNodeType.Region
-
-type [<Sealed>] internal CommandNode(path: Path, metadata: ICommandMetadata) as self = 
-    member this.Metadata with get () = metadata
-    member this.Path with get () = path
-    interface ICommandNode with 
-        member this.Metadata = self.Metadata
-    interface IDomNode with
-        member this.Name = self.Metadata.Name
-        member this.Path = self.Path
-        member this.Type = DomNodeType.Command

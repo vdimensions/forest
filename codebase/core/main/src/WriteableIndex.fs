@@ -23,8 +23,7 @@ type [<Sealed>] WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T
     override this.Item 
         with get k = 
             let key = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
-            if (map.ContainsKey(key)) then 
-                 null2opt map.[key]
+            if (map.ContainsKey(key)) then null2opt map.[key]
             else None
 
 

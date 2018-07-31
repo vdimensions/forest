@@ -16,13 +16,13 @@ and [<Interface>] IView =
 and [<Interface>] IRegion = 
     abstract Views: IIndex<IView, string> with get 
     abstract Name: string with get
-and [<Interface>] IViewModelStateRepository = 
+and [<Interface>] IViewState = 
     abstract member SuspendState: Path*obj -> unit 
     abstract member SuspendState: v:IView -> unit
     abstract member ResumeState: path: Path -> obj
 and [<Interface>] IForestContext =
     abstract Registry: IViewRegistry with get
-and [<Interface>] IContainer = 
+and [<Interface>] IViewFactory = 
     abstract member Resolve: vm: IViewDescriptor -> IView
 
 type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
@@ -73,6 +73,3 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
         member this.Publish (m, t) : unit = self.Publish (m, t)
         member this.Regions with get() = raise (System.NotImplementedException())
         member this.ViewModel with get() = upcast self.ViewModel
-
-
-//

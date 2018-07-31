@@ -1,4 +1,7 @@
 ﻿namespace Forest
+
+open Forest.Null
+
 open System
 open System.Collections.Generic
 open System.Linq
@@ -13,14 +16,13 @@ type [<Interface>] IViewDescriptor =
     abstract Name: string with get
     abstract ViewType: Type with get
     abstract ViewModelType: Type with get
-    abstract Commands: IEnumerable<ICommandMetadata> with get
+    abstract Commands: IEnumerable<ICommandDescriptor> with get
 
 [<RequireQualifiedAccessAttribute>]
 module View = 
-    let inline private isNotNull argName obj = match obj with | null -> nullArg argName | _ -> obj
 
     // TODO: argument verfication
-    type [<Sealed>] Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Metadata>) as self = 
+    type [<Sealed>] Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Descriptor>) as self = 
         member this.Name with get() = name
         member this.ViewType with get() = viewType
         member this.ViewModelType with get() = viewModelType
@@ -29,7 +31,7 @@ module View =
             member this.Name = self.Name
             member this.ViewType = self.ViewType
             member this.ViewModelType = self.ViewModelType
-            member this.Commands = self.Commands.Cast<ICommandMetadata>()
+            member this.Commands = self.Commands.Cast<ICommandDescriptor>()
 
     type Error = 
         | ViewAttributeMissing of Type

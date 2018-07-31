@@ -29,7 +29,7 @@
     <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="Region.fs" />
-    <Compile Include="Container.fs" />
+    <Compile Include="DefaultViewFactory.fs" />
     <Compile Include="EventBusTypes.fs" />
     <Compile Include="EventBus.fs" />
     <Compile Include="DefaultViewRegistry.fs" />

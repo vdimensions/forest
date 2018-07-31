@@ -9,13 +9,13 @@ type ViewRegistryError =
     | ViewError of View.Error
     | CommandError of Command.Error
 
-type [<AbstractClass>] AbstractViewRegistry(container: IContainer) as this = 
+type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this = 
     let storage: IDictionary<string, View.Descriptor> = upcast new Dictionary<string, View.Descriptor>(StringComparer.Ordinal)
 
     abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
 
     member this.InstantiateView viewMetadata = 
-        let instance = container.Resolve viewMetadata
+        let instance = factory.Resolve viewMetadata
         // TODO: Inject ViewState
         instance
 
@@ -72,8 +72,8 @@ type [<AbstractClass>] AbstractViewRegistry(container: IContainer) as this =
         member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
         member x.GetViewMetadata name = this.GetViewMetadata name
 
-type [<Sealed>] DefaultViewRegistry(container: IContainer) = 
-    inherit AbstractViewRegistry(container)
+type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) = 
+    inherit AbstractViewRegistry(factory)
     override this.GetViewMetadata t =
         match null2opt t with | None -> nullArg "t" | _ -> ()
         let inline isOfType t obj = (obj.GetType() = t)
@@ -111,7 +111,7 @@ type [<Sealed>] DefaultViewRegistry(container: IContainer) =
                             match parameters with
                             | [|param|] -> param.ParameterType
                             | _ -> typeof<Void>
-                        let metadata = a |> Seq.map (fun ca -> Command.Metadata(ca.Name, parameterType, mi))
+                        let metadata = a |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi))
                         Success (metadata)
 
                 let autowireCommands = attr.AutowireCommands
@@ -128,7 +128,7 @@ type [<Sealed>] DefaultViewRegistry(container: IContainer) =
                             let hasCommandAttrs = mi |> getCommandAttribs |> Seq.isEmpty
                             if (hasCommandAttrs) then 
                                 let p = mi.GetParameters()
-                                let result = [Command.Metadata(mi.Name, p.[0].ParameterType, mi)] |> Seq.map id
+                                let result = [Command.Descriptor(mi.Name, p.[0].ParameterType, mi)] |> Seq.map id
                                 Some (Success result)
                             else None                            
                         getMethods
