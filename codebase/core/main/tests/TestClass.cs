@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 
 using NUnit.Framework;
@@ -7,14 +6,17 @@ using NUnit.Framework;
 
 namespace Forest.Tests
 {
+    static class My
+    {
+        class ViewModel { }
+
+        [View("MyView", AutowireCommands = true)]
+        class View : Forest.View.Base<ViewModel> { }
+    }
+
     [TestFixture]
     public class TestClass
     {
-        class MyViewModel { }
-
-        [View("MyView", AutowireCommands = true)]
-        class MyView : AbstractView<MyViewModel> { }
-
         private static IDictionary<string, object> Add(IDictionary<string, object> target, string str)
         {
             target.Add(str, new Dictionary<string, object>());
@@ -34,8 +36,7 @@ namespace Forest.Tests
             Add(Get(Add(x, "view2"), "view2"), "emptyRegion");
 
             var ctx = new DefaultForestContext(new DefaultViewRegistry(new DefaultViewFactory()));
-            var engine = new DefaultForestEngine();
-            var index = engine.CreateIndex(ctx, rawTemplateStructureFromJson);
+            var index = Forest.Engine.CreateIndex(ctx, rawTemplateStructureFromJson);
 
             Console.WriteLine("dom index contains {0} root nodes", index.Count);
             foreach (var path in index.Paths)
@@ -44,7 +45,7 @@ namespace Forest.Tests
                 Console.WriteLine("  +-[{0}]", domNode.Path.ToString());
             }
 
-            var execIdnex = engine.Execute(ctx, index);
+            var execIdnex = Forest.Engine.Execute(ctx, index);
         }
     }
 }

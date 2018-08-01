@@ -1,5 +1,8 @@
 ﻿namespace Forest
+
+open Forest
 open Forest.Dom
+
 open System
 open System.Reflection
 open System.Collections.Generic

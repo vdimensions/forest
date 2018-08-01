@@ -29,7 +29,7 @@ type [<Sealed>] WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T
 
 type [<Sealed>] AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =
     inherit IndexProxy<'T, 'TKey, AutoIndex<'T, 'TKey>>(ix, (fun x -> new AutoIndex<'T, 'TKey>(keyFn, x)))
-    //new(keyFn: 'T -> 'TKey) = AutoIndex(keyFn, new WriteableIndex<'T, 'TKey>())
+    new(keyFn: 'T -> 'TKey) = AutoIndex(keyFn, new WriteableIndex<'T, 'TKey>())
     member this.Remove item = 
         let key: 'TKey = keyFn item
         new AutoIndex<'T, 'TKey>(keyFn, (ix.Remove key))

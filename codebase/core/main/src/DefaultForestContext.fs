@@ -1,10 +1,13 @@
 namespace Forest
 
+open Dom
+
 
 type [<AbstractClass>] AbstractForestContext(viewRegistry: IViewRegistry) as self =
-    member this.Registry with get(): IViewRegistry = viewRegistry
+    //let mutable _domIndex: IDomIndex = IDomIndex
+    member this.ViewRegistry with get(): IViewRegistry = viewRegistry
     interface IForestContext with
-        member this.Registry = self.Registry
+        member this.ViewRegistry = self.ViewRegistry
 
 type DefaultForestContext(viewRegistry: IViewRegistry) =
     inherit AbstractForestContext(viewRegistry)

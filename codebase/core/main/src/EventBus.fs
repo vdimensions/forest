@@ -23,22 +23,6 @@ module EventBus =
 
     type [<Sealed>] private T() as self = 
 
-        //[<ThreadStatic>]
-        //[<DefaultValue>]
-        //static val mutable private _staticEventBus: WeakReference
-
-        //static member Get: unit -> EventBus = 
-        //    let existing = 
-        //        match null2opt EventBus._staticEventBus with
-        //        | None -> None
-        //        | wr -> Some (downcast wr.Target : EventBus)
-        //    match existing with 
-        //    | None -> 
-        //        let eventBus = EventBus()
-        //        EventBus._staticEventBus <- WeakReference(eventBus)
-        //        eventBus
-        //    | Some eventBus -> eventBus.IncreaseUsageCount()
-
         let _subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
 
@@ -103,8 +87,7 @@ module EventBus =
             this
 
         interface IEventBus with
-            member this.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = 
-                self.Publish<'M>(sender, message, topics)
+            member this.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = self.Publish<'M>(sender, message, topics)
             member this.Subscribe x y = upcast self.Subscribe (x, y)
             member this.Unsubscribe receiver = upcast self.Unsubscribe receiver
 

@@ -3,16 +3,14 @@
 open Forest
 open Forest.Dom
 
+open System
 open System.Collections.Generic
 
 
-//[<AbstractClass>]
-//type AbstractForestEngine =
-//    interface IForestEngine with
-//        member x.Execute ctx node =
-//            ()
+module Engine =
+    type Operation =
+        | AddView of View.Path
 
-type [<Sealed>] DefaultForestEngine() = 
     let (|Dictionary|_|) (v: obj) = 
         if (v :? IDictionary<string, obj>) 
         then Some (v :?> IDictionary<string, obj>) 
@@ -27,7 +25,7 @@ type [<Sealed>] DefaultForestEngine() =
         | DomNodeType.Region -> match b with | Dictionary d -> Some(d) | _ -> None
         | _ -> None
 
-    let rec traverseRawTemplate (ctx: IForestContext) (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
+    let rec private traverseRawTemplate (ctx: IForestContext) (dom: IDomIndex) (path: Path) (arg: DomNodeType*obj) : IDomIndex =
         let mutable changedDom = dom
         match arg with
         | ViewMatcher regionsDictionary -> 
@@ -41,7 +39,7 @@ type [<Sealed>] DefaultForestEngine() =
             for entry in viewsDictionary do
                 let name = entry.Key
                 let path = path @@ name
-                let metadata = ctx.Registry.GetViewMetadata name
+                let metadata = ctx.ViewRegistry.GetViewMetadata name
                 let node = 
                     match metadata with
                     | Some m -> upcast new ViewNode(path, m): IDomNode
@@ -52,12 +50,11 @@ type [<Sealed>] DefaultForestEngine() =
             changedDom
         | _ -> changedDom
 
-    member this.CreateIndex (ctx: IForestContext, data: obj): IDomIndex = 
+
+    let CreateIndex (ctx: IForestContext, data: obj): IDomIndex = 
         traverseRawTemplate ctx (new DefaultDomIndex()) Path.Empty (DomNodeType.Region, data)
 
-    //let traverseDom
-
-    member this.Execute (cxt: IForestContext, domIndex: IDomIndex) : IDomIndex = 
+    let Execute (cxt: IForestContext, domIndex: IDomIndex) : IDomIndex = 
         for path in domIndex.Paths do
             match domIndex.[path] with
             | Some x ->
@@ -77,12 +74,19 @@ type [<Sealed>] DefaultForestEngine() =
                         ()
                     | _ -> ()
             | None -> ()
-
         Unchecked.defaultof<IDomIndex>
 
-    //let rec materializeDomIndex(ctx: IForestContex, domIndex: IDomIndex) = 
+    let Instantiate(ctx: IForestContext, path: string, viewName: string) : unit =
+        // 1. Construct/update a linear hierarchical representation of the current state.
+        //    Representation is as follows: path -> forestState
+        //       path: region/index#view
+        //       forestState: viewInstance * viewDescriptor * viewModelState
+        //
+        // 2. Detect 
 
+        let viewInstance = ctx.ViewRegistry.Resolve(viewName)
 
-module ForestEngine =
-    type Operation =
-        | AddView of View.Path
+        //let mutable vsIndex = WritableIndex<ViewState, Guid>()
+        //vsIndex.Insert
+
+        ()

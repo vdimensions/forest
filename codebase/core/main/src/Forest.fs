@@ -3,7 +3,6 @@ namespace Forest
 open Forest.Dom
 
 open System;
-open System.Collections.Generic
 
 
 type [<Interface>] IViewRegistry =
@@ -12,21 +11,27 @@ type [<Interface>] IViewRegistry =
     abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
     abstract member GetViewMetadata: name: string -> IViewDescriptor option
+
 and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
     abstract Regions: IIndex<IRegion, string> with get
     abstract ViewModel: obj
+
 and [<Interface>] IRegion = 
     abstract Views: IIndex<IView, string> with get 
     abstract Name: string with get
+
 and [<Interface>] IViewState = 
     abstract member SuspendState: Path*obj -> unit 
     abstract member SuspendState: v:IView -> unit
     abstract member ResumeState: path: Path -> obj
+
 and [<Interface>] IForestContext =
-    abstract Registry: IViewRegistry with get
+    abstract ViewRegistry: IViewRegistry with get
+
 and [<Interface>] IViewFactory = 
     abstract member Resolve: vm: IViewDescriptor -> IView
+
 /// <summary>
 /// An interface representing a Forest event bus
 /// </summary>
@@ -62,11 +67,14 @@ and [<Interface>] IEventBus =
     abstract member Publish<'M> : sender: IView * message: 'M * [<ParamArray>] topics: string[] -> unit;
     abstract member Subscribe: subscriptionHandler: ISubscriptionHandler -> topic: string -> IEventBus
     abstract member Unsubscribe : sender: IView -> IEventBus
+
 and [<Interface>] ISubscriptionHandler =
     abstract member Invoke: arg: obj -> unit;
     abstract MessageType: Type with get
     abstract Receiver: IView with get
 
+
+[<Obsolete>]
 type [<Interface>] IForestEngine =
     abstract member CreateDomIndex: ctx: IForestContext -> data: obj -> IDomIndex
     abstract member Execute: ctx: IForestContext -> node: IViewNode -> IView
@@ -74,6 +82,16 @@ type [<Interface>] IForestEngine =
 type [<Interface>] internal IForestContextAware =
     abstract member InitializeContext: ctx: IForestContext -> unit
 
-[<Flags>]
-type internal ViewChange =
-    | ViewModel // of something
+// internal functionality needed by the forest engine
+type [<Interface>] internal IViewInternal =
+    inherit IView
+    /// <summary>
+    /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
+    /// </summary>
+    /// <param name="context">
+    /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
+    /// </param>
+    abstract member Submit: ctx: IForestContext -> unit
+
+    abstract EventBus: IEventBus with get, set
+    abstract InstanceID: Guid with get, set

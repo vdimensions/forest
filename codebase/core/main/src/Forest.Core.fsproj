@@ -30,13 +30,12 @@
     <Compile Include="Forest.fs" />
     <Compile Include="View.fs" />
     <Compile Include="Region.fs" />
-    <Compile Include="DefaultViewFactory.fs" />
     <Compile Include="EventBus.fs" />
+    <Compile Include="DefaultViewFactory.fs" />
     <Compile Include="DefaultViewRegistry.fs" />
     <Compile Include="DefaultForestContext.fs" />
     <Compile Include="ForestState.fs" />
-    <Compile Include="DefaultForestEngine.fs" />
-    <Compile Include="Example.fs" />
+    <Compile Include="Engine.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
   </ItemGroup>
