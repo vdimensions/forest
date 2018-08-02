@@ -1,6 +1,8 @@
 ﻿namespace Forest
+
 open Forest
 open Forest.Dom
+
 open System
 
 module Region = 

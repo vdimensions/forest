@@ -9,7 +9,7 @@ type [<Interface>] ICommandDescriptor =
     abstract Name: string with get
     abstract ArgumentType: Type with get
 
-[<RequireQualifiedAccessAttribute>]
+[<RequireQualifiedAccess>]
 module Command = 
     // TODO: argument verification
     type [<Sealed>] Descriptor(name: string, argType: Type, mi: MethodInfo) as self = 

@@ -1,7 +1,5 @@
 namespace Forest
 
-open Dom
-
 
 type [<AbstractClass>] AbstractForestContext(viewRegistry: IViewRegistry) as self =
     //let mutable _domIndex: IDomIndex = IDomIndex

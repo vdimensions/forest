@@ -76,7 +76,7 @@ module Engine =
             | None -> ()
         Unchecked.defaultof<IDomIndex>
 
-    let Instantiate(ctx: IForestContext, path: string, viewName: string) : unit =
+    let Instantiate(ctx: IForestContext) : unit =
         // 1. Construct/update a linear hierarchical representation of the current state.
         //    Representation is as follows: path -> forestState
         //       path: region/index#view
@@ -84,7 +84,7 @@ module Engine =
         //
         // 2. Detect 
 
-        let viewInstance = ctx.ViewRegistry.Resolve(viewName)
+        //let viewInstance = ctx.ViewRegistry.Resolve(viewName)
 
         //let mutable vsIndex = WritableIndex<ViewState, Guid>()
         //vsIndex.Insert

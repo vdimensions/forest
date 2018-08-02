@@ -24,6 +24,7 @@ type [<Interface>] IDomNode =
 type [<Interface>] IViewNode = 
     inherit IDomNode
     abstract Descriptor: IViewDescriptor with get
+
 /// <summary>
 /// An interface representing the <see cref="IDomIndex">dom index</see> entry for a forest region.
 /// </summary>
@@ -94,7 +95,6 @@ type [<Sealed>] DefaultDomIndex(index: IWriteableIndex<IAutoIndex<IDomNode, stri
     override this.Count = index.Count
     override this.Paths = index.Keys
     override this.Item with get k = index.[k] |> Option.map (fun x -> upcast x)
-
 
 type [<Sealed>] internal ViewNode(path: Path, descriptor: IViewDescriptor) as self =
     member this.Descriptor with get () = descriptor
