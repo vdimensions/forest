@@ -2,6 +2,7 @@
 
 open Forest
 open Forest.Dom
+open Forest.Rop
 
 open System
 
@@ -24,7 +25,7 @@ type ForestOperation =
     | DestroyRegion of Node
     | InstantiateView of Node * string
     | InvokeCommand of Node * string * obj
-    | Multiple of ForestOperation[]
+    | Multiple of ForestOperation list
 
 type internal ForestStateData =
     | ViewState of Node * IViewDescriptor * IViewInternal
@@ -45,8 +46,10 @@ and [<Sealed>] internal ViewState(id: Node, descriptor: IViewDescriptor) =
 module State =
     type Error =
         | MultipleErrors of Error[]
-        | NoSuchView of string
+        | ViewNotFound of string
         | UnexpectedModelState of Node
+        | RegionNodeExpected of Node
+        | ViewNodeExpected of Node
 
     let (|View|_|) (node: Node) = 
         match node with 
@@ -64,6 +67,23 @@ module State =
             | _ -> None
         | Root -> Some Guid.Empty
 
+
+    type private StateData = { ModelData: WriteableIndex<obj, Node>; ViewStateData: WriteableIndex<ViewState[], Node> }
+
+    let inline private _insertViewModel (view: IViewInternal) (instanceID: Node) (sd: StateData): Result<StateData, Error> =
+        match sd.ModelData.[instanceID] with
+        | Some _ -> Failure (UnexpectedModelState instanceID)
+        | None ->
+            let newVMData = sd.ModelData.Insert instanceID view.ViewModel
+            Success { ModelData = newVMData; ViewStateData = sd.ViewStateData }
+
+    let private _insertViewState(viewState: ViewState) (node: Node) (sd: StateData): Result<StateData, Error> =
+        let vs = 
+            match sd.ViewStateData.[node] with
+            | Some states -> sd.ViewStateData.Insert node (Array.concat [| states; [|viewState|] |])
+            | None -> sd.ViewStateData.Insert node [|viewState|]
+        Success { ModelData = sd.ModelData; ViewStateData = vs }
+
     type [<Sealed>] private T =
         // transferrable across machines
         val mutable private _viewModelData: WriteableIndex<obj, Node>
@@ -72,22 +92,19 @@ module State =
 
         member this.Update (ctx: IForestContext, change: ForestOperation) =
             let inline makeViewID id = ID(DomNodeType.View, id)
-            let rec processChanges(c: ForestOperation): Result<obj, Error> =
-                let mutable result: Result<obj, Error> = Success null
+            let rec processChanges(stateData: StateData, c: ForestOperation): Result<StateData, Error> =
                 match c with
                 | Multiple changes -> 
-                    let mutable errors: Error[] = Array.empty
-                    for c in changes do 
-                        let innerResult = processChanges c
-                        match innerResult with
-                        | Success _ -> ()
-                        | Failure error ->
-                            errors <- Array.concat [|errors; [|error|]|]
-                            ()
-                    result <- match errors with
-                    | [||] -> Success null
-                    | _ -> Failure (MultipleErrors errors)
-                    ()
+                    let rec loopStates(sd, c) =
+                        match c with
+                        | [] -> Success sd
+                        | [change] -> processChanges(sd, change)
+                        | head::tail ->
+                            match processChanges(sd, head) with
+                            | Success tmp -> loopStates(tmp, tail)
+                            | Failure e -> Failure e
+                    loopStates(stateData, changes)
+
                 | InstantiateView (node, viewID) ->
                     match node with
                     | Region regionID ->
@@ -97,29 +114,19 @@ module State =
                             let viewInstance = (ctx.ViewRegistry.Resolve viewID) :?> IViewInternal
                             let viewState = ViewState(instanceID, descriptor)
                             viewState.View <- viewInstance
-                            
-                            match this._viewModelData.[instanceID] with
-                            | Some _ ->
-                                result <- Failure (UnexpectedModelState instanceID)
-                                ()
-                            | None ->
-                                this._viewModelData <- this._viewModelData.Insert instanceID viewInstance.ViewModel
-                                ()
 
-                            match result with
-                            | Success _ ->
-                                match this._viewStateData.[node] with
-                                | Some states ->
-                                     this._viewStateData <- this._viewStateData.Insert instanceID (Array.concat [| states; [|viewState|] |])
-                                | None -> 
-                                     this._viewStateData <- this._viewStateData.Insert instanceID [|viewState|]
-                            | _ -> ()
-                            ()
-                        | None ->
-                            result <- Failure (NoSuchView viewID)
-                            ()
-                        ()
-                    | _ -> ()
-                | _ -> ()
-                result
-            processChanges change
+                            Success stateData 
+                            >>= _insertViewModel viewInstance instanceID
+                            >>= _insertViewState viewState node
+                        | None -> Failure (ViewNotFound viewID)
+                    | _ -> Failure (RegionNodeExpected node)
+                | _ -> Success stateData
+                
+            match processChanges({ ModelData = this._viewModelData; ViewStateData = this._viewStateData }, change) with
+            | Success state ->
+                this._viewModelData <- state.ModelData
+                this._viewStateData <- state.ViewStateData
+                ()
+            | Failure e ->
+                // TODO exception
+                ()

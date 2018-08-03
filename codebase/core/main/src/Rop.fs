@@ -7,11 +7,11 @@ module Rop =
         | Success of 'T
         | Failure of 'E
 
-    let inline bind switchFn twoTrackInput =
-        match twoTrackInput with
+    let inline bind switchFn input =
+        match input with
         | Success s -> switchFn s
         | Failure e -> Failure e
 
-    let map singleTrackFn = bind (singleTrackFn >> Success)
+    //let map singleTrackFn = bind (singleTrackFn >> Success)
 
-    let (>>=) (fn, input) = bind fn input
+    let (>>=) input fn = bind fn input
