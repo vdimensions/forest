@@ -36,6 +36,7 @@ and [<Interface>] IViewFactory =
 /// An interface representing a Forest event bus
 /// </summary>
 and [<Interface>] IEventBus = 
+    inherit IDisposable
     /// <summary>
     /// Publishes a message trough the event bus
     /// </summary>
@@ -85,13 +86,20 @@ type [<Interface>] internal IForestContextAware =
 // internal functionality needed by the forest engine
 type [<Interface>] internal IViewInternal =
     inherit IView
-    /// <summary>
-    /// Submits the current view state to the specified <see cref="IForestContext"/> instance.
-    /// </summary>
-    /// <param name="context">
-    /// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
-    /// </param>
-    abstract member Submit: ctx: IForestContext -> unit
+    ///// <summary>
+    ///// Submits the current view state to the specified <see cref="IForestContext"/> instance.
+    ///// </summary>
+    ///// <param name="context">
+    ///// The <see cref="IForestRuntime" /> instance to manage the state of the current view.
+    ///// </param>
+    //abstract member Submit: ctx: IForestContext -> unit
 
     abstract EventBus: IEventBus with get, set
     abstract InstanceID: Guid with get, set
+
+and [<Interface>] internal IViewModelProvider =
+    abstract member GetViewModel: id: Guid -> obj
+    abstract member SetViewModel: id: Guid -> viewModel: obj -> unit
+
+and [<Interface>] internal IRegionProvider =
+    abstract member FindRegion: viewID: Guid -> regionID: Guid -> IRegion

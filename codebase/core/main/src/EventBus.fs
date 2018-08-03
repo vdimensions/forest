@@ -21,13 +21,13 @@ open System.Collections.Generic
 
 module EventBus = 
 
+    let inline subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
+        not (obj.ReferenceEquals (sender, subscription.Receiver))
+
     type [<Sealed>] private T() as self = 
 
         let _subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
-
-        let subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
-            not (obj.ReferenceEquals (sender, subscription.Receiver))
 
         member private this.InvokeMatchingSubscriptions<'M> (sender:IView, message: 'M, topicSubscriptionHandlers: IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             let inline isForMessageType (x: Type): bool = 

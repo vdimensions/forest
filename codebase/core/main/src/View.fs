@@ -88,9 +88,6 @@ module View =
             and set(v) = _instanceID <- v
 
         interface IViewInternal with
-            member this.Submit rt =
-               ()
-
             member this.EventBus 
                 with get() = _eventBus
                 and set value = _eventBus <- (isNotNull "value" value)
