@@ -18,7 +18,7 @@
   <ItemGroup>
     <Content Include="doc.txt" />
     <Compile Include="NullHandling.fs" />
-    <Compile Include="Rop.fs" />
+    <Compile Include="Result.fs" />
     <Compile Include="ComparisonAdapter.fs" />
     <Compile Include="Index.fs" />
     <Compile Include="WriteableIndex.fs" />
@@ -29,11 +29,12 @@
     <Compile Include="Dom.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="View.fs" />
-    <Compile Include="Region.fs" />
-    <Compile Include="EventBus.fs" />
     <Compile Include="DefaultViewFactory.fs" />
     <Compile Include="DefaultViewRegistry.fs" />
+    <Compile Include="Region.fs" />
+    <Compile Include="EventBus.fs" />
     <Compile Include="DefaultForestContext.fs" />
+    <Compile Include="Hierarchy.fs" />
     <Compile Include="ForestState.fs" />
     <Compile Include="Engine.fs" />
     <None Include="Script.fsx" />

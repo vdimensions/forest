@@ -4,6 +4,7 @@ open System.Collections.Generic;
 open System.Linq
 open System.Text
 
+[<Obsolete>]
 [<CustomEquality>]
 [<CustomComparison>]
 type [<Struct>] Path = 

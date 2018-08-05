@@ -52,11 +52,10 @@ module EventBus =
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
                      self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
-            | topics ->
-                for topic in topics do
+            | curratedTopics ->
+                for topic in curratedTopics do
                     match _subscriptions.TryGetValue(topic) with
-                    | (true, topicSubscriptionHandlers) -> 
-                        self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
+                    | (true, topicSubscriptionHandlers) -> self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
 
         member this.Subscribe (subscriptionHandler: ISubscriptionHandler, topic: string) : T =

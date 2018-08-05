@@ -1,14 +1,13 @@
 namespace Forest
 
-open Forest.Dom
-
 open System;
+open System.Text;
 
 
 type [<Interface>] IViewRegistry =
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
-    abstract member Resolve: viewNode: IViewNode -> IView
+    //abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
     abstract member GetViewMetadata: name: string -> IViewDescriptor option
 
@@ -18,16 +17,13 @@ and [<Interface>] IView =
     abstract ViewModel: obj
 
 and [<Interface>] IRegion = 
-    abstract Views: IIndex<IView, string> with get 
     abstract Name: string with get
-
-and [<Interface>] IViewState = 
-    abstract member SuspendState: Path*obj -> unit 
-    abstract member SuspendState: v:IView -> unit
-    abstract member ResumeState: path: Path -> obj
+    abstract Item: string -> IView with get
 
 and [<Interface>] IForestContext =
     abstract ViewRegistry: IViewRegistry with get
+    // TODO: renderers
+    // TODO: security
 
 and [<Interface>] IViewFactory = 
     abstract member Resolve: vm: IViewDescriptor -> IView
@@ -74,14 +70,6 @@ and [<Interface>] ISubscriptionHandler =
     abstract MessageType: Type with get
     abstract Receiver: IView with get
 
-
-[<Obsolete>]
-type [<Interface>] IForestEngine =
-    abstract member CreateDomIndex: ctx: IForestContext -> data: obj -> IDomIndex
-    abstract member Execute: ctx: IForestContext -> node: IViewNode -> IView
-
-type [<Interface>] internal IForestContextAware =
-    abstract member InitializeContext: ctx: IForestContext -> unit
 
 // internal functionality needed by the forest engine
 type [<Interface>] internal IViewInternal =

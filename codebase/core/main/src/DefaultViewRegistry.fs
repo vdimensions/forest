@@ -1,7 +1,6 @@
 ﻿namespace Forest
 
 open Forest
-open Forest.Dom
 
 open System
 open System.Reflection
@@ -17,7 +16,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
 
     abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
 
-    member this.InstantiateView viewMetadata = 
+    member __.InstantiateView viewMetadata = 
         let instance = factory.Resolve viewMetadata
         // TODO: Inject ViewState
         instance
@@ -28,14 +27,14 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         | CommandError ce -> (this.ResolveCommandError ce)
 
     abstract member ResolveViewError: ve: View.Error -> Exception
-    default this.ResolveViewError ve =
+    default __.ResolveViewError ve =
         match ve with
         | View.Error.ViewAttributeMissing t -> upcast View.ViewAttributeMissingException(t)
         | View.Error.ViewTypeIsAbstract t -> upcast View.ViewTypeIsAbstractException(t)
         | View.Error.NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
 
     abstract member ResolveCommandError: ce: Command.Error -> Exception
-    default this.ResolveCommandError ce =
+    default __.ResolveCommandError ce =
         // TODO
         match ce with
         | Command.Error.MoreThanOneArgument mi -> upcast InvalidOperationException()
@@ -46,38 +45,33 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         match null2opt t with
         | None -> nullArg "t"
         | _ -> 
-            let metadata = this.GetViewMetadata t
-            match metadata with
-            | Success metadata -> storage.[metadata.Name] <- metadata
-            | Failure e -> raise (e |> this.ResolveError)
+            match this.GetViewMetadata t with
+            | Ok metadata -> storage.[metadata.Name] <- metadata
+            | Error e -> raise (e |> this.ResolveError)
             upcast this: IViewRegistry
     member this.Register<'T when 'T:> IView> () = this.Register typeof<'T>
 
-    member this.Resolve (viewNode: IViewNode) = 
-        match null2opt viewNode with | None -> nullArg "viewNode" | _ -> ()
-        this.Resolve (viewNode.Name)
     member this.Resolve (name: string) = 
         match null2opt name with | None -> nullArg "name" | _ -> ()
-        let viewMetadataResult = storage.TryGetValue name
-        match viewMetadataResult with 
+        match storage.TryGetValue name with 
         | (false, _) -> invalidArg "name" "No such view was registered" 
         | (true, viewMetadata) -> viewMetadata |> this.InstantiateView 
 
-    member this.GetViewMetadata name = 
+    member this.GetViewDescriptor name = 
         match (storage.TryGetValue name) with
         | (true, metadata) -> Some (upcast metadata : IViewDescriptor)
         | (false, _) -> None  
             
     interface IViewRegistry with
-        member x.Register t = this.Register t
-        member x.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member x.Resolve (name: string) = this.Resolve name
-        member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
-        member x.GetViewMetadata name = this.GetViewMetadata name
+        member __.Register t = this.Register t
+        member __.Register<'T when 'T:> IView> () = this.Register<'T>()
+        member __.Resolve (name: string) = this.Resolve name
+        //member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
+        member __.GetViewMetadata name = this.GetViewDescriptor name
 
 type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) = 
     inherit AbstractViewRegistry(factory)
-    override this.GetViewMetadata t =
+    override __.GetViewMetadata t =
         match null2opt t with | None -> nullArg "t" | _ -> ()
         let inline isOfType t obj = (obj.GetType() = t)
         let inline getAttributes(mi: 'M when 'M :> MemberInfo) : seq<'a> =
@@ -107,15 +101,15 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                 let inline createCommandMetadata (a: seq<CommandAttribute>, mi: MethodInfo) =
                     let parameters = mi.GetParameters()
                     match mi with
-                    | mi when mi.ReturnType <> typeof<Void> -> Failure (Command.Error.NonVoidReturnType(mi))
-                    | mi when parameters.Length > 1 -> Failure (Command.Error.MoreThanOneArgument(mi))
+                    | mi when mi.ReturnType <> typeof<Void> -> Result.Error (Command.Error.NonVoidReturnType(mi))
+                    | mi when parameters.Length > 1 -> Result.Error (Command.Error.MoreThanOneArgument(mi))
                     | _ -> 
                         let parameterType = 
                             match parameters with
                             | [|param|] -> param.ParameterType
                             | _ -> typeof<Void>
                         let metadata = a |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi))
-                        Success (metadata)
+                        Ok (metadata)
 
                 let autowireCommands = attr.AutowireCommands
                 let commandMetadata = 
@@ -132,7 +126,7 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                             if (hasCommandAttrs) then 
                                 let p = mi.GetParameters()
                                 let result = [Command.Descriptor(mi.Name, p.[0].ParameterType, mi)] |> Seq.map id
-                                Some (Success result)
+                                Some (Ok result)
                             else None                            
                         getMethods
                         >> Seq.filter isCommandMethod                            
@@ -142,8 +136,8 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                 let name = attr.Name
                 let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
                 let commandMetadataResults = commandMetadata(flags)
-                // helper function to collect the errors that may have occured when looking commands up
-                let inline commandLookupFaulures a = match a with | Failure b -> Some b | _ -> None
+                // helper function to collect the errors that may have occurred when looking commands up
+                let inline commandLookupFaulures a = match a with | Result.Error b -> Some b | _ -> None
                 // get the list of command lookup errors
                 let failedCommandLookups = 
                     commandMetadataResults 
@@ -154,15 +148,15 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                 | [||] -> 
                     let inline successesSelector a = 
                         match a with 
-                        | Success data -> Some data 
-                        | Failure _ -> None
+                        | Result.Ok data -> Some data 
+                        | Result.Error _ -> None
                     let metadataArray = 
                         commandMetadataResults 
                         |> Seq.map successesSelector
                         |> Seq.choose id
                         |> Seq.concat
                         |> Seq.toArray
-                    Success (View.Descriptor(name, t, viewModelType, metadataArray))
-                | _ -> Failure ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
-            | None -> Failure ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
-        | None -> Failure ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)
+                    Ok (View.Descriptor(name, t, viewModelType, metadataArray))
+                | _ -> Result.Error ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
+            | None -> Result.Error ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
+        | None -> Result.Error ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)
