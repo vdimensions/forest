@@ -1,7 +1,6 @@
 namespace Forest
 
 open System;
-open System.Text;
 
 
 type [<Interface>] IViewRegistry =

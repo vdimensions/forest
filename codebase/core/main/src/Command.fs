@@ -11,15 +11,15 @@ type [<Interface>] ICommandDescriptor =
 
 [<RequireQualifiedAccess>]
 module Command = 
-    // TODO: argument verification
-    type [<Sealed>] Descriptor(name: string, argType: Type, mi: MethodInfo) as self = 
-        member this.Name with get() = name
-        member this.ArgumentType with get() = argType
-        interface ICommandDescriptor with
-            member this.Name = self.Name
-            member this.ArgumentType = self.ArgumentType
-
     type Error =
         | NonVoidReturnType of MethodInfo
         | MoreThanOneArgument of MethodInfo
-        | MultipleErrors of Error[]
+        | MultipleErrors of Error list
+
+    // TODO: argument verification
+    type [<Sealed>] Descriptor(name: string, argType: Type, mi: MethodInfo) as self = 
+        member __.Name with get() = name
+        member __.ArgumentType with get() = argType
+        interface ICommandDescriptor with
+            member __.Name with get() = self.Name
+            member __.ArgumentType with get() = self.ArgumentType

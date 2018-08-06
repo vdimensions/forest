@@ -3,18 +3,28 @@
 open Forest
 
 open System
-open System.Collections.Generic
-open System.Linq
 
 
 type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
     abstract ViewModel: 'T with get, set
 
+type AbstractViewException(message: string, inner: Exception) =
+    inherit Exception(isNotNull "message" message, inner)
+    new (message: string) = AbstractViewException(message, null)
+
+type ViewAttributeMissingException(viewType: Type, inner: Exception) =
+    inherit AbstractViewException(String.Format("The type `{0}` must be annotated with a `{1}`", viewType.FullName, typeof<ViewAttribute>.FullName), inner)
+    new (viewType: Type) = ViewAttributeMissingException((isNotNull "viewType" viewType), null)
+
+type ViewTypeIsAbstractException(viewType: Type, inner: Exception) =
+    inherit AbstractViewException(String.Format("Cannot instantiate view from type `{0}` because it is an interface or an abstract class.", (isNotNull "viewType" viewType).FullName), inner)
+    new (viewType: Type) = ViewTypeIsAbstractException((isNotNull "viewType" viewType), null)
+
 [<RequireQualifiedAccessAttribute>]
 module View =
     // TODO: argument verification
-    type [<Sealed>] Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IEnumerable<Command.Descriptor>) as self = 
+    type [<Sealed>] Descriptor(name: string, viewType: Type, viewModelType: Type, commands: IIndex<ICommandDescriptor, string>) as self = 
         member __.Name with get() = name
         member __.ViewType with get() = viewType
         member __.ViewModelType with get() = viewModelType
@@ -23,24 +33,12 @@ module View =
             member __.Name = self.Name
             member __.ViewType = self.ViewType
             member __.ViewModelType = self.ViewModelType
-            member __.Commands = self.Commands.Cast<ICommandDescriptor>()
+            member __.Commands = self.Commands
 
     type Error = 
         | ViewAttributeMissing of Type
         | ViewTypeIsAbstract of Type
         | NonGenericView of Type
-
-    type AbstractViewException(message: string, inner: Exception) =
-        inherit Exception(isNotNull "message" message, inner)
-        new (message: string) = AbstractViewException(message, null)
-
-    type ViewAttributeMissingException(viewType: Type, inner: Exception) =
-        inherit AbstractViewException(String.Format("The type `{0}` must be annotated with a `{1}`", viewType.FullName, typeof<ViewAttribute>.FullName), inner)
-        new (viewType: Type) = ViewAttributeMissingException((isNotNull "viewType" viewType), null)
-
-    type ViewTypeIsAbstractException(viewType: Type, inner: Exception) =
-        inherit AbstractViewException(String.Format("Cannot instantiate view from type `{0}` because it is an interface or an abstract class.", (isNotNull "viewType" viewType).FullName), inner)
-        new (viewType: Type) = ViewTypeIsAbstractException((isNotNull "viewType" viewType), null)
 
     type [<AbstractClass>] Base<'T when 'T: (new: unit -> 'T)> () as self =
         let mutable _viewModel : 'T = new 'T()

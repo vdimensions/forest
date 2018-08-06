@@ -14,5 +14,5 @@ type [<Interface>] IViewDescriptor =
     abstract Name: string with get
     abstract ViewType: Type with get
     abstract ViewModelType: Type with get
-    abstract Commands: IEnumerable<ICommandDescriptor> with get
+    abstract Commands: IIndex<ICommandDescriptor, string> with get
 

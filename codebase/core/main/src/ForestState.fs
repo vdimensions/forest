@@ -33,6 +33,7 @@ module State =
         | UnknownOperation of operation: ForestOperation
         | ExpectedViewKey of key: Guid
         | HierarchyError
+        | CommandError of innerError: Command.Error
 
     type StateChange =
         | ViewAdded of ViewID
@@ -43,7 +44,6 @@ module State =
         Hierarchy: Hierarchy.State;
         ViewModels: Map<Guid, obj>;
         ViewStates: Map<Guid, ViewState>;
-        ViewInstances: Map<Guid, IViewInternal>;
         ChangeLog: StateChange Set;
     }
     // -----------------------------------------
@@ -64,44 +64,90 @@ module State =
 
                 let vms = stateData.ViewModels.Add (guid, vi.ViewModel)
                 let vss = stateData.ViewStates.Add (guid, ViewState(guid, vd, vi))
-                let vis = stateData.ViewInstances.Add (guid, vi)
                 let clg = stateData.ChangeLog.Add (ViewAdded viewID)
-                Ok ({ Hierarchy = hs; ViewModels = vms; ViewStates = vss; ViewInstances = vis; ChangeLog = clg })
+                Ok ({ Hierarchy = hs; ViewModels = vms; ViewStates = vss; ChangeLog = clg })
             | None -> Error (ViewNotFound viewName)
         | None -> (Error (ExpectedViewKey guid))
 
-    let private _updateViewModel (guid:Guid) (vm: obj) (sd: StateData): Result<StateData, Error> =
+    let private _updateViewModel (guid: Guid) (vm: obj) (sd: StateData): Result<StateData, Error> =
         match (Hierarchy.getViewID guid sd.Hierarchy) with
         | Some viewID ->
             let vm = sd.ViewModels.Remove(guid).Add(guid, vm)
             let cl = sd.ChangeLog.Add (ViewNeedsRefresh viewID)
-            Ok { Hierarchy = sd.Hierarchy; ViewModels = vm; ViewStates = sd.ViewStates; ViewInstances = sd.ViewInstances; ChangeLog = cl }
+            Ok { Hierarchy = sd.Hierarchy; ViewModels = vm; ViewStates = sd.ViewStates; ChangeLog = cl }
         | None -> (Error (ExpectedViewKey guid))
+
+    let private _destroyView (guid: Guid) (sd: StateData): Result<StateData, Error> =
+        match (Hierarchy.getViewID guid sd.Hierarchy) with
+        | Some viewID ->
+            match Hierarchy.remove (Hierarchy.Key.ViewKey viewID) sd.Hierarchy with
+            | Ok (hierarchyUpdateResult) ->
+                let (h, guids) = hierarchyUpdateResult
+                let mutable (vm, vs, cl) = (sd.ViewModels, sd.ViewStates, sd.ChangeLog)
+                for removedGuid in guids do
+                    vm <- vm.Remove removedGuid
+                    vs <- vs.Remove removedGuid
+                    cl <- 
+                        match Hierarchy.getViewID removedGuid sd.Hierarchy with
+                        | Some removedViewID -> sd.ChangeLog.Add (ViewDestroyed removedViewID)
+                        | None -> cl
+                Ok { Hierarchy = h; ViewModels = vm; ViewStates = vs; ChangeLog = cl }
+            | Error e -> Error HierarchyError // TODO map error
+        | None -> (Error (ExpectedViewKey guid))
+
+    let private _destroyRegion (guid: Guid) (sd: StateData): Result<StateData, Error> =
+        match (Hierarchy.getRegionID guid sd.Hierarchy) with
+        | Some regionID ->
+            match Hierarchy.remove (Hierarchy.Key.RegionKey regionID) sd.Hierarchy with
+            | Ok (hierarchyUpdateResult) ->
+                let (h, guids) = hierarchyUpdateResult
+                let mutable (vm, vs, cl) = (sd.ViewModels, sd.ViewStates, sd.ChangeLog)
+                for removedGuid in guids do
+                    vm <- vm.Remove removedGuid
+                    vs <- vs.Remove removedGuid
+                    cl <- 
+                        match Hierarchy.getViewID removedGuid sd.Hierarchy with
+                        | Some removedViewID -> sd.ChangeLog.Add (ViewDestroyed removedViewID)
+                        | None -> cl
+                Ok { Hierarchy = h; ViewModels = vm; ViewStates = vs; ChangeLog = cl }
+            | Error e -> Error HierarchyError // TODO map error
+        | None -> (Error (ExpectedViewKey guid))
+
+    //let private _executCommand (guid: Guid) (name: string) (sd: StateData): Result<StateData, Error> =
+    //    // TODO: need to handle a special case with command altering the hierarchy -- adding or deleting a view
+    //    match sd.ViewStates.TryFind guid with
+    //    | Some vs ->
+    //        match vs.Descriptor.Commands.TryFind name with
+    //        | Some cmd ->
+    //            // TODO
+    //        | None -> Error (CommandNotFound(Unchecked.defaultof<ViewID>, name))
+    //    | None -> (Error (ExpectedViewKey guid))
+
     // -----------------------------------------
 
-    let rec private _processChanges(ctx: IForestContext) (eventBus: IEventBus) (operation: ForestOperation) (stateData: StateData) =
+    let rec private _processChanges (ctx: IForestContext) (eventBus: IEventBus) (operation: ForestOperation) (stateData: StateData) =
         match operation with
         | Multiple operations -> _loopStates ctx eventBus operations stateData
         | InstantiateView (region, viewName) ->
             let vk = Hierarchy.Key.ViewKey (ViewID(region, -1, viewName))
             Ok stateData.Hierarchy
-            >>>= (Hierarchy.add vk, _mapHierarchyError)
-            >>= _addViewState ctx eventBus stateData
+            |><| (Hierarchy.add vk, _mapHierarchyError)
+            |>| _addViewState ctx eventBus stateData
         | UpdateViewModel (viewID, vm) -> _updateViewModel viewID vm stateData
-        //| DestroyView viewID -> Ok (stateData |> _destroyViews [viewID])
-        //| DestroyRegion regionID -> Ok (stateData |> _destroyRegions [regionID])
+        | DestroyView viewID -> _destroyView viewID stateData
+        | DestroyRegion regionID -> _destroyRegion regionID stateData
         //| InvokeCommand (viewID, commandName, arg) -> Ok stateData >>= _executeCommand viewID commandName arg
         | _ -> Error (UnknownOperation operation)
-    and private _loopStates c eb ops sd =
+    and private _loopStates ctx eventBus ops stateData =
         match ops with
-        | [] -> Ok sd
-        | [op] -> _processChanges c eb op sd
+        | [] -> Ok stateData
+        | [op] -> _processChanges ctx eventBus op stateData
         | head::tail ->
-            Ok sd
-            >>= _processChanges c eb head
-            >>= _loopStates c eb tail
+            Ok stateData
+            |>| _processChanges ctx eventBus head
+            |>| _loopStates ctx eventBus tail
 
-    type [<Sealed>] private T =
+    type [<Sealed>] private T  =
         // transferable across machines
         val mutable private _hierarchy: Hierarchy.State
         // transferable across machines
@@ -111,26 +157,37 @@ module State =
 
         // non-transferable across machines
         val mutable private _viewStates:  Map<Guid, ViewState>
-        // non-transferable across machines
-        val mutable private _viewInstances:  Map<Guid, IViewInternal>
 
         member this.Update (ctx: IForestContext, operation: ForestOperation) =
+            let getState () = 
+                { 
+                    Hierarchy = this._hierarchy; 
+                    ViewModels = this._viewModels; 
+                    ViewStates = this._viewStates; 
+                    ChangeLog = this._changeLog;
+                }
+            let swapState sd =
+                this._hierarchy <- sd.Hierarchy
+                this._viewModels <- sd.ViewModels
+                this._viewStates <- sd.ViewStates
+                this._changeLog <- sd.ChangeLog
+                getState ()
+
             let sd = { 
                 Hierarchy = this._hierarchy; 
                 ViewModels = this._viewModels; 
                 ViewStates = this._viewStates; 
-                ViewInstances = this._viewInstances; 
                 ChangeLog = this._changeLog;
             }
             use eventBus = EventBus.Create()
             match _processChanges ctx eventBus operation sd with
-            | Ok state ->
-                this._hierarchy <- state.Hierarchy
-                this._viewModels <- state.ViewModels
-                this._viewStates <- state.ViewStates
-                this._viewInstances <- state.ViewInstances
-                this._changeLog <- state.ChangeLog
-                ()
+            | Ok state -> swapState state |> ignore
             | Error e ->
                 // TODO exception
                 ()
+        interface IViewModelProvider with
+            member this.GetViewModel guid = 
+                this._viewModels.[guid]
+            member this.SetViewModel guid value = 
+                // TODO: context??
+                this.Update(Unchecked.defaultof<IForestContext>, UpdateViewModel(guid, value))

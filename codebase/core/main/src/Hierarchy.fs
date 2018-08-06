@@ -143,8 +143,8 @@ module internal Hierarchy =
         match state.PrimaryMap.TryFind key with
         | Some guid ->
             Ok (state, List.Empty)
-            >>= _removeEntriesFor guid
-            >>= _compensateIndexGap key
+            |>| _removeEntriesFor guid
+            |>| _compensateIndexGap key
         | None -> Error (GuidNotFound(key))
 
     let getGuid (key: Key) (state: State) : Result<Guid, Error> =

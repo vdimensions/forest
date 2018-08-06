@@ -7,7 +7,7 @@ open System.Reflection
 
 
 type [<Sealed>] DefaultViewFactory() as self = 
-    member this.Resolve (vd : IViewDescriptor) : IView = 
+    member __.Resolve (vd : IViewDescriptor) : IView = 
         let flags = BindingFlags.Public|||BindingFlags.Instance
         let constructors = 
             vd.ViewType.GetConstructors(flags) 
@@ -17,5 +17,5 @@ type [<Sealed>] DefaultViewFactory() as self =
         | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable construcrtor", vd.ViewType.FullName)))
         | head::_ -> downcast head.Invoke([||]) : IView
         
-    interface IViewFactory with member this.Resolve m = self.Resolve m
+    interface IViewFactory with member __.Resolve m = self.Resolve m
 

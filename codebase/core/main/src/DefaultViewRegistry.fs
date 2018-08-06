@@ -17,9 +17,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
     abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
 
     member __.InstantiateView viewMetadata = 
-        let instance = factory.Resolve viewMetadata
-        // TODO: Inject ViewState
-        instance
+        factory.Resolve viewMetadata
 
     member this.ResolveError (e: ViewRegistryError): Exception = 
         match e with
@@ -29,8 +27,8 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
     abstract member ResolveViewError: ve: View.Error -> Exception
     default __.ResolveViewError ve =
         match ve with
-        | View.Error.ViewAttributeMissing t -> upcast View.ViewAttributeMissingException(t)
-        | View.Error.ViewTypeIsAbstract t -> upcast View.ViewTypeIsAbstractException(t)
+        | View.Error.ViewAttributeMissing t -> upcast ViewAttributeMissingException(t)
+        | View.Error.ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t)
         | View.Error.NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
 
     abstract member ResolveCommandError: ce: Command.Error -> Exception
@@ -57,7 +55,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         | (false, _) -> invalidArg "name" "No such view was registered" 
         | (true, viewMetadata) -> viewMetadata |> this.InstantiateView 
 
-    member this.GetViewDescriptor name = 
+    member __.GetViewDescriptor name = 
         match (storage.TryGetValue name) with
         | (true, metadata) -> Some (upcast metadata : IViewDescriptor)
         | (false, _) -> None  
@@ -101,15 +99,15 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                 let inline createCommandMetadata (a: seq<CommandAttribute>, mi: MethodInfo) =
                     let parameters = mi.GetParameters()
                     match mi with
-                    | mi when mi.ReturnType <> typeof<Void> -> Result.Error (Command.Error.NonVoidReturnType(mi))
-                    | mi when parameters.Length > 1 -> Result.Error (Command.Error.MoreThanOneArgument(mi))
+                    | mi when mi.ReturnType <> typeof<Void> -> Error (Command.Error.NonVoidReturnType(mi))
+                    | mi when parameters.Length > 1 -> Error (Command.Error.MoreThanOneArgument(mi))
                     | _ -> 
-                        let parameterType = 
-                            match parameters with
-                            | [|param|] -> param.ParameterType
-                            | _ -> typeof<Void>
-                        let metadata = a |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi))
-                        Ok (metadata)
+                    let parameterType = 
+                        match parameters with
+                        | [|param|] -> param.ParameterType
+                        | _ -> typeof<Void>
+                    let metadata = a |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi))
+                    Ok (metadata)
 
                 let autowireCommands = attr.AutowireCommands
                 let commandMetadata = 
@@ -137,26 +135,28 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                 let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
                 let commandMetadataResults = commandMetadata(flags)
                 // helper function to collect the errors that may have occurred when looking commands up
-                let inline commandLookupFaulures a = match a with | Result.Error b -> Some b | _ -> None
+                let inline commandLookupFaulures a = match a with | Error b -> Some b | _ -> None
                 // get the list of command lookup errors
                 let failedCommandLookups = 
                     commandMetadataResults 
                     |> Seq.choose commandLookupFaulures
-                    |> Seq.toArray
+                    |> Seq.toList
 
                 match failedCommandLookups with
-                | [||] -> 
+                | [] -> 
                     let inline successesSelector a = 
                         match a with 
-                        | Result.Ok data -> Some data 
-                        | Result.Error _ -> None
-                    let metadataArray = 
+                        | Ok data -> Some data 
+                        | Error _ -> None
+                    let folder (m: WriteableIndex<ICommandDescriptor, string>) (e: ICommandDescriptor) : WriteableIndex<ICommandDescriptor, string> = 
+                        m.Insert e.Name e
+                    let commandsIndex = 
                         commandMetadataResults 
                         |> Seq.map successesSelector
                         |> Seq.choose id
                         |> Seq.concat
-                        |> Seq.toArray
-                    Ok (View.Descriptor(name, t, viewModelType, metadataArray))
-                | _ -> Result.Error ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
-            | None -> Result.Error ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
-        | None -> Result.Error ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)
+                        |> Seq.fold folder (new WriteableIndex<ICommandDescriptor, string>(StringComparer.Ordinal, StringComparer.Ordinal))
+                    Ok (View.Descriptor(name, t, viewModelType, commandsIndex))
+                | _ -> Error ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
+            | None -> Error ((View.Error.NonGenericView t) |> ViewRegistryError.ViewError)
+        | None -> Error ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)

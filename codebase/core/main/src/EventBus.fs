@@ -14,7 +14,9 @@
 // limitations under the License.
 //
 namespace Forest.Events
+
 open Forest
+
 open System
 open System.Collections.Generic
 
@@ -24,28 +26,28 @@ module EventBus =
     let inline subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
 
+    let inline isForMessageType<'M> (x: Type): bool = 
+        let messageType = typeof<'M>
+        messageType = x || x.IsAssignableFrom(messageType)
+
     type [<Sealed>] private T() as self = 
 
         let _subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
 
-        member private this.InvokeMatchingSubscriptions<'M> (sender:IView, message: 'M, topicSubscriptionHandlers: IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
-            let inline isForMessageType (x: Type): bool = 
-                let messageType = typeof<'M>
-                messageType = x || x.IsAssignableFrom(messageType)
-   
+        member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message: 'M, topicSubscriptionHandlers: IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             let subscriptions =  
                 topicSubscriptionHandlers.Keys 
-                |> Seq.filter isForMessageType
+                |> Seq.filter isForMessageType<'M>
                 |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (subscribersFilter sender))
 
             for subscription in subscriptions do subscription.Invoke message
 
-        member this.Dispose (disposing: bool): unit =
+        member __.Dispose (disposing: bool): unit =
             for value in _subscriptions.Values do value.Clear()
             _subscriptions.Clear()
 
-        member this.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit =
+        member __.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit =
             match null2opt sender with | None -> nullArg "sender" | _ -> ()
             match null2opt message with | None -> nullArg "message" | _ -> ()
             match topics with
@@ -86,10 +88,10 @@ module EventBus =
             this
 
         interface IEventBus with
-            member this.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = self.Publish<'M>(sender, message, topics)
-            member this.Subscribe x y = upcast self.Subscribe (x, y)
-            member this.Unsubscribe receiver = upcast self.Unsubscribe receiver
+            member __.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = self.Publish<'M>(sender, message, topics)
+            member __.Subscribe x y = upcast self.Subscribe (x, y)
+            member __.Unsubscribe receiver = upcast self.Unsubscribe receiver
 
-        interface IDisposable with member this.Dispose () : unit = self.Dispose(true)
+        interface IDisposable with member __.Dispose () : unit = self.Dispose(true)
 
     let Create () : IEventBus = upcast new T()
