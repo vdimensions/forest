@@ -47,7 +47,7 @@ module State =
         ChangeLog: StateChange Set;
     }
     // -----------------------------------------
-    let private _mapHierarchyError (he: Hierarchy.Error) =
+    let inline private _mapHierarchyError (he: Hierarchy.Error) =
         HierarchyError
 
     let private _addViewState (ctx: IForestContext) (evb: IEventBus) (stateData: StateData) (h: Hierarchy.State*Guid): Result<StateData, Error> =
@@ -92,7 +92,7 @@ module State =
                         | Some removedViewID -> sd.ChangeLog.Add (ViewDestroyed removedViewID)
                         | None -> cl
                 Ok { Hierarchy = h; ViewModels = vm; ViewStates = vs; ChangeLog = cl }
-            | Error e -> Error HierarchyError // TODO map error
+            | Error e -> e |> _mapHierarchyError |> Error // TODO map error
         | None -> (Error (ExpectedViewKey guid))
 
     let private _destroyRegion (guid: Guid) (sd: StateData): Result<StateData, Error> =
@@ -110,7 +110,7 @@ module State =
                         | Some removedViewID -> sd.ChangeLog.Add (ViewDestroyed removedViewID)
                         | None -> cl
                 Ok { Hierarchy = h; ViewModels = vm; ViewStates = vs; ChangeLog = cl }
-            | Error e -> Error HierarchyError // TODO map error
+            | Error e -> e |> _mapHierarchyError |> Error // TODO map error
         | None -> (Error (ExpectedViewKey guid))
 
     //let private _executCommand (guid: Guid) (name: string) (sd: StateData): Result<StateData, Error> =

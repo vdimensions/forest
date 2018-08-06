@@ -3,10 +3,20 @@ namespace Forest
 open System;
 
 
-type [<Interface>] IViewRegistry =
+type [<Interface>] IViewDescriptor = 
+    abstract Name: string with get
+    abstract ViewType: Type with get
+    abstract ViewModelType: Type with get
+    abstract Commands: IIndex<ICommandDescriptor, string> with get
+
+and [<Interface>] ICommandDescriptor = 
+    abstract Name: string with get
+    abstract ArgumentType: Type with get
+    abstract member Invoke: arg: obj -> v:IView -> unit
+
+and [<Interface>] IViewRegistry =
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
-    //abstract member Resolve: viewNode: IViewNode -> IView
     abstract member Resolve: name: string -> IView
     abstract member GetViewMetadata: name: string -> IViewDescriptor option
 

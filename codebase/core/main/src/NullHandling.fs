@@ -2,6 +2,8 @@
 
 [<AutoOpen>]
 module internal NullHandling =
-    let inline null2opt arg = if obj.ReferenceEquals(arg, null) then None else Some arg
+    let inline null2opt arg = if System.Object.ReferenceEquals(arg, null) then None else Some arg
 
-    let inline isNotNull argName obj = match null2opt obj with | Some x -> x | None -> nullArg argName 
+    let inline isNotNull argName arg = if System.Object.ReferenceEquals(arg, null) then nullArg argName else arg 
+
+    let inline (|NotNull|) argName arg = arg |> isNotNull argName

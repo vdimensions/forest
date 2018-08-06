@@ -22,14 +22,10 @@
     <Compile Include="ComparisonAdapter.fs" />
     <Compile Include="Index.fs" />
     <Compile Include="WriteableIndex.fs" />
-    <Compile Include="Path.fs" />
-    <Compile Include="ForestNodeAttribute.fs" />
-    <Compile Include="Command.fs" />
-    <Compile Include="ViewAttribute.fs" />
-    <Compile Include="Dom.fs" />
+    <Compile Include="Attributes.fs" />
     <Compile Include="Forest.fs" />
+    <Compile Include="Command.fs" />
     <Compile Include="View.fs" />
-    <Compile Include="DefaultViewFactory.fs" />
     <Compile Include="DefaultViewRegistry.fs" />
     <Compile Include="Region.fs" />
     <Compile Include="EventBus.fs" />

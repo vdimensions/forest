@@ -1,6 +1,6 @@
 ﻿namespace Forest
+
 open System.Collections.Generic
-open System.Linq
 
 
 type [<Sealed>] WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T>, eqComparer : IEqualityComparer<'TKey>, comparer: IComparer<'TKey>) =
@@ -19,12 +19,9 @@ type [<Sealed>] WriteableIndex<'T, 'TKey>(map : Map<ComparisonAdapter<'TKey>, 'T
     override __.Count = map.Count
     override __.Keys = 
         let keys = (upcast map: IDictionary<ComparisonAdapter<'TKey>, 'T>).Keys
-        let keySelector = (fun (k: ComparisonAdapter<'TKey>) -> k.Value)
-        keys.Select(keySelector)
-    override __.Item 
-        with get k = 
-            let key = new ComparisonAdapter<'TKey>(k, comparer, eqComparer)
-            map.[key]
+        let inline keySelector (k: ComparisonAdapter<'TKey>) = k.Value
+        keys |> Seq.map keySelector
+    override __.Item with get k = map.[new ComparisonAdapter<'TKey>(k, comparer, eqComparer)]
 
 type [<Sealed>] AutoIndex<'T, 'TKey>(keyFn: 'T -> 'TKey, ix: IWriteableIndex<'T, 'TKey>) =
     inherit IndexProxy<'T, 'TKey, AutoIndex<'T, 'TKey>>(ix, (fun x -> new AutoIndex<'T, 'TKey>(keyFn, x)))
