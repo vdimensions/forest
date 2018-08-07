@@ -47,6 +47,26 @@ module State =
         ChangeLog: StateChange Set;
     }
     // -----------------------------------------
+    type private MutableState = 
+        let mutable _hierarchy: Hierarchy.State
+        let mutable _viewModels: Map<Guid, obj>
+        let mutable _viewStates: Map<Guid, ViewState>
+        let mutable _changeLog: StateChange Set
+
+        // when forest engine kicks in then this is what must happen:
+        // 1 - the engine initially keeps an immutable state of the current views and viewmodels
+        // 2 - the engine consults the hierarchy and creates a mutable state instance
+        // 3 - during step 2 the engine will instantiate any missing view instances (if sync-ed from another machine)
+        // 4 - if step 3 yields a collection of re-instantiated views, their respective resume method is called
+        // 5 - the engine proceeds with executing the necessary commands or hierarchy changes
+        // 6 - during step 5 the engine records a special change log collection
+        // 7 - when the processing finishes with success, the engine usess the changelog from step 6 so that
+        //     the changes are translated to the immutable state
+        // 8 - when step 7 completes, the engine raises an event with the changelog - 
+        //     this is the hooking point for replicating the changelog on another machine
+
+
+
     let inline private _mapHierarchyError (he: Hierarchy.Error) =
         HierarchyError
 
