@@ -9,38 +9,38 @@ type [<Interface>] IViewDescriptor =
     abstract ViewModelType: Type with get
     abstract Commands: IIndex<ICommandDescriptor, string> with get
 
-and [<Interface>] ICommandDescriptor = 
+ and [<Interface>] ICommandDescriptor = 
     abstract Name: string with get
     abstract ArgumentType: Type with get
     abstract member Invoke: arg: obj -> v:IView -> unit
 
-and [<Interface>] IViewRegistry =
+ and [<Interface>] IViewRegistry =
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: name: string -> IView
     abstract member GetViewMetadata: name: string -> IViewDescriptor option
 
-and [<Interface>] IView =
+ and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
     abstract Regions: IIndex<IRegion, string> with get
     abstract ViewModel: obj
 
-and [<Interface>] IRegion = 
+ and [<Interface>] IRegion = 
     abstract Name: string with get
     abstract Item: string -> IView with get
 
-and [<Interface>] IForestContext =
+ and [<Interface>] IForestContext =
     abstract ViewRegistry: IViewRegistry with get
     // TODO: renderers
     // TODO: security
 
-and [<Interface>] IViewFactory = 
+ and [<Interface>] IViewFactory = 
     abstract member Resolve: vm: IViewDescriptor -> IView
 
 /// <summary>
 /// An interface representing a Forest event bus
 /// </summary>
-and [<Interface>] IEventBus = 
+ and [<Interface>] IEventBus = 
     inherit IDisposable
     /// <summary>
     /// Publishes a message trough the event bus
@@ -74,7 +74,7 @@ and [<Interface>] IEventBus =
     abstract member Subscribe: subscriptionHandler: ISubscriptionHandler -> topic: string -> IEventBus
     abstract member Unsubscribe : sender: IView -> IEventBus
 
-and [<Interface>] ISubscriptionHandler =
+ and [<Interface>] ISubscriptionHandler =
     abstract member Invoke: arg: obj -> unit;
     abstract MessageType: Type with get
     abstract Receiver: IView with get
@@ -91,12 +91,14 @@ type [<Interface>] internal IViewInternal =
     ///// </param>
     //abstract member Submit: ctx: IForestContext -> unit
 
+    abstract member ResumeState: obj -> unit
+
     abstract EventBus: IEventBus with get, set
     abstract InstanceID: Guid with get, set
 
-and [<Interface>] internal IViewModelProvider =
+  and [<Interface>] internal IViewModelProvider =
     abstract member GetViewModel: id: Guid -> obj
     abstract member SetViewModel: id: Guid -> viewModel: obj -> unit
 
-and [<Interface>] internal IRegionProvider =
+  and [<Interface>] internal IRegionProvider =
     abstract member FindRegion: viewID: Guid -> regionID: Guid -> IRegion

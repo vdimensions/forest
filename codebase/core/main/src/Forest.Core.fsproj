@@ -31,7 +31,7 @@
     <Compile Include="EventBus.fs" />
     <Compile Include="DefaultForestContext.fs" />
     <Compile Include="Hierarchy.fs" />
-    <Compile Include="ForestState.fs" />
+    <Compile Include="State.fs" />
     <Compile Include="Engine.fs" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />

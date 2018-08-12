@@ -27,12 +27,15 @@ type RegionID = Root | Region of data: ViewID * string
 [<RequireQualifiedAccess>]
 module internal Hierarchy =
 
+    [<RequireQualifiedAccess>]
     type Key = 
         | ViewKey of ViewID//*Guid 
         | RegionKey of RegionID//*Guid
 
+    [<RequireQualifiedAccess>]
     type Error =
         | InconsistentKeyMapping of Key * Key
+        | InconsistentGuidMapping of Key
         | DataLeakage
         | KeyAlreadyPreset of Key
         | KeyNotFound of Key
@@ -48,23 +51,17 @@ module internal Hierarchy =
         Hierarchy: Map<Guid, Guid list>
     }
 
-    let private _initialState: State = { 
-        PrimaryMap = Map.empty.Add(RegionKey Root, Guid.Empty); 
-        ReverseMap = Map.empty.Add(Guid.Empty, RegionKey Root); 
-        Hierarchy = Map.empty.Add(Guid.Empty, List.Empty) 
-    }
-
     let inline private _getParentKey (key: Key) : Key option =
         match key with
-        | RegionKey regionID ->
+        | Key.RegionKey regionID ->
             match regionID with
             | Root -> None
-            | Region (vid, _) -> Some (ViewKey vid)
-        | ViewKey vid -> Some (RegionKey vid.RegionID)
+            | Region (vid, _) -> Some (Key.ViewKey vid)
+        | Key.ViewKey vid -> Some (Key.RegionKey vid.RegionID)
 
     let private _addEntry (guid: Guid) (key: Key) (state: State) : Result<State*Key, Error> =
         match state.PrimaryMap.TryFind key with
-        | Some _ -> Error (KeyAlreadyPreset key)
+        | Some _ -> Error (Error.KeyAlreadyPreset key)
         | None -> 
             match _getParentKey key with
             | Some k -> 
@@ -76,15 +73,15 @@ module internal Hierarchy =
                         let h = (state.Hierarchy.Remove parentGuid).Add (parentGuid, guids @ [guid])
                         let properKey =
                             match key with
-                            | ViewKey v when v.Index < 0 -> ViewKey (ViewID(v.RegionID, index, v.Name))
+                            | Key.ViewKey v when v.Index < 0 -> Key.ViewKey (ViewID(v.RegionID, index, v.Name))
                             | _ -> key
                         let (pm, rm) = (state.PrimaryMap.Add(properKey, guid), state.ReverseMap.Add(guid, properKey))
                         if (pm.Count = rm.Count) 
                         then Ok ({ PrimaryMap = pm; ReverseMap = rm; Hierarchy = h }, properKey)
-                        else Error (DataLeakage)
-                    | None -> Error (HierarchyEntryAbsent(k, parentGuid))
-                | None -> Error (GuidNotFound k)
-            | None -> Error (KeyParentNotFound key)
+                        else Error (Error.DataLeakage)
+                    | None -> Error (Error.HierarchyEntryAbsent(k, parentGuid))
+                | None -> Error (Error.GuidNotFound k)
+            | None -> Error (Error.KeyParentNotFound key)
             
     let rec private _removeEntriesFor (guid: Guid) (state: State*Guid list) : Result<State*Guid list, Error> =
         let (sd, gl) = state
@@ -105,9 +102,9 @@ module internal Hierarchy =
 
     let private _compensateIndexGap (key: Key) (state: State*Guid list) : Result<State*Guid list, Error> =
         match key with
-        | ViewKey v ->
+        | Key.ViewKey v ->
             let (sd, gl) = state 
-            let parentKey = RegionKey v.RegionID
+            let parentKey = Key.RegionKey v.RegionID
             match sd.PrimaryMap.TryFind parentKey with
             | Some parentGuid ->
                 let allSiblingKeys = 
@@ -116,7 +113,7 @@ module internal Hierarchy =
                         guidList 
                         |> List.map (sd.ReverseMap.TryFind) 
                         |> List.choose id
-                        |> List.map (fun wk -> match wk with | ViewKey v -> Some v | _ -> None)
+                        |> List.map (fun wk -> match wk with | Key.ViewKey v -> Some v | _ -> None)
                         |> List.choose id
                     | None -> List.Empty
                 if (allSiblingKeys.[v.Index - 1] = v)
@@ -124,13 +121,13 @@ module internal Hierarchy =
                     let mutable (pm, rm) = (sd.PrimaryMap, sd.ReverseMap)
                     for i in (v.Index) .. (allSiblingKeys.Length - 1) do
                         let oldKey = (allSiblingKeys.[i])
-                        let (newKey, oldKeyGuid) = (ViewID (oldKey.RegionID, (oldKey.Index - 1), oldKey.Name), pm.[(ViewKey oldKey)])
-                        pm <- (pm.Remove (ViewKey oldKey)).Add(ViewKey newKey, oldKeyGuid)
-                        rm <- (rm.Remove oldKeyGuid).Add(oldKeyGuid, ViewKey newKey)
+                        let (newKey, oldKeyGuid) = (ViewID (oldKey.RegionID, (oldKey.Index - 1), oldKey.Name), pm.[(Key.ViewKey oldKey)])
+                        pm <- (pm.Remove (Key.ViewKey oldKey)).Add(Key.ViewKey newKey, oldKeyGuid)
+                        rm <- (rm.Remove oldKeyGuid).Add(oldKeyGuid, Key.ViewKey newKey)
                     Ok ({ PrimaryMap = pm; ReverseMap = rm; Hierarchy = sd.Hierarchy }, gl)
-                else Error (WrongKeyAtIndex (key, v.Index, ViewKey allSiblingKeys.[v.Index - 1]))
-            | None -> Error (GuidNotFound parentKey)
-        | RegionKey _ -> Ok state
+                else Error (Error.WrongKeyAtIndex (key, v.Index, Key.ViewKey allSiblingKeys.[v.Index - 1]))
+            | None -> Error (Error.GuidNotFound parentKey)
+        | Key.RegionKey _ -> Ok state
 
 
     let add (key: Key) (state: State) : Result<State*Guid, Error> =
@@ -139,31 +136,36 @@ module internal Hierarchy =
         | Ok (hs, _) -> Ok (hs, guid)
         | Error e -> Error e
 
+    let insert (key: Key) (guid: Guid) (state: State) : Result<State*Guid, Error> =
+        match _addEntry guid key state with
+        | Ok (hs, _) -> Ok (hs, guid)
+        | Error e -> Error e
+
     let remove (key: Key) (state: State) : Result<State*Guid list, Error> =
         match state.PrimaryMap.TryFind key with
         | Some guid ->
             Ok (state, List.Empty)
-            |>| _removeEntriesFor guid
-            |>| _compensateIndexGap key
-        | None -> Error (GuidNotFound(key))
+            |>= _removeEntriesFor guid 
+            |>= _compensateIndexGap key
+        | None -> Error (Error.GuidNotFound(key))
 
     let getGuid (key: Key) (state: State) : Result<Guid, Error> =
         match state.PrimaryMap.TryFind key with
         | Some guid -> Ok guid
-        | None -> Error (KeyNotFound key)
+        | None -> Error (Error.KeyNotFound key)
 
-    let getViewGuid (viewID: ViewID) (state: State) : Result<Guid, Error> = getGuid (ViewKey viewID) state
+    let getViewGuid (viewID: ViewID) (state: State) : Result<Guid, Error> = getGuid (Key.ViewKey viewID) state
 
-    let getRegionGuid (regionID: RegionID) (state: State) : Result<Guid, Error> = getGuid (RegionKey regionID) state
+    let getRegionGuid (regionID: RegionID) (state: State) : Result<Guid, Error> = getGuid (Key.RegionKey regionID) state
 
     let getViewID (guid: Guid) (state: State) : ViewID option =
         match state.ReverseMap.TryFind guid with
-        | Some key -> match key with | ViewKey vk -> Some vk | _ -> None
+        | Some key -> match key with | Key.ViewKey vk -> Some vk | _ -> None
         | None -> None
 
     let getRegionID (guid: Guid) (state: State) : RegionID option =
         match state.ReverseMap.TryFind guid with
-        | Some key -> match key with | RegionKey rk -> Some rk | _ -> None
+        | Some key -> match key with | Key.RegionKey rk -> Some rk | _ -> None
         | None -> None
 
     let getChildren (guid: Guid) (state: State) : Guid list =
@@ -171,5 +173,9 @@ module internal Hierarchy =
         | Some guids -> guids
         | None -> List.Empty
 
-    let empty() = _initialState
+    let empty = { 
+        PrimaryMap = Map.empty.Add(Key.RegionKey Root, Guid.Empty); 
+        ReverseMap = Map.empty.Add(Guid.Empty, Key.RegionKey Root); 
+        Hierarchy = Map.empty.Add(Guid.Empty, List.Empty) 
+    }
 

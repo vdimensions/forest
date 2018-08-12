@@ -5,22 +5,31 @@ namespace Forest
 
 [<AutoOpen>]
 module Result =
-    //type Result<'T, 'E> = Microsoft.FSharp.Core.Result<'T, 'E>
+    let inline _bind2 (argMap: ('a -> Result<'b, 'x>), errMap: ('x -> 'y)) (input: Result<'a, 'x>) =
+        match input with
+        | Ok a -> match argMap a with Ok b -> Ok b | Error x -> Error (errMap x)
+        | Error x -> Error (errMap x)
+
+    let inline private _compose<'a,'b,'c,'e> (f: (Result<'a, 'e> -> Result<'b, 'e>)) (g: ('b -> Result<'c, 'e>)) = 
+        f >> (Result.bind g)
+
+    let inline private _compose2<'a,'b,'c,'e, 'f> (f: ('a -> Result<'b, 'e>)) ((e: ('e -> 'f)), (g: ('b -> Result<'c, 'f>))) = 
+        (_bind2 (f, e)) >> (Result.bind g)
+
     type Microsoft.FSharp.Core.Result<'T, 'E> with
-        static member bind2 (argMap: ('a -> Result<'b, 'x>), errMap: ('x -> 'y)) (input: Result<'a, 'x>) =
-            match input with
-            | Ok a -> match argMap a with Ok b -> Ok b | Error x -> Error (errMap x)
-            | Error x -> Error (errMap x)
+        static member bind2 (argMap, errMap) input = _bind2 (argMap, errMap) input
+        static member inline compose f g = _compose f g
+        static member inline compose2 f g = _compose2 f g
         static member inline ok res = match res with Ok data -> Some data | Error _ -> None
         // helper function to filter the errors
         static member inline error res = match res with Error e -> Some e | Ok _ -> None
 
-        static member some err opt = match opt with Some value -> Ok value | None -> Error err
+        static member inline some err opt = match opt with Some value -> Ok value | None -> Error err
 
-    //let (->>=) input (fn, errMap) = bind2 (fn, errMap) (Ok input)
-    let (|><|) input (fn, errMap) = Result.bind2 (fn, errMap) input
-    //let (<<<=) fn errMap input = bind2 (fn, errMap) input
+    let inline (|>=) input fn = (Result.bind fn input)
 
-    //let (->=) input fn = Result.bind fn (Ok input)
-    let (|>|) input fn = Result.bind fn input
-    //let (<<=) fn input = bind fn id input
+    let inline (|><=) input (fn, errMap) = (_bind2 (fn, errMap) input)
+
+    let inline (>>=) f g = (_compose (Result.bind f) g)
+
+    let inline (>><=) f (e, g) = (_compose2 (Result.bind f) (e, g))

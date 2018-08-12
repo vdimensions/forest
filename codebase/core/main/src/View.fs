@@ -66,17 +66,20 @@ module View =
         member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
             _eventBus.Publish(self, message, topics)
 
+        abstract member ResumeState: vm: 'T -> unit
+
         member __.ViewModel
             with get ():'T = _viewModel
-            and set (v: 'T) = _viewModel <- v
+            and set (NotNull "value" value: 'T) = _viewModel <- value
         member __.InstanceID
             with get() = _instanceID
             and set(v) = _instanceID <- v
 
         interface IViewInternal with
+            member __.ResumeState (NotNull "viewModel" viewModel) = self.ResumeState(downcast viewModel: 'T)
             member __.EventBus 
                 with get() = _eventBus
-                and set value = _eventBus <- (isNotNull "value" value)
+                and set (NotNull "value" value) = _eventBus <- value
             member __.InstanceID
                 with get() = self.InstanceID
                 and set v = self.InstanceID <- v
@@ -92,14 +95,14 @@ module View =
             member __.ViewModel with get() = upcast self.ViewModel
 
     type [<Sealed>] Factory() as self = 
-        member __.Resolve (NotNull "vd" vd : IViewDescriptor) : IView = 
+        member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 
             let flags = BindingFlags.Public|||BindingFlags.Instance
             let constructors = 
-                vd.ViewType.GetConstructors(flags) 
+                descriptor.ViewType.GetConstructors(flags) 
                 |> Array.toList
                 |> List.filter (fun c -> c.GetParameters().Length = 0) 
             match constructors with
-            | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", vd.ViewType.FullName)))
+            | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", descriptor.ViewType.FullName)))
             | head::_ -> downcast head.Invoke([||]) : IView
         
         interface IViewFactory with member __.Resolve m = self.Resolve m
