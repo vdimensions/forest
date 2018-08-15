@@ -124,14 +124,15 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
 
                 match failedCommandLookups with
                 | [] -> 
-                    let folder (m: WriteableIndex<ICommandDescriptor, string>) (e: ICommandDescriptor) : WriteableIndex<ICommandDescriptor, string> = 
-                        m.Insert e.Name e
+                    let folder (m: Dictionary<string, ICommandDescriptor>) (e: ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
+                        m.Add(e.Name, e)
+                        m
                     let commandsIndex = 
                         commandDescriptorResults 
                         |> Seq.choose Result.ok
                         |> Seq.concat
-                        |> Seq.fold folder (new WriteableIndex<ICommandDescriptor, string>(StringComparer.Ordinal, StringComparer.Ordinal))
-                    Ok (View.Descriptor(name, t, viewModelType, commandsIndex))
+                        |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
+                    Ok (View.Descriptor(name, t, viewModelType, (Index commandsIndex)))
                 | _ -> Error ((Command.Error.MultipleErrors failedCommandLookups) |> ViewRegistryError.CommandError)
             | Error e -> Error (ViewRegistryError.ViewError e)
         | None -> Error ((View.Error.ViewAttributeMissing t) |> ViewRegistryError.ViewError)

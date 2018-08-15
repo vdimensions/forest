@@ -8,6 +8,7 @@ type State internal(hierarchy: Hierarchy.State, viewModels: Map<Guid, obj>, view
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates
 
+[<RequireQualifiedAccess>]
 module State =
     [<Serializable>]
     [<RequireQualifiedAccess>]

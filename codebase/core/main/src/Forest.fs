@@ -1,13 +1,13 @@
 namespace Forest
 
-open System;
+open System
 
 
 type [<Interface>] IViewDescriptor = 
     abstract Name: string with get
     abstract ViewType: Type with get
     abstract ViewModelType: Type with get
-    abstract Commands: IIndex<ICommandDescriptor, string> with get
+    abstract Commands: Index<ICommandDescriptor, string> with get
 
  and [<Interface>] ICommandDescriptor = 
     abstract Name: string with get
@@ -22,12 +22,14 @@ type [<Interface>] IViewDescriptor =
 
  and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
-    abstract Regions: IIndex<IRegion, string> with get
+    // TODO
+    //abstract Regions: IDictionary<string, IRegion> with get
+    abstract member FindRegion: regionName: string -> IRegion
     abstract ViewModel: obj
 
  and [<Interface>] IRegion = 
     abstract Name: string with get
-    abstract Item: string -> IView with get
+    //abstract Item: string -> IView with get
 
  and [<Interface>] IForestContext =
     abstract ViewRegistry: IViewRegistry with get
@@ -96,14 +98,10 @@ type [<Interface>] internal IViewInternal =
     abstract EventBus: IEventBus with get, set
     abstract InstanceID: Guid with get, set
     abstract ViewModelProvider: IViewModelProvider with get, set
-    //abstract RegionProvider: IRegionProvider with get, set
 
   and [<Interface>] internal IViewModelProvider =
     abstract member GetViewModel: id: Guid -> obj
     abstract member SetViewModel: id: Guid -> viewModel: obj -> unit
-
-  and [<Interface>] internal IRegionProvider =
-    abstract member FindRegion: viewID: Guid -> regionID: Guid -> IRegion
 
 // contains the active mutable forest state, such as the latest dom index and view state changes
 type [<Sealed>] internal ViewState(id: Guid, descriptor: IViewDescriptor, viewInstance: IViewInternal) =

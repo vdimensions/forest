@@ -1,0 +1,5 @@
+framework: net45
+
+source https://nuget.org/api/v2
+  nuget FSharp.Core
+  nuget NUnit

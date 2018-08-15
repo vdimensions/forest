@@ -9,6 +9,8 @@ type State =
     member internal ViewModels: Map<Guid, obj> with get
     member internal ViewStates: Map<Guid, ViewState> with get
 
+
+[<RequireQualifiedAccess>]
 module State =
     [<Serializable>]
     [<RequireQualifiedAccess>]

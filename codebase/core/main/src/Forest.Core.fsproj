@@ -19,9 +19,7 @@
     <Content Include="doc.txt" />
     <Compile Include="NullHandling.fs" />
     <Compile Include="Result.fs" />
-    <Compile Include="ComparisonAdapter.fs" />
     <Compile Include="Index.fs" />
-    <Compile Include="WriteableIndex.fs" />
     <Compile Include="Attributes.fs" />
     <Compile Include="Forest.fs" />
     <Compile Include="Command.fs" />
