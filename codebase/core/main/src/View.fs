@@ -8,6 +8,7 @@ open System.Reflection
 
 type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
+    abstract member FindRegion: name: string -> IRegion
     abstract ViewModel: 'T with get, set
 
 [<Serializable>]
@@ -62,15 +63,20 @@ module View =
         let mutable _viewModel : 'T = new 'T()
         let mutable _eventBus: IEventBus = Unchecked.defaultof<IEventBus>
         let mutable _instanceID: Guid = Guid.Empty
+        let mutable _regionProvider: IRegionProvider = Unchecked.defaultof<IRegionProvider>
+        let mutable _viewModelProvider: IViewModelProvider = Unchecked.defaultof<IViewModelProvider>
 
         member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
             _eventBus.Publish(self, message, topics)
 
         abstract member ResumeState: vm: 'T -> unit
 
+        // TODO
+        abstract member FindRegion: name: string -> IRegion
+
         member __.ViewModel
-            with get ():'T = _viewModel
-            and set (NotNull "value" value: 'T) = _viewModel <- value
+            with get ():'T = match null2opt _viewModelProvider with Some vmp -> downcast vmp.GetViewModel(_instanceID) : 'T | None -> _viewModel
+            and set (NotNull "value" value: 'T) = (_viewModel <- value) |> _viewModelProvider.SetViewModel _instanceID
         member __.InstanceID
             with get() = _instanceID
             and set(v) = _instanceID <- v
@@ -79,12 +85,20 @@ module View =
             member __.ResumeState (NotNull "viewModel" viewModel) = self.ResumeState(downcast viewModel: 'T)
             member __.EventBus 
                 with get() = _eventBus
-                and set (NotNull "value" value) = _eventBus <- value
+                and set value = _eventBus <- value
             member __.InstanceID
                 with get() = self.InstanceID
                 and set v = self.InstanceID <- v
+             member __.ViewModelProvider
+                with get() = _viewModelProvider
+                and set v = _viewModelProvider <- v
+             //member __.RegionProvider
+             //   with get() = _regionProvider
+             //   and set v = _regionProvider <- v
 
         interface IView<'T> with
+            member __.FindRegion name = self.FindRegion name
+
             member __.ViewModel
                 with get() = self.ViewModel
                 and set v = self.ViewModel <- v

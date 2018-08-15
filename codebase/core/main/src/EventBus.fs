@@ -23,10 +23,10 @@ open System.Collections.Generic
 
 module EventBus = 
 
-    let inline subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
+    let inline private _subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
 
-    let inline isForMessageType<'M> (x: Type): bool = 
+    let inline private _isForMessageType<'M> (x: Type): bool = 
         let messageType = typeof<'M>
         messageType = x || x.IsAssignableFrom(messageType)
 
@@ -38,8 +38,8 @@ module EventBus =
         member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message: 'M, topicSubscriptionHandlers: IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             let subscriptions =  
                 topicSubscriptionHandlers.Keys 
-                |> Seq.filter isForMessageType<'M>
-                |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (subscribersFilter sender))
+                |> Seq.filter _isForMessageType<'M>
+                |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (_subscribersFilter sender))
 
             for subscription in subscriptions do subscription.Invoke message
 
@@ -47,9 +47,7 @@ module EventBus =
             for value in _subscriptions.Values do value.Clear()
             _subscriptions.Clear()
 
-        member __.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit =
-            match null2opt sender with | None -> nullArg "sender" | _ -> ()
-            match null2opt message with | None -> nullArg "message" | _ -> ()
+        member __.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, topics: string[]) : unit =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
@@ -60,9 +58,7 @@ module EventBus =
                     | (true, topicSubscriptionHandlers) -> self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
 
-        member this.Subscribe (subscriptionHandler: ISubscriptionHandler, topic: string) : T =
-            match null2opt subscriptionHandler with | None -> nullArg "subscriptionHandler" | _ -> ()
-            match null2opt topic with | None -> nullArg "topic" | _ -> ()
+        member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler: ISubscriptionHandler, NotNull "topic" topic: string) : T =
             let topicSubscriptionHandlers = 
                 match _subscriptions.TryGetValue(topic) with
                 | (true, topicSubscriptionHandlers) -> topicSubscriptionHandlers
@@ -83,7 +79,7 @@ module EventBus =
         member this.Unsubscribe (receiver: IView) : T =
             match null2opt receiver with | None -> nullArg "receiver" | _ -> ()
             for topicSubscriptionHandlers in _subscriptions.Values |> Seq.collect (fun x -> x.Values) do
-                for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (subscribersFilter receiver) do
+                for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
             this
 
@@ -92,6 +88,6 @@ module EventBus =
             member __.Subscribe x y = upcast self.Subscribe (x, y)
             member __.Unsubscribe receiver = upcast self.Unsubscribe receiver
 
-        interface IDisposable with member __.Dispose () : unit = self.Dispose(true)
+        interface IDisposable with member __.Dispose () = self.Dispose(true)
 
     let Create () : IEventBus = upcast new T()

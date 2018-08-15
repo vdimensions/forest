@@ -95,6 +95,8 @@ type [<Interface>] internal IViewInternal =
 
     abstract EventBus: IEventBus with get, set
     abstract InstanceID: Guid with get, set
+    abstract ViewModelProvider: IViewModelProvider with get, set
+    //abstract RegionProvider: IRegionProvider with get, set
 
   and [<Interface>] internal IViewModelProvider =
     abstract member GetViewModel: id: Guid -> obj
@@ -102,3 +104,9 @@ type [<Interface>] internal IViewInternal =
 
   and [<Interface>] internal IRegionProvider =
     abstract member FindRegion: viewID: Guid -> regionID: Guid -> IRegion
+
+// contains the active mutable forest state, such as the latest dom index and view state changes
+type [<Sealed>] internal ViewState(id: Guid, descriptor: IViewDescriptor, viewInstance: IViewInternal) =
+    member __.ID with get() = id
+    member __.Descriptor with get() = descriptor
+    member __.View with get() = viewInstance

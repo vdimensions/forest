@@ -17,13 +17,22 @@ module Result =
         (_bind2 (f, e)) >> (Result.bind g)
 
     type Microsoft.FSharp.Core.Result<'T, 'E> with
-        static member bind2 (argMap, errMap) input = _bind2 (argMap, errMap) input
+        [<CompiledName("Bind")>]
+        static member inline bind2 (argMap, errMap) input = _bind2 (argMap, errMap) input
+
+        [<CompiledName("Compose")>]
         static member inline compose f g = _compose f g
+        [<CompiledName("Compose")>]
         static member inline compose2 f g = _compose2 f g
+
+        [<CompiledName("Ok")>]
         static member inline ok res = match res with Ok data -> Some data | Error _ -> None
+
         // helper function to filter the errors
+        [<CompiledName("Error")>]
         static member inline error res = match res with Error e -> Some e | Ok _ -> None
 
+        [<CompiledName("Some")>]
         static member inline some err opt = match opt with Some value -> Ok value | None -> Error err
 
     let inline (|>=) input fn = (Result.bind fn input)

@@ -44,6 +44,7 @@ module internal Hierarchy =
         | HierarchyEntryAbsent of Key * Guid
         | WrongKeyAtIndex of Key * int * Key
 
+    [<Serializable>]
     type [<Struct>] State = {
         //[<Obsolete>]
         PrimaryMap: Map<Key, Guid>;
@@ -113,7 +114,7 @@ module internal Hierarchy =
                         guidList 
                         |> List.map (sd.ReverseMap.TryFind) 
                         |> List.choose id
-                        |> List.map (fun wk -> match wk with | Key.ViewKey v -> Some v | _ -> None)
+                        |> List.map (fun wk -> match wk with Key.ViewKey v -> Some v | _ -> None)
                         |> List.choose id
                     | None -> List.Empty
                 if (allSiblingKeys.[v.Index - 1] = v)

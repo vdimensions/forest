@@ -27,10 +27,10 @@
     <Compile Include="Command.fs" />
     <Compile Include="View.fs" />
     <Compile Include="DefaultViewRegistry.fs" />
-    <Compile Include="Region.fs" />
     <Compile Include="EventBus.fs" />
     <Compile Include="DefaultForestContext.fs" />
     <Compile Include="Hierarchy.fs" />
+    <Compile Include="State.fsi" />
     <Compile Include="State.fs" />
     <Compile Include="Engine.fs" />
     <None Include="Script.fsx" />
