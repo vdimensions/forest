@@ -3,7 +3,7 @@
 open System
 
 
-type State internal(hierarchy: Hierarchy.State, viewModels: Map<Guid, obj>, viewStates:  Map<Guid, ViewState>) =
+type State internal(hierarchy: Hierarchy.State, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>) =
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates
@@ -13,9 +13,9 @@ module State =
     [<Serializable>]
     [<RequireQualifiedAccess>]
     type StateChange =
-        | ViewAdded of ViewID * Guid * obj
-        | ViewModelUpdated of ViewID * Guid * obj
-        | ViewDestroyed of ViewID * Guid
+        | ViewAdded of Identifier * obj
+        | ViewModelUpdated of Identifier * obj
+        | ViewDestroyed of Identifier
 
     [<CompiledName("Create")>]
     let internal create (hs, vm, vs) = State(hs, vm, vs)

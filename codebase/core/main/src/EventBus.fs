@@ -47,7 +47,7 @@ module EventBus =
             for value in _subscriptions.Values do value.Clear()
             _subscriptions.Clear()
 
-        member __.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, topics: string[]) : unit =
+        member __.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, NotNull "topics" topics: string[]) : unit =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
@@ -76,8 +76,7 @@ module EventBus =
             subscriptionList.Add subscriptionHandler
             this
 
-        member this.Unsubscribe (receiver: IView) : T =
-            match null2opt receiver with | None -> nullArg "receiver" | _ -> ()
+        member this.Unsubscribe (NotNull "receiver" receiver: IView) : T =
             for topicSubscriptionHandlers in _subscriptions.Values |> Seq.collect (fun x -> x.Values) do
                 for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
@@ -90,4 +89,5 @@ module EventBus =
 
         interface IDisposable with member __.Dispose () = self.Dispose(true)
 
-    let Create () : IEventBus = upcast new T()
+    [<CompiledName("Create")>]
+    let create() : IEventBus = upcast new T()

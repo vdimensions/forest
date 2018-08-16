@@ -53,8 +53,8 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
 
     member __.GetViewDescriptor name = 
         match (storage.TryGetValue name) with
-        | (true, metadata) -> Some (upcast metadata : IViewDescriptor)
-        | (false, _) -> None  
+        | (true, metadata) -> upcast metadata : IViewDescriptor
+        | (false, _) -> nil<IViewDescriptor>  
             
     interface IViewRegistry with
         member __.Register t = this.Register t

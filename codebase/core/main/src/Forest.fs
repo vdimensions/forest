@@ -18,7 +18,7 @@ type [<Interface>] IViewDescriptor =
     abstract member Register: t: Type -> IViewRegistry
     abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
     abstract member Resolve: name: string -> IView
-    abstract member GetViewMetadata: name: string -> IViewDescriptor option
+    abstract member GetViewMetadata: name: string -> IViewDescriptor
 
  and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
@@ -96,15 +96,15 @@ type [<Interface>] internal IViewInternal =
     abstract member ResumeState: obj -> unit
 
     abstract EventBus: IEventBus with get, set
-    abstract InstanceID: Guid with get, set
+    abstract InstanceID: Identifier with get, set
     abstract ViewModelProvider: IViewModelProvider with get, set
 
   and [<Interface>] internal IViewModelProvider =
-    abstract member GetViewModel: id: Guid -> obj
-    abstract member SetViewModel: id: Guid -> viewModel: obj -> unit
+    abstract member GetViewModel: id: Identifier -> obj
+    abstract member SetViewModel: id: Identifier -> viewModel: obj -> unit
 
 // contains the active mutable forest state, such as the latest dom index and view state changes
-type [<Sealed>] internal ViewState(id: Guid, descriptor: IViewDescriptor, viewInstance: IViewInternal) =
+type [<Sealed>] internal ViewState(id: Identifier, descriptor: IViewDescriptor, viewInstance: IViewInternal) =
     member __.ID with get() = id
     member __.Descriptor with get() = descriptor
     member __.View with get() = viewInstance

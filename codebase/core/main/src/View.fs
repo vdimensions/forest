@@ -27,9 +27,9 @@ type ViewTypeIsAbstractException(viewType: Type, inner: Exception) =
 
 type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     let mutable _viewModel : 'T = new 'T()
-    let mutable _eventBus: IEventBus = Unchecked.defaultof<IEventBus>
-    let mutable _instanceID: Guid = Guid.Empty
-    let mutable _viewModelProvider: IViewModelProvider = Unchecked.defaultof<IViewModelProvider>
+    let mutable _eventBus: IEventBus = nil<IEventBus>
+    let mutable _instanceID: Identifier = Identifier.shell
+    let mutable _viewModelProvider: IViewModelProvider = nil<IViewModelProvider>
 
     member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         _eventBus.Publish(self, message, topics)
@@ -65,7 +65,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
         //member __.Regions with get() = raise (System.NotImplementedException())
         member __.ViewModel with get() = upcast self.ViewModel
 
-and private Region<'T when 'T: (new: unit -> 'T)>(parentViewID:Guid, name: string, view: AbstractView<'T>) as self =
+and private Region<'T when 'T: (new: unit -> 'T)>(parentViewID: Identifier, name: string, view: AbstractView<'T>) as self =
     member __.Name with get() = name
 
     interface IRegion with

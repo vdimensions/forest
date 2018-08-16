@@ -4,10 +4,10 @@ open System
 
 [<Serializable>]
 type State =
-    internal new: Hierarchy.State*Map<Guid, obj>*Map<Guid, ViewState> -> State
+    internal new: Hierarchy.State*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
     member internal Hierarchy: Hierarchy.State with get
-    member internal ViewModels: Map<Guid, obj> with get
-    member internal ViewStates: Map<Guid, ViewState> with get
+    member internal ViewModels: Map<Identifier, obj> with get
+    member internal ViewStates: Map<Identifier, ViewState> with get
 
 
 [<RequireQualifiedAccess>]
@@ -15,12 +15,12 @@ module State =
     [<Serializable>]
     [<RequireQualifiedAccess>]
     type StateChange =
-        | ViewAdded of ViewID * Guid * obj
-        | ViewModelUpdated of ViewID * Guid * obj
-        | ViewDestroyed of ViewID * Guid
+        | ViewAdded of Identifier * obj
+        | ViewModelUpdated of Identifier * obj
+        | ViewDestroyed of Identifier
 
     [<CompiledName("Create")>]
-    val internal create: Hierarchy.State*Map<Guid, obj>*Map<Guid, ViewState> -> State
+    val internal create: Hierarchy.State*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
 
     [<CompiledName("Empty")>]
     val empty: State
