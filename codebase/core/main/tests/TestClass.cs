@@ -10,16 +10,12 @@ namespace Forest.Tests
 {
     static class My
     {
-        class ViewModel { }
+        internal const string ViewName = "MyView";
+        internal class ViewModel { }
 
-        [View("MyView")]
-        class View : Forest.View.Base<ViewModel>
+        [View(ViewName, AutowireCommands = false)]
+        internal class View : Forest.AbstractView<ViewModel>
         {
-            public override IRegion FindRegion(string name)
-            {
-                throw new NotImplementedException();
-            }
-
             public override void ResumeState(ViewModel vm)
             {
                 throw new NotImplementedException();
@@ -49,6 +45,10 @@ namespace Forest.Tests
             //Add(Get(Add(x, "view2"), "view2"), "emptyRegion");
             //
             var ctx = new DefaultForestContext(new DefaultViewRegistry(new View.Factory()));
+            ctx.ViewRegistry.Register<My.View>();
+            var state = Forest.StateModule.Empty;
+            state = Forest.Engine.Update(ctx, state, ForestOperation.NewInstantiateView(IdentifierModule.Shell, string.Empty, My.ViewName));
+
             //var index = Forest.Engine.CreateIndex(ctx, rawTemplateStructureFromJson);
             //
             //Console.WriteLine("dom index contains {0} root nodes", index.Count);

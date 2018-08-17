@@ -16,23 +16,25 @@
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Utils\NullHandling.fs" />
+    <Compile Include="Utils\Result.fs" />
+    <Compile Include="Primitives\Index.fs" />
+    <Compile Include="Primitives\Identifier.fsi" />
+    <Compile Include="Primitives\Identifier.fs" />
+    <Compile Include="Primitives\Hierarchy.fs" />
+    <Compile Include="Api\Attributes.fs" />
+    <Compile Include="Api\Forest.fs" />
+    <Compile Include="Api\Command.fs" />
+    <Compile Include="Api\View.fs" />
+    <Compile Include="Api\DefaultViewRegistry.fs" />
+    <Compile Include="Api\EventBus.fs" />
+    <Compile Include="Api\DefaultForestContext.fs" />
     <Content Include="doc.txt" />
-    <Compile Include="NullHandling.fs" />
-    <Compile Include="Result.fs" />
-    <Compile Include="Index.fs" />
-    <Compile Include="Attributes.fs" />
-    <Compile Include="Identifier.fsi" />
-    <Compile Include="Identifier.fs" />
-    <Compile Include="Forest.fs" />
-    <Compile Include="Command.fs" />
-    <Compile Include="View.fs" />
-    <Compile Include="DefaultViewRegistry.fs" />
-    <Compile Include="EventBus.fs" />
-    <Compile Include="DefaultForestContext.fs" />
-    <Compile Include="Hierarchy.fs" />
     <Compile Include="State.fsi" />
     <Compile Include="State.fs" />
     <Compile Include="Engine.fs" />
+    <None Include="paket.dependencies" />
+    <None Include="paket.references" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
   </ItemGroup>

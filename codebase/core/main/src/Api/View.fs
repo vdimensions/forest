@@ -29,18 +29,18 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     let mutable _viewModel : 'T = new 'T()
     let mutable _eventBus: IEventBus = nil<IEventBus>
     let mutable _instanceID: Identifier = Identifier.shell
-    let mutable _viewModelProvider: IViewModelProvider = nil<IViewModelProvider>
+    let mutable _viewStateModifier: IViewStateModifier = nil<IViewStateModifier>
 
     member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         _eventBus.Publish(self, message, topics)
 
-    abstract member ResumeState: vm: 'T -> unit
+    abstract member ResumeState: vm: 'T -> unit // TODO
 
-    member __.FindRegion (NotNull "name" name) = upcast Region(_instanceID, name, self) : IRegion
+    member __.FindRegion (NotNull "name" name) = upcast Region(name, self) : IRegion
 
     member __.ViewModel
-        with get ():'T = match null2opt _viewModelProvider with Some vmp -> downcast vmp.GetViewModel(_instanceID) : 'T | None -> _viewModel
-        and set (NotNull "value" value: 'T) = (_viewModel <- value) |> _viewModelProvider.SetViewModel _instanceID
+        with get ():'T = _viewModel
+        and set (NotNull "value" value: 'T) = (_viewModel <- value) |> _viewStateModifier.SetViewModel false _instanceID
     member __.InstanceID
         with get() = _instanceID
         and set(v) = _instanceID <- v
@@ -53,24 +53,36 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
         member __.InstanceID
             with get() = self.InstanceID
             and set v = self.InstanceID <- v
-            member __.ViewModelProvider
-            with get() = _viewModelProvider
-            and set v = _viewModelProvider <- v
+        member __.ViewStateModifier
+            with get() = _viewStateModifier
+            and set v = 
+                match null2opt v with
+                | Some md -> 
+                    match md.GetViewModel self.InstanceID with
+                    | Some vm -> _viewModel <- (downcast vm : 'T)
+                    | None -> md.SetViewModel true self.InstanceID _viewModel
+                | None -> 
+                    match _viewStateModifier.GetViewModel self.InstanceID with
+                    | Some vm -> _viewModel <- (downcast vm : 'T)
+                    | None -> ()                    
+                _viewStateModifier <- v
 
     interface IView<'T> with member __.ViewModel with get() = self.ViewModel
 
     interface IView with
         member __.Publish (m, t) : unit = self.Publish (m, t)
         member __.FindRegion name = self.FindRegion name
-        //member __.Regions with get() = raise (System.NotImplementedException())
         member __.ViewModel with get() = upcast self.ViewModel
 
-and private Region<'T when 'T: (new: unit -> 'T)>(parentViewID: Identifier, name: string, view: AbstractView<'T>) as self =
-    member __.Name with get() = name
+and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: AbstractView<'T>) as self =
+    member __.ActivateView (NotNull "viewName" viewName: string) =
+        (upcast view : IViewInternal).ViewStateModifier.ActivateView view.InstanceID regionName viewName
+
+    member __.Name with get() = regionName
 
     interface IRegion with
         member __.Name = self.Name
-        //member __.Item with get
+        member __.ActivateView (viewName: string) = self.ActivateView viewName
 
 [<RequireQualifiedAccessAttribute>]
 module View =

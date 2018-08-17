@@ -4,8 +4,8 @@ open System
 
 [<Serializable>]
 type State =
-    internal new: Hierarchy.State*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
-    member internal Hierarchy: Hierarchy.State with get
+    internal new: Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
+    member internal Hierarchy: Hierarchy with get
     member internal ViewModels: Map<Identifier, obj> with get
     member internal ViewStates: Map<Identifier, ViewState> with get
 
@@ -19,8 +19,9 @@ module State =
         | ViewModelUpdated of Identifier * obj
         | ViewDestroyed of Identifier
 
-    [<CompiledName("Create")>]
-    val internal create: Hierarchy.State*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
+    val internal create: Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
+
+    val internal discardViewStates: State -> State
 
     [<CompiledName("Empty")>]
     val empty: State

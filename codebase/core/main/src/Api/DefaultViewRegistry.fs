@@ -99,6 +99,7 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                     if not autowireCommands then
                         getMethods 
                         >> Seq.map (fun x -> (x |> getCommandAttribs), x)
+                        >> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
                         >> Seq.map createCommandMetadata
                     else
                         let inline isCommandMethod (mi: MethodInfo) = 

@@ -22,12 +22,11 @@ type [<Interface>] IViewDescriptor =
 
  and [<Interface>] IView =
     abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
-    // TODO
-    //abstract Regions: IDictionary<string, IRegion> with get
     abstract member FindRegion: regionName: string -> IRegion
     abstract ViewModel: obj
 
  and [<Interface>] IRegion = 
+    abstract member ActivateView: name:string -> IView
     abstract Name: string with get
     //abstract Item: string -> IView with get
 
@@ -97,11 +96,12 @@ type [<Interface>] internal IViewInternal =
 
     abstract EventBus: IEventBus with get, set
     abstract InstanceID: Identifier with get, set
-    abstract ViewModelProvider: IViewModelProvider with get, set
+    abstract ViewStateModifier: IViewStateModifier with get, set
 
-  and [<Interface>] internal IViewModelProvider =
-    abstract member GetViewModel: id: Identifier -> obj
-    abstract member SetViewModel: id: Identifier -> viewModel: obj -> unit
+  and [<Interface>] internal IViewStateModifier =
+    abstract member GetViewModel: id: Identifier -> obj option
+    abstract member SetViewModel: silent: bool -> id: Identifier -> viewModel: obj -> unit
+    abstract member ActivateView: parent: Identifier -> region: string -> name: string -> IView
 
 // contains the active mutable forest state, such as the latest dom index and view state changes
 type [<Sealed>] internal ViewState(id: Identifier, descriptor: IViewDescriptor, viewInstance: IViewInternal) =

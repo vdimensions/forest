@@ -5,21 +5,21 @@ open Forest
 open System
 
 
+[<Serializable>]
+type [<Struct>] Hierarchy = {
+    Hierarchy: Map<Identifier, Identifier list>;
+}
+
 [<RequireQualifiedAccess>]
 module internal Hierarchy =
-    [<Serializable>]
-    type [<Struct>] State = {
-        Hierarchy: Map<Identifier, Identifier list>;
-    }
-
-    let getChildren (id: Identifier) (state: State) : Identifier list =
+    
+    let getChildren (id: Identifier) (state: Hierarchy) : Identifier list =
         match state.Hierarchy.TryFind id with
         | Some data -> data
         | None -> List.Empty
 
-
-    let add (parent: Identifier) (name: string) (state: State) : State*Identifier =
-        let newValue = parent |> Identifier.addNew name
+    let add (parent: Identifier) (region: string) (name: string) (state: Hierarchy) : Hierarchy*Identifier =
+        let newValue = parent |> Identifier.addNew region name
         let list = 
             match state.Hierarchy.TryFind parent with
             | Some list -> list
@@ -27,8 +27,8 @@ module internal Hierarchy =
         let h = state.Hierarchy.Remove(parent).Add(parent, list @ [newValue])
         ({ Hierarchy = h }, newValue)
 
-    let insert (parent: Identifier) (guid: Guid) (name: string) (state: State) : State*Identifier =
-        let newValue = parent |> Identifier.add guid name
+    let insert (parent: Identifier) (guid: Guid) (region: string) (name: string) (state: Hierarchy) : Hierarchy*Identifier =
+        let newValue = parent |> Identifier.add guid region name
         let list = 
             match state.Hierarchy.TryFind parent with
             | Some list -> list
@@ -36,7 +36,7 @@ module internal Hierarchy =
         let h = state.Hierarchy.Remove(parent).Add(parent, list @ [newValue])
         ({ Hierarchy = h }, newValue)
 
-    let remove (id: Identifier) (state: State) : State*Identifier list =
+    let remove (id: Identifier) (state: Hierarchy) : Hierarchy*Identifier list =
         let rec doRemove parentID (st, lst) =
             match st |> getChildren parentID  with
             | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, [parentID] @ lst)
@@ -44,25 +44,20 @@ module internal Hierarchy =
 
         let (noContents, removedIDs) = doRemove id (state, [])
         
-        match Identifier.parentOf id with
-        | Some parentID ->
+        match Identifier.isShell id.Parent with
+        | false ->
+            let parentID = id.Parent
             let siblings = noContents |> getChildren parentID
             let updatedSiblings = siblings |> List.except [id]
             
             if (updatedSiblings.Length = siblings.Length)
             then (noContents, removedIDs)
             else ({ Hierarchy = noContents.Hierarchy.Remove(parentID).Add(parentID, updatedSiblings) }, removedIDs)
-        | None -> (noContents, removedIDs)
+        | true -> (noContents, removedIDs)
 
-    let tryFindRegion (id: Identifier) (regionName: string) (state: State) : Identifier option =
-        match Identifier.isView id with
-        | true -> state |> getChildren id |> List.tryFind (fun candidate -> StringComparer.Ordinal.Equals(Identifier.nameof candidate, regionName) )
-        | false -> None
-
-    let tryFindView (id: Identifier) (viewName: string) (state: State) : Identifier option =
-        match Identifier.isRegion id with
-        | true -> state |> getChildren id |> List.tryFind (fun candidate -> StringComparer.Ordinal.Equals(Identifier.nameof candidate, viewName) )
-        | false -> None
+    let tryFindView (id: Identifier) (regionName: string) (viewName: string) (state: Hierarchy) : Identifier option =
+        let cmp = StringComparer.Ordinal
+        state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.Name, viewName) )
 
     let empty = { 
         Hierarchy = Map.empty.Add(Identifier.shell, List.Empty);

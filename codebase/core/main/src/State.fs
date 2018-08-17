@@ -3,7 +3,7 @@
 open System
 
 
-type State internal(hierarchy: Hierarchy.State, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>) =
+type State internal(hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>) =
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates
@@ -17,8 +17,10 @@ module State =
         | ViewModelUpdated of Identifier * obj
         | ViewDestroyed of Identifier
 
-    [<CompiledName("Create")>]
     let internal create (hs, vm, vs) = State(hs, vm, vs)
+
+    let internal discardViewStates (st: State) =
+        State(st.Hierarchy, st.ViewModels, Map.empty)
 
     [<CompiledName("Empty")>]
     let empty = State(Hierarchy.empty, Map.empty, Map.empty)
