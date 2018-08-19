@@ -2,11 +2,9 @@
 
 open System
 
-type [<Interface>] IForestIdentifier =
-    abstract member Name: string with get
-    abstract member UniqueID: Guid with get
-
 type [<Sealed>] Identifier =
+    [<CompiledName("Shell")>]
+    static member shell: Identifier
     member Parent: Identifier with get
     member Region: string with get
     member Name: string with get
@@ -14,17 +12,13 @@ type [<Sealed>] Identifier =
     member Fragment: string with get
     override Equals: obj -> bool
     override GetHashCode: unit -> int
-    interface IForestIdentifier
     interface IComparable<Identifier>
     interface IComparable
     interface IEquatable<Identifier>
 
-module Identifier =
-    val internal add: Guid -> string -> string -> Identifier -> Identifier
+module internal Identifier =
+    val add: Guid -> string -> string -> Identifier -> Identifier
 
-    val internal addNew: string -> string -> Identifier -> Identifier
+    val addNew: string -> string -> Identifier -> Identifier
 
-    val internal isShell: Identifier -> bool
-
-    [<CompiledName("Shell")>]
-    val shell: Identifier
+    val isShell: Identifier -> bool

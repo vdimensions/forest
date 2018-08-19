@@ -30,8 +30,4 @@ module Result =
         [<CompiledName("Split")>]
         static member inline split succeed fail result = match result with Ok ok -> succeed ok | Error e -> fail e
 
-    let inline (|>=) input fn = (Result.bind fn input)
-
-    let inline (>>=) f g = _compose f g
-
     let inline (>>!) f g = _composeError f g

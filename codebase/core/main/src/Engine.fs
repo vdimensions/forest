@@ -5,27 +5,15 @@ open Forest.Events
 
 open System
 
-
 type ForestOperation =
     | InstantiateView of Identifier * string * string
     | UpdateViewModel of Identifier * obj
-    | HandleEvent of Identifier
     | DestroyView of Identifier
     | InvokeCommand of Identifier * string * obj
     | Multiple of ForestOperation list
 
 [<RequireQualifiedAccess>]
 module Engine =
-    type Error =
-        | ViewNotFound of ViewName: string
-        | UnexpectedModelState of Path: Identifier
-        | MissingModelState of Path: Identifier
-        | CommandNotFound of Parameters: Identifier * string
-        | CommandBadArgument of Parameters: Identifier * string * Type
-        | UnknownOperation of Operation: ForestOperation
-        | CommandError of Cause: Command.Error
-        | HierarchyElementAbsent of id: Identifier
-        | NoViewAdded
 
     let inline private _toMap (dict: System.Collections.Generic.IDictionary<'a, 'b>) : Map<'a, 'b> =
         dict
@@ -40,23 +28,23 @@ module Engine =
         let _viewModels: System.Collections.Generic.Dictionary<Identifier, obj> = System.Collections.Generic.Dictionary(viewModels)
         let _viewStates: System.Collections.Generic.Dictionary<Identifier, ViewState> = System.Collections.Generic.Dictionary(viewStates)
 
-        let _changeLog: System.Collections.Generic.List<State.StateChange>  = System.Collections.Generic.List()
+        let _changeLog: System.Collections.Generic.List<StateChange>  = System.Collections.Generic.List()
 
-        let _updateViewModel (id: Identifier) (vm: obj): Result<State.StateChange List, Error> =
+        let _updateViewModel (id: Identifier) (vm: obj): Result<StateChange List, StateError> =
             _viewModels.[id] <- vm
             //_changeLog <- _changeLog @ [(ViewNeedsRefresh viewID)]
             Ok (_toList _changeLog)
 
-        let _destroyView (id: Identifier): Result<State.StateChange List, Error> =
+        let _destroyView (id: Identifier): Result<StateChange List, StateError> =
             let (h, ids) = Hierarchy.remove id _hierarchy
             for removedID in ids do
                 _viewModels.Remove removedID |> ignore
                 _viewStates.Remove removedID |> ignore
-                _changeLog.Add(State.StateChange.ViewDestroyed(removedID))
+                _changeLog.Add(StateChange.ViewDestroyed(removedID))
             _hierarchy <- h
             Ok (_toList _changeLog)
 
-        let _executeCommand (id: Identifier) (name: string) (arg: obj) : Result<State.StateChange List, Error> =
+        let _executeCommand (id: Identifier) (name: string) (arg: obj) : Result<StateChange List, StateError> =
             match _viewStates.TryGetValue id with
             | (true, vs) ->
                 match vs.Descriptor.Commands.TryFind name with
@@ -73,7 +61,7 @@ module Engine =
             | UpdateViewModel (viewID, vm) -> _updateViewModel viewID vm
             | DestroyView viewID -> _destroyView viewID
             | InvokeCommand (viewID, commandName, arg) -> _executeCommand viewID commandName arg
-            | _ -> Error (UnknownOperation operation)
+            //| _ -> Error (UnknownOperation operation)
         and _loopStates ctx eventBus ops cl =
             match ops with
             | [] -> Ok cl
@@ -94,24 +82,22 @@ module Engine =
         new(state: State, ctx: IForestContext) = MutableState(state.Hierarchy, state.ViewModels, state.ViewStates, EventBus.create(), ctx)
 
         member private __._visitViewState (evb: IEventBus) (vs:ViewState) =
-            // TODO: more vi setup
             vs.View.EventBus <- evb
             vs.View.ViewStateModifier <- (upcast self : IViewStateModifier)
             vs
 
         member private __._unvisitViewState (vs:ViewState) =
-            // TODO: more vi setup
             vs.View.ViewStateModifier <- nil<IViewStateModifier>
             vs.View.EventBus <- nil<IEventBus>
             ()
 
-        member private __._addViewState (ctx: IForestContext) (evb: IEventBus) (parent: Identifier) (region: string) (viewName: string): Result<State.StateChange List, Error> =
+        member private __._addViewState (ctx: IForestContext) (evb: IEventBus) (parent: Identifier) (region: string) (viewName: string): Result<StateChange List, StateError> =
             let (hs, id) = (Hierarchy.add parent region viewName _hierarchy)
             match _createViewState ctx evb id with
             | Ok viewState ->
                 _hierarchy <- hs
                 _viewStates.Add (id, viewState)
-                _changeLog.Add(State.StateChange.ViewAdded(id, viewState.View.ViewModel))
+                _changeLog.Add(StateChange.ViewAdded(id, viewState.View.ViewModel))
                 Ok (_toList _changeLog)
             | Error e -> Error e
 
@@ -125,11 +111,11 @@ module Engine =
             with 
             | _ -> (_toList _changeLog)
 
-        member this.Apply (callResumeState: bool) (entry: State.StateChange) =
+        member this.Apply (callResumeState: bool) (entry: StateChange) =
             match entry with
-            | State.StateChange.ViewAdded (viewID, vm) ->
+            | StateChange.ViewAdded (viewID, vm) ->
                 match Identifier.isShell viewID with
-                | true -> Some (Error.HierarchyElementAbsent(viewID))
+                | true -> Some (StateError.HierarchyElementAbsent(viewID))
                 | false ->
                     let (hs, id) = _hierarchy |> Hierarchy.insert viewID.Parent viewID.UniqueID viewID.Region viewID.Name
                     match _viewModels.TryGetValue id with
@@ -140,12 +126,12 @@ module Engine =
                             if (callResumeState) then viewState.View.ResumeState(vm)
                             _hierarchy <- hs
                             _viewStates.Add (id, viewState)
-                            _viewModels.[id] = viewState.View.ViewModel
+                            _viewModels.[id] <- viewState.View.ViewModel
                             None
                         | Error e -> Some e
-            | State.StateChange.ViewDestroyed (viewID) ->
+            | StateChange.ViewDestroyed (viewID) ->
                  match _destroyView viewID with Ok _ -> None | Error e -> Some e
-            | State.StateChange.ViewModelUpdated (viewID, vm) -> 
+            | StateChange.ViewModelUpdated (viewID, vm) -> 
                 _viewModels.[viewID] <- vm
                 None
 
@@ -162,16 +148,16 @@ module Engine =
                 | (false, _) -> None
              member __.SetViewModel silent id vm = 
                 _viewModels.[id] <- vm
-                if not silent then _changeLog.Add(State.StateChange.ViewModelUpdated(id, vm))
+                if not silent then _changeLog.Add(StateChange.ViewModelUpdated(id, vm))
              member __.ActivateView parent region name =
-                let inline vsd changeList =
+                let inline vsd changeList =                    
                     match changeList with
-                    | head::_ -> Ok head
-                    | _ -> Error <| NoViewAdded
+                    | [] -> Error <| NoViewAdded
+                    | list -> list |> (List.last >> Ok)
 
                 let inline getViewState (vs: System.Collections.Generic.Dictionary<Identifier, ViewState>) ch =
                     match ch with
-                    | State.StateChange.ViewAdded (id, _) -> 
+                    | StateChange.ViewAdded (id, _) -> 
                         match vs.TryGetValue id with
                         | (true, viewState) -> Ok (upcast viewState.View : IView)
                         | (false, _) -> Error (ViewNotFound (id.Name) )
@@ -183,8 +169,8 @@ module Engine =
 
         interface IDisposable with member __.Dispose() = self.Dispose()
 
-    let inline private _applyStateChanges (mutableState:MutableState) (sync: bool) (changeLog: State.StateChange List) (ctx: IForestContext) (state: State) =
-        let rec _applyChangelog (ms: MutableState) (cl: State.StateChange List) =
+    let inline private _applyStateChanges (mutableState:MutableState) (sync: bool) (changeLog: StateChange List) (ctx: IForestContext) (state: State) =
+        let rec _applyChangelog (ms: MutableState) (cl: StateChange List) =
             match cl with
             | [] -> None
             | head::tail -> 
@@ -205,11 +191,11 @@ module Engine =
             // TODO: exception or error view stuff
 
 
-    let ApplyChangeLog (ctx: IForestContext) (state: State) (changeLog: State.StateChange List) = 
+    let ApplyChangeLog (ctx: IForestContext) (state: State) (changeLog: StateChange List) = 
         use ms = new MutableState(state, ctx)
         _applyStateChanges ms true changeLog ctx state
 
-    let Update (ctx: IForestContext) (state: State) (operation: ForestOperation) =
+    let Update (ctx: IForestContext) (operation: ForestOperation) (state: State) =
         // when forest engine kicks in then this is what must happen:
         // 1 - the engine initially keeps an immutable state of the current views and viewmodels
         // 2 - the engine consults the hierarchy and creates a mutable state instance

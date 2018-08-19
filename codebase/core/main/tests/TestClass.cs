@@ -46,8 +46,7 @@ namespace Forest.Tests
             //
             var ctx = new DefaultForestContext(new DefaultViewRegistry(new View.Factory()));
             ctx.ViewRegistry.Register<My.View>();
-            var state = Forest.StateModule.Empty;
-            state = Forest.Engine.Update(ctx, state, ForestOperation.NewInstantiateView(IdentifierModule.Shell, string.Empty, My.ViewName));
+            var state = Forest.Engine.Update(ctx, ForestOperation.NewInstantiateView(IdentifierModule.Shell, string.Empty, My.ViewName), State.Empty);
 
             //var index = Forest.Engine.CreateIndex(ctx, rawTemplateStructureFromJson);
             //
