@@ -6,24 +6,11 @@ open System
 open System.Reflection
 
 
-type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
-    inherit IView
-    abstract ViewModel: 'T with get
-
-[<Serializable>]
-type AbstractViewException(message: string, inner: Exception) =
-    inherit Exception(isNotNull "message" message, inner)
-    new (message: string) = AbstractViewException(message, null)
-
-[<Serializable>]
-type ViewAttributeMissingException(viewType: Type, inner: Exception) =
-    inherit AbstractViewException(String.Format("The type `{0}` must be annotated with a `{1}`", viewType.FullName, typeof<ViewAttribute>.FullName), inner)
-    new (viewType: Type) = ViewAttributeMissingException(isNotNull "viewType" viewType, null)
-
-[<Serializable>]
-type ViewTypeIsAbstractException(viewType: Type, inner: Exception) =
-    inherit AbstractViewException(String.Format("Cannot instantiate view from type `{0}` because it is an interface or an abstract class.", (isNotNull "viewType" viewType).FullName), inner)
-    new (viewType: Type) = ViewTypeIsAbstractException(isNotNull "viewType" viewType, null)
+// contains the active mutable forest state, such as the latest dom index and view state changes
+type [<Sealed>] internal ViewState(id: Identifier, descriptor: IViewDescriptor, viewInstance: IViewInternal) =
+    member __.ID with get() = id
+    member __.Descriptor with get() = descriptor
+    member __.View with get() = viewInstance
 
 type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     let mutable _viewModel : 'T = new 'T()
