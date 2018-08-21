@@ -4,30 +4,30 @@ open System
 
 [<Serializable>]
 type [<Struct>] StateError =
-    | ViewNotFound of ViewName: string
-    | UnexpectedModelState of Path: Identifier
-    | CommandNotFound of Parameters: Identifier * string
-    | CommandError of Cause: Command.Error
-    | HierarchyElementAbsent of ID: Identifier
+    | ViewNotFound of view: string
+    | UnexpectedModelState of identifier: Identifier
+    | CommandNotFound of owner: Identifier * command: string
+    | CommandError of cause: Command.Error
+    | HierarchyElementAbsent of orphanIdentifier: Identifier
     | NoViewAdded
 
 [<Serializable>]
 type StateChange =
-    | ViewAdded of AddParams: Identifier * obj
-    | ViewModelUpdated of UpdateParams: Identifier * obj
-    | ViewDestroyed of DestroyedViewID: Identifier
+    | ViewAdded of parent: Identifier * viewModel: obj
+    | ViewModelUpdated of parent: Identifier * updatedViewModel: obj
+    | ViewDestroyed of destroyedViewID: Identifier
 
 type ForestOperation =
-    | InstantiateView of Identifier * string * string
-    | UpdateViewModel of Identifier * obj
-    | DestroyView of Identifier
-    | InvokeCommand of Identifier * string * obj
-    | Multiple of ForestOperation list
+    | InstantiateView of parent: Identifier * region: string * viewName: string
+    | UpdateViewModel of parent: Identifier * viewModel: obj
+    | DestroyView of identifier: Identifier
+    | InvokeCommand of owner: Identifier * commandName: string * commandArg: obj
+    | Multiple of operations: ForestOperation list
 
-type [<Sealed>] internal MutableState =
+type [<Sealed>] internal MutableStateScope =
     interface IDisposable
     interface IViewStateModifier
-    internal new: Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState> * IForestContext -> MutableState
+    internal new: Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState> * IForestContext -> MutableStateScope
     member Apply: bool -> StateChange -> StateError option
     member Update: ForestOperation -> StateChange list
     member Deconstruct: unit -> Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState>

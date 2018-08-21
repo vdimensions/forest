@@ -5,30 +5,32 @@ open System
 
 [<Serializable>]
 type [<Struct>] StateError =
-    | ViewNotFound of ViewName: string
-    | UnexpectedModelState of Path: Identifier
-    | CommandNotFound of Parameters: Identifier * string
-    | CommandError of Cause: Command.Error
-    | HierarchyElementAbsent of ID: Identifier
+    | ViewNotFound of view: string
+    | UnexpectedModelState of identifier: Identifier
+    | CommandNotFound of owner: Identifier * command: string
+    | CommandError of cause: Command.Error
+    | HierarchyElementAbsent of orphanIdentifier: Identifier
     | NoViewAdded
 
 [<Serializable>]
 type StateChange =
-    | ViewAdded of AddParams: Identifier * obj
-    | ViewModelUpdated of UpdateParams: Identifier * obj
-    | ViewDestroyed of DestroyedViewID: Identifier
+    | ViewAdded of parent: Identifier * viewModel: obj
+    | ViewModelUpdated of parent: Identifier * updatedViewModel: obj
+    | ViewDestroyed of destroyedViewID: Identifier
 
 type ForestOperation =
-    | InstantiateView of Identifier * string * string
-    | UpdateViewModel of Identifier * obj
-    | DestroyView of Identifier
-    | InvokeCommand of Identifier * string * obj
-    | Multiple of ForestOperation list
+    | InstantiateView of parent: Identifier * region: string * viewName: string
+    | UpdateViewModel of parent: Identifier * viewModel: obj
+    | DestroyView of identifier: Identifier
+    | InvokeCommand of owner: Identifier * commandName: string * commandArg: obj
+    | Multiple of operations: ForestOperation list
 
-type [<Sealed>] internal MutableState (hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates: Map<Identifier, ViewState>, ctx: IForestContext) as self = 
-    do 
+type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates: Map<Identifier, ViewState>, ctx: IForestContext) as self = 
+    do
         for kvp in viewStates do 
             kvp.Value |> self._visitViewState |> ignore
+        // TODO: create non-existing view-states, call resume state on the newly created ones
+        //
     let mutable _hierarchy = hierarchy
     let _eventBus: IEventBus = Forest.Events.EventBus.create()
     let _viewModels: System.Collections.Generic.Dictionary<Identifier, obj> = System.Collections.Generic.Dictionary(viewModels)
@@ -83,15 +85,13 @@ type [<Sealed>] internal MutableState (hierarchy: Hierarchy, viewModels: Map<Ide
             |>= _processChanges ctx head
             |>= _loopStates ctx tail     
 
-    let _createViewState(ctx: IForestContext) (id: Identifier) =
+    member private __._createViewState(ctx: IForestContext) (id: Identifier) =
         match ctx.ViewRegistry.GetDescriptor(id.Name) |> null2vopt with
         | ValueSome vd ->
             let vi = (ctx.ViewRegistry.Resolve id.Name) :?> IViewInternal
             vi.InstanceID <- id
             ViewState(id, vd, vi) |> (self._visitViewState >> Ok)
         | ValueNone -> Error (ViewNotFound id.Name)
-
-    //new(state: State1, ctx: IForestContext) = MutableState(state.Hierarchy, state.ViewModels, state.ViewStates, EventBus.create(), ctx)
 
     member private __._visitViewState (vs:ViewState) =
         vs.View.EventBus <- _eventBus
@@ -105,7 +105,7 @@ type [<Sealed>] internal MutableState (hierarchy: Hierarchy, viewModels: Map<Ide
 
     member private __._addViewState (ctx: IForestContext) (parent: Identifier) (region: string) (viewName: string): Result<StateChange List, StateError> =
         let (hs, id) = (Hierarchy.add parent region viewName _hierarchy)
-        match _createViewState ctx id with
+        match self._createViewState ctx id with
         | Ok viewState ->
             _hierarchy <- hs
             _viewStates.Add (id, viewState)
@@ -123,7 +123,7 @@ type [<Sealed>] internal MutableState (hierarchy: Hierarchy, viewModels: Map<Ide
         with 
         | _ -> (_toList _changeLog)
 
-    member this.Apply (callResumeState: bool) (entry: StateChange) =
+    member __.Apply (callResumeState: bool) (entry: StateChange) =
         match entry with
         | StateChange.ViewAdded (viewID, vm) ->
             match Identifier.isShell viewID with
@@ -133,16 +133,16 @@ type [<Sealed>] internal MutableState (hierarchy: Hierarchy, viewModels: Map<Ide
                 match _viewModels.TryGetValue id with
                 | (true, _) -> Some (UnexpectedModelState viewID)
                 | (false, _) ->
-                    match _createViewState ctx id with
+                    match self._createViewState ctx id with
                     | Ok viewState ->
-                        if (callResumeState) then viewState.View.ResumeState(vm)
                         _hierarchy <- hs
                         _viewStates.Add (id, viewState)
                         _viewModels.[id] <- viewState.View.ViewModel
+                        if (callResumeState) then viewState.View.ResumeState()
                         None
                     | Error e -> Some e
         | StateChange.ViewDestroyed (viewID) ->
-                match _destroyView viewID with Ok _ -> None | Error e -> Some e
+            match _destroyView viewID with Ok _ -> None | Error e -> Some e
         | StateChange.ViewModelUpdated (viewID, vm) -> 
             _viewModels.[viewID] <- vm
             None
@@ -182,8 +182,8 @@ type [<Sealed>] internal MutableState (hierarchy: Hierarchy, viewModels: Map<Ide
 
 type State1 =
     | Empty
-    | Some of Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState>
-    | Mutable
+    | ReadOnly of Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState>
+    | Active of MutableStateScope
 
 [<Serializable>]
 type State internal(hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>) =

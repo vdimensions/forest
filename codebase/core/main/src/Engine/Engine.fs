@@ -1,25 +1,12 @@
 ﻿namespace Forest
 
 open Forest
-open Forest.Events
-
-open System
-
 
 
 [<RequireQualifiedAccess>]
 module Engine =
-
-    let inline private _toMap (dict: System.Collections.Generic.IDictionary<'a, 'b>) : Map<'a, 'b> =
-        dict
-        |> Seq.map (|KeyValue|)
-        |> Map.ofSeq
-    //let private _toMap<'k, 'v> = Seq.map (|KeyValue|) >> Map.ofSeq<'k,'v>
-    
-    
-
-    let inline private _applyStateChanges (mutableState:MutableState) (sync: bool) (changeLog: StateChange List) (ctx: IForestContext) (state: State) =
-        let rec _applyChangelog (ms: MutableState) (cl: StateChange List) =
+    let inline private _applyStateChanges (mutableState:MutableStateScope) (sync: bool) (changeLog: StateChange List) (ctx: IForestContext) (state: State) =
+        let rec _applyChangelog (ms: MutableStateScope) (cl: StateChange List) =
             match cl with
             | [] -> None
             | head::tail -> 
@@ -41,7 +28,7 @@ module Engine =
 
 
     let ApplyChangeLog (ctx: IForestContext) (state: State) (changeLog: StateChange List) = 
-        use ms = new MutableState(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+        use ms = new MutableStateScope(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
         _applyStateChanges ms true changeLog ctx state
 
     let Update (ctx: IForestContext) (operation: ForestOperation) (state: State) =
@@ -58,7 +45,7 @@ module Engine =
         //     this is the hooking point for replicating the changelog on another machine
 
         // TODO: invoke steps 1..4
-        use ms = new MutableState(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+        use ms = new MutableStateScope(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
         let c = ms.Update operation
         //_applyStateChanges ms false c ctx state
         // TODO: raise event for state changes

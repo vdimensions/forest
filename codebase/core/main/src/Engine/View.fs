@@ -21,38 +21,38 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         _eventBus.Publish(self, message, topics)
 
-    abstract member ResumeState: vm: 'T -> unit // TODO
+    abstract member ResumeState: unit -> unit // TODO
 
     member __.FindRegion (NotNull "name" name) = upcast Region(name, self) : IRegion
 
     member __.ViewModel
         with get ():'T = _viewModel
         and set (NotNull "value" value: 'T) = (_viewModel <- value) |> _viewStateModifier.SetViewModel false _instanceID
-    member __.InstanceID
+    member internal __.InstanceID
         with get() = _instanceID
-        and set(v) = _instanceID <- v
+        and set(NotNull "value" value) = _instanceID <- value
 
     interface IViewInternal with
-        member __.ResumeState (NotNull "viewModel" viewModel) = self.ResumeState(downcast viewModel: 'T)
+        member __.ResumeState () = self.ResumeState()
         member __.EventBus 
             with get() = _eventBus
             and set value = _eventBus <- value
         member __.InstanceID
             with get() = self.InstanceID
-            and set v = self.InstanceID <- v
+            and set value = self.InstanceID <- value
         member __.ViewStateModifier
             with get() = _viewStateModifier
-            and set v = 
-                match null2opt v with
+            and set value = 
+                match null2opt value with
                 | Some md -> 
                     match md.GetViewModel self.InstanceID with
                     | Some vm -> _viewModel <- (downcast vm : 'T)
                     | None -> md.SetViewModel true self.InstanceID _viewModel
                 | None -> 
-                    match _viewStateModifier.GetViewModel self.InstanceID with
+                    match _viewStateModifier |> (null2opt >>= (fun vsm -> vsm.GetViewModel self.InstanceID)) with
                     | Some vm -> _viewModel <- (downcast vm : 'T)
                     | None -> ()                    
-                _viewStateModifier <- v
+                _viewStateModifier <- value
 
     interface IView<'T> with member __.ViewModel with get() = self.ViewModel
 
@@ -97,12 +97,12 @@ module View =
         | true -> Some (tt.GetGenericArguments().[0])
         | false -> None
 
-    let inline private tryGetViewModelType (t: Type) = 
+    let inline private _tryGetViewModelType (t: Type) = 
         t.GetInterfaces()
         |> Seq.choose _selectViewModelTypes
         |> Seq.tryHead
 
-    let getViewModelType (NotNull "viewType" viewType: Type) = Result.some (NonGenericView viewType) (tryGetViewModelType viewType)
+    let getViewModelType (NotNull "viewType" viewType: Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
     type [<Sealed>] Factory() as self = 
         member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 

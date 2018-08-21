@@ -1,4 +1,4 @@
 namespace Forest
 
 type [<Interface>] ISecurityManager =
-    abstract member HasAccess: principal: string -> descriptor: IForestDescriptor -> bool
+    abstract member HasAccess: descriptor: IForestDescriptor -> bool

@@ -8,8 +8,8 @@ open System.Collections.Generic
 
 
 type [<Struct>] ViewRegistryError = 
-    | ViewError of ViewError: View.Error
-    | CommandError of CommandError: Command.Error
+    | ViewError of viewError: View.Error
+    | CommandError of commandError: Command.Error
 
 type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this = 
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
@@ -87,7 +87,8 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
             | Ok vmt -> Ok (viewAttr, viewType, vmt)
             | Error e -> Error e
         let inline getViewDescriptor (viewAttr: ViewAttribute, viewType: Type, viewModelType: Type) =
-            let inline getMethods (f) = viewType.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
+            let inline getMethods (f) = 
+                viewType.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
             let inline createCommandMetadata (a: seq<CommandAttribute>, mi: MethodInfo) =
                 let parameters = mi.GetParameters()
                 if mi.ReturnType <> typeof<Void> 
@@ -104,7 +105,6 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                         |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi)) 
                         |> Ok
                     | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
-
             let getCommandDescriptors = 
                 getMethods 
                 >> Seq.map (fun x -> (x |> getCommandAttribs), x)
@@ -130,10 +130,10 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                     |> Seq.choose Result.ok
                     |> Seq.concat
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
-                Ok (upcast View.Descriptor(viewAttr.Name, viewType, viewModelType, (Index commandsIndex)) : IViewDescriptor)
+                    |> Index
+                Ok (upcast View.Descriptor(viewAttr.Name, viewType, viewModelType, commandsIndex) : IViewDescriptor)
             | _ -> Error (Command.Error.MultipleErrors failedCommandLookups)
 
         let f1 = (Result.mapError ViewError << (getViewAttribute >>= getViewModelType))
-        let f3 = (Result.mapError CommandError << getViewDescriptor)
-        let f4 = f1 >>= f3
-        f4 t
+        let f2 = (Result.mapError CommandError << getViewDescriptor)
+        f1 >>= f2 <| t

@@ -40,6 +40,7 @@
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="Rendering\Renderer.fs" />
     <Content Include="doc.txt" />
+    <None Include="mason.properties" />
     <None Include="paket.dependencies" />
     <None Include="paket.references" />
     <None Include="Script.fsx" />
