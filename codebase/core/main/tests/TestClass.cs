@@ -14,9 +14,23 @@ namespace Forest.Tests
         [View(ViewName)]
         internal class View : AbstractView<ViewModel>
         {
-            public override void ResumeState()
+            public override void Load()
             {
-                throw new NotImplementedException();
+                //throw new NotImplementedException();
+            }
+        }
+    }
+    static class Other
+    {
+        internal const string ViewName = "Other";
+        internal class ViewModel { }
+
+        [View(ViewName)]
+        internal class View : AbstractView<ViewModel>
+        {
+            public override void Load()
+            {
+                this.FindRegion("SomeRegion").ActivateView(My.ViewName);
             }
         }
     }
@@ -40,6 +54,17 @@ namespace Forest.Tests
             var ctx = new DefaultForestContext(new View.Factory(), null);
             ctx.ViewRegistry.Register<My.View>();
             var state = Forest.Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, My.ViewName), State.Empty);
+
+            Assert.AreNotEqual(state, State.Empty);
+        }
+
+        [Test]
+        public void TestAddingViewFormAnotherOne()
+        {
+            var ctx = new DefaultForestContext(new View.Factory(), null);
+            ctx.ViewRegistry.Register<My.View>();
+            ctx.ViewRegistry.Register<Other.View>();
+            var state = Forest.Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, Other.ViewName), State.Empty);
 
             Assert.AreNotEqual(state, State.Empty);
         }

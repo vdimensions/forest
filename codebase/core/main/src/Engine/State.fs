@@ -90,7 +90,7 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
         | ValueSome vd ->
             let vi = (ctx.ViewRegistry.Resolve id.Name) :?> IViewInternal
             vi.InstanceID <- id
-            ViewState(id, vd, vi) |> (self._visitViewState >> Ok)
+            ViewState(id, vd, vi) |> (self._visitViewState >> Ok) // will also set the view model
         | ValueNone -> Error (ViewNotFound id.Name)
 
     member private __._visitViewState (vs:ViewState) =
@@ -110,6 +110,7 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
             _hierarchy <- hs
             _viewStates.Add (id, viewState)
             _changeLog.Add(StateChange.ViewAdded(id, viewState.View.ViewModel))
+            viewState.View.ResumeState()
             Ok (_toList _changeLog)
         | Error e -> Error e
 
@@ -138,7 +139,8 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
                         _hierarchy <- hs
                         _viewStates.Add (id, viewState)
                         _viewModels.[id] <- viewState.View.ViewModel
-                        if (callResumeState) then viewState.View.ResumeState()
+                        //if (callResumeState) then viewState.View.ResumeState()
+                        viewState.View.ResumeState()
                         None
                     | Error e -> Some e
         | StateChange.ViewDestroyed (viewID) ->

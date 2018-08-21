@@ -21,7 +21,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         _eventBus.Publish(self, message, topics)
 
-    abstract member ResumeState: unit -> unit // TODO
+    abstract member Load: unit -> unit // TODO
 
     member __.FindRegion (NotNull "name" name) = upcast Region(name, self) : IRegion
 
@@ -33,7 +33,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
         and set(NotNull "value" value) = _instanceID <- value
 
     interface IViewInternal with
-        member __.ResumeState () = self.ResumeState()
+        member __.ResumeState () = self.Load()
         member __.EventBus 
             with get() = _eventBus
             and set value = _eventBus <- value
