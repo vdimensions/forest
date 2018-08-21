@@ -74,21 +74,22 @@ and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: Abst
 [<RequireQualifiedAccessAttribute>]
 module View =
     // TODO: argument verification
-    type [<Sealed>] Descriptor internal (name: string, viewType: Type, viewModelType: Type, commands: Index<ICommandDescriptor, string>) as self = 
+    type [<Sealed>] internal Descriptor internal (name: string, viewType: Type, viewModelType: Type, commands: Index<ICommandDescriptor, string>) as self = 
         member __.Name with get() = name
         member __.ViewType with get() = viewType
         member __.ViewModelType with get() = viewModelType
         member __.Commands with get() = commands
-        interface IViewDescriptor with
+        interface IForestDescriptor with
             member __.Name = self.Name
+        interface IViewDescriptor with
             member __.ViewType = self.ViewType
             member __.ViewModelType = self.ViewModelType
             member __.Commands = self.Commands
 
-    type Error = 
-        | ViewAttributeMissing of Type
-        | ViewTypeIsAbstract of Type
-        | NonGenericView of Type
+    type [<Struct>] Error = 
+        | ViewAttributeMissing of NonAnnotatedViewType: Type
+        | ViewTypeIsAbstract of AbstractViewType: Type
+        | NonGenericView of NonGenericViewType: Type
 
     let inline private _selectViewModelTypes (tt: Type) = 
         let isGenericView = tt.IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)

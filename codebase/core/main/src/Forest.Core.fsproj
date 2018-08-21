@@ -25,14 +25,20 @@
     <Compile Include="Primitives\Hierarchy.fs" />
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\Forest.fs" />
+    <Compile Include="Api\Security.fs" />
+    <Compile Include="Api\Context.fs" />
+    <Compile Include="Api\EventBus.fs" />
+    <Compile Include="Api\ViewApi.fs" />
+    <Compile Include="Api\Internals.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\View.fs" />
     <Compile Include="Engine\DefaultViewRegistry.fs" />
-    <Compile Include="Engine\EventBus.fs" />
+    <Compile Include="Engine\EventBusImpl.fs" />
     <Compile Include="Engine\DefaultForestContext.fs" />
     <Compile Include="Engine\State.fsi" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\Engine.fs" />
+    <Compile Include="Rendering\Renderer.fs" />
     <Content Include="doc.txt" />
     <None Include="paket.dependencies" />
     <None Include="paket.references" />
@@ -43,7 +49,9 @@
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Templates\" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

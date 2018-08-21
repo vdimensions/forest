@@ -6,7 +6,7 @@ open System
 
 
 [<Serializable>]
-type [<Struct>] Hierarchy = {
+type [<Struct>] internal Hierarchy = {
     Hierarchy: Map<Identifier, Identifier list>;
 }
 

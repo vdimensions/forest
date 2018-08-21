@@ -10,7 +10,7 @@ type [<AbstractClass>] ForestNodeAttribute(name: string) =
 [<AttributeUsage(AttributeTargets.Class)>]
 type [<Sealed>] ViewAttribute(name: string) = 
     inherit ForestNodeAttribute(name)
-    member val AutowireCommands = false with get, set
+    //member val AutowireCommands = false with get, set
 
 [<AttributeUsage(AttributeTargets.Method)>]
 type [<Sealed>] CommandAttribute(name: string) = inherit ForestNodeAttribute(name)

@@ -7,14 +7,14 @@ open System.Reflection
 open System.Collections.Generic
 
 
-type ViewRegistryError = 
-    | ViewError of View.Error
-    | CommandError of Command.Error
+type [<Struct>] ViewRegistryError = 
+    | ViewError of ViewError: View.Error
+    | CommandError of CommandError: Command.Error
 
 type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this = 
-    let storage: IDictionary<string, View.Descriptor> = upcast new Dictionary<string, View.Descriptor>(StringComparer.Ordinal)
+    let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
-    abstract member GetViewMetadata: t: Type -> Result<View.Descriptor, ViewRegistryError>
+    abstract member GetViewMetadata: t: Type -> Result<IViewDescriptor, ViewRegistryError>
 
     member __.InstantiateView viewMetadata = 
         factory.Resolve viewMetadata
@@ -53,7 +53,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
 
     member __.GetViewDescriptor (NotNull "name" name) = 
         match (storage.TryGetValue name) with
-        | (true, metadata) -> upcast metadata : IViewDescriptor
+        | (true, metadata) -> metadata
         | (false, _) -> nil<IViewDescriptor>  
             
     interface IViewRegistry with
@@ -61,7 +61,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         member __.Register<'T when 'T:> IView> () = this.Register<'T>()
         member __.Resolve (name: string) = this.Resolve name
         //member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
-        member __.GetViewMetadata name = this.GetViewDescriptor name
+        member __.GetDescriptor name = this.GetViewDescriptor name
 
 type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) = 
     inherit AbstractViewRegistry(factory)
@@ -95,15 +95,15 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                 else
                     let parameterType = 
                         match parameters with
-                        | [||] -> Some typeof<Void>
-                        | [|param|] -> Some param.ParameterType
-                        | _ -> None
+                        | [||] -> ValueSome typeof<Void>
+                        | [|param|] -> ValueSome param.ParameterType
+                        | _ -> ValueNone
                     match parameterType with
-                    | Some parameterType ->
+                    | ValueSome parameterType ->
                         a 
                         |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi)) 
                         |> Ok
-                    | None -> Error (Command.Error.MoreThanOneArgument(mi))
+                    | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
 
             let getCommandDescriptors = 
                 getMethods 
@@ -130,7 +130,7 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                     |> Seq.choose Result.ok
                     |> Seq.concat
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
-                Ok (View.Descriptor(viewAttr.Name, viewType, viewModelType, (Index commandsIndex)))
+                Ok (upcast View.Descriptor(viewAttr.Name, viewType, viewModelType, (Index commandsIndex)) : IViewDescriptor)
             | _ -> Error (Command.Error.MultipleErrors failedCommandLookups)
 
         let f1 = (Result.mapError ViewError << (getViewAttribute >>= getViewModelType))

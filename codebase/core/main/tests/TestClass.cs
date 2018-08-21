@@ -13,7 +13,7 @@ namespace Forest.Tests
         internal const string ViewName = "MyView";
         internal class ViewModel { }
 
-        [View(ViewName, AutowireCommands = false)]
+        [View(ViewName)]
         internal class View : Forest.AbstractView<ViewModel>
         {
             public override void ResumeState(ViewModel vm)
@@ -39,25 +39,11 @@ namespace Forest.Tests
         [Test]
         public void TestMethod()
         {
-            //IDictionary<string, object> rawTemplateStructureFromJson = new Dictionary<string, object>();
-            //
-            //var x = Add(Get(Add(Get(Add(rawTemplateStructureFromJson, "rootView"), "rootView"), "contentRegion"), "contentRegion"), "MyView");
-            //Add(Get(Add(x, "view2"), "view2"), "emptyRegion");
-            //
             var ctx = new DefaultForestContext(new DefaultViewRegistry(new View.Factory()));
             ctx.ViewRegistry.Register<My.View>();
             var state = Forest.Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, My.ViewName), State.Empty);
 
-            //var index = Forest.Engine.CreateIndex(ctx, rawTemplateStructureFromJson);
-            //
-            //Console.WriteLine("dom index contains {0} root nodes", index.Count);
-            //foreach (var path in index.Paths)
-            //foreach (var domNode in index[path].Value)
-            //{
-            //    Console.WriteLine("  +-[{0}]", domNode.Path.ToString());
-            //}
-            //
-            //var execIdnex = Forest.Engine.Execute(ctx, index);
+            Assert.AreNotEqual(state, State.Empty);
         }
     }
 }
