@@ -1,5 +1,5 @@
 ﻿//
-// Copyright 2014 vdimensions.net.
+// Copyright 2014-2018 vdimensions.net.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,9 +19,30 @@ open Forest
 
 open System
 open System.Collections.Generic
+open System.Reflection
 
 
-module EventBus = 
+module Event = 
+
+    type [<Sealed>] internal Descriptor(vt: Type, mt: Type, mi: MethodInfo, topics: string array) as this =
+        member __.Trigger (NotNull "view" view: IView) (NotNull "message" message: obj) = ignore <| mi.Invoke(view, [|message|])
+        member __.MessageType with get () = mt
+        member __.Topics with get () = topics
+        interface IEventDescriptor with
+            member __.Trigger v m = this.Trigger v m
+            member __.MessageType = this.MessageType
+            member __.Topics = this.Topics
+
+    type [<Sealed>] internal Handler(descriptor: IEventDescriptor, receiver: IView) =
+        interface ISubscriptionHandler with
+            member __.MessageType = descriptor.MessageType
+            member __.Invoke message = descriptor.Trigger receiver message
+            member __.Receiver = receiver
+
+    type Error =
+        | NonVoidReturnType of methodWithReturnValue: MethodInfo
+        | BadEventSignature of badEventSignatureMethod: MethodInfo
+        | MultipleErrors of errors: Error list
 
     let inline private _subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
@@ -43,11 +64,11 @@ module EventBus =
 
             for subscription in subscriptions do subscription.Invoke message
 
-        member __.Dispose (disposing: bool): unit =
+        member __.Dispose () =
             for value in _subscriptions.Values do value.Clear()
             _subscriptions.Clear()
 
-        member __.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, NotNull "topics" topics: string[]) : unit =
+        member __.Publish<'M> (NotNull "sender" sender: IView, NotNull "message" message:'M, NotNull "topics" topics: string[]) : unit =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
@@ -87,7 +108,7 @@ module EventBus =
             member __.Subscribe x y = upcast self.Subscribe (x, y)
             member __.Unsubscribe receiver = upcast self.Unsubscribe receiver
 
-        interface IDisposable with member __.Dispose () = self.Dispose(true)
+        interface IDisposable with member __.Dispose () = self.Dispose()
 
     [<CompiledName("Create")>]
-    let create() : IEventBus = upcast new T()
+    let internal create() : IEventBus = upcast new T()

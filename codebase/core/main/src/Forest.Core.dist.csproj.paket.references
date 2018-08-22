@@ -1,0 +1,3 @@
+group build
+  Mason.Targets.Packager
+  Mason.Targets.Verman

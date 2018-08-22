@@ -6,9 +6,9 @@ using NUnit.Framework;
 
 namespace Forest.Tests
 {
-    static class My
+    internal static class Inner
     {
-        internal const string ViewName = "My";
+        internal const string ViewName = "Inner";
         internal class ViewModel { }
 
         [View(ViewName)]
@@ -20,9 +20,10 @@ namespace Forest.Tests
             }
         }
     }
-    static class Other
+
+    internal static class Outer
     {
-        internal const string ViewName = "Other";
+        internal const string ViewName = "Outer";
         internal class ViewModel { }
 
         [View(ViewName)]
@@ -30,7 +31,8 @@ namespace Forest.Tests
         {
             public override void Load()
             {
-                this.FindRegion("SomeRegion").ActivateView(My.ViewName);
+                var innerView = (Inner.View) FindRegion("SomeRegion").ActivateView(Inner.ViewName);
+                innerView.ViewModel = new Inner.ViewModel();
             }
         }
     }
@@ -52,8 +54,8 @@ namespace Forest.Tests
         public void TestMethod()
         {
             var ctx = new DefaultForestContext(new View.Factory(), null);
-            ctx.ViewRegistry.Register<My.View>();
-            var state = Forest.Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, My.ViewName), State.Empty);
+            ctx.ViewRegistry.Register<Inner.View>();
+            var state = Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, Inner.ViewName), State.Empty);
 
             Assert.AreNotEqual(state, State.Empty);
         }
@@ -62,9 +64,9 @@ namespace Forest.Tests
         public void TestAddingViewFormAnotherOne()
         {
             var ctx = new DefaultForestContext(new View.Factory(), null);
-            ctx.ViewRegistry.Register<My.View>();
-            ctx.ViewRegistry.Register<Other.View>();
-            var state = Forest.Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, Other.ViewName), State.Empty);
+            ctx.ViewRegistry.Register<Inner.View>();
+            ctx.ViewRegistry.Register<Outer.View>();
+            var state = Engine.Update(ctx, ForestOperation.NewInstantiateView(Identifier.Shell, string.Empty, Outer.ViewName), State.Empty);
 
             Assert.AreNotEqual(state, State.Empty);
         }

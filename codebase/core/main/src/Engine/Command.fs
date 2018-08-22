@@ -18,8 +18,7 @@ module Command =
         member __.Name with get() = name
         member __.ArgumentType with get() = argType
         member __.Invoke (arg: obj) (view:IView) : unit = mi.Invoke(view, [|arg|]) |> ignore
-        interface IForestDescriptor with
-            member __.Name = self.Name
         interface ICommandDescriptor with
+            member __.Name = self.Name
             member __.ArgumentType = self.ArgumentType
             member __.Invoke arg view = self.Invoke arg view

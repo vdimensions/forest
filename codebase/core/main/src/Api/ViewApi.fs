@@ -7,7 +7,7 @@ type [<Interface>] IViewFactory =
 
 type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
     inherit IView
-    abstract ViewModel: 'T with get
+    abstract ViewModel: 'T with get, set
 
 [<Serializable>]
 type AbstractViewException(message: string, inner: Exception) =

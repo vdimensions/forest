@@ -1,6 +1,7 @@
 ﻿namespace Forest
 
 open Forest
+open Forest.Events
 
 open System
 open System.Reflection
@@ -9,7 +10,7 @@ open System.Collections.Generic
 
 type [<Struct>] ViewRegistryError = 
     | ViewError of viewError: View.Error
-    | CommandError of commandError: Command.Error
+    | BindingError of commandError: Command.Error * eventError: Event.Error
 
 type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this = 
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
@@ -22,7 +23,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
     member this.ResolveError (e: ViewRegistryError): Exception = 
         match e with
         | ViewError ve -> (this.ResolveViewError ve)
-        | CommandError ce -> (this.ResolveCommandError ce)
+        | BindingError (ce, ee) -> (this.ResolveBindingError ce ee)
 
     abstract member ResolveViewError: ve: View.Error -> Exception
     default __.ResolveViewError ve =
@@ -31,8 +32,8 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         | View.Error.ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t)
         | View.Error.NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
 
-    abstract member ResolveCommandError: ce: Command.Error -> Exception
-    default __.ResolveCommandError ce =
+    abstract member ResolveBindingError: ce: Command.Error -> ee: Event.Error -> Exception
+    default __.ResolveBindingError ce ee =
         // TODO
         match ce with
         | Command.Error.MoreThanOneArgument mi -> upcast InvalidOperationException()
@@ -75,6 +76,8 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
             getAttributesInternal(true)
         let inline getCommandAttribs (methodInfo: MethodInfo): seq<CommandAttribute> = 
             getAttributes methodInfo
+        let inline getEventAttribs (methodInfo: MethodInfo): seq<SubscriptionAttribute> = 
+            getAttributes methodInfo
 
         let inline getViewAttribute (viewType: Type) = 
             viewType
@@ -105,23 +108,54 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                         |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi)) 
                         |> Ok
                     | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
-            let getCommandDescriptors = 
-                getMethods 
-                >> Seq.map (fun x -> (x |> getCommandAttribs), x)
-                >> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
-                >> Seq.map createCommandMetadata
-                >> Seq.cache
+            let inline getCommandDescriptors methods = 
+                methods
+                |> Seq.map (fun x -> (x |> getCommandAttribs), x)
+                |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
+                |> Seq.map createCommandMetadata
+                |> Seq.cache
+            let inline createEventMetadata (a: seq<SubscriptionAttribute>, mi: MethodInfo) =
+                let parameters = mi.GetParameters()
+                if mi.ReturnType <> typeof<Void> 
+                then Error <| Event.Error.NonVoidReturnType(mi)
+                else
+                    let parameterType = 
+                        match parameters with
+                        | [||] -> ValueNone
+                        | [|param|] -> ValueSome param.ParameterType
+                        | _ -> ValueNone
+                    match parameterType with
+                    | ValueSome parameterType ->
+                        let topics = 
+                            a 
+                            |> Seq.map (fun sa -> sa.Topic) 
+                            |> Array.ofSeq 
+                        Ok <| (upcast Event.Descriptor(viewType, parameterType, mi, topics) : IEventDescriptor)
+                    | ValueNone -> Error <| Event.Error.BadEventSignature(mi)
+            let inline getEventDescriptors methods = 
+                methods 
+                |> Seq.map (fun x -> (x |> getEventAttribs), x)
+                |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
+                |> Seq.map createEventMetadata
+                |> Seq.cache
 
             let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
-            let commandDescriptorResults = getCommandDescriptors flags
+            let methods = getMethods flags
+            let commandDescriptorResults = getCommandDescriptors methods
             // get the list of command lookup errors
-            let failedCommandLookups = 
+            let commandDescriptorFailures = 
                 commandDescriptorResults  
                 |> Seq.choose Result.error
-                |> List.ofSeq
+                |> List.ofSeq 
 
-            match failedCommandLookups with
-            | [] -> 
+            let eventDescriptorResults = getEventDescriptors methods
+            let eventDescriptorFailures =
+                eventDescriptorResults  
+                |> Seq.choose Result.error
+                |> List.ofSeq 
+
+            match (commandDescriptorFailures, eventDescriptorFailures) with
+            | ([], []) -> 
                 let inline folder (m: Dictionary<string, ICommandDescriptor>) (e: ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
                     m.Add(e.Name, e)
                     m
@@ -131,9 +165,15 @@ type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) =
                     |> Seq.concat
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
                     |> Index
-                Ok (upcast View.Descriptor(viewAttr.Name, viewType, viewModelType, commandsIndex) : IViewDescriptor)
-            | _ -> Error (Command.Error.MultipleErrors failedCommandLookups)
 
-        let f1 = (Result.mapError ViewError << (getViewAttribute >>= getViewModelType))
-        let f2 = (Result.mapError CommandError << getViewDescriptor)
-        f1 >>= f2 <| t
+                let eventSubscriptions = 
+                    eventDescriptorResults 
+                    |> Seq.choose Result.ok 
+                    |> Array.ofSeq
+
+                Ok (upcast View.Descriptor(viewAttr.Name, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
+            | (ce, ee) -> 
+                let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
+                Error <| BindingError (ce', ee')
+
+        (Result.mapError ViewError << (getViewAttribute >>= getViewModelType)) >>= getViewDescriptor <| t

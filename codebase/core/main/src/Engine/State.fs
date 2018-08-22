@@ -1,5 +1,7 @@
 ﻿namespace Forest
 
+open Forest.Events
+
 open System
 
 
@@ -32,7 +34,7 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
         // TODO: create non-existing view-states, call resume state on the newly created ones
         //
     let mutable _hierarchy = hierarchy
-    let _eventBus: IEventBus = Forest.Events.EventBus.create()
+    let _eventBus: IEventBus = Forest.Events.Event.create()
     let _viewModels: System.Collections.Generic.Dictionary<Identifier, obj> = System.Collections.Generic.Dictionary(viewModels)
     let _viewStates: System.Collections.Generic.Dictionary<Identifier, ViewState> = System.Collections.Generic.Dictionary(viewStates)
 
@@ -95,10 +97,13 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
 
     member private __._visitViewState (vs:ViewState) =
         vs.View.EventBus <- _eventBus
+        vs.View.Descriptor <- vs.Descriptor
+        // NB: this setter triggers internal logic, it must be called last
         vs.View.ViewStateModifier <- (upcast self : IViewStateModifier)
         vs
 
     member private __._unvisitViewState (vs:ViewState) =
+        // NB: this setter triggers internal logic, it must be called first
         vs.View.ViewStateModifier <- nil<IViewStateModifier>
         vs.View.EventBus <- nil<IEventBus>
         ()
@@ -110,7 +115,7 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
             _hierarchy <- hs
             _viewStates.Add (id, viewState)
             _changeLog.Add(StateChange.ViewAdded(id, viewState.View.ViewModel))
-            viewState.View.ResumeState()
+            viewState.View.Load()
             Ok (_toList _changeLog)
         | Error e -> Error e
 
@@ -140,7 +145,7 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
                         _viewStates.Add (id, viewState)
                         _viewModels.[id] <- viewState.View.ViewModel
                         //if (callResumeState) then viewState.View.ResumeState()
-                        viewState.View.ResumeState()
+                        viewState.View.Load()
                         None
                     | Error e -> Some e
         | StateChange.ViewDestroyed (viewID) ->
@@ -163,6 +168,7 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
         member __.SetViewModel silent id vm = 
             _viewModels.[id] <- vm
             if not silent then _changeLog.Add(StateChange.ViewModelUpdated(id, vm))
+            vm
         member __.ActivateView parent region name =
             let inline vsd changeList =                    
                 match changeList with
@@ -176,10 +182,15 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
                     | (true, viewState) -> Ok (upcast viewState.View : IView)
                     | (false, _) -> Error (ViewNotFound (id.Name) )
                 | _ -> Error NoViewAdded
-
             match ForestOperation.InstantiateView(parent, region, name) |> ((self.Update >> vsd) >>= (getViewState _viewStates)) with
             | Ok view -> view
             | Error e -> failwith (e.ToString())
+        member __.SubscribeEvents view =
+            for event in view.Descriptor.Events do
+                let handler = Event.Handler(event, view)
+                for topic in event.Topics do _eventBus.Subscribe handler topic |> ignore
+        member __.UnsubscribeEvents view =
+            _eventBus.Unsubscribe view |> ignore
     interface IDisposable with member __.Dispose() = self.Dispose()
 
 type State1 =

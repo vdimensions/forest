@@ -16,6 +16,7 @@
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.fs" />
     <Compile Include="Utils\NullHandling.fs" />
     <Compile Include="Utils\Result.fs" />
     <Compile Include="Utils\Monad.fs" />
@@ -27,13 +28,12 @@
     <Compile Include="Api\Forest.fs" />
     <Compile Include="Api\Security.fs" />
     <Compile Include="Api\Context.fs" />
-    <Compile Include="Api\EventBus.fs" />
     <Compile Include="Api\ViewApi.fs" />
     <Compile Include="Api\Internals.fs" />
     <Compile Include="Engine\Command.fs" />
+    <Compile Include="Engine\Event.fs" />
     <Compile Include="Engine\View.fs" />
     <Compile Include="Engine\DefaultViewRegistry.fs" />
-    <Compile Include="Engine\EventBusImpl.fs" />
     <Compile Include="Engine\DefaultForestContext.fs" />
     <Compile Include="Engine\State.fsi" />
     <Compile Include="Engine\State.fs" />
@@ -54,5 +54,6 @@
   <ItemGroup>
     <Folder Include="Templates\" />
   </ItemGroup>
+  <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

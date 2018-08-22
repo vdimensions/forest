@@ -1,4 +1,4 @@
-namespace ${id}.AssemblyInfo
+﻿module ${id}.AssemblyInfo
 
 open System.Reflection
 open System.Runtime.CompilerServices
@@ -16,10 +16,12 @@ open System.Runtime.InteropServices
 [<assembly: AssemblyCulture("")>]
 
 [<assembly: ComVisible(false)>]
+#if !NETSTANDARD || NETSTANDARD1_1_OR_NEWER
 [<assembly: Guid("${guid}")>]
+#endif
 
 [<assembly: AssemblyVersion("${version}")>]
 [<assembly: AssemblyFileVersion("${version}")>]
+[<assembly: AssemblyInformationalVersion("${version}")>]
 
-do
-    ()
+do ()

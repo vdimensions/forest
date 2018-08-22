@@ -1,4 +1,4 @@
-msbuild="../../submodules/btw/msbuild.sh"
+msbuild="../../../../submodules/btw/msbuild.sh"
 paket='.paket/paket.sh'
 project='Forest.Core'
 
@@ -22,7 +22,7 @@ if [ $? -ne 0 ]; then
   echo ""
   exit
 fi
-$msbuild $project.verman.csproj
+$msbuild $project.dist.csproj
 if [ $? -ne 0 ]; then
   read -rsp "Press [Enter] to quit"
   echo ""
