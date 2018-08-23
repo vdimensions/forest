@@ -27,8 +27,8 @@ module internal Hierarchy =
         let h = state.Hierarchy.Remove(parent).Add(parent, list @ [newValue])
         ({ Hierarchy = h }, newValue)
 
-    let insert (parent: Identifier) (guid: Guid) (region: string) (name: string) (state: Hierarchy) : Hierarchy*Identifier =
-        let newValue = parent |> Identifier.add guid region name
+    let insert (parent: Identifier) (fid: ForestID) (region: string) (name: string) (state: Hierarchy) : Hierarchy*Identifier =
+        let newValue = parent |> Identifier.add fid region name
         let list = 
             match state.Hierarchy.TryFind parent with
             | Some list -> list
@@ -57,7 +57,7 @@ module internal Hierarchy =
 
     let tryFindView (id: Identifier) (regionName: string) (viewName: string) (state: Hierarchy) : Identifier option =
         let cmp = StringComparer.Ordinal
-        state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.Name, viewName) )
+        state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.View, viewName) )
 
     let empty = { 
         Hierarchy = Map.empty.Add(Identifier.shell, List.Empty);

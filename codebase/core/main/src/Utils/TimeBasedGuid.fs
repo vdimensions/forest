@@ -1,16 +1,27 @@
-#r "bin/Debug/net45/Forest.Core.dll"
-#r "System.Core"
-#r "System"
-#r "System.Numerics"
-#r "System.Runtime.Serialization"
+﻿namespace Forest.Utils
+
 open System.Runtime.InteropServices
 
-module Guid =
+/// <summary>
+/// Used for generating UUID based on RFC 4122.
+/// <para>
+/// Adapted from C# version found in https://gist.github.com/nberardi/3759706
+/// </para>
+/// </summary>
+/// <seealso href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122 - A Universally Unique IDentifier (UUID) URN Namespace</seealso>
+module internal TimeBasedGuid =
     let inline private iod def i (arr:'a array) = if arr.Length > i then arr.[i] else def
     let private iodb = iod 0uy
     let private iodb2 bytes = (iodb 0 bytes, iodb 1 bytes)
     let private iodb6 bytes = (iodb 0 bytes, iodb 1 bytes, iodb 2 bytes, iodb 3 bytes, iodb 4 bytes, iodb 5 bytes)
     let private iodb8 bytes = (iodb 0 bytes, iodb 1 bytes, iodb 2 bytes, iodb 3 bytes, iodb 4 bytes, iodb 5 bytes, iodb 6 bytes, iodb 7 bytes)
+    
+    [<Literal>]
+    let internal HashOffset = 10
+    [<Literal>]
+    let internal HashSize = 6
+    [<Literal>]
+    let internal TimestampSize = 8;
 
     [<RequireQualifiedAccess>]
     module internal Type =
@@ -43,8 +54,12 @@ module Guid =
             result.[_Index] <- value
             result
 
-        let reverse (version: int) (bytes: byte array) =
+        let reveal (bytes: byte array) =
+            (int (bytes.[_Index]) &&& 0xFF) >>> _Shift
+
+        let reverse(bytes: byte array) =
             // reverse the version
+            let version = reveal bytes
             let value = ((bytes.[_Index] &&& _Mask) ||| byte (version >>> _Shift))
             let result = Array.copy bytes
             result.[_Index] <- value
@@ -132,9 +147,9 @@ module Guid =
     type [<Struct>] internal TimeBasedGuid =
         [<FieldOffset(0)>]
         val mutable private _timestamp: TimestampBytes
-        [<FieldOffset(8)>]
+        [<FieldOffset(TimestampSize)>]
         val mutable private _clockSequence: ClockSequenceBytes
-        [<FieldOffset(10)>]
+        [<FieldOffset(HashOffset)>]
         val mutable private _node: NodeBytes
         [<FieldOffset(0);DefaultValue>]
         val mutable private _guid: System.Guid
@@ -160,8 +175,8 @@ module Guid =
 
     let private DefaultClockSequenceAndNote = generateClockSequenceAndNote ()
 
-    let private getDateTimeOffset (version: int) (guid: System.Guid) : System.DateTimeOffset =
-        let bytes = guid.ToByteArray() |> Version.reverse version
+    let internal getDateTimeOffset (guid: System.Guid) : System.DateTimeOffset =
+        let bytes = guid.ToByteArray() |> Version.reverse
         let TimestampByte = 0
         let timestampBytes: byte array = Array.create 8 0uy
         System.Array.Copy(bytes, TimestampByte, timestampBytes, 0, 8)
@@ -170,33 +185,14 @@ module Guid =
         let ticks: int64  = timestamp + gregorianCalendarStart.Ticks
         new System.DateTimeOffset(ticks, System.TimeSpan.Zero)
 
+
     let private create (version: int) =
         let (a, (b, c)) = (System.DateTimeOffset.UtcNow, DefaultClockSequenceAndNote)
         version |> TimeBasedGuid(TimestampBytes(a), ClockSequenceBytes(b), NodeBytes(c)).ToGuid
+
 
     let newTimeBasedGuid() = create Type.Default
     let newReservedGuid() = create Type.Reserved
     let newNameBasedGuid() = create Type.NameBased
     let newRandomBasedGuid() = create Type.NameBased
 
-
-//let t = TimestampBytes()
-//;;
-//let c = ClockSequenceBytes(2uy, 9uy)
-//;;
-//let n = NodeBytes()
-//;;
-//(t.Bytes, c.Bytes, n.Bytes)
-//;;
-//TimeGuid(t, c, n).Guid
-//;;
-
-Guid.newTimeBasedGuid()
-;;
-Guid.newTimeBasedGuid()
-;;
-
-Guid.newNameBasedGuid()
-;;
-Guid.newNameBasedGuid()
-;;

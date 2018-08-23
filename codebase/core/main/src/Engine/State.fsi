@@ -44,6 +44,8 @@ type State = // TODO: convert to state machine
     member internal Hierarchy: Hierarchy with get
     member internal ViewModels: Map<Identifier, obj> with get
     member internal ViewStates: Map<Identifier, ViewState> with get
+    member Hash: string with get
+    member Host: string with get
 
 [<RequireQualifiedAccess>]
 module State =

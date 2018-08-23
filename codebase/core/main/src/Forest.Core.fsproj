@@ -20,8 +20,9 @@
     <Compile Include="Utils\NullHandling.fs" />
     <Compile Include="Utils\Result.fs" />
     <Compile Include="Utils\Monad.fs" />
-    <Compile Include="Utils\Guid.fs" />
+    <Compile Include="Utils\TimeBasedGuid.fs" />
     <Compile Include="Primitives\Index.fs" />
+    <Compile Include="Primitives\ForestID.fs" />
     <Compile Include="Primitives\Identifier.fsi" />
     <Compile Include="Primitives\Identifier.fs" />
     <Compile Include="Primitives\Hierarchy.fs" />
@@ -41,9 +42,12 @@
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="Rendering\Renderer.fs" />
     <Content Include="doc.txt" />
+    <None Include="build.sh" />
     <None Include="mason.properties" />
     <None Include="paket.dependencies" />
     <None Include="paket.references" />
+    <None Include="Properties\AssemblyInfo.fs.template" />
+    <None Include="restore.sh" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
   </ItemGroup>

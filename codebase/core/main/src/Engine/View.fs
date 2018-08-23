@@ -8,7 +8,7 @@ open System.Reflection
 
 
 // contains the active mutable forest state, such as the latest dom index and view state changes
-type [<Sealed>] internal ViewState(id: Identifier, descriptor: IViewDescriptor, viewInstance: IViewInternal) =
+type [<Sealed>] internal ViewState(id: Identifier, descriptor: IViewDescriptor, viewInstance: IViewState) =
     member __.ID with get() = id
     member __.Descriptor with get() = descriptor
     member __.View with get() = viewInstance
@@ -23,48 +23,53 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         _eventBus.Publish(self, message, topics)
 
-    abstract member Load: unit -> unit // TODO
+    abstract member Load: unit -> unit
 
-    member __.FindRegion (NotNull "name" name) = upcast Region(name, self) : IRegion
-
+    member __.FindRegion (NotNull "name" name) = 
+        upcast Region(name, self) : IRegion
 
     member __.ViewModel
         with get ():'T = _viewModel
-        and set (NotNull "value" value: 'T) = _viewModel <- (_viewStateModifier.SetViewModel false _instanceID value)
+         and set (NotNull "value" value: 'T) = _viewModel <- (_viewStateModifier.SetViewModel false _instanceID value)
     member internal __.InstanceID
         with get() = _instanceID
-        and set(NotNull "value" value) = _instanceID <- value
+         and set(NotNull "value" value) = _instanceID <- value
 
-    interface IViewInternal with
+    interface IViewState with
         member __.Load () = self.Load()
         member __.EventBus 
             with get() = _eventBus
-            and set value = _eventBus <- value
+             and set value = _eventBus <- value
         member __.InstanceID
             with get() = self.InstanceID
-            and set value = self.InstanceID <- value
+             and set value = self.InstanceID <- value
         member __.Descriptor
             with get() = _descriptor
              and set v = _descriptor <- v
         member __.ViewStateModifier
             with get() = _viewStateModifier
-            and set value = 
-                match null2vopt value with
-                | ValueSome md -> 
-                    match md.GetViewModel self.InstanceID with
-                    | Some vm -> _viewModel <- (downcast vm : 'T)
-                    | None -> ignore <| md.SetViewModel true self.InstanceID _viewModel
-                    md.SubscribeEvents self
-                | ValueNone -> 
-                    match null2vopt _viewStateModifier with
-                    | ValueSome md ->
-                        md.UnsubscribeEvents self
-                        match md.GetViewModel self.InstanceID with
-                        | Some vm -> _viewModel <- (downcast vm : 'T)
-                        | None -> () 
-                    | ValueNone ->
-                        ()
-                _viewStateModifier <- value
+        member __.EnterModificationScope (NotNull "modifier" modifier: IViewStateModifier) =
+            match null2vopt _viewStateModifier with
+            | ValueNone ->
+                match modifier.GetViewModel self.InstanceID with
+                | Some viewModelFromState -> _viewModel <- (downcast viewModelFromState : 'T)
+                | None -> ignore <| modifier.SetViewModel true self.InstanceID _viewModel
+                modifier.SubscribeEvents self
+                _viewStateModifier <- modifier
+                ()
+            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _instanceID.View)))
+
+        member __.LeaveModificationScope (_) =
+            match null2vopt _viewStateModifier with
+            | ValueSome currentModifier ->
+                currentModifier.UnsubscribeEvents self
+                match currentModifier.GetViewModel self.InstanceID with
+                | Some viewModelFromState -> 
+                    _viewModel <- (downcast viewModelFromState : 'T)
+                    ()
+                | None -> () 
+                _viewStateModifier <- nil<IViewStateModifier>
+            | ValueNone -> ()
 
     interface IView<'T> with 
         member __.ViewModel
@@ -78,7 +83,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
 
 and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: AbstractView<'T>) as self =
     member __.ActivateView (NotNull "viewName" viewName: string) =
-        (upcast view : IViewInternal).ViewStateModifier.ActivateView view.InstanceID regionName viewName
+        (upcast view : IViewState).ViewStateModifier.ActivateView view.InstanceID regionName viewName
 
     member __.Name with get() = regionName
 
