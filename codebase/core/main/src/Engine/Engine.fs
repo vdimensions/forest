@@ -5,8 +5,8 @@ open Forest
 
 [<RequireQualifiedAccess>]
 module Engine =
-    let inline private _applyStateChanges (mutableState:MutableStateScope) (sync: bool) (changeLog: StateChange List) (ctx: IForestContext) (state: State) =
-        let rec _applyChangelog (ms: MutableStateScope) (cl: StateChange List) =
+    let inline private _applyStateChanges (mutableState:MutableScope) (sync: bool) (changeLog: StateChange List) (ctx: IForestContext) (state: State) =
+        let rec _applyChangelog (ms: MutableScope) (cl: StateChange List) =
             match cl with
             | [] -> None
             | head::tail -> 
@@ -28,7 +28,7 @@ module Engine =
 
 
     let ApplyChangeLog (ctx: IForestContext) (state: State) (changeLog: StateChange List) = 
-        use ms = new MutableStateScope(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+        use ms = new MutableScope(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
         _applyStateChanges ms true changeLog ctx state
 
     let Update (ctx: IForestContext) (operation: ForestOperation) (state: State) =
@@ -45,7 +45,7 @@ module Engine =
         //     this is the hooking point for replicating the changelog on another machine
 
         // TODO: invoke steps 1..4
-        use ms = new MutableStateScope(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+        use ms = new MutableScope(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
         let c = ms.Update operation
         //_applyStateChanges ms false c ctx state
         // TODO: raise event for state changes

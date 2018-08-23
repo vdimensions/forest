@@ -12,9 +12,9 @@ type [<Struct>] StateError =
     | NoViewAdded
 
 [<Serializable>]
-type StateChange =
+type [<Struct>] StateChange =
     | ViewAdded of parent: Identifier * viewModel: obj
-    | ViewModelUpdated of parent: Identifier * updatedViewModel: obj
+    | ViewModelUpdated of id: Identifier * updatedViewModel: obj
     | ViewDestroyed of destroyedViewID: Identifier
 
 type ForestOperation =
@@ -24,21 +24,21 @@ type ForestOperation =
     | InvokeCommand of owner: Identifier * commandName: string * commandArg: obj
     | Multiple of operations: ForestOperation list
 
-type [<Sealed>] internal MutableStateScope =
+type [<Sealed>] internal MutableScope =
     interface IDisposable
     interface IViewStateModifier
-    internal new: Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState> * IForestContext -> MutableStateScope
+    internal new: Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState> * IForestContext -> MutableScope
     member Apply: bool -> StateChange -> StateError option
     member Update: ForestOperation -> StateChange list
-    member Deconstruct: unit -> Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState>
+    member Deconstruct: unit -> Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState>
 
 
-[<Serializable>]
-type State1
+//[<Serializable>]
+//type State1
 
 [<Serializable>]
 type State = // TODO: convert to state machine
-    internal new: Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
+    internal new: Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState> -> State
     [<CompiledName("Empty")>]
     static member empty: State
     member internal Hierarchy: Hierarchy with get
@@ -47,6 +47,6 @@ type State = // TODO: convert to state machine
 
 [<RequireQualifiedAccess>]
 module State =
-    val internal create: Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState> -> State
+    val internal create: Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState> -> State
 
     val internal discardViewStates: State -> State

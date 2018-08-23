@@ -20,6 +20,7 @@
     <Compile Include="Utils\NullHandling.fs" />
     <Compile Include="Utils\Result.fs" />
     <Compile Include="Utils\Monad.fs" />
+    <Compile Include="Utils\Guid.fs" />
     <Compile Include="Primitives\Index.fs" />
     <Compile Include="Primitives\Identifier.fsi" />
     <Compile Include="Primitives\Identifier.fs" />

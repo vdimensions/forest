@@ -1,7 +1,6 @@
 ﻿namespace Forest
 
 open Forest
-open Forest.Events
 
 open System
 open System.Collections.Generic
@@ -104,9 +103,9 @@ module View =
             member __.Events = self.Events
 
     type [<Struct>] Error = 
-        | ViewAttributeMissing of NonAnnotatedViewType: Type
-        | ViewTypeIsAbstract of AbstractViewType: Type
-        | NonGenericView of NonGenericViewType: Type
+        | ViewAttributeMissing of nonAnnotatedViewType: Type
+        | ViewTypeIsAbstract of abstractViewType: Type
+        | NonGenericView of nonGenericViewType: Type
 
     let inline private _selectViewModelTypes (tt: Type) = 
         let isGenericView = tt.IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)

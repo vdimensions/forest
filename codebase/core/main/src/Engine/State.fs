@@ -15,11 +15,12 @@ type [<Struct>] StateError =
     | NoViewAdded
 
 [<Serializable>]
-type StateChange =
+type [<Struct>] StateChange =
     | ViewAdded of parent: Identifier * viewModel: obj
-    | ViewModelUpdated of parent: Identifier * updatedViewModel: obj
+    | ViewModelUpdated of id: Identifier * updatedViewModel: obj
     | ViewDestroyed of destroyedViewID: Identifier
 
+[<Serializable>]
 type ForestOperation =
     | InstantiateView of parent: Identifier * region: string * viewName: string
     | UpdateViewModel of parent: Identifier * viewModel: obj
@@ -27,7 +28,7 @@ type ForestOperation =
     | InvokeCommand of owner: Identifier * commandName: string * commandArg: obj
     | Multiple of operations: ForestOperation list
 
-type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates: Map<Identifier, ViewState>, ctx: IForestContext) as self = 
+type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates: Map<Identifier, ViewState>, ctx: IForestContext) as self = 
     do
         for kvp in viewStates do 
             kvp.Value |> self._visitViewState |> ignore
@@ -193,10 +194,10 @@ type [<Sealed>] internal MutableStateScope (hierarchy: Hierarchy, viewModels: Ma
             _eventBus.Unsubscribe view |> ignore
     interface IDisposable with member __.Dispose() = self.Dispose()
 
-type State1 =
-    | Empty
-    | ReadOnly of Hierarchy*Map<Identifier, obj>*Map<Identifier, ViewState>
-    | Active of MutableStateScope
+//type State1 =
+//    | Empty
+//    | Immutable of Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState>
+//    | Mutable of MutableScope
 
 [<Serializable>]
 type State internal(hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>) =
