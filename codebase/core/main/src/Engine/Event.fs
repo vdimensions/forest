@@ -112,4 +112,4 @@ module Event =
         interface IDisposable with member __.Dispose () = __.Dispose()
 
     [<CompiledName("Create")>]
-    let internal create() : IEventBus = upcast new T()
+    let internal createEventBus() : IEventBus = upcast new T()

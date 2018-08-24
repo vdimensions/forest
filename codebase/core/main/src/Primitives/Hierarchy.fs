@@ -21,23 +21,23 @@ module internal Hierarchy =
         | Some data -> data
         | None -> List.Empty
 
-    let add (parent: HierarchyKey) (region: string) (name: string) (state: Hierarchy) : Hierarchy*HierarchyKey =
-        let newValue = parent |> HierarchyKey.addNew region name
-        let list = 
-            match state.Hierarchy.TryFind parent with
-            | Some list -> list
-            | None -> List.empty
-        let h = state.Hierarchy.Remove(parent).Add(parent, list @ [newValue])
-        ({ Hierarchy = h }, newValue)
+    //[<Obsolete>]
+    //let add (parent: HierarchyKey) (region: string) (name: string) (state: Hierarchy) : Hierarchy*HierarchyKey =
+    //    let newValue = HierarchyKey.newKey region name parent
+    //    let list = 
+    //        match state.Hierarchy.TryFind parent with
+    //        | Some list -> list
+    //        | None -> List.empty
+    //    let h = state.Hierarchy.Remove(parent).Add(parent, list @ [newValue])
+    //    ({ Hierarchy = h }, newValue)
 
-    let insert (parent: HierarchyKey) (hash: string) (region: string) (name: string) (state: Hierarchy) : Hierarchy*HierarchyKey =
-        let newValue = parent |> HierarchyKey.add hash region name
+    let insert (id: HierarchyKey) (state: Hierarchy) : Hierarchy =
         let list = 
-            match state.Hierarchy.TryFind parent with
+            match state.Hierarchy.TryFind id.Parent with
             | Some list -> list
             | None -> List.empty
-        let h = state.Hierarchy.Remove(parent).Add(parent, list @ [newValue])
-        ({ Hierarchy = h }, newValue)
+        let h = state.Hierarchy.Remove(id.Parent).Add(id.Parent, list @ [id])
+        { Hierarchy = h }
 
     let remove (id: HierarchyKey) (state: Hierarchy) : Hierarchy*HierarchyKey list =
         let rec doRemove parentID (st, lst) =

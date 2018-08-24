@@ -8,7 +8,7 @@ open System.Reflection
 open System.Diagnostics
 
 
-type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
+type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable _viewModel : 'T = new 'T()
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
@@ -18,13 +18,15 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable _descriptor: IViewDescriptor = nil<IViewDescriptor>
 
-    member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
-        _viewStateModifier.PublishEvent(self, message, topics)
+    member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
+        _viewStateModifier.PublishEvent this message topics
 
     abstract member Load: unit -> unit
+    abstract member Resume: unit -> unit
+    default __.Resume() = ()
 
-    member __.FindRegion (NotNull "name" name) = 
-        upcast Region(name, self) : IRegion
+    member this.FindRegion (NotNull "name" name) = 
+        upcast Region(name, this) : IRegion
 
     member __.ViewModel
         with get ():'T = _viewModel
@@ -34,31 +36,34 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
          and set(NotNull "value" value) = _hkey <- value
 
     interface IViewState with
-        member __.Load () = self.Load()
-        member __.InstanceID
-            with get() = self.HierarchyKey
-             and set value = self.HierarchyKey <- value
+        member this.Load () = this.Load()
+        member this.Resume viewModel =
+            _viewModel <- (downcast viewModel : 'T)
+            this.Resume()
+        member this.InstanceID
+            with get() = this.HierarchyKey
+             and set value = this.HierarchyKey <- value
         member __.Descriptor
             with get() = _descriptor
              and set v = _descriptor <- v
         member __.ViewStateModifier
             with get() = _viewStateModifier
-        member __.EnterModificationScope (NotNull "modifier" modifier: IViewStateModifier) =
+        member this.EnterModificationScope (NotNull "modifier" modifier: IViewStateModifier) =
             match null2vopt _viewStateModifier with
             | ValueNone ->
-                match modifier.GetViewModel self.HierarchyKey with
+                match modifier.GetViewModel this.HierarchyKey with
                 | Some viewModelFromState -> _viewModel <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| modifier.SetViewModel true self.HierarchyKey _viewModel
-                modifier.SubscribeEvents self
+                | None -> ignore <| modifier.SetViewModel true this.HierarchyKey _viewModel
+                modifier.SubscribeEvents this
                 _viewStateModifier <- modifier
                 ()
             | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _hkey.View)))
 
-        member __.LeaveModificationScope (_) =
+        member this.LeaveModificationScope (_) =
             match null2vopt _viewStateModifier with
             | ValueSome currentModifier ->
-                currentModifier.UnsubscribeEvents self
-                match currentModifier.GetViewModel self.HierarchyKey with
+                currentModifier.UnsubscribeEvents this
+                match currentModifier.GetViewModel this.HierarchyKey with
                 | Some viewModelFromState -> 
                     _viewModel <- (downcast viewModelFromState : 'T)
                     ()
@@ -67,40 +72,41 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
             | ValueNone -> ()
 
     interface IView<'T> with 
-        member __.ViewModel
-            with get() = self.ViewModel
-             and set v = self.ViewModel <- v
+        member this.ViewModel
+            with get() = this.ViewModel
+             and set v = this.ViewModel <- v
 
     interface IView with
-        member __.Publish (m, t) : unit = self.Publish (m, t)
-        member __.FindRegion name = self.FindRegion name
-        member __.ViewModel with get() = upcast self.ViewModel
+        member this.Publish (m, t) = this.Publish (m, t)
+        member this.FindRegion name = this.FindRegion name
+        member this.ViewModel with get() = upcast this.ViewModel
 
-and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: AbstractView<'T>) as self =
+and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: AbstractView<'T>) =
     member __.ActivateView (NotNull "viewName" viewName: string) =
         (upcast view : IViewState).ViewStateModifier.ActivateView view.HierarchyKey regionName viewName
 
-    member __.Name with get() = regionName
+    member __.Name 
+        with get() = regionName
 
     interface IRegion with
-        member __.Name = self.Name
-        member __.ActivateView (viewName: string) = self.ActivateView viewName
+        member this.Name = this.Name
+        member this.ActivateView (viewName: string) = this.ActivateView viewName
 
 [<RequireQualifiedAccessAttribute>]
 module View =
     // TODO: argument verification
-    type [<Sealed>] internal Descriptor internal (name: string, viewType: Type, viewModelType: Type, commands: Index<ICommandDescriptor, string>, events: IEventDescriptor array) as self = 
+    type [<Sealed>] internal Descriptor internal (name: string, viewType: Type, viewModelType: Type, commands: Index<ICommandDescriptor, string>, events: IEventDescriptor array) = 
         member __.Name with get() = name
         member __.ViewType with get() = viewType
         member __.ViewModelType with get() = viewModelType
         member __.Commands with get() = commands
         member __.Events with get() = upcast events : IEnumerable<IEventDescriptor>
         interface IViewDescriptor with
-            member __.Name = self.Name
-            member __.ViewType = self.ViewType
-            member __.ViewModelType = self.ViewModelType
-            member __.Commands = self.Commands
-            member __.Events = self.Events
+            member this.Name = this.Name
+            member this.ViewType = this.ViewType
+            member this.ViewModelType = this.ViewModelType
+            member this.Commands = this.Commands
+            member this.Events = this.Events
 
     type [<Struct>] Error = 
         | ViewAttributeMissing of nonAnnotatedViewType: Type
@@ -120,7 +126,7 @@ module View =
 
     let getViewModelType (NotNull "viewType" viewType: Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
-    type [<Sealed>] Factory() as self = 
+    type [<Sealed>] Factory() = 
         member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 
             let flags = BindingFlags.Public|||BindingFlags.Instance
             let constructors = 
@@ -131,4 +137,4 @@ module View =
             | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", descriptor.ViewType.FullName)))
             | head::_ -> downcast head.Invoke([||]) : IView
         
-        interface IViewFactory with member __.Resolve m = self.Resolve m
+        interface IViewFactory with member this.Resolve m = this.Resolve m

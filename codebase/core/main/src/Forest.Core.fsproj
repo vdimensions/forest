@@ -40,6 +40,7 @@
     <Compile Include="Engine\DefaultForestContext.fs" />
     <Compile Include="Engine\State.fsi" />
     <Compile Include="Engine\State.fs" />
+    <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="Rendering\Renderer.fs" />
     <Content Include="doc.txt" />

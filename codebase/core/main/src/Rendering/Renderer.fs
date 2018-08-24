@@ -2,8 +2,8 @@
 
 
 type [<Interface>] IStateVisitor =
-    abstract member BFS: key:HierarchyKey -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member DFS: key:HierarchyKey -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
+    abstract member BFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
+    abstract member DFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
 
 module Renderer =
     let rec private _traverseState (v: IStateVisitor) parent (ids: HierarchyKey list) siblingsCount (st: State) =
@@ -14,14 +14,14 @@ module Renderer =
             let vm = st.ViewModels.[head]
             let vs = st.ViewStates.[head]
             let descriptor = vs.Descriptor
-            v.BFS vs.InstanceID head.Region head.View ix vm descriptor
+            v.BFS head ix vm descriptor
             // visit siblings 
             _traverseState v parent tail siblingsCount st
             // visit children
             match st.Hierarchy.Hierarchy.TryFind head with
             | Some children -> _traverseState v head children children.Length st
             | None -> ()
-            v.DFS vs.InstanceID head.Region head.View ix vm descriptor
+            v.DFS head ix vm descriptor
             ()
 
     let traverse (v: IStateVisitor) (st: State) =

@@ -1,22 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
 
 using NUnit.Framework;
 
 
 namespace Forest.Tests
 {
+    internal abstract class BaseEq
+    {
+        public override bool Equals(object obj) => true;
+    }
     internal static class Inner
     {
         internal const string ViewName = "Inner";
-        internal class ViewModel { }
+
+        internal class ViewModel : BaseEq { }
 
         [View(ViewName)]
         internal class View : AbstractView<ViewModel>
         {
             public override void Load()
             {
-                //throw new NotImplementedException();
             }
         }
     }
@@ -24,7 +27,7 @@ namespace Forest.Tests
     internal static class Outer
     {
         internal const string ViewName = "Outer";
-        internal class ViewModel { }
+        internal class ViewModel : BaseEq { }
 
         [View(ViewName)]
         internal class View : AbstractView<ViewModel>
@@ -47,80 +50,87 @@ namespace Forest.Tests
         }
     }
 
-    internal class Visitor : IStateVisitor
+    internal class PrintVisitor : IStateVisitor
     {
-        public void BFS(HierarchyKey key, string region, string view, int index, object viewModel, IViewDescriptor descriptor)
+        public void BFS(HierarchyKey key, int index, object viewModel, IViewDescriptor descriptor)
         {
-            Console.WriteLine(">> BFS: {0} : {1}", index, key.Hash);
+            Console.WriteLine(">> BFS: {0} : {1}", index, key);
         }
 
-        public void DFS(HierarchyKey key, string region, string view, int index, object viewModel, IViewDescriptor descriptor)
+        public void DFS(HierarchyKey key, int index, object viewModel, IViewDescriptor descriptor)
         {
-            Console.WriteLine("<< DFS: {0} : {1}", index, key.Hash);
+            Console.WriteLine("<< DFS: {0} : {1}", index, key);
         }
     }
 
     [TestFixture]
     public class TestClass
     {
-        private static IDictionary<string, object> Add(IDictionary<string, object> target, string str)
+        private IForestContext ctx;
+
+        [SetUp]
+        public void SetUp()
         {
-            target.Add(str, new Dictionary<string, object>());
-            return target;
-        }
-        private static IDictionary<string, object> Get(IDictionary<string, object> target, string str)
-        {
-            return target[str] as IDictionary<string, object>;
+            ctx = new DefaultForestContext(new View.Factory(), null);
+            ctx.ViewRegistry.Register<Inner.View>();
+            ctx.ViewRegistry.Register<Outer.View>();
         }
 
         [Test]
         public void TestMethod()
         {
-            var ctx = new DefaultForestContext(new View.Factory(), null);
-            ctx.ViewRegistry.Register<Inner.View>();
+            var key = HierarchyKey.NewKey(string.Empty, Inner.ViewName, HierarchyKey.Shell);
+            var result = Engine.Update(ctx, ForestOperation.NewInstantiateView(key), State.Empty);
 
-            var state = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.Shell, string.Empty, Inner.ViewName), State.Empty);
+            Assert.AreNotEqual(result.State, State.Empty);
+            Assert.AreNotEqual(result.State.Hash, State.Empty.Hash);
+            Assert.AreNotEqual(result.State.MachineToken, State.Empty.MachineToken);
+        }
 
-            Assert.AreNotEqual(state, State.Empty);
-            Assert.AreNotEqual(state.Hash, State.Empty.Hash);
-            Assert.AreNotEqual(state.MachineToken, State.Empty.MachineToken);
+        [Test]
+        public void TestStateCompensation()
+        {
+            var key = HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell);
+            var originalResult = Engine.Update(ctx, ForestOperation.NewInstantiateView(key), State.Empty);
+
+            Assert.AreNotEqual(originalResult.State, State.Empty);
+            Assert.AreNotEqual(originalResult.State.Hash, State.Empty.Hash);
+            Assert.AreNotEqual(originalResult.State.MachineToken, State.Empty.MachineToken);
+
+            var compensatedResult = Engine.ApplyChangeLog(ctx, State.Empty, originalResult.ChangeList);
+
+           // Assert.AreEqual(originalResult.State, compensatedResult.State);
+            Assert.IsTrue(originalResult.State.Equals(compensatedResult.State));
+            Assert.AreEqual(originalResult.State.Hash, compensatedResult.State.Hash);
+            Assert.AreEqual(originalResult.State.MachineToken, compensatedResult.State.MachineToken);
         }
 
         [Test]
         public void TestAddingViewFormAnotherOne()
         {
-            var ctx = new DefaultForestContext(new View.Factory(), null);
-            ctx.ViewRegistry.Register<Inner.View>();
-            ctx.ViewRegistry.Register<Outer.View>();
+            var result1 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell)), State.Empty);
 
-            var state1 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.Shell, string.Empty, Outer.ViewName), State.Empty);
+            Assert.AreNotEqual(result1.State, State.Empty);
+            Assert.AreNotEqual(result1.State.Hash, State.Empty.Hash);
+            Assert.AreNotEqual(result1.State.MachineToken, State.Empty.MachineToken);
 
-            Assert.AreNotEqual(state1, State.Empty);
-            Assert.AreNotEqual(state1.Hash, State.Empty.Hash);
-            Assert.AreNotEqual(state1.MachineToken, State.Empty.MachineToken);
+            var result2 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell)), result1.State);
 
-            var state2 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.Shell, string.Empty, Outer.ViewName), state1);
-
-            Assert.AreNotEqual(state2, state1);
-            Assert.AreNotEqual(state2.Hash, state1.Hash);
-            Assert.AreEqual(state2.MachineToken, state1.MachineToken);
+            Assert.AreNotEqual(result2.State, result1.State);
+            Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);
+            Assert.AreEqual(result2.State.MachineToken, result1.State.MachineToken);
         }
-
 
         [Test]
         public void TestTraversal()
         {
-            var ctx = new DefaultForestContext(new View.Factory(), null);
-            ctx.ViewRegistry.Register<Inner.View>();
-            ctx.ViewRegistry.Register<Outer.View>();
+            var result = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell)), State.Empty);
 
-            var state1 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.Shell, string.Empty, Outer.ViewName), State.Empty);
+            Assert.AreNotEqual(result.State, State.Empty);
+            Assert.AreNotEqual(result.State.Hash, State.Empty.Hash);
+            Assert.AreNotEqual(result.State.MachineToken, State.Empty.MachineToken);
 
-            Assert.AreNotEqual(state1, State.Empty);
-            Assert.AreNotEqual(state1.Hash, State.Empty.Hash);
-            Assert.AreNotEqual(state1.MachineToken, State.Empty.MachineToken);
-
-            Renderer.traverse( new Visitor(), state1);
+            Renderer.traverse( new PrintVisitor(), result.State);
         }
     }
 }
