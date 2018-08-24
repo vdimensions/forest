@@ -5,23 +5,21 @@ open Forest
 open System
 open System.Collections.Generic
 open System.Reflection
+open System.Diagnostics
 
-
-// contains the active mutable forest state, such as the latest dom index and view state changes
-type [<Sealed>] internal ViewState(id: Identifier, descriptor: IViewDescriptor, viewInstance: IViewState) =
-    member __.ID with get() = id
-    member __.Descriptor with get() = descriptor
-    member __.View with get() = viewInstance
 
 type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable _viewModel : 'T = new 'T()
-    let mutable _eventBus: IEventBus = nil<IEventBus>
-    let mutable _instanceID: Identifier = Identifier.shell
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
+    let mutable _hkey: HierarchyKey = HierarchyKey.shell
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable _viewStateModifier: IViewStateModifier = nil<IViewStateModifier>
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable _descriptor: IViewDescriptor = nil<IViewDescriptor>
 
     member __.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
-        _eventBus.Publish(self, message, topics)
+        _viewStateModifier.PublishEvent(self, message, topics)
 
     abstract member Load: unit -> unit
 
@@ -30,19 +28,16 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
 
     member __.ViewModel
         with get ():'T = _viewModel
-         and set (NotNull "value" value: 'T) = _viewModel <- (_viewStateModifier.SetViewModel false _instanceID value)
-    member internal __.InstanceID
-        with get() = _instanceID
-         and set(NotNull "value" value) = _instanceID <- value
+         and set (NotNull "value" value: 'T) = _viewModel <- (_viewStateModifier.SetViewModel false _hkey value)
+    member internal __.HierarchyKey
+        with get() = _hkey
+         and set(NotNull "value" value) = _hkey <- value
 
     interface IViewState with
         member __.Load () = self.Load()
-        member __.EventBus 
-            with get() = _eventBus
-             and set value = _eventBus <- value
         member __.InstanceID
-            with get() = self.InstanceID
-             and set value = self.InstanceID <- value
+            with get() = self.HierarchyKey
+             and set value = self.HierarchyKey <- value
         member __.Descriptor
             with get() = _descriptor
              and set v = _descriptor <- v
@@ -51,19 +46,19 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
         member __.EnterModificationScope (NotNull "modifier" modifier: IViewStateModifier) =
             match null2vopt _viewStateModifier with
             | ValueNone ->
-                match modifier.GetViewModel self.InstanceID with
+                match modifier.GetViewModel self.HierarchyKey with
                 | Some viewModelFromState -> _viewModel <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| modifier.SetViewModel true self.InstanceID _viewModel
+                | None -> ignore <| modifier.SetViewModel true self.HierarchyKey _viewModel
                 modifier.SubscribeEvents self
                 _viewStateModifier <- modifier
                 ()
-            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _instanceID.View)))
+            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _hkey.View)))
 
         member __.LeaveModificationScope (_) =
             match null2vopt _viewStateModifier with
             | ValueSome currentModifier ->
                 currentModifier.UnsubscribeEvents self
-                match currentModifier.GetViewModel self.InstanceID with
+                match currentModifier.GetViewModel self.HierarchyKey with
                 | Some viewModelFromState -> 
                     _viewModel <- (downcast viewModelFromState : 'T)
                     ()
@@ -83,7 +78,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () as self =
 
 and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: AbstractView<'T>) as self =
     member __.ActivateView (NotNull "viewName" viewName: string) =
-        (upcast view : IViewState).ViewStateModifier.ActivateView view.InstanceID regionName viewName
+        (upcast view : IViewState).ViewStateModifier.ActivateView view.HierarchyKey regionName viewName
 
     member __.Name with get() = regionName
 

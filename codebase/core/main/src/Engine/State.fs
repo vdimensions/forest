@@ -8,36 +8,31 @@ open System
 [<Serializable>]
 type [<Struct>] StateError =
     | ViewNotFound of view: string
-    | UnexpectedModelState of identifier: Identifier
-    | CommandNotFound of owner: Identifier * command: string
+    | UnexpectedModelState of identifier: HierarchyKey
+    | CommandNotFound of owner: HierarchyKey * command: string
     | CommandError of cause: Command.Error
-    | HierarchyElementAbsent of orphanIdentifier: Identifier
+    | HierarchyElementAbsent of orphanIdentifier: HierarchyKey
     | NoViewAdded
 
 [<Serializable>]
 type [<Struct>] StateChange =
-    | ViewAdded of parent: Identifier * viewModel: obj
-    | ViewModelUpdated of id: Identifier * updatedViewModel: obj
-    | ViewDestroyed of destroyedViewID: Identifier
+    | ViewAdded of parent: HierarchyKey * viewModel: obj
+    | ViewModelUpdated of id: HierarchyKey * updatedViewModel: obj
+    | ViewDestroyed of destroyedViewID: HierarchyKey
 
 [<Serializable>]
 type ForestOperation =
-    | InstantiateView of parent: Identifier * region: string * viewName: string
-    | UpdateViewModel of parent: Identifier * viewModel: obj
-    | DestroyView of identifier: Identifier
-    | InvokeCommand of owner: Identifier * commandName: string * commandArg: obj
+    | InstantiateView of parent: HierarchyKey * region: string * viewName: string
+    | UpdateViewModel of parent: HierarchyKey * viewModel: obj
+    | DestroyView of identifier: HierarchyKey
+    | InvokeCommand of owner: HierarchyKey * commandName: string * commandArg: obj
     | Multiple of operations: ForestOperation list
 
-type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates: Map<Identifier, ViewState>, ctx: IForestContext) as self = 
-    do
-        for kvp in viewStates do 
-            kvp.Value |> self._visitViewState |> ignore
-        // TODO: create non-existing view-states, call resume state on the newly created ones
-        //
+type [<Sealed>] MutableScope private (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates: Map<HierarchyKey, IViewState>, ctx: IForestContext) as self = 
     let mutable _hierarchy = hierarchy
     let _eventBus: IEventBus = Forest.Events.Event.create()
-    let _viewModels: System.Collections.Generic.Dictionary<Identifier, obj> = System.Collections.Generic.Dictionary(viewModels)
-    let _viewStates: System.Collections.Generic.Dictionary<Identifier, ViewState> = System.Collections.Generic.Dictionary(viewStates)
+    let _viewModels: System.Collections.Generic.Dictionary<HierarchyKey, obj> = System.Collections.Generic.Dictionary(viewModels)
+    let _viewStates: System.Collections.Generic.Dictionary<HierarchyKey, IViewState> = System.Collections.Generic.Dictionary(viewStates)
 
     let _toList (l: System.Collections.Generic.IList<'a>) = List.ofSeq l
     let _toMap (dict: System.Collections.Generic.IDictionary<'a, 'b>) : Map<'a, 'b> =
@@ -47,12 +42,12 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
 
     let _changeLog: System.Collections.Generic.List<StateChange>  = System.Collections.Generic.List()
 
-    let _updateViewModel (id: Identifier) (vm: obj): Result<StateChange List, StateError> =
+    let _updateViewModel (id: HierarchyKey) (vm: obj): Result<StateChange List, StateError> =
         _viewModels.[id] <- vm
         //_changeLog <- _changeLog @ [(ViewNeedsRefresh viewID)]
         Ok (_toList _changeLog)
 
-    let _destroyView (id: Identifier): Result<StateChange List, StateError> =
+    let _destroyView (id: HierarchyKey): Result<StateChange List, StateError> =
         let (h, ids) = Hierarchy.remove id _hierarchy
         for removedID in ids do
             _viewModels.Remove removedID |> ignore
@@ -61,12 +56,12 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
         _hierarchy <- h
         Ok (_toList _changeLog)
 
-    let _executeCommand (id: Identifier) (name: string) (arg: obj) : Result<StateChange List, StateError> =
+    let _executeCommand (id: HierarchyKey) (name: string) (arg: obj) : Result<StateChange List, StateError> =
         match _viewStates.TryGetValue id with
         | (true, vs) ->
             match vs.Descriptor.Commands.TryFind name with
             | Some cmd -> 
-                vs.View |> cmd.Invoke arg
+                vs |> cmd.Invoke arg
                 Ok (_toList _changeLog)
             | None ->  Error (CommandNotFound(id, name))
         | (false, _) -> (Error (ViewNotFound id.View))
@@ -86,39 +81,43 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
         | head::tail ->
             Ok List.empty 
             |>= _processChanges ctx head
-            |>= _loopStates ctx tail     
+            |>= _loopStates ctx tail
 
-    member private __._createViewState(ctx: IForestContext) (id: Identifier) =
+    member private __._createViewState(ctx: IForestContext) (id: HierarchyKey) =
         match ctx.ViewRegistry.GetDescriptor(id.View) |> null2vopt with
         | ValueSome vd ->
             let vi = (ctx.ViewRegistry.Resolve id.View) :?> IViewState
             vi.InstanceID <- id
-            ViewState(id, vd, vi) |> (self._visitViewState >> Ok) // will also set the view model
+            vi.Descriptor <- vd
+            vi.EnterModificationScope __
+            Ok vi // will also set the view model
         | ValueNone -> Error (ViewNotFound id.View)
 
-    member private __._visitViewState (vs:ViewState) =
-        vs.View.EventBus <- _eventBus
-        vs.View.Descriptor <- vs.Descriptor
-        // NB: this setter triggers internal logic, it must be called last
-        vs.View.EnterModificationScope self
-        vs
-
-    member private __._unvisitViewState (vs:ViewState) =
+    member private __._unvisitViewState (vs:IViewState) =
         // NB: this setter triggers internal logic, it must be called first
-        vs.View.LeaveModificationScope self
-        vs.View.EventBus <- nil<IEventBus>
+        vs.LeaveModificationScope __
         ()
 
-    member private __._addViewState (ctx: IForestContext) (parent: Identifier) (region: string) (viewName: string): Result<StateChange List, StateError> =
+    member private __._addViewState (ctx: IForestContext) (parent: HierarchyKey) (region: string) (viewName: string): Result<StateChange List, StateError> =
         let (hs, id) = (Hierarchy.add parent region viewName _hierarchy)
-        match self._createViewState ctx id with
+        match __._createViewState ctx id with
         | Ok viewState ->
             _hierarchy <- hs
             _viewStates.Add (id, viewState)
-            _changeLog.Add(StateChange.ViewAdded(id, viewState.View.ViewModel))
-            viewState.View.Load()
+            _changeLog.Add(StateChange.ViewAdded(id, viewState.ViewModel))
+            viewState.Load()
             Ok (_toList _changeLog)
         | Error e -> Error e
+
+    static member Create (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates: Map<HierarchyKey, IViewState>, ctx: IForestContext) = 
+        (new MutableScope(hierarchy, viewModels, viewStates, ctx)).Init()
+
+    member this.Init() =
+        for kvp in viewStates do 
+            kvp.Value.EnterModificationScope this |> ignore
+        // TODO: create non-existing view-states, call resume state on the newly created ones
+        //
+        this
 
     member __.Update (operation: ForestOperation) =
         try
@@ -133,10 +132,10 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
     member __.Apply (callResumeState: bool) (entry: StateChange) =
         match entry with
         | StateChange.ViewAdded (viewID, vm) ->
-            match Identifier.isShell viewID with
+            match HierarchyKey.isShell viewID with
             | true -> Some (StateError.HierarchyElementAbsent(viewID))
             | false ->
-                let (hs, id) = _hierarchy |> Hierarchy.insert viewID.Parent viewID.UniqueID viewID.Region viewID.View
+                let (hs, id) = _hierarchy |> Hierarchy.insert viewID.Parent viewID.Hash viewID.Region viewID.View
                 match _viewModels.TryGetValue id with
                 | (true, _) -> Some (UnexpectedModelState viewID)
                 | (false, _) ->
@@ -144,9 +143,9 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
                     | Ok viewState ->
                         _hierarchy <- hs
                         _viewStates.Add (id, viewState)
-                        _viewModels.[id] <- viewState.View.ViewModel
+                        _viewModels.[id] <- viewState.ViewModel
                         //if (callResumeState) then viewState.View.ResumeState()
-                        viewState.View.Load()
+                        viewState.Load()
                         None
                     | Error e -> Some e
         | StateChange.ViewDestroyed (viewID) ->
@@ -176,16 +175,18 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
                 | [] -> Error <| NoViewAdded
                 | list -> list |> (List.last >> Ok)
 
-            let inline getViewState (vs: System.Collections.Generic.Dictionary<Identifier, ViewState>) ch =
+            let inline getViewState (vs: System.Collections.Generic.Dictionary<HierarchyKey, IViewState>) ch =
                 match ch with
                 | StateChange.ViewAdded (id, _) -> 
                     match vs.TryGetValue id with
-                    | (true, viewState) -> Ok (upcast viewState.View : IView)
+                    | (true, viewState) -> Ok (upcast viewState : IView)
                     | (false, _) -> Error (ViewNotFound (id.View) )
                 | _ -> Error NoViewAdded
             match ForestOperation.InstantiateView(parent, region, name) |> ((self.Update >> vsd) >>= (getViewState _viewStates)) with
             | Ok view -> view
             | Error e -> failwith (e.ToString())
+        member __.PublishEvent(sender:IView, message:'M, [<ParamArray>] topics:string array) = 
+            _eventBus.Publish(sender, message, topics)
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do
                 let handler = Event.Handler(event, view)
@@ -200,19 +201,19 @@ type [<Sealed>] internal MutableScope (hierarchy: Hierarchy, viewModels: Map<Ide
 //    | Mutable of MutableScope
 
 [<Serializable>]
-type State internal(hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>, fid: ForestID) =
-    internal new (hierarchy: Hierarchy, viewModels: Map<Identifier, obj>, viewStates:  Map<Identifier, ViewState>) = State(hierarchy, viewModels, viewStates, ForestID.newID())
+type State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>, fid: ForestID) =
+    internal new (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>) = State(hierarchy, viewModels, viewStates, ForestID.newID())
     [<CompiledName("Empty")>]
     static member empty = State(Hierarchy.empty, Map.empty, Map.empty, ForestID.empty)
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates
     member __.Hash with get() = fid.Hash
-    member __.Host with get() = fid.Host
+    member __.MachineToken with get() = fid.MachineToken
 
 type [<Interface>] IStateVisitor =
-    abstract member BFS: id:Identifier -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member DFS: id:Identifier -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
+    abstract member BFS: id:HierarchyKey -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
+    abstract member DFS: id:HierarchyKey -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
 
 [<RequireQualifiedAccess>]
 module internal State =
@@ -220,13 +221,13 @@ module internal State =
 
     let discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
 
-    let rec private _traverseState (v: IStateVisitor) parent (ids: Identifier list) (st: State) =
+    let rec private _traverseState (v: IStateVisitor) parent (ids: HierarchyKey list) (st: State) =
         match ids with
         | [] -> ()
         | head::tail ->
             let ix = 0 // TODO
             let vm = st.ViewModels.[head]
-            let descriptor = st.ViewStates.[head].View.Descriptor
+            let descriptor = st.ViewStates.[head].Descriptor
             v.BFS parent head.Region head.View ix vm descriptor
             // visit siblings 
             _traverseState v parent tail st
@@ -236,6 +237,6 @@ module internal State =
             ()
 
     let traverse (v: IStateVisitor) (st: State) =
-        let root = Identifier.shell
+        let root = HierarchyKey.shell
         let ch = st.Hierarchy.Hierarchy.[root]
         _traverseState v root ch st
