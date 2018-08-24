@@ -23,15 +23,16 @@ open System.Reflection
 
 
 module Event = 
+    open Forest.Reflection
 
-    type [<Sealed>] internal Descriptor(vt: Type, mt: Type, mi: MethodInfo, topics: string array) as this =
+    type [<Sealed>] internal Descriptor(vt: Type, mt: Type, mi: IEventMethod, topic: string) =
         member __.Trigger (NotNull "view" view: IView) (NotNull "message" message: obj) = ignore <| mi.Invoke(view, [|message|])
         member __.MessageType with get () = mt
-        member __.Topics with get () = topics
+        member __.Topic with get () = topic
         interface IEventDescriptor with
-            member __.Trigger v m = this.Trigger v m
-            member __.MessageType = this.MessageType
-            member __.Topics = this.Topics
+            member __.Trigger v m = __.Trigger v m
+            member __.MessageType = __.MessageType
+            member __.Topic = __.Topic
 
     type [<Sealed>] internal Handler(descriptor: IEventDescriptor, receiver: IView) =
         interface ISubscriptionHandler with
@@ -40,8 +41,8 @@ module Event =
             member __.Receiver = receiver
 
     type Error =
-        | NonVoidReturnType of methodWithReturnValue: MethodInfo
-        | BadEventSignature of badEventSignatureMethod: MethodInfo
+        | NonVoidReturnType of methodWithReturnValue: IEventMethod
+        | BadEventSignature of badEventSignatureMethod: IEventMethod
         | MultipleErrors of errors: Error list
 
     let inline private _subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
@@ -51,7 +52,7 @@ module Event =
         let messageType = typeof<'M>
         messageType = x || x.IsAssignableFrom(messageType)
 
-    type [<Sealed>] private T() as self = 
+    type [<Sealed>] private T() = 
 
         let _subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
@@ -72,11 +73,11 @@ module Event =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
-                     self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
+                     __.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
             | curratedTopics ->
                 for topic in curratedTopics do
                     match _subscriptions.TryGetValue(topic) with
-                    | (true, topicSubscriptionHandlers) -> self.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
+                    | (true, topicSubscriptionHandlers) -> __.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
 
         member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler: ISubscriptionHandler, NotNull "topic" topic: string) : T =
@@ -104,11 +105,11 @@ module Event =
             this
 
         interface IEventBus with
-            member __.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = self.Publish<'M>(sender, message, topics)
-            member __.Subscribe x y = upcast self.Subscribe (x, y)
-            member __.Unsubscribe receiver = upcast self.Unsubscribe receiver
+            member __.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = __.Publish<'M>(sender, message, topics)
+            member __.Subscribe x y = upcast __.Subscribe (x, y)
+            member __.Unsubscribe receiver = upcast __.Unsubscribe receiver
 
-        interface IDisposable with member __.Dispose () = self.Dispose()
+        interface IDisposable with member __.Dispose () = __.Dispose()
 
     [<CompiledName("Create")>]
     let internal create() : IEventBus = upcast new T()

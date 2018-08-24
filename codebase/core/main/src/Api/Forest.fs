@@ -17,7 +17,7 @@ type [<Interface>] IViewDescriptor =
     abstract member Invoke: arg: obj -> v:IView -> unit
 
  and [<Interface>] IEventDescriptor =
-    abstract Topics: string[] with get
+    abstract Topic: string with get
     abstract MessageType: Type with get
     abstract member Trigger: view: IView -> message: obj -> unit
 

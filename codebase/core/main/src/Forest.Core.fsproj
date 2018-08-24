@@ -32,6 +32,7 @@
     <Compile Include="Api\Context.fs" />
     <Compile Include="Api\ViewApi.fs" />
     <Compile Include="Api\Internals.fs" />
+    <Compile Include="Reflection\Reflection.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\Event.fs" />
     <Compile Include="Engine\View.fs" />

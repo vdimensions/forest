@@ -2,9 +2,9 @@
 
 open Forest
 open Forest.Events
+open Forest.Reflection
 
 open System
-open System.Reflection
 open System.Collections.Generic
 
 
@@ -64,116 +64,84 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         //member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
         member __.GetDescriptor name = this.GetViewDescriptor name
 
-type [<Sealed>] DefaultViewRegistry(factory: IViewFactory) = 
+type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)
+    [<Obsolete>] new (factory: IViewFactory) = DefaultViewRegistry(factory, DefaultReflectionProvider())
     override __.GetViewMetadata (NotNull "t" t) =
-        let inline isOfType tt obj = (obj.GetType() = tt)
-        let inline getAttributes(mi: #MemberInfo) : seq<'a> =
-            let getAttributesInternal = 
-                mi.GetCustomAttributes 
-                >> Seq.filter(isOfType typeof<'a>) 
-                >> Seq.map(fun attr -> (downcast attr : 'a)) 
-            getAttributesInternal(true)
-        let inline getCommandAttribs (methodInfo: MethodInfo): seq<CommandAttribute> = 
-            getAttributes methodInfo
-        let inline getEventAttribs (methodInfo: MethodInfo): seq<SubscriptionAttribute> = 
-            getAttributes methodInfo
-
-        let inline getViewAttribute (viewType: Type) = 
+        let inline getViewAttribute (rp:IReflectionProvider) (viewType: Type) = 
             viewType
-            |> getAttributes 
-            |> (Seq.tryPick<ViewAttribute, ViewAttribute> Some)
-            |> (Result.some (View.Error.ViewAttributeMissing viewType))
+            |> rp.GetViewAttribute
+            |> null2opt
+            |> Result.some (View.Error.ViewAttributeMissing viewType)
             |> Result.map (fun va -> (va, viewType))
         let inline getViewModelType (viewAttr: ViewAttribute, viewType: Type) = 
             match View.getViewModelType viewType with
             | Ok vmt -> Ok (viewAttr, viewType, vmt)
             | Error e -> Error e
         let inline getViewDescriptor (viewAttr: ViewAttribute, viewType: Type, viewModelType: Type) =
-            let inline getMethods (f) = 
-                viewType.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
-            let inline createCommandMetadata (a: seq<CommandAttribute>, mi: MethodInfo) =
-                let parameters = mi.GetParameters()
+            let inline createCommandMetadata (mi: ICommandMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error (Command.Error.NonVoidReturnType(mi))
                 else
                     let parameterType = 
-                        match parameters with
+                        match mi.ParameterTypes with
                         | [||] -> ValueSome typeof<Void>
-                        | [|param|] -> ValueSome param.ParameterType
+                        | [|pt|] -> ValueSome pt
                         | _ -> ValueNone
                     match parameterType with
-                    | ValueSome parameterType ->
-                        a 
-                        |> Seq.map (fun ca -> Command.Descriptor(ca.Name, parameterType, mi)) 
-                        |> Ok
+                    | ValueSome parameterType -> Ok <| Command.Descriptor(parameterType, mi)
                     | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
-            let inline getCommandDescriptors methods = 
-                methods
-                |> Seq.map (fun x -> (x |> getCommandAttribs), x)
-                |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
+            let inline getCommandDescriptors (rp:IReflectionProvider) t = 
+                rp.GetCommandMethods t
                 |> Seq.map createCommandMetadata
                 |> Seq.cache
-            let inline createEventMetadata (a: seq<SubscriptionAttribute>, mi: MethodInfo) =
-                let parameters = mi.GetParameters()
+            //let inline getMethods (f) = 
+            //    viewType.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
+            let inline createEventMetadata (mi: IEventMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error <| Event.Error.NonVoidReturnType(mi)
                 else
                     let parameterType = 
-                        match parameters with
+                        match mi.ParameterTypes with
                         | [||] -> ValueNone
-                        | [|param|] -> ValueSome param.ParameterType
+                        | [|pt|] -> ValueSome pt
                         | _ -> ValueNone
                     match parameterType with
-                    | ValueSome parameterType ->
-                        let topics = 
-                            a 
-                            |> Seq.map (fun sa -> sa.Topic) 
-                            |> Array.ofSeq 
-                        Ok <| (upcast Event.Descriptor(viewType, parameterType, mi, topics) : IEventDescriptor)
+                    | ValueSome parameterType -> Ok <| (upcast Event.Descriptor(viewType, parameterType, mi, mi.Topic) : IEventDescriptor)
                     | ValueNone -> Error <| Event.Error.BadEventSignature(mi)
-            let inline getEventDescriptors methods = 
-                methods 
-                |> Seq.map (fun x -> (x |> getEventAttribs), x)
-                |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
+            let inline getEventDescriptors (rp:IReflectionProvider) t = 
+                t
+                |> rp.GetSubscriptionMethods
                 |> Seq.map createEventMetadata
                 |> Seq.cache
-
-            let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
-            let methods = getMethods flags
-            let commandDescriptorResults = getCommandDescriptors methods
+            let commandDescriptorResults = getCommandDescriptors reflectionProvider viewType
             // get the list of command lookup errors
             let commandDescriptorFailures = 
                 commandDescriptorResults  
                 |> Seq.choose Result.error
                 |> List.ofSeq 
-
-            let eventDescriptorResults = getEventDescriptors methods
+            let eventDescriptorResults = getEventDescriptors reflectionProvider viewType
             let eventDescriptorFailures =
                 eventDescriptorResults  
                 |> Seq.choose Result.error
                 |> List.ofSeq 
-
             match (commandDescriptorFailures, eventDescriptorFailures) with
             | ([], []) -> 
                 let inline folder (m: Dictionary<string, ICommandDescriptor>) (e: ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
                     m.Add(e.Name, e)
                     m
+                // TODO "This could fail if multiple commands share the same name! Add a respective error case"
                 let commandsIndex = 
                     commandDescriptorResults 
                     |> Seq.choose Result.ok
-                    |> Seq.concat
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
                     |> Index
-
                 let eventSubscriptions = 
                     eventDescriptorResults 
                     |> Seq.choose Result.ok 
                     |> Array.ofSeq
-
                 Ok (upcast View.Descriptor(viewAttr.Name, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
             | (ce, ee) -> 
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
                 Error <| BindingError (ce', ee')
-
-        (Result.mapError ViewError << (getViewAttribute >>= getViewModelType)) >>= getViewDescriptor <| t
+        (Result.mapError ViewError << (getViewAttribute reflectionProvider >>= getViewModelType)) >>= getViewDescriptor <| t

@@ -16,6 +16,7 @@ type [<Sealed>] CommandAttribute(name: string) = inherit ForestNodeAttribute(nam
 
 [<AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)>]
 type [<Sealed>] SubscriptionAttribute(topic: string) = 
+    inherit Attribute()
     do ignore <| isNotNull "topic" topic
     member __.Topic with get() = topic
 

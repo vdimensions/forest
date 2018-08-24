@@ -190,7 +190,7 @@ type [<Sealed>] MutableScope private (hierarchy: Hierarchy, viewModels: Map<Hier
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do
                 let handler = Event.Handler(event, view)
-                for topic in event.Topics do _eventBus.Subscribe handler topic |> ignore
+                _eventBus.Subscribe handler event.Topic |> ignore
         member __.UnsubscribeEvents view =
             _eventBus.Unsubscribe view |> ignore
     interface IDisposable with member __.Dispose() = self.Dispose()
@@ -211,32 +211,8 @@ type State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, vi
     member __.Hash with get() = fid.Hash
     member __.MachineToken with get() = fid.MachineToken
 
-type [<Interface>] IStateVisitor =
-    abstract member BFS: id:HierarchyKey -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member DFS: id:HierarchyKey -> region:string -> view:string -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-
 [<RequireQualifiedAccess>]
 module internal State =
     let create (hs, vm, vs) = State(hs, vm, vs)
 
     let discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
-
-    let rec private _traverseState (v: IStateVisitor) parent (ids: HierarchyKey list) (st: State) =
-        match ids with
-        | [] -> ()
-        | head::tail ->
-            let ix = 0 // TODO
-            let vm = st.ViewModels.[head]
-            let descriptor = st.ViewStates.[head].Descriptor
-            v.BFS parent head.Region head.View ix vm descriptor
-            // visit siblings 
-            _traverseState v parent tail st
-            // visit children
-            _traverseState v head st.Hierarchy.Hierarchy.[head] st
-            v.DFS parent head.Region head.View ix vm descriptor
-            ()
-
-    let traverse (v: IStateVisitor) (st: State) =
-        let root = HierarchyKey.shell
-        let ch = st.Hierarchy.Hierarchy.[root]
-        _traverseState v root ch st
