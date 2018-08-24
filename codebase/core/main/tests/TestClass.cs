@@ -38,7 +38,25 @@ namespace Forest.Tests
                     var innerView = (Inner.View) region.ActivateView(Inner.ViewName);
                     innerView.ViewModel = new Inner.ViewModel();
                 }
+                var count2 = new Random().Next(1, 5);
+                for (var i = 0; i < count2; i++)
+                {
+                    region.ActivateView(Outer.ViewName);
+                }
             }
+        }
+    }
+
+    internal class Visitor : IStateVisitor
+    {
+        public void BFS(HierarchyKey key, string region, string view, int index, object viewModel, IViewDescriptor descriptor)
+        {
+            Console.WriteLine(">> BFS: {0} : {1}", index, key.Hash);
+        }
+
+        public void DFS(HierarchyKey key, string region, string view, int index, object viewModel, IViewDescriptor descriptor)
+        {
+            Console.WriteLine("<< DFS: {0} : {1}", index, key.Hash);
         }
     }
 
@@ -86,6 +104,23 @@ namespace Forest.Tests
             Assert.AreNotEqual(state2, state1);
             Assert.AreNotEqual(state2.Hash, state1.Hash);
             Assert.AreEqual(state2.MachineToken, state1.MachineToken);
+        }
+
+
+        [Test]
+        public void TestTraversal()
+        {
+            var ctx = new DefaultForestContext(new View.Factory(), null);
+            ctx.ViewRegistry.Register<Inner.View>();
+            ctx.ViewRegistry.Register<Outer.View>();
+
+            var state1 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.Shell, string.Empty, Outer.ViewName), State.Empty);
+
+            Assert.AreNotEqual(state1, State.Empty);
+            Assert.AreNotEqual(state1.Hash, State.Empty.Hash);
+            Assert.AreNotEqual(state1.MachineToken, State.Empty.MachineToken);
+
+            Renderer.traverse( new Visitor(), state1);
         }
     }
 }

@@ -29,7 +29,7 @@ type ForestID =
     member __.Guid with get() = __._guid
     member internal __.MachineTokenBytes with get() = __._guid.ToByteArray() |> Seq.skip TimeBasedGuid.HashOffset
     member __.MachineToken with get() = __.MachineTokenBytes |> ForestID.hex2Str
-    member internal __.HashBytes with get() = __._guid.ToByteArray() |> Seq.take TimeBasedGuid.HashOffset
+    member internal __.HashBytes with get() = __._guid.ToByteArray() |> Seq.take TimeBasedGuid.TimestampSize
     member __.Hash with get() = __.HashBytes |> Seq.rev |> ForestID.hex2Str
     member __.Timestamp with get() = __._guid |> TimeBasedGuid.getDateTimeOffset
     interface IComparable with

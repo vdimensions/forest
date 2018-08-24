@@ -59,7 +59,7 @@ type [<Sealed>] private DefaultProperty(property: PropertyInfo) =
         member __.SetValue target value = property.SetValue(target, value)
         member __.Name with get() = property.Name
 
-type [<Sealed>] DefaultReflectionProvider() =
+type [<Sealed>] internal DefaultReflectionProvider() =
 
     [<Literal>]
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public

@@ -12,7 +12,7 @@ type [<Struct>] ViewRegistryError =
     | ViewError of viewError: View.Error
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
-type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this = 
+type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) = 
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
     abstract member GetViewMetadata: t: Type -> Result<IViewDescriptor, ViewRegistryError>
@@ -58,11 +58,11 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) as this =
         | (false, _) -> nil<IViewDescriptor>  
             
     interface IViewRegistry with
-        member __.Register t = this.Register t
-        member __.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member __.Resolve (name: string) = this.Resolve name
+        member __.Register t = __.Register t
+        member __.Register<'T when 'T:> IView> () = __.Register<'T>()
+        member __.Resolve (name: string) = __.Resolve name
         //member x.Resolve (viewNode: IViewNode) = this.Resolve viewNode
-        member __.GetDescriptor name = this.GetViewDescriptor name
+        member __.GetDescriptor name = __.GetViewDescriptor name
 
 type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)
@@ -108,7 +108,7 @@ type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IR
                         | _ -> ValueNone
                     match parameterType with
                     | ValueSome parameterType -> Ok <| (upcast Event.Descriptor(viewType, parameterType, mi, mi.Topic) : IEventDescriptor)
-                    | ValueNone -> Error <| Event.Error.BadEventSignature(mi)
+                    | ValueNone -> Error <| Event.Error.BadEventSignature mi
             let inline getEventDescriptors (rp:IReflectionProvider) t = 
                 t
                 |> rp.GetSubscriptionMethods
