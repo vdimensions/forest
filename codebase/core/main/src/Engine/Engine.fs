@@ -6,7 +6,7 @@ open Forest.Events
 open System
 
 [<Serializable>]
-type ForestOperation =
+type [<Struct>] ForestOperation =
     | InstantiateView of id: HierarchyKey
     | UpdateViewModel of parent: HierarchyKey * viewModel: obj
     | DestroyView of identifier: HierarchyKey
@@ -114,7 +114,7 @@ type [<Sealed>] internal MutableScope private (hierarchy: Hierarchy, viewModels:
         with 
         | _ -> (_toList _changeLog)
 
-    member __.Apply (callResumeState: bool) (entry: StateChange) =
+    member __.Apply (entry: StateChange) =
         match entry with
         | StateChange.ViewAdded (id, vm) ->
             match HierarchyKey.isShell id with
@@ -128,16 +128,13 @@ type [<Sealed>] internal MutableScope private (hierarchy: Hierarchy, viewModels:
                     | Ok viewState ->
                         _hierarchy <- hs
                         _viewStates.Add (id, viewState)
-                        _viewModels.[id] <- vm//viewState.ViewModel
-                        //if (callResumeState) then viewState.View.ResumeState()
                         viewState.Resume(vm)
                         None
                     | Error e -> Some e
-        | StateChange.ViewDestroyed (viewID) ->
-            match _destroyView viewID with Ok _ -> None | Error e -> Some e
-        | StateChange.ViewModelUpdated (viewID, vm) -> 
-            _viewModels.[viewID] <- vm
-            _viewStates.[viewID].Resume(vm)
+        | StateChange.ViewDestroyed (id) ->
+            match _destroyView id with Ok _ -> None | Error e -> Some e
+        | StateChange.ViewModelUpdated (id, vm) -> 
+            _viewStates.[id].Resume(vm)
             None
 
     member __.Dispose() = 
@@ -184,31 +181,24 @@ type [<Sealed>] EngineResult internal (state:State, changeList:ChangeList) =
 
 [<RequireQualifiedAccess>]
 module Engine =
-    let inline private _applyStateChanges (mutableState:MutableScope) (sync: bool) (changeList:ChangeList) (ctx: IForestContext) (state: State) =
+    let inline private _applyStateChanges (mutableState:MutableScope) (changeList:ChangeList) (state: State) =
         let rec _applyChangelog (ms: MutableScope) (cl: StateChange List) =
             match cl with
             | [] -> None
             | head::tail -> 
-                match head |> ms.Apply sync with
+                match head |> ms.Apply with
                 | Some e -> Some e
                 | None -> _applyChangelog ms tail
-                
-        
         match _applyChangelog mutableState (changeList.ToList()) with
-        | None ->
-            match mutableState.Deconstruct() with
-            | (a, b, c) -> 
-                // TODO: create state guid
-                State.createWithFuid (a, b, c, changeList.Fuid)
+        | None -> match mutableState.Deconstruct() with (a, b, c) -> State.createWithFuid (a, b, c, changeList.Fuid)
         | Some error ->
             //always discard the viewstates upon error
             state |> State.discardViewStates
             // TODO: exception or error view stuff
 
-
-    let ApplyChangeLog (ctx: IForestContext) (state: State) (changeList: ChangeList) = 
+    let ApplyChangeLog (ctx:IForestContext) (state:State) (changeList:ChangeList) = 
         use ms = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
-        let newState = _applyStateChanges ms true changeList ctx state
+        let newState = state |> _applyStateChanges ms changeList
         EngineResult(newState, changeList)
 
     let Update (ctx: IForestContext) (operation: ForestOperation) (state: State) =
@@ -225,9 +215,7 @@ module Engine =
         //     this is the hooking point for replicating the changelog on another machine
 
         // TODO: invoke steps 1..4
-        use ms = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
-        let c = ms.Update operation
-        //_applyStateChanges ms false c ctx state
-        // TODO: raise event for state changes
-        let newState = State.create <| ms.Deconstruct()
-        EngineResult(newState, ChangeList(state.Hash, c, newState.Fuid))
+        use mutationScope = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+        let changeList = mutationScope.Update operation
+        let newState = State.create <| mutationScope.Deconstruct()
+        EngineResult(newState, ChangeList(state.Hash, changeList, newState.Fuid))

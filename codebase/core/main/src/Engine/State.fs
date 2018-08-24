@@ -35,7 +35,7 @@ type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKe
     [<DebuggerNonUserCode>]
     member internal __.Fuid with get() = fuid
     member __.Hash with get() = fuid.Hash
-    member __.MachineToken with get() = fuid.MachineToken
+    //member __.MachineToken with get() = fuid.MachineToken
     member private this.eq (other:State):bool =
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
         && LanguagePrimitives.GenericEqualityComparer.Equals(this.Hierarchy, other.Hierarchy)

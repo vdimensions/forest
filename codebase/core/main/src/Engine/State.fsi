@@ -47,7 +47,7 @@ type [<Sealed>] State = // TODO: convert to state machine
     [<System.Diagnostics.DebuggerNonUserCode>]
     member internal Fuid:Fuid with get
     member Hash: string with get
-    member MachineToken: string with get
+    //member MachineToken: string with get
     interface IEquatable<State>
 
 [<RequireQualifiedAccess>]

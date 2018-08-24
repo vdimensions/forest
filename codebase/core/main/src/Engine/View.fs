@@ -38,7 +38,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     interface IViewState with
         member this.Load () = this.Load()
         member this.Resume viewModel =
-            _viewModel <- (downcast viewModel : 'T)
+            _viewModel <- _viewStateModifier.SetViewModel true _hkey (downcast viewModel : 'T)
             this.Resume()
         member this.InstanceID
             with get() = this.HierarchyKey

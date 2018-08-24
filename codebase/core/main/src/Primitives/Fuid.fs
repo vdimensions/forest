@@ -1,6 +1,6 @@
 ﻿namespace Forest
 
-open Forest.Utils
+//open Forest.Utils
 
 open System
 open System.Diagnostics
@@ -27,11 +27,11 @@ type Fuid =
         | _ -> false
     override __.ToString() = __._guid.ToString();
     member __.Guid with get() = __._guid
-    member internal __.MachineTokenBytes with get() = __._guid.ToByteArray() |> Seq.skip TimeBasedGuid.HashOffset
-    member __.MachineToken with get() = __.MachineTokenBytes |> Fuid.hex2Str
-    member internal __.HashBytes with get() = __._guid.ToByteArray() |> Seq.take TimeBasedGuid.TimestampSize
-    member __.Hash with get() = __.HashBytes |> Seq.rev |> Fuid.hex2Str
-    member __.Timestamp with get() = __._guid |> TimeBasedGuid.getDateTimeOffset
+    //member internal __.MachineTokenBytes with get() = __._guid.ToByteArray() |> Seq.skip TimeBasedGuid.HashOffset
+    //member __.MachineToken with get() = __.MachineTokenBytes |> Fuid.hex2Str
+    member internal __.HashBytes with get() = __._guid.ToByteArray()// |> Seq.take TimeBasedGuid.TimestampSize
+    member __.Hash with get() = __.HashBytes |> Fuid.hex2Str
+    //member __.Timestamp with get() = __._guid |> TimeBasedGuid.getDateTimeOffset
     interface IComparable with
         member __.CompareTo (other: obj) =
             match other with
@@ -43,8 +43,38 @@ type Fuid =
 
 [<AutoOpen>]
 module internal Fuid = 
+    // https://stackoverflow.com/a/12580020/795158
+    // https://github.com/nhibernate/nhibernate-core/blob/5e71e83ac45439239b9028e6e87d1a8466aba551/src/NHibernate/Id/GuidCombGenerator.cs
+    let private newCombGuid() =
+        let guidArray = Guid.NewGuid().ToByteArray();
+
+        let baseDate  = new DateTime(1900, 1, 1);
+        let now = DateTime.Now;
+
+        // Get the days and milliseconds which will be used to build the byte string 
+        let days = new TimeSpan(now.Ticks - baseDate.Ticks);
+        let msecs = now.TimeOfDay;
+
+        // Convert to a byte array 
+        // Note that SQL Server is accurate to 1/300th of a millisecond so we divide by 3.333333 
+        let daysArray = BitConverter.GetBytes(days.Days);
+        let msecsArray = BitConverter.GetBytes(int64 (msecs.TotalMilliseconds / 3.333333));
+
+        // Reverse the bytes to match SQL Servers ordering 
+        Array.Reverse(daysArray);
+        Array.Reverse(msecsArray);
+
+        // Copy the bytes into the guid 
+        Array.Copy(daysArray, daysArray.Length - 2, guidArray, guidArray.Length - 6, 2);
+        Array.Copy(msecsArray, msecsArray.Length - 4, guidArray, guidArray.Length - 4, 4);
+
+        Array.Reverse(guidArray)
+
+        Guid(guidArray);
+
     [<CompiledName("NewID")>]
-    let newID () = Fuid(TimeBasedGuid.newTimeBasedGuid())
+    //let newID () = Fuid(TimeBasedGuid.newTimeBasedGuid())
+    let newID () = Fuid(newCombGuid())
 
     [<CompiledName("Empty")>]
     let empty = Fuid(System.Guid.Empty)

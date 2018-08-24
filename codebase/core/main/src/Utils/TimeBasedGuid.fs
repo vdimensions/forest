@@ -10,6 +10,8 @@ open System.Runtime.InteropServices
 /// </summary>
 /// <seealso href="http://www.ietf.org/rfc/rfc4122.txt">RFC 4122 - A Universally Unique IDentifier (UUID) URN Namespace</seealso>
 module internal TimeBasedGuid =
+    open System
+
     let inline private iod def i (arr:'a array) = if arr.Length > i then arr.[i] else def
     let private iodb = iod 0uy
     let private iodb2 bytes = (iodb 0 bytes, iodb 1 bytes)
@@ -38,8 +40,7 @@ module internal TimeBasedGuid =
     let private gregorianCalendarStart = System.DateTimeOffset(1582, 10, 15, 0, 0, 0, System.TimeSpan.Zero)
 
     let private offsetToBytes (offset: System.DateTimeOffset): byte array =
-        let ticks: int64  = (offset - gregorianCalendarStart).Ticks;
-        System.BitConverter.GetBytes(ticks);
+        (offset - gregorianCalendarStart).Ticks |> System.BitConverter.GetBytes
 
     [<RequireQualifiedAccess>]
     module internal Version =

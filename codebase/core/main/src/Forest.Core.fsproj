@@ -20,7 +20,6 @@
     <Compile Include="Utils\NullHandling.fs" />
     <Compile Include="Utils\Result.fs" />
     <Compile Include="Utils\Monad.fs" />
-    <Compile Include="Utils\TimeBasedGuid.fs" />
     <Compile Include="Primitives\Index.fs" />
     <Compile Include="Primitives\Fuid.fs" />
     <Compile Include="Primitives\HierarchyKey.fsi" />
