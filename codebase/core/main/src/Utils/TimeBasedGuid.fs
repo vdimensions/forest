@@ -47,7 +47,7 @@ module internal TimeBasedGuid =
         let private _Mask = 0x0fuy
         let private _Shift = 4
 
-        let apply (version: int) (bytes: byte array) =
+        let encode (version: int) (bytes: byte array) =
             // set the version
             let value = ((bytes.[_Index] &&& _Mask) ||| byte (version <<< _Shift))
             let result = Array.copy bytes
@@ -57,7 +57,7 @@ module internal TimeBasedGuid =
         let reveal (bytes: byte array) =
             (int (bytes.[_Index]) &&& 0xFF) >>> _Shift
 
-        let reverse(bytes: byte array) =
+        let decode (bytes: byte array) =
             // reverse the version
             let version = reveal bytes
             let value = ((bytes.[_Index] &&& _Mask) ||| byte (version >>> _Shift))
@@ -71,13 +71,13 @@ module internal TimeBasedGuid =
         let private _Mask = 0x3fuy
         let private _Shift = 0x80uy
 
-        let apply (bytes: byte array) =
+        let encode (bytes: byte array) =
             let value = ((bytes.[_Index] &&& _Mask) ||| _Shift)
             let result = Array.copy bytes
             result.[_Index] <- value
             result
 
-        let reverse (bytes: byte array) =
+        let decode (bytes: byte array) =
             let value = ((bytes.[_Index] &&& _Mask) ||| _Shift)
             let result = Array.copy bytes
             result.[_Index] <- value
@@ -107,7 +107,7 @@ module internal TimeBasedGuid =
         new (bytes: byte array) = TimestampBytes(iodb8(bytes))
         new (offset: System.DateTimeOffset) = TimestampBytes(offsetToBytes(offset))
 
-        member this.Bytes: byte array = Array.ofList [this._b1;this._b2;this._b3;this._b4;this._b5;this._b6;this._b7;this._b8]
+        member this.Bytes: byte array = [|this._b1;this._b2;this._b3;this._b4;this._b5;this._b6;this._b7;this._b8|]
 
     [<StructLayout(LayoutKind.Explicit)>]
     type [<Struct>] internal NodeBytes =
@@ -128,7 +128,7 @@ module internal TimeBasedGuid =
         new (_b1, _b2, _b3, _b4, _b5, _b6) = NodeBytes((_b1, _b2, _b3, _b4, _b5, _b6))
         new (bytes: byte array) = NodeBytes(iodb6 bytes)
 
-        member this.Bytes: byte array = Array.ofList [this._b1;this._b2;this._b3;this._b4;this._b5;this._b6]
+        member this.Bytes: byte array = [|this._b1;this._b2;this._b3;this._b4;this._b5;this._b6|]
 
     [<StructLayout(LayoutKind.Explicit)>]
     type [<Struct>] internal ClockSequenceBytes =
@@ -141,7 +141,7 @@ module internal TimeBasedGuid =
         new (_v1, _v2) = ClockSequenceBytes((_v1, _v2))
         new (bytes: byte array) = ClockSequenceBytes(iodb2 bytes)
 
-        member this.Bytes: byte array = Array.ofList [this._b1;this._b2]
+        member this.Bytes: byte array = [|this._b1;this._b2|]
 
     [<StructLayout(LayoutKind.Explicit)>]
     type [<Struct>] internal TimeBasedGuid =
@@ -159,8 +159,8 @@ module internal TimeBasedGuid =
         member this.ToGuid (version: int): System.Guid = 
             let guidBytes = 
                 Array.concat( [this._timestamp.Bytes; this._clockSequence.Bytes; this._node.Bytes] )
-                |> Variant.apply
-                |> Version.apply version//TimeBased
+                |> Variant.encode
+                |> Version.encode version
             System.Guid(guidBytes)
 
     let private generateClockSequenceAndNote () =
@@ -176,13 +176,13 @@ module internal TimeBasedGuid =
     let private DefaultClockSequenceAndNote = generateClockSequenceAndNote ()
 
     let internal getDateTimeOffset (guid: System.Guid) : System.DateTimeOffset =
-        let bytes = guid.ToByteArray() |> Version.reverse
+        let bytes = guid.ToByteArray() |> Version.decode
         let TimestampByte = 0
         let timestampBytes: byte array = Array.create 8 0uy
         System.Array.Copy(bytes, TimestampByte, timestampBytes, 0, 8)
 
-        let timestamp: int64 = System.BitConverter.ToInt64(timestampBytes, 0)
-        let ticks: int64  = timestamp + gregorianCalendarStart.Ticks
+        let timestamp:int64 = System.BitConverter.ToInt64(timestampBytes, 0)
+        let ticks:int64  = timestamp + gregorianCalendarStart.Ticks
         new System.DateTimeOffset(ticks, System.TimeSpan.Zero)
 
 

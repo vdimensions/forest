@@ -22,7 +22,7 @@
     <Compile Include="Utils\Monad.fs" />
     <Compile Include="Utils\TimeBasedGuid.fs" />
     <Compile Include="Primitives\Index.fs" />
-    <Compile Include="Primitives\ForestID.fs" />
+    <Compile Include="Primitives\Fuid.fs" />
     <Compile Include="Primitives\HierarchyKey.fsi" />
     <Compile Include="Primitives\HierarchyKey.fs" />
     <Compile Include="Primitives\Hierarchy.fs" />

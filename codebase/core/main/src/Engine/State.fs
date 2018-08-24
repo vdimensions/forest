@@ -201,10 +201,10 @@ type [<Sealed>] MutableScope private (hierarchy: Hierarchy, viewModels: Map<Hier
 //    | Mutable of MutableScope
 
 [<Serializable>]
-type State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>, fid: ForestID) =
-    internal new (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>) = State(hierarchy, viewModels, viewStates, ForestID.newID())
+type State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>, fid: Fuid) =
+    internal new (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
-    static member empty = State(Hierarchy.empty, Map.empty, Map.empty, ForestID.empty)
+    static member empty = State(Hierarchy.empty, Map.empty, Map.empty, Fuid.empty)
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates

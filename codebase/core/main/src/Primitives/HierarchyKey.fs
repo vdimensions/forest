@@ -14,7 +14,7 @@ type HierarchyKey =
     member this.Parent with get() = match this with Shell_ -> Shell_ | ViewID_ (p, _, _, _) -> p
     member this.Region with get() = match this with Shell_ -> String.Empty | ViewID_ (_, r, _, _) -> r
     member this.View with get() = match this with Shell_ -> String.Empty | ViewID_ (_, _, v, _) -> v
-    member this.Hash with get() = match this with Shell_ -> ForestID.empty.Hash | ViewID_ (_, _, _, h) -> h
+    member this.Hash with get() = match this with Shell_ -> Fuid.empty.Hash | ViewID_ (_, _, _, h) -> h
     member private this._compareTo (other:HierarchyKey) = StringComparer.Ordinal.Compare(this.Hash, other.Hash)
     member private this._equals (other: HierarchyKey) = StringComparer.Ordinal.Equals(this.Hash, other.Hash)
     override this.Equals o = 
@@ -42,7 +42,7 @@ type HierarchyKey =
 module internal HierarchyKey =
     let add id region name parent = HierarchyKey.ViewID_(parent, region, name, id)
 
-    let addNew region name parent = add (ForestID.newID().Hash) region name parent
+    let addNew region name parent = add (Fuid.newID().Hash) region name parent
 
     let isShell (id:HierarchyKey) = match id with HierarchyKey.Shell_ -> true | _ -> false
     
