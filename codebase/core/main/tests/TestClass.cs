@@ -79,8 +79,12 @@ namespace Forest.Tests
         [Test]
         public void TestMethod()
         {
-            var key = HierarchyKey.NewKey(string.Empty, Inner.ViewName, HierarchyKey.Shell);
-            var result = Engine.Update(ctx, ForestOperation.NewInstantiateView(key), State.Empty);
+            var result = State.Empty.Update(
+                ctx,
+                e =>
+                {
+                    e.ActivateView<Inner.View>(Inner.ViewName);
+                });
 
             Assert.AreNotEqual(result.State, State.Empty);
             Assert.AreNotEqual(result.State.Hash, State.Empty.Hash);
@@ -93,14 +97,13 @@ namespace Forest.Tests
         [Test]
         public void TestStateTransferConsistency()
         {
-            var key = HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell);
-            var originalResult = Engine.Update(ctx, ForestOperation.NewInstantiateView(key), State.Empty);
+            var originalResult = State.Empty.Update(ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(originalResult.State, State.Empty);
             Assert.AreNotEqual(originalResult.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(originalResult.State.MachineToken, State.Empty.MachineToken);
 
-            var compensatedResult = Engine.ApplyChangeLog(ctx, State.Empty, originalResult.ChangeList);
+            var compensatedResult = State.Empty.Sync(ctx, originalResult.ChangeList);
 
             Console.WriteLine("--------------------------------------");
             Renderer.traverse(new PrintVisitor(), originalResult.State);
@@ -126,13 +129,13 @@ namespace Forest.Tests
         [Test]
         public void TestAddingViewFormAnotherOne()
         {
-            var result1 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell)), State.Empty);
+            var result1 = State.Empty.Update(ctx, a => a.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result1.State, State.Empty);
             Assert.AreNotEqual(result1.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(result1.State.MachineToken, State.Empty.MachineToken);
 
-            var result2 = Engine.Update(ctx, ForestOperation.NewInstantiateView(HierarchyKey.NewKey(string.Empty, Outer.ViewName, HierarchyKey.Shell)), result1.State);
+            var result2 = result1.State.Update(ctx, a => a.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result2.State, result1.State);
             Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);

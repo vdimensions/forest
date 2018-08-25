@@ -1,5 +1,7 @@
 ﻿namespace Forest
 
+open Forest.NullHandling
+
 open System.Collections
 open System.Collections.Generic
 open System.Diagnostics
@@ -14,6 +16,6 @@ type [<Sealed>] ChangeList internal (previousStateHash:string, changes:StateChan
     [<DebuggerNonUserCode>]
     member internal __.Fuid with get() = currentStateFuid
     member internal __.ToList() = changes
-    interface IEnumerable<StateChange> with member __.GetEnumerator() = (upcast changes : IEnumerable<_>).GetEnumerator()
-    interface IEnumerable with member __.GetEnumerator() = (upcast changes : IEnumerable).GetEnumerator()
+    interface IEnumerable<StateChange> with member __.GetEnumerator() = (upcast changes:IEnumerable<_>).GetEnumerator()
+    interface IEnumerable with member __.GetEnumerator() = (upcast changes:IEnumerable).GetEnumerator()
 

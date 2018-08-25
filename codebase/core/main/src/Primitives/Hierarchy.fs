@@ -16,12 +16,12 @@ type [<Struct>] internal Hierarchy = {
 [<RequireQualifiedAccess>]
 module internal Hierarchy =
     
-    let getChildren (id: HierarchyKey) (state: Hierarchy) : HierarchyKey list =
+    let inline getChildren (id:HierarchyKey) (state:Hierarchy) : HierarchyKey list =
         match state.Hierarchy.TryFind id with
         | Some data -> data
         | None -> List.Empty
 
-    let insert (id: HierarchyKey) (state: Hierarchy) : Hierarchy =
+    let insert (id:HierarchyKey) (state:Hierarchy) : Hierarchy =
         match state.Hierarchy.TryFind id with
         | Some _ -> state // prevent multiple inserts
         | None ->
@@ -33,7 +33,7 @@ module internal Hierarchy =
             let h = state.Hierarchy.Remove(parent).Add(parent, list @ [id]).Add(id, List.empty)
             { Hierarchy = h }
 
-    let remove (id: HierarchyKey) (state: Hierarchy) : Hierarchy*HierarchyKey list =
+    let remove (id:HierarchyKey) (state:Hierarchy) : Hierarchy*HierarchyKey list =
         let rec doRemove parentID (st, lst) =
             match st |> getChildren parentID  with
             | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, [parentID] @ lst)

@@ -1,7 +1,9 @@
 ﻿namespace Forest
 
 open Forest
+open Forest.Collections
 open Forest.Events
+open Forest.NullHandling
 open Forest.Reflection
 
 open System
@@ -12,27 +14,27 @@ type [<Struct>] ViewRegistryError =
     | ViewError of viewError: View.Error
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
-type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) = 
+type [<AbstractClass>] AbstractViewRegistry(factory:IViewFactory) = 
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
-    abstract member GetViewMetadata: t: Type -> Result<IViewDescriptor, ViewRegistryError>
+    abstract member GetViewMetadata: t:Type -> Result<IViewDescriptor, ViewRegistryError>
 
     member __.InstantiateView viewMetadata = 
         factory.Resolve viewMetadata
 
-    member this.ResolveError (e: ViewRegistryError): Exception = 
+    member this.ResolveError (e:ViewRegistryError) : Exception = 
         match e with
         | ViewError ve -> (this.ResolveViewError ve)
         | BindingError (ce, ee) -> (this.ResolveBindingError ce ee)
 
-    abstract member ResolveViewError: ve: View.Error -> Exception
+    abstract member ResolveViewError: ve:View.Error -> Exception
     default __.ResolveViewError ve =
         match ve with
         | View.Error.ViewAttributeMissing t -> upcast ViewAttributeMissingException(t)
         | View.Error.ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t)
         | View.Error.NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
 
-    abstract member ResolveBindingError: ce: Command.Error -> ee: Event.Error -> Exception
+    abstract member ResolveBindingError: ce:Command.Error -> ee:Event.Error -> Exception
     default __.ResolveBindingError ce ee =
         // TODO
         match ce with
@@ -40,7 +42,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory: IViewFactory) =
         | Command.Error.NonVoidReturnType mi -> upcast InvalidOperationException()
         | Command.Error.MultipleErrors e -> upcast InvalidOperationException()
 
-    member this.Register (NotNull "t" t: Type) = 
+    member this.Register (NotNull "t" t:Type) = 
         match this.GetViewMetadata t with
         | Ok metadata -> storage.[metadata.Name] <- metadata
         | Error e -> raise (e |> this.ResolveError)
@@ -115,19 +117,12 @@ type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IR
                 |> Seq.map createEventMetadata
                 |> Seq.cache
             let commandDescriptorResults = getCommandDescriptors reflectionProvider viewType
-            // get the list of command lookup errors
-            let commandDescriptorFailures = 
-                commandDescriptorResults  
-                |> Seq.choose Result.error
-                |> List.ofSeq 
             let eventDescriptorResults = getEventDescriptors reflectionProvider viewType
-            let eventDescriptorFailures =
-                eventDescriptorResults  
-                |> Seq.choose Result.error
-                |> List.ofSeq 
+            let commandDescriptorFailures = commandDescriptorResults |> Seq.choose Result.error |> List.ofSeq
+            let eventDescriptorFailures = eventDescriptorResults |> Seq.choose Result.error |> List.ofSeq
             match (commandDescriptorFailures, eventDescriptorFailures) with
             | ([], []) -> 
-                let inline folder (m: Dictionary<string, ICommandDescriptor>) (e: ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
+                let inline folder (m:Dictionary<string, ICommandDescriptor>) (e:ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
                     m.Add(e.Name, e)
                     m
                 // TODO "This could fail if multiple commands share the same name! Add a respective error case"
@@ -144,4 +139,4 @@ type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IR
             | (ce, ee) -> 
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
                 Error <| BindingError (ce', ee')
-        (Result.mapError ViewError << (getViewAttribute reflectionProvider >>= getViewModelType)) >>= getViewDescriptor <| t
+        (Result.mapError ViewError << (getViewAttribute reflectionProvider >> Result.bind getViewModelType)) >> Result.bind getViewDescriptor <| t

@@ -1,15 +1,17 @@
 namespace Forest
 
+open Forest.Collections
+
 open System
 open System.Collections.Generic
 
 
 type [<Interface>] IViewDescriptor = 
-    abstract Name: string with get
-    abstract ViewType: Type with get
-    abstract ViewModelType: Type with get
-    abstract Commands: Index<ICommandDescriptor, string> with get
-    abstract Events: IEnumerable<IEventDescriptor> with get
+    abstract Name:string with get
+    abstract ViewType:Type with get
+    abstract ViewModelType:Type with get
+    abstract Commands:Index<ICommandDescriptor, string> with get
+    abstract Events:IEnumerable<IEventDescriptor> with get
 
  and [<Interface>] ICommandDescriptor = 
     abstract Name: string with get
@@ -17,20 +19,20 @@ type [<Interface>] IViewDescriptor =
     abstract member Invoke: arg: obj -> v:IView -> unit
 
  and [<Interface>] IEventDescriptor =
-    abstract Topic: string with get
-    abstract MessageType: Type with get
-    abstract member Trigger: view: IView -> message: obj -> unit
+    abstract Topic:string with get
+    abstract MessageType:Type with get
+    abstract member Trigger: view:IView -> message:obj -> unit
 
  and [<Interface>] IViewRegistry =
-    abstract member Register: t: Type -> IViewRegistry
-    abstract member Register<'T when 'T:> IView> : unit -> IViewRegistry
-    abstract member Resolve: name: string -> IView
-    abstract member GetDescriptor: name: string -> IViewDescriptor
+    abstract member Register: t:Type -> IViewRegistry
+    abstract member Register<'T when 'T:>IView> : unit -> IViewRegistry
+    abstract member Resolve: name:string -> IView
+    abstract member GetDescriptor: name:string -> IViewDescriptor
 
  and [<Interface>] IView =
-    abstract Publish<'M> : message: 'M * [<ParamArray>] topics: string[] -> unit
-    abstract member FindRegion: regionName: string -> IRegion
-    abstract ViewModel: obj
+    abstract Publish<'M> : message:'M * [<ParamArray>] topics:string[] -> unit
+    abstract member FindRegion: regionName:string -> IRegion
+    abstract ViewModel:obj
 
  and [<Interface>] IRegion = 
     abstract member ActivateView: name:string -> IView
@@ -70,12 +72,12 @@ type [<Interface>] IEventBus =
     /// <exception cref="ArgumentNullException">
     /// <paramref name="sender"/> is <c>null</c>
     /// </exception>
-    abstract member Publish<'M> : sender: IView * message: 'M * [<ParamArray>] topics: string[] -> unit
-    abstract member Subscribe: subscriptionHandler: ISubscriptionHandler -> topic: string -> IEventBus
-    abstract member Unsubscribe : sender: IView -> IEventBus
+    abstract member Publish<'M> : sender:IView * message:'M * [<ParamArray>] topics:string[] -> unit
+    abstract member Subscribe: subscriptionHandler:ISubscriptionHandler -> topic:string -> IEventBus
+    abstract member Unsubscribe : sender:IView -> IEventBus
 
  and [<Interface>] ISubscriptionHandler =
-    abstract member Invoke: arg: obj -> unit
-    abstract MessageType: Type with get
-    abstract Receiver: IView
+    abstract member Invoke: arg:obj -> unit
+    abstract MessageType:Type with get
+    abstract Receiver:IView
 

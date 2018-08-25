@@ -19,12 +19,11 @@
     <Compile Include="Properties\AssemblyInfo.fs" />
     <Compile Include="Utils\NullHandling.fs" />
     <Compile Include="Utils\Result.fs" />
-    <Compile Include="Utils\Monad.fs" />
-    <Compile Include="Primitives\Index.fs" />
     <Compile Include="Primitives\Fuid.fs" />
     <Compile Include="Primitives\HierarchyKey.fsi" />
     <Compile Include="Primitives\HierarchyKey.fs" />
     <Compile Include="Primitives\Hierarchy.fs" />
+    <Compile Include="Collections\Index.fs" />
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\Forest.fs" />
     <Compile Include="Api\Security.fs" />
@@ -41,7 +40,11 @@
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Engine.fs" />
+    <Compile Include="Engine\StateExtensions.fs" />
     <Compile Include="Rendering\Renderer.fs" />
+    <Compile Include="Templates\CompiledTemplates.fs" />
+    <Compile Include="Templates\RawTemplates.fs" />
+    <Compile Include="Templates\TemplateParsing.fs" />
     <Content Include="doc.txt" />
     <None Include="build.sh" />
     <None Include="mason.properties" />
@@ -56,9 +59,6 @@
     <Reference Include="mscorlib" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Templates\" />
   </ItemGroup>
   <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />

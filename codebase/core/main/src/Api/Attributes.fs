@@ -1,5 +1,7 @@
 ﻿namespace Forest
 
+open Forest.NullHandling
+
 open System
 
 

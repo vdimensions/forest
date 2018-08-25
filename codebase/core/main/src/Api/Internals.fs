@@ -10,9 +10,9 @@ type [<Interface>] internal IViewState =
     abstract member Load: unit -> unit
     abstract member Resume: viewModel:obj -> unit
 
-    abstract InstanceID: HierarchyKey with get, set
-    abstract Descriptor: IViewDescriptor with get, set
-    abstract ViewStateModifier: IViewStateModifier with get
+    abstract InstanceID:HierarchyKey with get, set
+    abstract Descriptor:IViewDescriptor with get, set
+    abstract ViewStateModifier:IViewStateModifier with get
 
   and [<Interface>] internal IViewStateModifier =
     abstract member SubscribeEvents: receiver:IViewState -> unit
@@ -23,4 +23,4 @@ type [<Interface>] internal IViewState =
     //
     abstract member ActivateView: parent:HierarchyKey -> region:string -> view:string -> IView
     abstract member ExecuteCommand: issuer:IViewState -> command:string -> arg:obj -> unit
-    abstract member PublishEvent: sender:IView -> message:'M -> topics:string array -> unit
+    abstract member PublishEvent: sender:IViewState -> message:'M -> topics:string array -> unit

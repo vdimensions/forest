@@ -6,18 +6,18 @@ open System.Diagnostics
 
 [<Serializable>]
 type [<Struct>] StateError =
-    | ViewNotFound of view: string
-    | UnexpectedModelState of identifier: HierarchyKey
-    | CommandNotFound of owner: HierarchyKey * command: string
-    | CommandError of cause: Command.Error
-    | HierarchyElementAbsent of orphanIdentifier: HierarchyKey
+    | ViewNotFound of view:string
+    | UnexpectedModelState of identifier:HierarchyKey
+    | CommandNotFound of owner:HierarchyKey * command:string
+    | CommandError of cause:Command.Error
+    | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
     | NoViewAdded
 
 [<Serializable>]
 type [<Struct>] StateChange =
-    | ViewAdded of parent: HierarchyKey * viewModel: obj
-    | ViewModelUpdated of id: HierarchyKey * updatedViewModel: obj
-    | ViewDestroyed of destroyedViewID: HierarchyKey
+    | ViewAdded of parent:HierarchyKey * viewModel:obj
+    | ViewModelUpdated of id:HierarchyKey * updatedViewModel:obj
+    | ViewDestroyed of destroyedViewID:HierarchyKey
 
 //type State1 =
 //    | Empty
@@ -45,7 +45,7 @@ type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKe
         | :? State as other -> this.eq other
         | _ -> false
     override this.GetHashCode() = hash this.Hash
-    interface IEquatable<State> with member __.Equals(other:State) = __.eq other
+    interface IEquatable<State> with member this.Equals(other:State) = this.eq other
 
 [<RequireQualifiedAccess>]
 module internal State =

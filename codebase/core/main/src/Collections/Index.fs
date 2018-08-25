@@ -1,11 +1,11 @@
-namespace Forest
+namespace Forest.Collections
 
 open System.Collections
 open System.Collections.Generic;
 
 
 [<AutoOpen>]
-type [<Sealed>] Index<'T, 'TKey> internal(dict: IDictionary<'TKey, 'T>) =
+type [<Sealed>] Index<'T, 'TKey> internal(dict:IDictionary<'TKey, 'T>) =
     member __.Contains item = dict.Values.Contains item
     member __.ContainsKey key = dict.ContainsKey key
     member __.TryFind key =
@@ -13,10 +13,10 @@ type [<Sealed>] Index<'T, 'TKey> internal(dict: IDictionary<'TKey, 'T>) =
         | (true, v) -> Some v
         | (false, _) -> None
     member __.Count with get() = dict.Count
-    member __.Keys with get() = upcast dict.Keys : IEnumerable<'TKey>
+    member __.Keys with get() = upcast dict.Keys:IEnumerable<'TKey>
     member __.Item with get(key) = dict.[key]
     interface IEnumerable<'T> with member __.GetEnumerator() = dict.Values.GetEnumerator()
-    interface IEnumerable with member __.GetEnumerator() = upcast dict.Values.GetEnumerator() : IEnumerator
+    interface IEnumerable with member __.GetEnumerator() = upcast dict.Values.GetEnumerator():IEnumerator
 
 //[<AutoOpen>]
 //type [<Interface>] IIndex<'T, 'TKey> =

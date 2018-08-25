@@ -1,6 +1,7 @@
 ﻿namespace Forest.Reflection
 
 open Forest
+open Forest.NullHandling
 
 open System
 open System.Reflection
@@ -64,18 +65,18 @@ type [<Sealed>] internal DefaultReflectionProvider() =
     [<Literal>]
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
 
-    member inline __.isOfType tt obj = (obj.GetType() = tt)
-    member inline __.getAttributes(mi: #MemberInfo) : seq<'a :> Attribute> =
+    member inline private __.isOfType<'a> obj = (obj.GetType() = typeof<'a>)
+    member inline private __.getAttributes(mi:#MemberInfo):seq<'a:>Attribute> =
         let getAttributesInternal = 
             mi.GetCustomAttributes 
-            >> Seq.filter(__.isOfType typeof<'a>) 
-            >> Seq.map(fun attr -> (downcast attr : 'a)) 
+            >> Seq.filter __.isOfType<'a>  
+            >> Seq.map(fun attr -> (downcast attr:'a)) 
         getAttributesInternal(true)
-    member inline __.getMethods (f) (t:Type) = 
+    member inline private __.getMethods (f) (t:Type) = 
         t.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
-    member inline __.getCommandAttribs (methodInfo: MethodInfo): seq<CommandAttribute> = 
+    member inline private __.getCommandAttribs (methodInfo:MethodInfo): seq<CommandAttribute> = 
         __.getAttributes methodInfo
-    member inline __.getEventAttribs (methodInfo: MethodInfo): seq<SubscriptionAttribute> = 
+    member inline private __.getEventAttribs (methodInfo:MethodInfo): seq<SubscriptionAttribute> = 
         __.getAttributes methodInfo
 
     interface IReflectionProvider with

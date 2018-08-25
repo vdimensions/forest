@@ -16,6 +16,7 @@
 namespace Forest.Events
 
 open Forest
+open Forest.NullHandling
 
 open System
 open System.Collections.Generic
@@ -30,9 +31,9 @@ module Event =
         member __.MessageType with get () = mt
         member __.Topic with get () = topic
         interface IEventDescriptor with
-            member __.Trigger v m = __.Trigger v m
-            member __.MessageType = __.MessageType
-            member __.Topic = __.Topic
+            member this.Trigger v m = this.Trigger v m
+            member this.MessageType = this.MessageType
+            member this.Topic = this.Topic
 
     type [<Sealed>] internal Handler(descriptor: IEventDescriptor, receiver: IView) =
         interface ISubscriptionHandler with
@@ -69,15 +70,15 @@ module Event =
             for value in _subscriptions.Values do value.Clear()
             _subscriptions.Clear()
 
-        member __.Publish<'M> (NotNull "sender" sender: IView, NotNull "message" message:'M, NotNull "topics" topics: string[]) : unit =
+        member this.Publish<'M> (NotNull "sender" sender: IView, NotNull "message" message:'M, NotNull "topics" topics: string[]) : unit =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
-                     __.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
+                     this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
             | curratedTopics ->
                 for topic in curratedTopics do
                     match _subscriptions.TryGetValue(topic) with
-                    | (true, topicSubscriptionHandlers) -> __.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
+                    | (true, topicSubscriptionHandlers) -> this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
 
         member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler: ISubscriptionHandler, NotNull "topic" topic: string) : T =
@@ -105,11 +106,11 @@ module Event =
             this
 
         interface IEventBus with
-            member __.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = __.Publish<'M>(sender, message, topics)
-            member __.Subscribe x y = upcast __.Subscribe (x, y)
-            member __.Unsubscribe receiver = upcast __.Unsubscribe receiver
+            member this.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = this.Publish<'M>(sender, message, topics)
+            member this.Subscribe x y = upcast this.Subscribe (x, y)
+            member this.Unsubscribe receiver = upcast this.Unsubscribe receiver
 
-        interface IDisposable with member __.Dispose () = __.Dispose()
+        interface IDisposable with member this.Dispose () = this.Dispose()
 
     [<CompiledName("Create")>]
     let internal createEventBus() : IEventBus = upcast new T()

@@ -1,6 +1,8 @@
 ﻿namespace Forest
 
 open Forest
+open Forest.Collections
+open Forest.NullHandling
 
 open System
 open System.Collections.Generic
@@ -81,9 +83,9 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
         member this.FindRegion name = this.FindRegion name
         member this.ViewModel with get() = upcast this.ViewModel
 
-and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: AbstractView<'T>) =
-    member __.ActivateView (NotNull "viewName" viewName: string) =
-        (upcast view : IViewState).ViewStateModifier.ActivateView view.HierarchyKey regionName viewName
+and private Region<'T when 'T: (new: unit -> 'T)>(regionName:string, view:AbstractView<'T>) =
+    member __.ActivateView (NotNull "viewName" viewName:string) =
+        (upcast view:IViewState).ViewStateModifier.ActivateView view.HierarchyKey regionName viewName
 
     member __.Name 
         with get() = regionName
@@ -95,12 +97,12 @@ and private Region<'T when 'T: (new: unit -> 'T)>(regionName: string, view: Abst
 [<RequireQualifiedAccessAttribute>]
 module View =
     // TODO: argument verification
-    type [<Sealed>] internal Descriptor internal (name: string, viewType: Type, viewModelType: Type, commands: Index<ICommandDescriptor, string>, events: IEventDescriptor array) = 
+    type [<Sealed>] internal Descriptor internal (name:string, viewType:Type, viewModelType:Type, commands:Index<ICommandDescriptor, string>, events:IEventDescriptor array) = 
         member __.Name with get() = name
         member __.ViewType with get() = viewType
         member __.ViewModelType with get() = viewModelType
         member __.Commands with get() = commands
-        member __.Events with get() = upcast events : IEnumerable<IEventDescriptor>
+        member __.Events with get() = upcast events:IEnumerable<IEventDescriptor>
         interface IViewDescriptor with
             member this.Name = this.Name
             member this.ViewType = this.ViewType
@@ -109,25 +111,25 @@ module View =
             member this.Events = this.Events
 
     type [<Struct>] Error = 
-        | ViewAttributeMissing of nonAnnotatedViewType: Type
-        | ViewTypeIsAbstract of abstractViewType: Type
-        | NonGenericView of nonGenericViewType: Type
+        | ViewAttributeMissing of nonAnnotatedViewType:Type
+        | ViewTypeIsAbstract of abstractViewType:Type
+        | NonGenericView of nonGenericViewType:Type
 
-    let inline private _selectViewModelTypes (tt: Type) = 
+    let inline private _selectViewModelTypes (tt:Type) = 
         let isGenericView = tt.IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)
         match isGenericView with
         | true -> Some (tt.GetGenericArguments().[0])
         | false -> None
 
-    let inline private _tryGetViewModelType (t: Type) = 
+    let inline private _tryGetViewModelType (t:Type) = 
         t.GetInterfaces()
         |> Seq.choose _selectViewModelTypes
         |> Seq.tryHead
 
-    let getViewModelType (NotNull "viewType" viewType: Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
+    let getViewModelType (NotNull "viewType" viewType:Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
     type [<Sealed>] Factory() = 
-        member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 
+        member __.Resolve (NotNull "descriptor" descriptor:IViewDescriptor) : IView = 
             let flags = BindingFlags.Public|||BindingFlags.Instance
             let constructors = 
                 descriptor.ViewType.GetConstructors(flags) 
