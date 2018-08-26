@@ -61,10 +61,33 @@ module Raw =
                 let placeholderMap = d |> Seq.map (fun a -> (a.placeholder, a.contents)) |> Map.ofSeq
                 let newContents = 
                      result.contents 
+                     |> inlineTemplates provider
                      |> processPlaceholders placeholderMap
                      |> expandTemplates provider
                 { result with contents = newContents }
-            |> flattenTemplate provider tail 
+            |> flattenTemplate provider tail
+    /// Locates and expands any `InlinedTemplate` item
+    and private inlineTemplates (provider:ITemplateProvider) (current:ViewContents list):ViewContents list =
+        let mutable result = List.empty
+        for vc in current do
+            match vc with 
+            | InlinedTemplate t -> 
+                let inlinedTemplate = t |> loadTemplate provider
+                for c in (inlineTemplates provider inlinedTemplate.contents) do 
+                    result <- c::result
+            | Region (name, regionContents) ->
+                let mutable newRegionContents = List.empty
+                for rc in regionContents do
+                    match rc with
+                    | ClearInstruction -> newRegionContents <- List.empty
+                    | Placeholder _ -> newRegionContents <- rc::newRegionContents
+                    | View (name, nestedViewContents) ->
+                        let newNestedViewContents = nestedViewContents |> inlineTemplates provider 
+                        newRegionContents <- View (name, newNestedViewContents)::newRegionContents
+                    | any -> newRegionContents <- any::newRegionContents
+                result <- Region (name, newRegionContents |> List.rev)::result
+        result |> List.rev
+    /// Inlines the contents of any accumulated `Placeholders` into the respective `Content` items
     and private processPlaceholders (placeholderData:Map<string, RegionContents list>) (current:ViewContents list):ViewContents list =
         if placeholderData |> Map.isEmpty |> not 
         then
@@ -92,13 +115,11 @@ module Raw =
                     result <- Region (name, newRegionContents |> List.rev)::result
             result |> List.rev
         else current
+    /// expands any `Template` items to a fully flattened template 
     and private expandTemplates (provider:ITemplateProvider) (current:ViewContents list):ViewContents list =
         let mutable result = List.empty
         for vc in current do
             match vc with 
-            | InlinedTemplate t -> 
-                let inlinedTemplate = t |> loadTemplate provider
-                for c in inlinedTemplate.contents do result <- c::result
             | Region (name, regionContents) ->
                 let mutable newRegionContents = List.empty
                 for rc in regionContents do
@@ -108,8 +129,7 @@ module Raw =
                     | View (name, nestedViewContents) ->
                         let newNestedViewContents = nestedViewContents |> expandTemplates provider 
                         newRegionContents <- View (name, newNestedViewContents)::newRegionContents
-                    | Template t ->
-                        let template = loadTemplate provider t
-                        newRegionContents <- View(t, template.contents)::newRegionContents
+                    | Template t -> newRegionContents <- View(t, (loadTemplate provider t).contents)::newRegionContents
                 result <- Region (name, newRegionContents |> List.rev)::result
+            | any -> result <- any::result
         result |> List.rev

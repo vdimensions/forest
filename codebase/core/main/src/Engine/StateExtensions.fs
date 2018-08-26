@@ -62,27 +62,29 @@ type private ForestEngineAdapter(scope: MutableScope) =
 [<Extension>]
 [<AutoOpen>]
 type StateExtensions =
+    static member inline private toResult (scope:MutableScope) (fuid:Fuid option) (state:State) =
+        match scope.Deconstruct() with 
+        | (a, b, c, cl) -> 
+        let newState = 
+            match fuid with
+            | Some f -> State.createWithFuid(a, b, c, f)
+            | None -> State.create(a, b, c)
+        EngineResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+
     [<Extension>]
     static member Update (state:State, ctx:IForestContext, operation:System.Action<IForestEngine>):EngineResult =
         try 
             use mutationScope = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
             let adapter = new ForestEngineAdapter(mutationScope)
             operation.Invoke adapter
-
-            match mutationScope.Deconstruct() with 
-                | (a, b, c, cl) -> 
-                let newState = State.create(a, b, c)
-                EngineResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+            state |> StateExtensions.toResult mutationScope None
         with
         | e -> 
-            use mutationScope = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
             let se = State.empty
+            use mutationScope = MutableScope.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show mutationScope
             // TODO: set error data
-            match mutationScope.Deconstruct() with 
-                | (a, b, c, cl) -> 
-                let newState = State.create(a, b, c)
-                EngineResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+            se |> StateExtensions.toResult mutationScope None
     [<Extension>]
     static member Sync (state:State, ctx:IForestContext, changes:ChangeList):EngineResult =
         try 
@@ -95,19 +97,12 @@ type StateExtensions =
                     | Some e -> Some e
                     | None -> _applyChangelog ms tail
             match _applyChangelog mutationScope (changes.ToList()) with
-            | None -> 
-                match mutationScope.Deconstruct() with 
-                | (a, b, c, cl) -> 
-                    let newState = State.createWithFuid(a, b, c, changes.Fuid)
-                    EngineResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+            | None -> state |> StateExtensions.toResult mutationScope (Some changes.Fuid)
             | Some e -> failwith "error" //TODO
         with
         | e -> 
-            use mutationScope = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
             let se = State.empty
+            use mutationScope = MutableScope.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show mutationScope
             // TODO: set error data
-            match mutationScope.Deconstruct() with 
-                | (a, b, c, cl) -> 
-                let newState = State.create(a, b, c)
-                EngineResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+            se |> StateExtensions.toResult mutationScope None

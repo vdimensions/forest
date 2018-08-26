@@ -3,10 +3,10 @@
 open Forest.Templates.Raw
 
 type [<Interface>] ITemplateParser =
-    abstract member Parse: stream:System.IO.Stream -> TemplateDefinition
+    abstract member Parse: name:string -> stream:System.IO.Stream -> Template
 
-type [<AbstractClass>] AbstractTemplateParser =
-    abstract member Parse: stream:System.IO.Stream -> TemplateDefinition
+type [<AbstractClass>] AbstractTemplateParser() =
+    abstract member Parse: name:string -> stream:System.IO.Stream -> Template
     member __.CreateTemplateDefinition (name:string) (contents:ViewContents list) : TemplateDefinition =
         { name = name; contents = contents }
     member __.CreateRoot (definition:TemplateDefinition) : Template =
@@ -25,4 +25,4 @@ type [<AbstractClass>] AbstractTemplateParser =
         ViewContents.Region(name, contents)
     member __.CreateInlinedTemplate (name:string) : ViewContents =
         ViewContents.InlinedTemplate(name)
-    interface ITemplateParser with member this.Parse stream = this.Parse stream
+    interface ITemplateParser with member this.Parse name stream = this.Parse name stream
