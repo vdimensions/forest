@@ -19,24 +19,19 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     let mutable _viewStateModifier: IViewStateModifier = nil<IViewStateModifier>
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable _descriptor: IViewDescriptor = nil<IViewDescriptor>
-
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         _viewStateModifier.PublishEvent this message topics
-
     abstract member Load: unit -> unit
     abstract member Resume: unit -> unit
     default __.Resume() = ()
-
     member this.FindRegion (NotNull "name" name) = 
         upcast Region(name, this) : IRegion
-
     member __.ViewModel
         with get ():'T = _viewModel
          and set (NotNull "value" value: 'T) = _viewModel <- (_viewStateModifier.SetViewModel false _hkey value)
     member internal __.HierarchyKey
         with get() = _hkey
          and set(NotNull "value" value) = _hkey <- value
-
     interface IViewState with
         member this.Load () = this.Load()
         member this.Resume viewModel =
@@ -60,7 +55,6 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
                 _viewStateModifier <- modifier
                 ()
             | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _hkey.View)))
-
         member this.LeaveModificationScope (_) =
             match null2vopt _viewStateModifier with
             | ValueSome currentModifier ->
@@ -72,12 +66,10 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
                 | None -> () 
                 _viewStateModifier <- nil<IViewStateModifier>
             | ValueNone -> ()
-
     interface IView<'T> with 
         member this.ViewModel
             with get() = this.ViewModel
              and set v = this.ViewModel <- v
-
     interface IView with
         member this.Publish (m, t) = this.Publish (m, t)
         member this.FindRegion name = this.FindRegion name
@@ -86,10 +78,8 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
 and private Region<'T when 'T: (new: unit -> 'T)>(regionName:string, view:AbstractView<'T>) =
     member __.ActivateView (NotNull "viewName" viewName:string) =
         (upcast view:IViewState).ViewStateModifier.ActivateView view.HierarchyKey regionName viewName
-
     member __.Name 
         with get() = regionName
-
     interface IRegion with
         member this.Name = this.Name
         member this.ActivateView (viewName: string) = this.ActivateView viewName
@@ -120,12 +110,10 @@ module View =
         match isGenericView with
         | true -> Some (tt.GetGenericArguments().[0])
         | false -> None
-
     let inline private _tryGetViewModelType (t:Type) = 
         t.GetInterfaces()
         |> Seq.choose _selectViewModelTypes
         |> Seq.tryHead
-
     let getViewModelType (NotNull "viewType" viewType:Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
     type [<Sealed>] Factory() = 

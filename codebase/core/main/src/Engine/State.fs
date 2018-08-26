@@ -19,11 +19,6 @@ type [<Struct>] StateChange =
     | ViewModelUpdated of id:HierarchyKey * updatedViewModel:obj
     | ViewDestroyed of destroyedViewID:HierarchyKey
 
-//type State1 =
-//    | Empty
-//    | Immutable of Hierarchy * Map<Identifier, obj> * Map<Identifier, ViewState>
-//    | Mutable of MutableScope
-
 [<Serializable>]
 type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>, fuid: Fuid) =
     internal new (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())

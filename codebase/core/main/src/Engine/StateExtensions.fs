@@ -8,14 +8,15 @@ open System.Runtime.CompilerServices
 type [<Interface>] IForestEngine =
     abstract member ActivateView: name:string -> 'a when 'a:>IView
     abstract member GetOrActivateView: name:string -> 'a when 'a:>IView
-    abstract member Publish: message:'M -> unit
+    abstract member SendMessage: message:'M -> unit
     abstract member ExecuteCommand: target:HierarchyKey -> command:string -> arg:'M -> unit
 
 module internal MessagingRemoteControl =
     [<Literal>]
     let Name = "MessagingRemoteControl"
     let private Key = HierarchyKey.shell |> HierarchyKey.newKey HierarchyKey.shell.Region Name
-    type [<Sealed>] ViewModel() = override __.Equals o = true
+    type [<Sealed>] ViewModel() = 
+        override __.Equals _ = true
     [<View(Name)>]
     type [<Sealed>] View() =
         inherit AbstractView<ViewModel>() with
@@ -24,7 +25,7 @@ module internal MessagingRemoteControl =
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
         | None -> ctx.ViewRegistry.Register typeof<View> |> ignore
-    let Get (ms:MutableScope) : View = Key |> ms.GetOrActivateView<View>
+    let Get (ms:StateMutationSpan) : View = Key |> ms.GetOrActivateView<View>
 
 module internal Error =
     [<Literal>]
@@ -39,10 +40,10 @@ module internal Error =
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
         | None -> ctx.ViewRegistry.Register typeof<View> |> ignore
-    let Show (ms:MutableScope) : View = 
+    let Show (ms:StateMutationSpan) : View = 
         Key |> ms.GetOrActivateView
 
-type private ForestEngineAdapter(scope: MutableScope) =
+type private ForestEngineAdapter(scope: StateMutationSpan) =
     let mutable _messagingRC = nil<MessagingRemoteControl.View>
     do
         MessagingRemoteControl.Reg scope.Context
@@ -56,13 +57,13 @@ type private ForestEngineAdapter(scope: MutableScope) =
             HierarchyKey.shell |> HierarchyKey.newKey HierarchyKey.shell.Region name |> scope.GetOrActivateView
         member __.ExecuteCommand target command message = 
             ForestOperation.InvokeCommand(target, command, message) |> scope.Update
-        member __.Publish message = 
+        member __.SendMessage message = 
             _messagingRC.Publish(message, System.String.Empty)
 
 [<Extension>]
 [<AutoOpen>]
 type StateExtensions =
-    static member inline private toResult (scope:MutableScope) (fuid:Fuid option) (state:State) =
+    static member inline private toResult (scope:StateMutationSpan) (fuid:Fuid option) (state:State) =
         match scope.Deconstruct() with 
         | (a, b, c, cl) -> 
         let newState = 
@@ -74,22 +75,22 @@ type StateExtensions =
     [<Extension>]
     static member Update (state:State, ctx:IForestContext, operation:System.Action<IForestEngine>):EngineResult =
         try 
-            use mutationScope = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+            use mutationScope = StateMutationSpan.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
             let adapter = new ForestEngineAdapter(mutationScope)
             operation.Invoke adapter
             state |> StateExtensions.toResult mutationScope None
         with
         | e -> 
             let se = State.empty
-            use mutationScope = MutableScope.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
+            use mutationScope = StateMutationSpan.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show mutationScope
             // TODO: set error data
             se |> StateExtensions.toResult mutationScope None
     [<Extension>]
     static member Sync (state:State, ctx:IForestContext, changes:ChangeList):EngineResult =
         try 
-            use mutationScope = MutableScope.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
-            let rec _applyChangelog (ms: MutableScope) (cl: StateChange List) =
+            use mutationScope = StateMutationSpan.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+            let rec _applyChangelog (ms: StateMutationSpan) (cl: StateChange List) =
                 match cl with
                 | [] -> None
                 | head::tail -> 
@@ -102,7 +103,7 @@ type StateExtensions =
         with
         | e -> 
             let se = State.empty
-            use mutationScope = MutableScope.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
+            use mutationScope = StateMutationSpan.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show mutationScope
             // TODO: set error data
             se |> StateExtensions.toResult mutationScope None

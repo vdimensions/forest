@@ -61,10 +61,8 @@ type [<Sealed>] private DefaultProperty(property: PropertyInfo) =
         member __.Name with get() = property.Name
 
 type [<Sealed>] internal DefaultReflectionProvider() =
-
     [<Literal>]
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
-
     member inline private __.isOfType<'a> obj = (obj.GetType() = typeof<'a>)
     member inline private __.getAttributes(mi:#MemberInfo):seq<'a:>Attribute> =
         let getAttributesInternal = 
@@ -78,7 +76,6 @@ type [<Sealed>] internal DefaultReflectionProvider() =
         __.getAttributes methodInfo
     member inline private __.getEventAttribs (methodInfo:MethodInfo): seq<SubscriptionAttribute> = 
         __.getAttributes methodInfo
-
     interface IReflectionProvider with
         member __.GetViewAttribute viewType =
             match (viewType |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
@@ -100,4 +97,3 @@ type [<Sealed>] internal DefaultReflectionProvider() =
             |> Seq.toArray
         member __.GetLocalizeableProperties vmType = 
             Array.empty
-

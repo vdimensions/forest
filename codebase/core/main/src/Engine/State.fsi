@@ -16,25 +16,6 @@ type [<Struct>] StateChange =
     | ViewAdded of parent:HierarchyKey * viewModel:obj
     | ViewModelUpdated of id:HierarchyKey * updatedViewModel:obj
     | ViewDestroyed of destroyedViewID:HierarchyKey
-//
-//type ForestOperation =
-//    | InstantiateView of parent: HierarchyKey * region: string * viewName: string
-//    | UpdateViewModel of parent: HierarchyKey * viewModel: obj
-//    | DestroyView of identifier: HierarchyKey
-//    | InvokeCommand of owner: HierarchyKey * commandName: string * commandArg: obj
-//    | Multiple of operations: ForestOperation list
-//
-//type [<Sealed>] internal MutableScope =
-//    interface IDisposable
-//    interface IViewStateModifier
-//    static member Create: Hierarchy * Map<HierarchyKey, obj> * Map<HierarchyKey, IViewState> * IForestContext -> MutableScope
-//    member Apply: bool -> StateChange -> StateError option
-//    member Update: ForestOperation -> StateChange list
-//    member Deconstruct: unit -> Hierarchy * Map<HierarchyKey, obj> * Map<HierarchyKey, IViewState>
-
-
-//[<Serializable>]
-//type State1
 
 [<Serializable>]
 type [<Sealed>] State = // TODO: convert to state machine

@@ -17,14 +17,14 @@ type [<Sealed>] XmlTemplateParser() =
         then Some e
         else None
 
-    member private this.ReadPlaceHolderContents(elements:IEnumerable<XElement>) =
+    member private this.ReadPlaceHolderDefinitions(elements:IEnumerable<XElement>) =
         let mutable result = List.empty
         for e in elements do
             match e with
             | TagName "content" v ->
                 let id = v.Attribute("id" |> XName.Get).Value
-                let children = v.Elements() |> this.ReadRegionContents
-                result <- (this.CreateContentDefinition id children)::result
+                let contents = v.Elements() |> this.ReadRegionContents
+                result <- (this.CreateContentDefinition id contents)::result
             | _ -> ignore()
         result |> List.rev
 
@@ -34,8 +34,8 @@ type [<Sealed>] XmlTemplateParser() =
             match e with
             | TagName "region" v ->
                 let name = v.Attribute("name" |> XName.Get).Value
-                let children = v.Elements() |> this.ReadRegionContents
-                result <- (this.CreateRegion name children)::result
+                let contents = v.Elements() |> this.ReadRegionContents
+                result <- (this.CreateRegion name contents)::result
             | TagName "inline" v ->
                 let name = v.Attribute("template" |> XName.Get).Value
                 result <- (this.CreateInlinedTemplate name)::result
@@ -64,7 +64,7 @@ type [<Sealed>] XmlTemplateParser() =
         let template = XDocument.Load(stream, LoadOptions.None).Root
         let master = template.Attribute("master" |> XName.Get)
         match null2vopt master with
-        | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderContents(template.Elements()))
+        | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderDefinitions(template.Elements()))
         | ValueNone -> this.ReadViewContents(template.Elements()) |> this.CreateTemplateDefinition name |> Root
 
 

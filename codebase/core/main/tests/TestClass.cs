@@ -129,13 +129,13 @@ namespace Forest.Tests
         [Test]
         public void TestAddingViewFormAnotherOne()
         {
-            var result1 = State.Empty.Update(ctx, a => a.ActivateView<Outer.View>(Outer.ViewName));
+            var result1 = State.Empty.Update(ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result1.State, State.Empty);
             Assert.AreNotEqual(result1.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(result1.State.MachineToken, State.Empty.MachineToken);
 
-            var result2 = result1.State.Update(ctx, a => a.ActivateView<Outer.View>(Outer.ViewName));
+            var result2 = result1.State.Update(ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result2.State, result1.State);
             Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);
