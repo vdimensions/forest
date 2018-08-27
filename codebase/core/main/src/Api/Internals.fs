@@ -21,7 +21,7 @@ type [<Interface>] internal IViewState =
     abstract member GetViewModel: id:HierarchyKey -> obj option
     abstract member SetViewModel: silent:bool -> id:HierarchyKey -> viewModel:'T -> 'T
     //
-    abstract member ActivateView: parent: HierarchyKey -> region:string -> view:string -> IView
-    abstract member ActivateAnonymousView<'v when 'v:>IView> : parent: HierarchyKey -> region: string -> 'v
-    abstract member ExecuteCommand: issuer:IViewState -> command:string -> arg:obj -> unit
+    abstract member ActivateView: parent: HierarchyKey -> region:rname -> view:vname -> IView
+    abstract member ActivateAnonymousView<'v when 'v:>IView> : parent:HierarchyKey -> region:rname -> 'v
+    abstract member ExecuteCommand: issuer:IViewState -> command:cname -> arg:obj -> unit
     abstract member PublishEvent: sender:IViewState -> message:'M -> topics:string array -> unit

@@ -7,13 +7,16 @@ open System.Text
 open System.Diagnostics
 open System.Runtime.CompilerServices
 
+type rname = string
+type vname = string
+type cname = string
 
 [<DebuggerDisplay("{this.ToString()}")>]
 [<CustomComparison>]
 [<CustomEquality>]
 type HierarchyKey = 
     | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] Shell_
-    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:HierarchyKey * region:string * view:string * hash:string
+    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:HierarchyKey * region:rname * view:vname * hash:string
     [<CompiledName("Shell")>]
     static member shell = 
         HierarchyKey.Shell_
@@ -23,9 +26,9 @@ type HierarchyKey =
     member this.Parent 
         with get() = match this with Shell_ -> Shell_ | ViewID_ (p, _, _, _) -> p
     member this.Region 
-        with get() = match this with Shell_ -> String.Empty | ViewID_ (_, r, _, _) -> r
+        with get() = match this with Shell_ -> rname.Empty | ViewID_ (_, r, _, _) -> r
     member this.View 
-        with get() = match this with Shell_ -> String.Empty | ViewID_ (_, _, v, _) -> v
+        with get() = match this with Shell_ -> vname.Empty | ViewID_ (_, _, v, _) -> v
     member this.Hash 
         with get() = match this with Shell_ -> Fuid.empty.Hash | ViewID_ (_, _, _, h) -> h
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]

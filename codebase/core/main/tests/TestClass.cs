@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Forest.Rendering;
+
 using NUnit.Framework;
 
 
@@ -61,6 +63,11 @@ namespace Forest.Tests
         {
             Console.WriteLine("<< DFS: {0} : {1}", index, key);
         }
+
+        public void Done()
+        {
+            Console.WriteLine("--------------------------------------");
+        }
     }
 
     [TestFixture]
@@ -105,13 +112,11 @@ namespace Forest.Tests
 
             var compensatedResult = State.Empty.Sync(ctx, originalResult.ChangeList);
 
-            Console.WriteLine("--------------------------------------");
             Renderer.traverse(new PrintVisitor(), originalResult.State);
-            Console.WriteLine("--------------------------------------");
             Renderer.traverse(new PrintVisitor(), compensatedResult.State);
 
-            //Assert.AreEqual(originalResult.State, compensatedResult.State);
-            Assert.IsTrue(originalResult.State.Equals(compensatedResult.State));
+            Assert.AreEqual(originalResult.State, compensatedResult.State);
+            //Assert.IsTrue(originalResult.State.Equals(compensatedResult.State));
             Assert.AreEqual(originalResult.State.Hash, compensatedResult.State.Hash);
             //Assert.AreEqual(originalResult.State.MachineToken, compensatedResult.State.MachineToken);
         }
@@ -122,7 +127,7 @@ namespace Forest.Tests
             for (var i = 0; i < 1000; i++)
             {
                 TestStateTransferConsistency();
-                Console.WriteLine("===================");
+                Console.WriteLine("======================================");
             }
         }
 
@@ -141,9 +146,7 @@ namespace Forest.Tests
             Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);
             //Assert.AreEqual(result2.State.MachineToken, result1.State.MachineToken);
 
-            Console.WriteLine("--------------------------------------");
             Renderer.traverse(new PrintVisitor(), result1.State);
-            Console.WriteLine("--------------------------------------");
             Renderer.traverse(new PrintVisitor(), result2.State);
         }
 

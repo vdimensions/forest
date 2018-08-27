@@ -2,14 +2,18 @@
 
 open System
 
+type rname = string
+type vname = string
+type cname = string
+
 type [<Sealed>] HierarchyKey =
     [<CompiledName("Shell")>]
     static member shell:HierarchyKey
     [<CompiledName("NewKey")>]
-    static member newKey: region:string -> view:string -> parent:HierarchyKey -> HierarchyKey
+    static member newKey: region:rname -> view:vname -> parent:HierarchyKey -> HierarchyKey
     member Parent:HierarchyKey with get
-    member Region:string with get
-    member View:string with get
+    member Region:rname with get
+    member View:vname with get
     member Hash:string with get
     member RegionFragment:string with get
     override Equals: o:obj -> bool

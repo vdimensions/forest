@@ -55,7 +55,7 @@ module internal Hierarchy =
             else ({ Hierarchy = noContents.Hierarchy.Remove(parentID).Add(parentID, updatedSiblings) }, removedIDs)
         | true -> (noContents, removedIDs)
 
-    let tryFindView (id: HierarchyKey) (regionName: string) (viewName: string) (state: Hierarchy) : HierarchyKey option =
+    let tryFindView (id:HierarchyKey) (regionName:rname) (viewName:vname) (state:Hierarchy) : HierarchyKey option =
         let cmp = StringComparer.Ordinal
         state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.View, viewName) )
 
