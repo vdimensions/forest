@@ -57,8 +57,11 @@ module Raw =
         | head::tail -> 
             match head with
             | Root d -> { result with contents = d.contents }
-            | Mastered (_, d) ->
-                let placeholderMap = d |> Seq.map (fun a -> (a.placeholder, a.contents)) |> Map.ofSeq
+            | Mastered (_, contentDefinitions) ->
+                let placeholderMap = 
+                    contentDefinitions 
+                    |> Seq.map (fun a -> (a.placeholder, a.contents)) 
+                    |> Map.ofSeq
                 let newContents = 
                      result.contents 
                      |> inlineTemplates provider

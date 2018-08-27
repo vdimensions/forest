@@ -6,7 +6,7 @@ open System
 type [<Struct>] StateError =
     | ViewNotFound of view:string
     | UnexpectedModelState of identifier:HierarchyKey
-    | CommandNotFound of owner:HierarchyKey * command:string
+    | CommandNotFound of owner:string * command:string
     | CommandError of cause:Command.Error
     | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
     | NoViewAdded
@@ -19,12 +19,12 @@ type [<Struct>] StateChange =
 
 [<Serializable>]
 type [<Sealed>] State = // TODO: convert to state machine
-    internal new: Hierarchy * Map<HierarchyKey, obj> * Map<HierarchyKey, IViewState> -> State
+    internal new: Hierarchy * Map<string, obj> * Map<string, IViewState> -> State
     [<CompiledName("Empty")>]
     static member empty:State
     member internal Hierarchy:Hierarchy with get
-    member internal ViewModels:Map<HierarchyKey, obj> with get
-    member internal ViewStates:Map<HierarchyKey, IViewState> with get
+    member internal ViewModels:Map<string, obj> with get
+    member internal ViewStates:Map<string, IViewState> with get
     [<System.Diagnostics.DebuggerNonUserCode>]
     member internal Fuid:Fuid with get
     member Hash:string with get
@@ -33,6 +33,6 @@ type [<Sealed>] State = // TODO: convert to state machine
 
 [<RequireQualifiedAccess>]
 module internal State =
-    val create: Hierarchy * Map<HierarchyKey, obj> * Map<HierarchyKey, IViewState> -> State
-    val createWithFuid: Hierarchy * Map<HierarchyKey, obj> * Map<HierarchyKey, IViewState> * Fuid -> State
+    val create: Hierarchy * Map<string, obj> * Map<string, IViewState> -> State
+    val createWithFuid: Hierarchy * Map<string, obj> * Map<string, IViewState> * Fuid -> State
     val discardViewStates: State -> State

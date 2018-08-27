@@ -4,16 +4,9 @@ open Forest.NullHandling
 
 open System.Runtime.CompilerServices
 
-
-type [<Interface>] IForestEngine =
-    abstract member ActivateView: name:string -> 'a when 'a:>IView
-    abstract member GetOrActivateView: name:string -> 'a when 'a:>IView
-    abstract member SendMessage: message:'M -> unit
-    abstract member ExecuteCommand: target:HierarchyKey -> command:string -> arg:'M -> unit
-
-module internal MessagingRemoteControl =
+module internal MessageDispatcher =
     [<Literal>]
-    let Name = "MessagingRemoteControl"
+    let Name = "MessageDispatcher"
     let private Key = HierarchyKey.shell |> HierarchyKey.newKey HierarchyKey.shell.Region Name
     type [<Sealed>] ViewModel() = 
         override __.Equals _ = true
@@ -25,7 +18,7 @@ module internal MessagingRemoteControl =
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
         | None -> ctx.ViewRegistry.Register typeof<View> |> ignore
-    let Get (ms:StateMutationSpan) : View = Key |> ms.GetOrActivateView<View>
+    let Get (ms:ForestRuntime) : View = Key |> ms.GetOrActivateView
 
 module internal Error =
     [<Literal>]
@@ -40,14 +33,14 @@ module internal Error =
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
         | None -> ctx.ViewRegistry.Register typeof<View> |> ignore
-    let Show (ms:StateMutationSpan) : View = 
+    let Show (ms:ForestRuntime) : View = 
         Key |> ms.GetOrActivateView
 
-type private ForestEngineAdapter(scope: StateMutationSpan) =
-    let mutable _messagingRC = nil<MessagingRemoteControl.View>
+type private ForestEngineAdapter(scope: ForestRuntime) =
+    let mutable _messageDispatcher = nil<MessageDispatcher.View>
     do
-        MessagingRemoteControl.Reg scope.Context
-        _messagingRC <- scope |> MessagingRemoteControl.Get
+        MessageDispatcher.Reg scope.Context
+        _messageDispatcher <- scope |> MessageDispatcher.Get
         ()
     interface IForestEngine with
         member __.ActivateView (name) : 'a when 'a:>IView = 
@@ -58,52 +51,52 @@ type private ForestEngineAdapter(scope: StateMutationSpan) =
         member __.ExecuteCommand target command message = 
             ForestOperation.InvokeCommand(target, command, message) |> scope.Update
         member __.SendMessage message = 
-            _messagingRC.Publish(message, System.String.Empty)
+            _messageDispatcher.Publish(message, System.String.Empty)
 
 [<Extension>]
 [<AutoOpen>]
 type StateExtensions =
-    static member inline private toResult (scope:StateMutationSpan) (fuid:Fuid option) (state:State) =
-        match scope.Deconstruct() with 
+    static member inline private toResult (rt:ForestRuntime) (fuid:Fuid option) (state:State) =
+        match rt.Deconstruct() with 
         | (a, b, c, cl) -> 
         let newState = 
             match fuid with
             | Some f -> State.createWithFuid(a, b, c, f)
             | None -> State.create(a, b, c)
-        EngineResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+        ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
 
     [<Extension>]
-    static member Update (state:State, ctx:IForestContext, operation:System.Action<IForestEngine>):EngineResult =
+    static member Update (state:State, ctx:IForestContext, operation:System.Action<IForestEngine>):ForestResult =
         try 
-            use mutationScope = StateMutationSpan.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
-            let adapter = new ForestEngineAdapter(mutationScope)
+            use rt = ForestRuntime.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+            let adapter = new ForestEngineAdapter(rt)
             operation.Invoke adapter
-            state |> StateExtensions.toResult mutationScope None
+            state |> StateExtensions.toResult rt None
         with
-        | e -> 
+        | :? ForestException as e -> 
             let se = State.empty
-            use mutationScope = StateMutationSpan.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
-            let errorView = Error.Show mutationScope
+            use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
+            let errorView = Error.Show rt
             // TODO: set error data
-            se |> StateExtensions.toResult mutationScope None
+            se |> StateExtensions.toResult rt None
     [<Extension>]
-    static member Sync (state:State, ctx:IForestContext, changes:ChangeList):EngineResult =
+    static member Sync (state:State, ctx:IForestContext, changes:ChangeList):ForestResult =
         try 
-            use mutationScope = StateMutationSpan.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
-            let rec _applyChangelog (ms: StateMutationSpan) (cl: StateChange List) =
+            use rt = ForestRuntime.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+            let rec _applyChangelog (ms: ForestRuntime) (cl: StateChange List) =
                 match cl with
                 | [] -> None
                 | head::tail -> 
                     match head |> ms.Apply with
                     | Some e -> Some e
                     | None -> _applyChangelog ms tail
-            match _applyChangelog mutationScope (changes.ToList()) with
-            | None -> state |> StateExtensions.toResult mutationScope (Some changes.Fuid)
+            match _applyChangelog rt (changes.ToList()) with
+            | None -> state |> StateExtensions.toResult rt (Some changes.Fuid)
             | Some e -> failwith "error" //TODO
         with
-        | e -> 
+        | :? ForestException as e -> 
             let se = State.empty
-            use mutationScope = StateMutationSpan.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
-            let errorView = Error.Show mutationScope
+            use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
+            let errorView = Error.Show rt
             // TODO: set error data
-            se |> StateExtensions.toResult mutationScope None
+            se |> StateExtensions.toResult rt None

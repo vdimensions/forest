@@ -14,7 +14,7 @@ type [<Interface>] IView<'T when 'T: (new: unit -> 'T)> =
 
 [<Serializable>]
 type AbstractViewException(message:string, inner:Exception) =
-    inherit Exception(isNotNull "message" message, inner)
+    inherit ForestException(isNotNull "message" message, inner)
     new (message: string) = AbstractViewException(message, null)
 
 [<Serializable>]

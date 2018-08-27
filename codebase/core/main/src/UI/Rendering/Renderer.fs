@@ -7,12 +7,13 @@ type [<Interface>] IStateVisitor =
 
 module Renderer =
     let rec private _traverseState (v: IStateVisitor) parent (ids: HierarchyKey list) siblingsCount (st: State) =
-        match ids with
+        match ids |> List.rev with
         | [] -> ()
         | head::tail ->
             let ix = siblingsCount - ids.Length // TODO
-            let vm = st.ViewModels.[head]
-            let vs = st.ViewStates.[head]
+            let hash = head.Hash
+            let vm = st.ViewModels.[hash]
+            let vs = st.ViewStates.[hash]
             let descriptor = vs.Descriptor
             v.BFS head ix vm descriptor
             // visit siblings 

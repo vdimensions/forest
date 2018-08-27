@@ -15,28 +15,31 @@ type [<Struct>] internal Hierarchy = {
 
 [<RequireQualifiedAccess>]
 module internal Hierarchy =
-    
-    let inline getChildren (id:HierarchyKey) (state:Hierarchy) : HierarchyKey list =
-        match state.Hierarchy.TryFind id with
+    let inline getChildren (id:HierarchyKey) (hierarchy:Hierarchy) : HierarchyKey list =
+        match hierarchy.Hierarchy.TryFind id with
         | Some data -> data
-        | None -> List.Empty
+        | None -> List.empty
 
-    let insert (id:HierarchyKey) (state:Hierarchy) : Hierarchy =
-        match state.Hierarchy.TryFind id with
-        | Some _ -> state // prevent multiple inserts
+    let insert (id:HierarchyKey) (hierarchy:Hierarchy) : Hierarchy =
+        match hierarchy.Hierarchy.TryFind id with
+        | Some _ -> hierarchy // prevent multiple inserts
         | None ->
             let parent = id.Parent
             let list = 
-                match state.Hierarchy.TryFind parent with
+                match hierarchy.Hierarchy.TryFind parent with
                 | Some list -> list
                 | None -> List.empty
-            let h = state.Hierarchy.Remove(parent).Add(parent, list @ [id]).Add(id, List.empty)
+            let h = 
+                hierarchy.Hierarchy
+                |> Map.remove parent 
+                |> Map.add parent (id::list)
+                |> Map.add id List.empty
             { Hierarchy = h }
 
     let remove (id:HierarchyKey) (state:Hierarchy) : Hierarchy*HierarchyKey list =
         let rec doRemove parentID (st, lst) =
             match st |> getChildren parentID  with
-            | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, [parentID] @ lst)
+            | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, parentID::lst)
             | head::_ -> (st, lst) |> doRemove head |> doRemove parentID
 
         let (noContents, removedIDs) = doRemove id (state, [])
@@ -57,6 +60,6 @@ module internal Hierarchy =
         state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.View, viewName) )
 
     let empty = { 
-        Hierarchy = Map.empty.Add(HierarchyKey.shell, List.Empty);
+        Hierarchy = Map.empty.Add(HierarchyKey.shell, List.empty);
     }
 

@@ -12,15 +12,16 @@ open System.Diagnostics
 
 type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _viewModel : 'T = new 'T()
+    let mutable _viewModel:'T = new 'T()
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _hkey: HierarchyKey = HierarchyKey.shell
+    let mutable _hkey:HierarchyKey = HierarchyKey.shell
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _viewStateModifier: IViewStateModifier = nil<IViewStateModifier>
+    let mutable _runtime:IForestRuntime = nil<IForestRuntime>
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _descriptor: IViewDescriptor = nil<IViewDescriptor>
+    let mutable _descriptor:IViewDescriptor = nil<IViewDescriptor>
+
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
-        _viewStateModifier.PublishEvent this message topics
+        _runtime.PublishEvent this message topics
     abstract member Load: unit -> unit
     abstract member Resume: unit -> unit
     default __.Resume() = ()
@@ -28,14 +29,14 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
         upcast Region(name, this) : IRegion
     member __.ViewModel
         with get ():'T = _viewModel
-         and set (NotNull "value" value: 'T) = _viewModel <- (_viewStateModifier.SetViewModel false _hkey value)
+         and set (NotNull "value" value: 'T) = _viewModel <- (_runtime.SetViewModel false _hkey value)
     member internal __.HierarchyKey
         with get() = _hkey
          and set(NotNull "value" value) = _hkey <- value
     interface IViewState with
         member this.Load () = this.Load()
         member this.Resume viewModel =
-            _viewModel <- _viewStateModifier.SetViewModel true _hkey (downcast viewModel : 'T)
+            _viewModel <- _runtime.SetViewModel true _hkey (downcast viewModel : 'T)
             this.Resume()
         member this.InstanceID
             with get() = this.HierarchyKey
@@ -43,20 +44,20 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
         member __.Descriptor
             with get() = _descriptor
              and set v = _descriptor <- v
-        member __.ViewStateModifier
-            with get() = _viewStateModifier
-        member this.EnterModificationScope (NotNull "modifier" modifier: IViewStateModifier) =
-            match null2vopt _viewStateModifier with
+        member __.Runtime
+            with get() = _runtime
+        member this.AcquireRuntime (NotNull "runtime" runtime:IForestRuntime) =
+            match null2vopt _runtime with
             | ValueNone ->
-                match modifier.GetViewModel this.HierarchyKey with
+                match runtime.GetViewModel this.HierarchyKey with
                 | Some viewModelFromState -> _viewModel <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| modifier.SetViewModel true this.HierarchyKey _viewModel
-                modifier.SubscribeEvents this
-                _viewStateModifier <- modifier
+                | None -> ignore <| runtime.SetViewModel true this.HierarchyKey _viewModel
+                runtime.SubscribeEvents this
+                _runtime <- runtime
                 ()
             | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _hkey.View)))
-        member this.LeaveModificationScope (_) =
-            match null2vopt _viewStateModifier with
+        member this.AbandonRuntime (_) =
+            match null2vopt _runtime with
             | ValueSome currentModifier ->
                 currentModifier.UnsubscribeEvents this
                 match currentModifier.GetViewModel this.HierarchyKey with
@@ -64,7 +65,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
                     _viewModel <- (downcast viewModelFromState : 'T)
                     ()
                 | None -> () 
-                _viewStateModifier <- nil<IViewStateModifier>
+                _runtime <- nil<IForestRuntime>
             | ValueNone -> ()
     interface IView<'T> with 
         member this.ViewModel
@@ -77,12 +78,15 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
 
 and private Region<'T when 'T: (new: unit -> 'T)>(regionName:string, view:AbstractView<'T>) =
     member __.ActivateView (NotNull "viewName" viewName:string) =
-        (upcast view:IViewState).ViewStateModifier.ActivateView view.HierarchyKey regionName viewName
+        (upcast view:IViewState).Runtime.ActivateView view.HierarchyKey regionName viewName
+    member __.ActivateView<'v when 'v:>IView> () : 'v =
+        (upcast view:IViewState).Runtime.ActivateAnonymousView view.HierarchyKey regionName
     member __.Name 
         with get() = regionName
     interface IRegion with
         member this.Name = this.Name
         member this.ActivateView (viewName: string) = this.ActivateView viewName
+        member this.ActivateView<'v when 'v:>IView>() = this.ActivateView<'v>()
 
 [<RequireQualifiedAccessAttribute>]
 module View =

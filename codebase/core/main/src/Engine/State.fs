@@ -8,7 +8,7 @@ open System.Diagnostics
 type [<Struct>] StateError =
     | ViewNotFound of view:string
     | UnexpectedModelState of identifier:HierarchyKey
-    | CommandNotFound of owner:HierarchyKey * command:string
+    | CommandNotFound of owner:string * command:string
     | CommandError of cause:Command.Error
     | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
     | NoViewAdded
@@ -20,8 +20,8 @@ type [<Struct>] StateChange =
     | ViewDestroyed of destroyedViewID:HierarchyKey
 
 [<Serializable>]
-type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>, fuid: Fuid) =
-    internal new (hierarchy: Hierarchy, viewModels: Map<HierarchyKey, obj>, viewStates:  Map<HierarchyKey, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
+type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>, fuid: Fuid) =
+    internal new (hierarchy: Hierarchy, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
     static member empty = State(Hierarchy.empty, Map.empty, Map.empty, Fuid.empty)
     member internal __.Hierarchy with get() = hierarchy

@@ -1,7 +1,5 @@
 ﻿namespace Forest
 
-//open Forest.Utils
-
 open System
 open System.Diagnostics
 open System.Runtime.InteropServices
@@ -11,7 +9,7 @@ open System.Text
 [<Struct;StructLayout(LayoutKind.Explicit)>]
 [<CustomComparison>]
 [<CustomEquality>]
-type Fuid =
+type internal Fuid =
     static member inline private hex2Str (bytes:byte seq) =
         let inline folder (sb:StringBuilder) (x:byte) = sb.AppendFormat("{0:x2}", x)
         let sb = bytes |> Seq.fold folder (StringBuilder())
@@ -28,11 +26,8 @@ type Fuid =
         | _ -> false
     override __.ToString() = __._guid.ToString();
     member __.Guid with get() = __._guid
-    //member internal __.MachineTokenBytes with get() = __._guid.ToByteArray() |> Seq.skip TimeBasedGuid.HashOffset
-    //member __.MachineToken with get() = __.MachineTokenBytes |> Fuid.hex2Str
     member internal __.HashBytes with get() = __._guid.ToByteArray()// |> Seq.take TimeBasedGuid.TimestampSize
     member __.Hash with get() = __.HashBytes |> Fuid.hex2Str
-    //member __.Timestamp with get() = __._guid |> TimeBasedGuid.getDateTimeOffset
     interface IComparable with
         member __.CompareTo (other:obj) =
             match other with
@@ -74,7 +69,6 @@ module internal Fuid =
         Guid(guidArray);
 
     [<CompiledName("NewID")>]
-    //let newID () = Fuid(TimeBasedGuid.newTimeBasedGuid())
     let newID () = Fuid(newCombGuid())
 
     [<CompiledName("Empty")>]

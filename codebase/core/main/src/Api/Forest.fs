@@ -1,6 +1,7 @@
 namespace Forest
 
 open Forest.Collections
+open Forest.NullHandling
 
 open System
 open System.Collections.Generic
@@ -14,9 +15,9 @@ type [<Interface>] IViewDescriptor =
     abstract Events:IEnumerable<IEventDescriptor> with get
 
  and [<Interface>] ICommandDescriptor = 
-    abstract Name: string with get
-    abstract ArgumentType: Type with get
-    abstract member Invoke: arg: obj -> v:IView -> unit
+    abstract Name:string with get
+    abstract ArgumentType:Type with get
+    abstract member Invoke: arg:obj -> v:IView -> unit
 
  and [<Interface>] IEventDescriptor =
     abstract Topic:string with get
@@ -27,7 +28,9 @@ type [<Interface>] IViewDescriptor =
     abstract member Register: t:Type -> IViewRegistry
     abstract member Register<'T when 'T:>IView> : unit -> IViewRegistry
     abstract member Resolve: name:string -> IView
+    abstract member Resolve: viewType:Type -> IView
     abstract member GetDescriptor: name:string -> IViewDescriptor
+    abstract member GetDescriptor: viewType:Type -> IViewDescriptor
 
  and [<Interface>] IView =
     abstract Publish<'M> : message:'M * [<ParamArray>] topics:string[] -> unit
@@ -36,6 +39,7 @@ type [<Interface>] IViewDescriptor =
 
  and [<Interface>] IRegion = 
     abstract member ActivateView: name:string -> IView
+    abstract member ActivateView<'v when 'v:>IView> : unit -> 'v
     abstract Name: string with get
     //abstract Item: string -> IView with get
 
@@ -80,4 +84,9 @@ type [<Interface>] IEventBus =
     abstract member Invoke: arg:obj -> unit
     abstract MessageType:Type with get
     abstract Receiver:IView
+
+[<Serializable>]
+type ForestException(message:string, inner:Exception) =
+    inherit Exception(isNotNull "message" message, inner)
+    new (message: string) = ForestException(message, null)
 

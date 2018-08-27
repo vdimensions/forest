@@ -41,10 +41,10 @@
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="Engine\StateExtensions.fs" />
-    <Compile Include="Rendering\Renderer.fs" />
+    <Compile Include="UI\Rendering\Renderer.fs" />
     <Compile Include="UI\UIAdpter.fs" />
-    <Compile Include="Templates\CompiledTemplates.fs" />
     <Compile Include="Templates\RawTemplates.fs" />
+    <Compile Include="Templates\CompiledTemplates.fs" />
     <Compile Include="Templates\TemplateParsing.fs" />
     <Compile Include="Templates\Xml\XmlTemplateParser.fs" />
     <Content Include="doc.txt" />
