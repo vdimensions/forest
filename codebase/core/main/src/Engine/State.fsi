@@ -3,15 +3,6 @@
 open System
 
 [<Serializable>]
-type [<Struct>] StateError =
-    | ViewNotFound of view:string
-    | UnexpectedModelState of identifier:HierarchyKey
-    | CommandNotFound of owner:string * command:string
-    | CommandError of cause:Command.Error
-    | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
-    | NoViewAdded
-
-[<Serializable>]
 type [<Struct>] StateChange =
     | ViewAdded of parent:HierarchyKey * viewModel:obj
     | ViewModelUpdated of id:HierarchyKey * updatedViewModel:obj

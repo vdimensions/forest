@@ -1,8 +1,8 @@
-﻿framework: auto-detect
+framework: auto-detect
 storage: none
 
 source https://nuget.org/api/v2
-  nuget FSharp.Core [4.4, )
+  nuget FSharp.Core ${fsharp-core.version}
 
 group build
   source ../../../../submodules/mason/dist

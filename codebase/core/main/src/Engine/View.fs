@@ -89,9 +89,10 @@ and private Region<'T when 'T: (new: unit -> 'T)>(regionName:string, view:Abstra
         member this.ActivateView<'v when 'v:>IView>() = this.ActivateView<'v>()
 
 [<RequireQualifiedAccessAttribute>]
+[<CompiledName("View")>]
 module View =
     // TODO: argument verification
-    type [<Sealed>] internal Descriptor internal (name:string, viewType:Type, viewModelType:Type, commands:Index<ICommandDescriptor, string>, events:IEventDescriptor array) = 
+    type [<Sealed>] internal Descriptor internal (name:vname, viewType:Type, viewModelType:Type, commands:Index<ICommandDescriptor, cname>, events:IEventDescriptor array) = 
         member __.Name with get() = name
         member __.ViewType with get() = viewType
         member __.ViewModelType with get() = viewModelType

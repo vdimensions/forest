@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Forest.Rendering;
+using Forest.UI.Rendering;
 
 using NUnit.Framework;
 
@@ -73,21 +73,21 @@ namespace Forest.Tests
     [TestFixture]
     public class TestClass
     {
-        private IForestContext ctx;
+        private IForestContext _ctx;
 
         [SetUp]
         public void SetUp()
         {
-            ctx = new DefaultForestContext(new View.Factory(), null);
-            ctx.ViewRegistry.Register<Inner.View>();
-            ctx.ViewRegistry.Register<Outer.View>();
+            _ctx = new DefaultForestContext(new View.Factory(), null);
+            _ctx.ViewRegistry.Register<Inner.View>();
+            _ctx.ViewRegistry.Register<Outer.View>();
         }
 
         [Test]
         public void TestMethod()
         {
             var result = State.Empty.Update(
-                ctx,
+                _ctx,
                 e =>
                 {
                     e.ActivateView<Inner.View>(Inner.ViewName);
@@ -104,13 +104,13 @@ namespace Forest.Tests
         [Test]
         public void TestStateTransferConsistency()
         {
-            var originalResult = State.Empty.Update(ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
+            var originalResult = State.Empty.Update(_ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(originalResult.State, State.Empty);
             Assert.AreNotEqual(originalResult.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(originalResult.State.MachineToken, State.Empty.MachineToken);
 
-            var compensatedResult = State.Empty.Sync(ctx, originalResult.ChangeList);
+            var compensatedResult = State.Empty.Sync(_ctx, originalResult.ChangeList);
 
             Renderer.traverse(new PrintVisitor(), originalResult.State);
             Renderer.traverse(new PrintVisitor(), compensatedResult.State);
@@ -134,13 +134,13 @@ namespace Forest.Tests
         [Test]
         public void TestAddingViewFormAnotherOne()
         {
-            var result1 = State.Empty.Update(ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
+            var result1 = State.Empty.Update(_ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result1.State, State.Empty);
             Assert.AreNotEqual(result1.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(result1.State.MachineToken, State.Empty.MachineToken);
 
-            var result2 = result1.State.Update(ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
+            var result2 = result1.State.Update(_ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result2.State, result1.State);
             Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);

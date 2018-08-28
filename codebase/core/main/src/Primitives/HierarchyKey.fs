@@ -10,13 +10,14 @@ open System.Runtime.CompilerServices
 type rname = string
 type vname = string
 type cname = string
+type sname = string
 
 [<DebuggerDisplay("{this.ToString()}")>]
 [<CustomComparison>]
 [<CustomEquality>]
 type HierarchyKey = 
     | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] Shell_
-    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:HierarchyKey * region:rname * view:vname * hash:string
+    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:HierarchyKey * region:rname * view:vname * hash:sname
     [<CompiledName("Shell")>]
     static member shell = 
         HierarchyKey.Shell_
@@ -32,16 +33,16 @@ type HierarchyKey =
     member this.Hash 
         with get() = match this with Shell_ -> Fuid.empty.Hash | ViewID_ (_, _, _, h) -> h
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
-    member private this._compareTo (other:HierarchyKey) = 
+    member private this.cmp (other:HierarchyKey) = 
         StringComparer.Ordinal.Compare(this.Hash, other.Hash)
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>] 
-    member private this._equals (other: HierarchyKey) = 
+    member private this.eq (other: HierarchyKey) = 
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
     override this.Equals o = 
         match null2opt o with
         | Some v ->
             match v with
-            | :? HierarchyKey as other -> this._equals other
+            | :? HierarchyKey as other -> this.eq other
             | _ -> false
         | None -> false
     override this.GetHashCode() = 
@@ -60,15 +61,15 @@ type HierarchyKey =
     override this.ToString() = 
         this.ToStringBuilder(false).ToString()
     interface IComparable<HierarchyKey> with 
-        member this.CompareTo other = this._compareTo other
+        member this.CompareTo other = this.cmp other
     interface IComparable with
         member this.CompareTo o = 
             match o with
-            | :? HierarchyKey as id -> this._compareTo id
+            | :? HierarchyKey as id -> this.cmp id
             | :? IComparable as c -> (-1)*(c.CompareTo this)
             | _ -> raise (NotSupportedException ())
     interface IEquatable<HierarchyKey> with 
-        member this.Equals other = this._equals other
+        member this.Equals other = this.eq other
 
 module internal HierarchyKey =
     //let add id region name parent = HierarchyKey.ViewID_(parent, region, name, id)

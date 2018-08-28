@@ -24,8 +24,8 @@ open System.Collections.Generic
 
 
 module Event = 
-    type [<Sealed>] internal Descriptor(vt: Type, mt: Type, mi: IEventMethod, topic: string) =
-        member __.Trigger (NotNull "view" view: IView) (NotNull "message" message: obj) = ignore <| mi.Invoke(view, [|message|])
+    type [<Sealed>] internal Descriptor(mt:Type, mi:IEventMethod, topic:string) =
+        member __.Trigger (NotNull "view" view:IView) (NotNull "message" message:obj) = ignore <| mi.Invoke(view, [|message|])
         member __.MessageType with get () = mt
         member __.Topic with get () = topic
         interface IEventDescriptor with
@@ -33,28 +33,28 @@ module Event =
             member this.MessageType = this.MessageType
             member this.Topic = this.Topic
 
-    type [<Sealed>] internal Handler(descriptor: IEventDescriptor, receiver: IView) =
+    type [<Sealed>] internal Handler(descriptor:IEventDescriptor, receiver:IView) =
         interface ISubscriptionHandler with
             member __.MessageType = descriptor.MessageType
             member __.Invoke message = descriptor.Trigger receiver message
             member __.Receiver = receiver
 
     type Error =
-        | NonVoidReturnType of methodWithReturnValue: IEventMethod
-        | BadEventSignature of badEventSignatureMethod: IEventMethod
-        | MultipleErrors of errors: Error list
+        | NonVoidReturnType of methodWithReturnValue:IEventMethod
+        | BadEventSignature of badEventSignatureMethod:IEventMethod
+        | MultipleErrors of errors:Error list
 
-    let inline private _subscribersFilter (sender: IView) (subscription: ISubscriptionHandler) : bool =
+    let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
 
-    let inline private _isForMessageType<'M> (x: Type): bool = 
+    let inline private _isForMessageType<'M> (x:Type): bool = 
         let messageType = typeof<'M>
         messageType = x || x.IsAssignableFrom(messageType)
 
     type [<Sealed>] private T() = 
         let _subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
-        member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message: 'M, topicSubscriptionHandlers: IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
+        member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             let subscriptions =  
                 topicSubscriptionHandlers.Keys 
                 |> Seq.filter _isForMessageType<'M>
@@ -63,7 +63,7 @@ module Event =
         member __.Dispose () =
             for value in _subscriptions.Values do value.Clear()
             _subscriptions.Clear()
-        member this.Publish<'M> (NotNull "sender" sender: IView, NotNull "message" message:'M, NotNull "topics" topics: string[]) : unit =
+        member this.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, NotNull "topics" topics:string[]) : unit =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in _subscriptions.Values do
@@ -73,7 +73,7 @@ module Event =
                     match _subscriptions.TryGetValue(topic) with
                     | (true, topicSubscriptionHandlers) -> this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
-        member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler: ISubscriptionHandler, NotNull "topic" topic: string) : T =
+        member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler:ISubscriptionHandler, NotNull "topic" topic:string) : T =
             let topicSubscriptionHandlers = 
                 match _subscriptions.TryGetValue(topic) with
                 | (true, topicSubscriptionHandlers) -> topicSubscriptionHandlers
@@ -90,16 +90,17 @@ module Event =
                     tmp
             subscriptionList.Add subscriptionHandler
             this
-        member this.Unsubscribe (NotNull "receiver" receiver: IView) : T =
+        member this.Unsubscribe (NotNull "receiver" receiver:IView) : T =
             for topicSubscriptionHandlers in _subscriptions.Values |> Seq.collect (fun x -> x.Values) do
                 for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
             this
         interface IEventBus with
-            member this.Publish<'M> (sender:IView, message:'M, topics: string[]) : unit = this.Publish<'M>(sender, message, topics)
+            member this.Publish<'M> (sender:IView, message:'M, topics:string[]) : unit = this.Publish<'M>(sender, message, topics)
             member this.Subscribe x y = upcast this.Subscribe (x, y)
             member this.Unsubscribe receiver = upcast this.Unsubscribe receiver
-        interface IDisposable with member this.Dispose () = this.Dispose()
+        interface IDisposable with 
+            member this.Dispose() = this.Dispose()
 
     [<CompiledName("Create")>]
     let internal createEventBus() : IEventBus = upcast new T()

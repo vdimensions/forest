@@ -4,6 +4,6 @@ open System
 
 
 type [<Interface>] IForestContext =
-    abstract ViewRegistry: IViewRegistry with get
+    abstract ViewRegistry:IViewRegistry with get
     // TODO: renderers
-    abstract SecurityManager: ISecurityManager with get
+    abstract SecurityManager:ISecurityManager with get

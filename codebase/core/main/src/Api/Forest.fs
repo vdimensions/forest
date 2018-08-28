@@ -88,5 +88,10 @@ type [<Interface>] IEventBus =
 [<Serializable>]
 type ForestException(message:string, inner:Exception) =
     inherit Exception(isNotNull "message" message, inner)
-    new (message: string) = ForestException(message, null)
+    new (message:string) = ForestException(message, null)
+
+type [<Interface>] ICommandModel =
+    abstract member Name:string with get
+    abstract member Description:string with get
+    abstract member Tooltip:string with get
 

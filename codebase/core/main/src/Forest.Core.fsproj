@@ -39,8 +39,8 @@
     <Compile Include="Engine\State.fsi" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ChangeList.fs" />
+    <Compile Include="Engine\Runtime.fs" />
     <Compile Include="Engine\Engine.fs" />
-    <Compile Include="Engine\StateExtensions.fs" />
     <Compile Include="UI\Rendering\Renderer.fs" />
     <Compile Include="UI\UIAdpter.fs" />
     <Compile Include="Templates\RawTemplates.fs" />
@@ -49,18 +49,15 @@
     <Compile Include="Templates\Xml\XmlTemplateParser.fs" />
     <Content Include="doc.txt" />
     <None Include="build.sh" />
+    <None Include="Forest.Core.nuspec.template" />
     <None Include="mason.properties" />
     <None Include="paket.dependencies" />
+    <None Include="paket.dependencies.template" />
     <None Include="paket.references" />
     <None Include="Properties\AssemblyInfo.fs.template" />
     <None Include="restore.sh" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
   </ItemGroup>
   <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />

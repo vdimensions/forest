@@ -5,6 +5,7 @@ open System
 type rname = string
 type vname = string
 type cname = string
+type sname = string
 
 type [<Sealed>] HierarchyKey =
     [<CompiledName("Shell")>]
@@ -14,7 +15,7 @@ type [<Sealed>] HierarchyKey =
     member Parent:HierarchyKey with get
     member Region:rname with get
     member View:vname with get
-    member Hash:string with get
+    member Hash:sname with get
     member RegionFragment:string with get
     override Equals: o:obj -> bool
     override GetHashCode: unit -> int

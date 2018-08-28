@@ -1,4 +1,4 @@
-﻿namespace Forest.Rendering
+﻿namespace Forest.UI.Rendering
 
 open Forest
 

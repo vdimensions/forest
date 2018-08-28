@@ -112,7 +112,7 @@ type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IR
                         | [|pt|] -> ValueSome pt
                         | _ -> ValueNone
                     match parameterType with
-                    | ValueSome parameterType -> Ok <| (upcast Event.Descriptor(viewType, parameterType, mi, mi.Topic) : IEventDescriptor)
+                    | ValueSome parameterType -> Ok <| (upcast Event.Descriptor(parameterType, mi, mi.Topic) : IEventDescriptor)
                     | ValueNone -> Error <| Event.Error.BadEventSignature mi
             let inline getEventDescriptors (rp:IReflectionProvider) t = 
                 t

@@ -15,17 +15,17 @@ type IMethod = interface
 end
 type ICommandMethod = interface 
     inherit IMethod
-    abstract member CommandName: string with get
+    abstract member CommandName:string with get
 end
 type IEventMethod = interface 
     inherit IMethod
-    abstract member Topic: string with get
+    abstract member Topic:string with get
 end
 
 type IProperty = interface
     abstract member GetValue: target:obj -> obj
     abstract member SetValue: target:obj -> value:obj -> unit
-    abstract member Name: string with get
+    abstract member Name:string with get
 end
 
 type IReflectionProvider = interface
@@ -46,12 +46,14 @@ type [<AbstractClass>] private AbstractMethod(method:MethodInfo) =
 type [<Sealed>] private DefaultCommandMethod(method:MethodInfo, commandName:string) =
     inherit AbstractMethod(method)
     do ignore <| isNotNull "commandName" commandName
-    interface ICommandMethod with member __.CommandName with get() = commandName
+    interface ICommandMethod with 
+        member __.CommandName with get() = commandName
 
 type [<Sealed>] private DefaultEventMethod(method:MethodInfo, topic:string) =
     inherit AbstractMethod(method)
     do ignore <| isNotNull "topic" topic
-    interface IEventMethod with member __.Topic with get() = topic
+    interface IEventMethod with 
+        member __.Topic with get() = topic
 
 type [<Sealed>] private DefaultProperty(property: PropertyInfo) =
     do ignore <| isNotNull "property" property
