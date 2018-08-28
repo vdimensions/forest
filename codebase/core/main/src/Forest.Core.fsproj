@@ -20,25 +20,26 @@
     <Compile Include="Utils\NullHandling.fs" />
     <Compile Include="Utils\Result.fs" />
     <Compile Include="Primitives\Fuid.fs" />
-    <Compile Include="Primitives\HierarchyKey.fsi" />
-    <Compile Include="Primitives\HierarchyKey.fs" />
-    <Compile Include="Primitives\Hierarchy.fs" />
+    <Compile Include="Primitives\Hierarchy\HierarchyKey.fsi" />
+    <Compile Include="Primitives\Hierarchy\HierarchyKey.fs" />
+    <Compile Include="Primitives\Hierarchy\Hierarchy.fs" />
     <Compile Include="Collections\Index.fs" />
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\Forest.fs" />
     <Compile Include="Api\Security.fs" />
     <Compile Include="Api\Context.fs" />
     <Compile Include="Api\ViewApi.fs" />
+    <Compile Include="Api\Exceptions.fs" />
     <Compile Include="Api\Internals.fs" />
     <Compile Include="Reflection\Reflection.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\Event.fs" />
-    <Compile Include="Engine\View.fs" />
-    <Compile Include="Engine\DefaultViewRegistry.fs" />
-    <Compile Include="Engine\DefaultForestContext.fs" />
-    <Compile Include="Engine\State.fsi" />
-    <Compile Include="Engine\State.fs" />
-    <Compile Include="Engine\ChangeList.fs" />
+    <Compile Include="Engine\View\View.fs" />
+    <Compile Include="Engine\View\DefaultViewRegistry.fs" />
+    <Compile Include="Engine\View\DefaultForestContext.fs" />
+    <Compile Include="Engine\State\State.fsi" />
+    <Compile Include="Engine\State\State.fs" />
+    <Compile Include="Engine\State\ChangeList.fs" />
     <Compile Include="Engine\Runtime.fs" />
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="UI\Rendering\Renderer.fs" />
@@ -49,7 +50,6 @@
     <Compile Include="Templates\Xml\XmlTemplateParser.fs" />
     <Content Include="doc.txt" />
     <None Include="build.sh" />
-    <None Include="Forest.Core.nuspec.template" />
     <None Include="mason.properties" />
     <None Include="paket.dependencies" />
     <None Include="paket.dependencies.template" />
@@ -58,6 +58,11 @@
     <None Include="restore.sh" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
   </ItemGroup>
   <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />

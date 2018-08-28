@@ -11,7 +11,7 @@ type [<Interface>] IViewDescriptor =
     abstract Name:vname with get
     abstract ViewType:Type with get
     abstract ViewModelType:Type with get
-    abstract Commands:Index<ICommandDescriptor, string> with get
+    abstract Commands:Index<ICommandDescriptor, cname> with get
     abstract Events:IEnumerable<IEventDescriptor> with get
 
  and [<Interface>] ICommandDescriptor = 
@@ -93,5 +93,6 @@ type ForestException(message:string, inner:Exception) =
 type [<Interface>] ICommandModel =
     abstract member Name:string with get
     abstract member Description:string with get
+    abstract member DisplayName:string with get
     abstract member Tooltip:string with get
 

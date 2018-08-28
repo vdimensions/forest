@@ -7,29 +7,33 @@ open Forest.NullHandling
 open System
 open System.Collections.Generic
 
+[<RequireQualifiedAccess>]
+module Runtime =
+    [<Serializable>]
+    [<CompiledName("Error")>]
+    type [<Struct>] Error =
+        | ViewstateAbsent of view:vname
+        | UnexpectedState of identifier:HierarchyKey
+        | CommandError of commandErrorCause:Command.Error
+        | ViewError of viewErrorCause:View.Error
+        | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
 
-[<Serializable>]
-[<CompiledName("ForestRuntimeError")>]
-type [<Struct>] RuntimeError =
-    | ViewstateAbsent of view:vname
-    | UnexpectedState of identifier:HierarchyKey
-    | CommandError of cause:Command.Error
-    | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
+    [<Serializable>]
+    [<CompiledName("Operation")>]
+    type [<Struct>] Operation =
+        | InstantiateView of id:HierarchyKey
+        | UpdateViewModel of parent:sname * viewModel:obj
+        | DestroyView of identifier:HierarchyKey
+        | InvokeCommand of owner:sname * commandName:cname * commandArg:obj
+        | PublishEvent of senderID:sname * message:obj * topics:string array
+        | Multiple of operations:Operation list
 
-type [<Interface>] IForestEngine =
-    abstract member ActivateView: name:vname -> 'a when 'a:>IView
-    abstract member GetOrActivateView: name:vname -> 'a when 'a:>IView
-    abstract member SendMessage: message:'M -> unit
-    abstract member ExecuteCommand: target:sname -> command:cname -> arg:'M -> unit
-
-[<Serializable>]
-type [<Struct>] RuntimeOperation =
-    | InstantiateView of id:HierarchyKey
-    | UpdateViewModel of parent:sname * viewModel:obj
-    | DestroyView of identifier:HierarchyKey
-    | InvokeCommand of owner:sname * commandName:cname * commandArg:obj
-    | PublishEvent of senderID:sname * message:obj * topics:string array
-    | Multiple of operations:RuntimeOperation list
+    let resolveError (error:Error) =
+        match error with
+        | ViewError ve -> ve |> View.resolveError 
+        | CommandError ce -> ce |> Command.resolveError 
+        // TODO
+        | _ -> ()
 
 type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) as self = 
     let mutable hierarchy = hierarchy
@@ -38,12 +42,10 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
     let viewStates:System.Collections.Generic.Dictionary<sname, IViewState> = System.Collections.Generic.Dictionary(viewStates, StringComparer.Ordinal)
     let changeLog:System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
 
-    let toList (seq:System.Collections.Generic.IList<'a>) = 
-        List.ofSeq seq
-    let updateViewModel (id:sname) (vm:obj) : Result<StateChange list, RuntimeError> =
+    let updateViewModel (id:sname) (vm:obj) : Result<unit, Runtime.Error> =
         viewModels.[id] <- vm
-        Ok (toList changeLog)
-    let destroyView (id:HierarchyKey) : Result<StateChange list, RuntimeError> =
+        Ok ()
+    let destroyView (id:HierarchyKey) : Result<unit, Runtime.Error> =
         let (h, ids) = Hierarchy.remove id hierarchy
         for removedID in ids do
             let removedIDHash = removedID.Hash
@@ -51,38 +53,45 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             viewStates.Remove removedIDHash |> ignore
             changeLog.Add(StateChange.ViewDestroyed(removedID))
         hierarchy <- h
-        Ok (toList changeLog)
-    let executeCommand (stateKey:sname) (name:cname) (arg:obj) : Result<StateChange list, RuntimeError> =
+        Ok ()
+    let executeCommand (stateKey:sname) (name:cname) (arg:obj) : Result<unit, Runtime.Error> =
         match viewStates.TryGetValue stateKey with
         | (true, vs) ->
             match vs.Descriptor.Commands.TryFind name with
             | Some cmd -> 
                 vs |> cmd.Invoke arg
-                Ok (toList changeLog)
-            | None ->  Error (CommandError <| Command.Error.CommandNotFound(vs.Descriptor.ViewType, name))
-        | (false, _) -> (Error (ViewstateAbsent stateKey))
-    let publishEvent (id:sname) (message:'m) (topics:string array) : Result<StateChange list, RuntimeError> =
+                Ok ()
+            | None ->  Error (Runtime.Error.CommandError <| Command.Error.CommandNotFound(vs.Descriptor.ViewType, name))
+        | (false, _) -> (Error (Runtime.Error.ViewstateAbsent stateKey))
+    let publishEvent (id:sname) (message:'m) (topics:string array) : Result<unit, Runtime.Error> =
         match viewStates.TryGetValue id with
         | (true, sender) -> 
             eventBus.Publish(sender, message, topics)
-            Ok (toList changeLog)
-        | _ -> Ok (toList changeLog)
-    let rec processChanges (ctx:IForestContext) (operation:RuntimeOperation) =
+            Ok ()
+        | _ -> Ok ()
+    let rec processChanges (ctx:IForestContext) (operation:Runtime.Operation) =
         match operation with
-        | Multiple operations -> iterateStates ctx operations
-        | InstantiateView (id) -> self.addViewState id |> ignore
-        | UpdateViewModel (viewID, vm) -> updateViewModel viewID vm |> ignore
-        | DestroyView viewID -> destroyView viewID |> ignore
-        | InvokeCommand (viewID, commandName, arg) -> executeCommand viewID commandName arg |> ignore
-        | PublishEvent (senderID, message, topics) -> publishEvent senderID message topics |> ignore
+        | Runtime.Operation.Multiple operations -> 
+            iterateStates ctx operations
+        | Runtime.Operation.InstantiateView (id) -> 
+            self.addViewState id
+        | Runtime.Operation.UpdateViewModel (viewID, vm) -> 
+            updateViewModel viewID vm
+        | Runtime.Operation.DestroyView viewID -> 
+            destroyView viewID
+        | Runtime.Operation.InvokeCommand (viewID, commandName, arg) -> 
+            executeCommand viewID commandName arg
+        | Runtime.Operation.PublishEvent (senderID, message, topics) -> 
+            publishEvent senderID message topics
         //| _ -> Error (UnknownOperation operation)
     and iterateStates ctx ops =
         match ops with
-        | [] -> ()
+        | [] -> Ok ()
         | [op] -> processChanges ctx op
         | head::tail ->
             processChanges ctx head
-            iterateStates ctx tail
+            |> Result.map (fun _ -> tail)
+            |> Result.bind (iterateStates ctx)
     member private this.createViewState(id:HierarchyKey) =
         match ctx.ViewRegistry.GetDescriptor(id.View) |> null2vopt with
         | ValueSome vd ->
@@ -91,8 +100,10 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             vi.Descriptor <- vd
             vi.AcquireRuntime this
             Ok vi // will also set the view model
-        | ValueNone -> Error (ViewstateAbsent id.View)
-    member private this.addViewState (id:HierarchyKey) : Result<StateChange list, RuntimeError> =
+        | ValueNone -> 
+            // this is a different error
+            Error (Runtime.Error.ViewstateAbsent id.Hash)
+    member private this.addViewState (id:HierarchyKey) : Result<unit, Runtime.Error> =
         let hs = (Hierarchy.insert id hierarchy)
         match this.createViewState id with
         | Ok viewState ->
@@ -100,7 +111,7 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             viewStates.Add(id.Hash, viewState)
             changeLog.Add(StateChange.ViewAdded(id, viewState.ViewModel))
             viewState.Load()
-            Ok (toList changeLog)
+            Ok ()
         | Error e -> Error e
     static member Create (hierarchy:Hierarchy, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) = 
         (new ForestRuntime(hierarchy, viewModels, viewStates, ctx)).Init()
@@ -116,7 +127,7 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
                 | _ -> ignore()
         this
     member internal this.ActivateView(id) =
-        RuntimeOperation.InstantiateView(id) |> this.Update |> ignore
+        Runtime.Operation.InstantiateView(id) |> this.Update |> ignore
         match viewStates.TryGetValue id.Hash with
         | (true, viewState) -> (upcast viewState:IView)
         | (false, _) -> nil<_>
@@ -134,17 +145,19 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             | (true, viewState) -> (upcast viewState:IView)
             | (false, _) -> this.ActivateView id
         downcast result:'TView
-    member __.Update (operation:RuntimeOperation) =
-        processChanges ctx operation
+    member this.Update (operation:Runtime.Operation) =
+        match processChanges ctx operation with
+        | Ok _ -> ()
+        | Error e -> Runtime.resolveError e
     member this.Apply (entry:StateChange) =
         match entry with
         | StateChange.ViewAdded (id, vm) ->
             match HierarchyKey.isShell id with
-            | true -> Some (RuntimeError.HierarchyElementAbsent(id))
+            | true -> Some (Runtime.Error.HierarchyElementAbsent(id))
             | false ->
                 let hs = hierarchy |> Hierarchy.insert id
                 match viewModels.TryGetValue id.Hash with
-                | (true, _) -> Some (UnexpectedState id)
+                | (true, _) -> Some (Runtime.Error.UnexpectedState id)
                 | (false, _) ->
                     match this.createViewState id with
                     | Ok viewState ->
@@ -186,9 +199,9 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
         member this.ActivateAnonymousView<'v when 'v:>IView> parent region =
             this.ActivateAnonymousView<'v> parent region
         member this.PublishEvent sender message topics = 
-            RuntimeOperation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update |> ignore
+            Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update |> ignore
         member this.ExecuteCommand issuer command arg =
-            RuntimeOperation.InvokeCommand(issuer.InstanceID.Hash, command, arg) |> this.Update |> ignore
+            Runtime.Operation.InvokeCommand(issuer.InstanceID.Hash, command, arg) |> this.Update |> ignore
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do
                 let handler = Event.Handler(event, view)

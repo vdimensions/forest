@@ -12,60 +12,60 @@ open System.Diagnostics
 
 type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _viewModel:'T = new 'T()
+    let mutable vm:'T = new 'T()
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _hkey:HierarchyKey = HierarchyKey.shell
+    let mutable hierarchyKey:HierarchyKey = HierarchyKey.shell
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _runtime:IForestRuntime = nil<IForestRuntime>
+    let mutable rt:IForestRuntime = nil<IForestRuntime>
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable _descriptor:IViewDescriptor = nil<IViewDescriptor>
+    let mutable descriptor:IViewDescriptor = nil<IViewDescriptor>
 
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
-        _runtime.PublishEvent this message topics
+        rt.PublishEvent this message topics
     abstract member Load: unit -> unit
     abstract member Resume: unit -> unit
     default __.Resume() = ()
     member this.FindRegion (NotNull "name" name) = 
         upcast Region(name, this) : IRegion
     member __.ViewModel
-        with get ():'T = _viewModel
-         and set (NotNull "value" value: 'T) = _viewModel <- (_runtime.SetViewModel false _hkey value)
+        with get ():'T = vm
+         and set (NotNull "value" value: 'T) = vm <- (rt.SetViewModel false hierarchyKey value)
     member internal __.HierarchyKey
-        with get() = _hkey
-         and set(NotNull "value" value) = _hkey <- value
+        with get() = hierarchyKey
+         and set(NotNull "value" value) = hierarchyKey <- value
     interface IViewState with
         member this.Load () = this.Load()
         member this.Resume viewModel =
-            _viewModel <- _runtime.SetViewModel true _hkey (downcast viewModel : 'T)
+            vm <- rt.SetViewModel true hierarchyKey (downcast viewModel : 'T)
             this.Resume()
         member this.InstanceID
             with get() = this.HierarchyKey
              and set value = this.HierarchyKey <- value
         member __.Descriptor
-            with get() = _descriptor
-             and set v = _descriptor <- v
+            with get() = descriptor
+             and set v = descriptor <- v
         member __.Runtime
-            with get() = _runtime
+            with get() = rt
         member this.AcquireRuntime (NotNull "runtime" runtime:IForestRuntime) =
-            match null2vopt _runtime with
+            match null2vopt rt with
             | ValueNone ->
                 match runtime.GetViewModel this.HierarchyKey with
-                | Some viewModelFromState -> _viewModel <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| runtime.SetViewModel true this.HierarchyKey _viewModel
+                | Some viewModelFromState -> vm <- (downcast viewModelFromState : 'T)
+                | None -> ignore <| runtime.SetViewModel true this.HierarchyKey vm
                 runtime.SubscribeEvents this
-                _runtime <- runtime
+                rt <- runtime
                 ()
-            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", _hkey.View)))
+            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", hierarchyKey.View)))
         member this.AbandonRuntime (_) =
-            match null2vopt _runtime with
+            match null2vopt rt with
             | ValueSome currentModifier ->
                 currentModifier.UnsubscribeEvents this
                 match currentModifier.GetViewModel this.HierarchyKey with
                 | Some viewModelFromState -> 
-                    _viewModel <- (downcast viewModelFromState : 'T)
+                    vm <- (downcast viewModelFromState : 'T)
                     ()
                 | None -> () 
-                _runtime <- nil<IForestRuntime>
+                rt <- nil<IForestRuntime>
             | ValueNone -> ()
     interface IView<'T> with 
         member this.ViewModel
@@ -120,6 +120,11 @@ module View =
         |> Seq.choose _selectViewModelTypes
         |> Seq.tryHead
     let getViewModelType (NotNull "viewType" viewType:Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
+
+    let inline resolveError (e:Error) =
+        match e with
+        | NonGenericView vt -> raise <| ViewTypeIsNotGenericException vt
+        | _ -> ()
 
     type [<Sealed>] Factory() = 
         member __.Resolve (NotNull "descriptor" descriptor:IViewDescriptor) : IView = 

@@ -4,7 +4,6 @@ open Forest.NullHandling
 
 open System.Collections
 open System.Collections.Generic
-open System.Diagnostics
 
 
 type [<Sealed>] ChangeList internal (previousStateHash:string, changes:StateChange list, currentStateFuid:Fuid) =
@@ -13,7 +12,6 @@ type [<Sealed>] ChangeList internal (previousStateHash:string, changes:StateChan
         ignore <| isNotNull "changes" changes
     member __.InHash with get() = previousStateHash
     member __.OutHash with get() = currentStateFuid.Hash
-    [<DebuggerNonUserCode>]
     member internal __.Fuid with get() = currentStateFuid
     member internal __.ToList() = changes
     interface IEnumerable<StateChange> with member __.GetEnumerator() = (upcast changes:IEnumerable<_>).GetEnumerator()

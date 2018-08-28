@@ -108,7 +108,7 @@ same callback instance we have passed when publishing the message.
 
 - When using request-reply messages, one could send the message like so:
 
-      Publish(myName, null, topicName);
+        Publish(myName, null, topicName);
 
   This will mean that the callback object sent is `null`. However, the 
   subscriber does not have to worry about this, as the `EventBus` will 
@@ -118,9 +118,9 @@ same callback instance we have passed when publishing the message.
 
 - When using request-reply messages, one could send the message like so:
 
-      Publish(myName, topicName);
+        Publish(myName, topicName);
 
-  Yet, if the only declared subscriber is a method that receives a callback 
+    Yet, if the only declared subscriber is a method that receives a callback 
   as a second argument. Then the behavior is like in the above example, the 
   `EventBus` will automatically suply a no-op callback. 
 
@@ -128,6 +128,7 @@ same callback instance we have passed when publishing the message.
   matching subscriber that receives a reply callback, the messsage will 
   **not** be sent at all. As a general rule of a thumb, prefer to use a 
   signature for the subscriber methods that has a callback. 
+
 
  ## Message Routing ##
 

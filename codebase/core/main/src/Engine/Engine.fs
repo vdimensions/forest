@@ -5,6 +5,12 @@ open Forest.NullHandling
 open System.Runtime.CompilerServices
 
 
+type [<Interface>] IForestEngine =
+    abstract member ActivateView: name:vname -> 'a when 'a:>IView
+    abstract member GetOrActivateView: name:vname -> 'a when 'a:>IView
+    abstract member SendMessage: message:'M -> unit
+    abstract member ExecuteCommand: target:sname -> command:cname -> arg:'M -> unit
+
 type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList) = 
     do
         ignore <| isNotNull "state" state
@@ -57,7 +63,7 @@ type private ForestEngineAdapter(scope: ForestRuntime) =
         member __.GetOrActivateView name = 
             HierarchyKey.shell |> HierarchyKey.newKey HierarchyKey.shell.Region name |> scope.GetOrActivateView
         member __.ExecuteCommand target command message = 
-            RuntimeOperation.InvokeCommand(target, command, message) |> scope.Update
+            Runtime.Operation.InvokeCommand(target, command, message) |> scope.Update
         member __.SendMessage message = 
             _messageDispatcher.Publish(message, System.String.Empty)
 

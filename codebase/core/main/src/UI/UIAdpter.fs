@@ -2,7 +2,6 @@
 
 open Forest
 open Forest.NullHandling
-open Forest.UI.Rendering
 
 open System
 
@@ -27,13 +26,16 @@ type [<AbstractClass>] AbstractViewAdapter(commandDispatcher:ICommandDispatcher,
         member __.InvokeCommand (NotNull "name" name) (arg) =
             commandDispatcher.InvokeCommand key.Hash name arg
         member this.Update (NotNull "viewModel" viewModel:obj) =
-            match null2vopt vm with
-            | ValueSome vm -> if not <| obj.Equals(vm, viewModel) then this.Refresh viewModel
-            | ValueNone -> this.Refresh viewModel
+            let update = 
+                match null2vopt vm with
+                | ValueSome value -> not <| obj.Equals(value, viewModel)
+                | ValueNone -> true
+            if update then
+                vm <- viewModel
+                this.Refresh viewModel
         member __.Key with get() = key.Hash
     interface IDisposable with
         member this.Dispose() = this.Dispose(true)
-
 
 
 type [<AbstractClass>] AbstractUIVisitor() =
@@ -51,7 +53,6 @@ type [<AbstractClass>] AbstractUIVisitor() =
             adapter.Update viewModel
             map <- map |> Map.add hash adapter
         keys <- keys |> Set.remove hash
-
 
     interface IStateVisitor with
         member this.BFS key index viewModel descriptor = 

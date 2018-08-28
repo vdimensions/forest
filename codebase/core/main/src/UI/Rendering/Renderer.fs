@@ -3,13 +3,8 @@
 open Forest
 
 
-type [<Interface>] IStateVisitor =
-    abstract member BFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member DFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member Done: unit -> unit
-
 module Renderer =
-    let rec private _traverseState (v: IStateVisitor) parent (ids: HierarchyKey list) siblingsCount (st: State) =
+    let rec private _traverseState (v:IStateVisitor) parent (ids:HierarchyKey list) (siblingsCount:int) (st:State) =
         match ids |> List.rev with
         | [] -> ()
         | head::tail ->

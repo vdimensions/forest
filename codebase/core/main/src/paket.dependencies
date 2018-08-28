@@ -2,7 +2,7 @@
 storage: none
 
 source https://nuget.org/api/v2
-  nuget FSharp.Core [4.4, )
+  nuget FSharp.Core >= 4.3
 
 group build
   source ../../../../submodules/mason/dist

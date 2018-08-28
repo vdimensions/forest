@@ -40,9 +40,13 @@ module Event =
             member __.Receiver = receiver
 
     type Error =
+        | InvocationError of cause:exn
         | NonVoidReturnType of methodWithReturnValue:IEventMethod
         | BadEventSignature of badEventSignatureMethod:IEventMethod
         | MultipleErrors of errors:Error list
+
+    let resolveError(e:Error) =
+        ()
 
     let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
@@ -52,7 +56,7 @@ module Event =
         messageType = x || x.IsAssignableFrom(messageType)
 
     type [<Sealed>] private T() = 
-        let _subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
+        let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
         member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             let subscriptions =  
@@ -61,25 +65,25 @@ module Event =
                 |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (_subscribersFilter sender))
             for subscription in subscriptions do subscription.Invoke message
         member __.Dispose () =
-            for value in _subscriptions.Values do value.Clear()
-            _subscriptions.Clear()
+            for value in subscriptions.Values do value.Clear()
+            subscriptions.Clear()
         member this.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, NotNull "topics" topics:string[]) : unit =
             match topics with
             | [||] ->
-                for topicSubscriptionHandlers in _subscriptions.Values do
+                for topicSubscriptionHandlers in subscriptions.Values do
                      this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
             | curratedTopics ->
                 for topic in curratedTopics do
-                    match _subscriptions.TryGetValue(topic) with
+                    match subscriptions.TryGetValue(topic) with
                     | (true, topicSubscriptionHandlers) -> this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
         member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler:ISubscriptionHandler, NotNull "topic" topic:string) : T =
             let topicSubscriptionHandlers = 
-                match _subscriptions.TryGetValue(topic) with
+                match subscriptions.TryGetValue(topic) with
                 | (true, topicSubscriptionHandlers) -> topicSubscriptionHandlers
                 | (false, _) ->
                     let tmp = upcast Dictionary<Type, ICollection<ISubscriptionHandler>>(): IDictionary<Type, ICollection<ISubscriptionHandler>>
-                    _subscriptions.Add(topic, tmp);
+                    subscriptions.Add(topic, tmp);
                     tmp
             let subscriptionList = 
                 match topicSubscriptionHandlers.TryGetValue(subscriptionHandler.MessageType) with
@@ -91,7 +95,7 @@ module Event =
             subscriptionList.Add subscriptionHandler
             this
         member this.Unsubscribe (NotNull "receiver" receiver:IView) : T =
-            for topicSubscriptionHandlers in _subscriptions.Values |> Seq.collect (fun x -> x.Values) do
+            for topicSubscriptionHandlers in subscriptions.Values |> Seq.collect (fun x -> x.Values) do
                 for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
             this

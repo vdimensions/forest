@@ -1,6 +1,6 @@
 namespace Forest
 
-// internal functionality needed by the forest engine
+// internal functionality needed by the forest runtime
 type [<Interface>] internal IViewState =
     inherit IView
 

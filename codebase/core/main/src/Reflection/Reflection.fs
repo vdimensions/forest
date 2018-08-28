@@ -98,4 +98,5 @@ type [<Sealed>] internal DefaultReflectionProvider() =
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> upcast DefaultEventMethod(m, x) : IEventMethod))
             |> Seq.toArray
         member __.GetLocalizeableProperties vmType = 
+            // TODO
             Array.empty
