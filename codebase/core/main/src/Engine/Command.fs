@@ -28,9 +28,10 @@ module Command =
             member this.Invoke arg view = this.Invoke arg view
 
     [<CompiledName("CommandModel")>]
-    type [<Sealed>] internal Model(name:cname, tooltip:string, description:string) =
+    type [<Sealed>] internal Model(name:cname, displayName:string, tooltip:string, description:string) =
+        new (name:cname) = Model(name, String.Empty, String.Empty, String.Empty)
         member __.Name with get() = name
-        member val DisplayName = tooltip with get, set
+        member val DisplayName = displayName with get, set
         member val Tooltip = tooltip with get, set
         member val Description = description with get, set
         interface ICommandModel with

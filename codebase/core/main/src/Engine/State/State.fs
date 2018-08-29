@@ -30,18 +30,18 @@ type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<string, obj
     override this.GetHashCode() = hash this.Hash
     interface IEquatable<State> with member this.Equals(other:State) = this.eq other
 
-type [<Interface>] IStateVisitor =
+type [<Interface>] IForestStateVisitor =
     abstract member BFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
     abstract member DFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member Done: unit -> unit
+    abstract member Complete: unit -> unit
 
 [<RequireQualifiedAccess>]
-module internal State =
-    let create (hs, vm, vs) = State(hs, vm, vs)
-    let createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
-    let discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
+module State =
+    let internal create (hs, vm, vs) = State(hs, vm, vs)
+    let internal createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
+    let internal discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
 
-    let rec private _traverseState (v:IStateVisitor) parent (ids:HierarchyKey list) (siblingsCount:int) (st:State) =
+    let rec private _traverseState (v:IForestStateVisitor) parent (ids:HierarchyKey list) (siblingsCount:int) (st:State) =
         match ids |> List.rev with
         | [] -> ()
         | head::tail ->
@@ -60,11 +60,12 @@ module internal State =
             v.DFS head ix vm descriptor
             ()
 
-    let traverse (v: IStateVisitor) (st: State) =
+    [<CompiledName("Traverse")>]
+    let traverse (v: IForestStateVisitor) (st: State) =
         let root = HierarchyKey.shell
         match st.Hierarchy.Hierarchy.TryFind root with
         | Some ch -> _traverseState v root ch ch.Length st
         | None -> ()
-        v.Done()
+        v.Complete()
 
 

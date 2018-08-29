@@ -21,14 +21,17 @@ type [<Sealed>] State =
     //member MachineToken: string with get
     interface IEquatable<State>
 
-type [<Interface>] IStateVisitor =
+/// An interface representing a forest state visitor;
+type [<Interface>] IForestStateVisitor =
     abstract member BFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
     abstract member DFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member Done: unit -> unit
+    /// Executed once when the traversal is complete.
+    abstract member Complete: unit -> unit
 
 [<RequireQualifiedAccess>]
-module internal State =
-    val create: Hierarchy * Map<string, obj> * Map<string, IViewState> -> State
-    val createWithFuid: Hierarchy * Map<string, obj> * Map<string, IViewState> * Fuid -> State
-    val discardViewStates: State -> State
-    val traverse: visitor:IStateVisitor -> st:State -> unit
+module State =
+    val internal create: Hierarchy * Map<string, obj> * Map<string, IViewState> -> State
+    val internal createWithFuid: Hierarchy * Map<string, obj> * Map<string, IViewState> * Fuid -> State
+    val internal discardViewStates: State -> State
+    [<CompiledName("Traverse")>]
+    val traverse: visitor:IForestStateVisitor -> st:State -> unit

@@ -2,6 +2,7 @@
 
 open Forest
 open Forest.NullHandling
+open Forest.UI.Rendering
 
 open System
 
@@ -16,7 +17,9 @@ type [<Interface>] IViewAdapter =
     abstract member Key:string
 
 type [<AbstractClass>] AbstractViewAdapter(commandDispatcher:ICommandDispatcher, key:HierarchyKey) =
-    do ignore <| isNotNull "commandDispatcher" commandDispatcher
+    do 
+        ignore <| isNotNull "commandDispatcher" commandDispatcher
+        ignore <| isNotNull "key" key
     let mutable vm:obj = nil<obj>
     
     abstract member Refresh: viewModel:obj -> unit
@@ -42,24 +45,36 @@ type [<AbstractClass>] AbstractUIVisitor() =
     let mutable map: Map<string, IViewAdapter> = Map.empty
     let mutable keys: Set<string> = Set.empty
 
-    abstract member CreateAdapter: key:HierarchyKey -> viewModel:obj -> descriptor:IViewDescriptor -> IViewAdapter
+    abstract member CreateAdapter: key:sname -> viewModel:obj -> IViewAdapter
 
-    member this.Visit (key:HierarchyKey) index viewModel (descriptor:IViewDescriptor) =
+    member this.Visit (key:HierarchyKey) _ viewModel =
         let hash = key.Hash
         match map.TryFind hash with
         | Some adapter -> adapter.Update viewModel
         | None -> 
-            let adapter = (this.CreateAdapter key viewModel descriptor)
+            let adapter = (this.CreateAdapter key.Hash viewModel)
             adapter.Update viewModel
             map <- map |> Map.add hash adapter
         keys <- keys |> Set.remove hash
 
-    interface IStateVisitor with
+    interface IForestRenderer with
+        member this.ProcessNode n =
+            let hash = n.id
+            match map.TryFind hash with
+            | Some adapter -> adapter.Update n.model
+            | None -> 
+                let adapter = (this.CreateAdapter hash n.model)
+                adapter.Update n.model
+                map <- map |> Map.add hash adapter
+            keys <- keys |> Set.remove hash
+            n
+
+    interface IForestStateVisitor with
         member this.BFS key index viewModel descriptor = 
-            this.Visit key index viewModel descriptor
-        member this.DFS key index viewModel descriptor = 
+            this.Visit key index viewModel
+        member __.DFS key index viewModel descriptor = 
             ()
-        member this.Done() = 
+        member __.Complete() = 
             for k in keys do 
                 match map.TryFind k with
                 | Some v -> 
