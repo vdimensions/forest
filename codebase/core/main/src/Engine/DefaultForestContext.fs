@@ -11,6 +11,11 @@ type [<AbstractClass>] AbstractForestContext (viewFactory:IViewFactory, reflecti
         member this.ViewRegistry = this.ViewRegistry
         member this.SecurityManager = this.SecurityManager
 
+type NoopSecurityManager() =
+    interface ISecurityManager with
+        member __.HasAccess(_:ICommandDescriptor) = true
+        member __.HasAccess(_:IViewDescriptor) = true
+
 type DefaultForestContext(viewFactory:IViewFactory, reflectionProvider:IReflectionProvider, securityManager:ISecurityManager) =
     inherit AbstractForestContext(viewFactory, reflectionProvider, securityManager)
     new (viewFactory:IViewFactory, securityManager:ISecurityManager) = DefaultForestContext(viewFactory, DefaultReflectionProvider(), securityManager)

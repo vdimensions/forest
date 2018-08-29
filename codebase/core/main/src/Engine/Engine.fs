@@ -2,8 +2,6 @@
 
 open Forest.NullHandling
 
-open System.Runtime.CompilerServices
-
 
 type [<Interface>] IForestEngine =
     abstract member ActivateView: name:vname -> 'a when 'a:>IView
@@ -11,11 +9,18 @@ type [<Interface>] IForestEngine =
     abstract member SendMessage: message:'M -> unit
     abstract member ExecuteCommand: target:sname -> command:cname -> arg:'M -> unit
 
-type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList) = 
+type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList, ctx:IForestContext) = 
     do
         ignore <| isNotNull "state" state
         ignore <| isNotNull "changeList" changeList
-    member __.State with get() = state
+
+    //member __.Render (visitor:IForestStateVisitor) =
+    //    state |> State.traverse visitor 
+    member __.Render (renderer:IDomRenderer) =
+        let visitor = ForestRenderer(renderer |> Seq.singleton, ctx)
+        state |> State.traverse visitor 
+
+    member internal __.State with get() = state
     member __.ChangeList with get() = changeList
 
 module internal MessageDispatcher =
@@ -32,7 +37,8 @@ module internal MessageDispatcher =
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
         | None -> ctx.ViewRegistry.Register typeof<View> |> ignore
-    let Get (ms:ForestRuntime) : View = Key |> ms.GetOrActivateView
+    let Get (ms:ForestRuntime) : View = 
+        Key |> ms.GetOrActivateView
 
 module internal Error =
     [<Literal>]
@@ -67,9 +73,11 @@ type private ForestEngineAdapter(scope: ForestRuntime) =
         member __.SendMessage message = 
             _messageDispatcher.Publish(message, System.String.Empty)
 
-[<Extension>]
-[<AutoOpen>]
-type StateExtensions =
+[<CompiledName("ForestEngine")>]
+type Engine private(ctx:IForestContext, state:State) =
+    let mutable st:State = state
+    new (ctx:IForestContext) = Engine(ctx, State.empty)
+
     static member inline private toResult (rt:ForestRuntime) (fuid:Fuid option) (state:State) =
         match rt.Deconstruct() with 
         | (a, b, c, cl) -> 
@@ -77,26 +85,29 @@ type StateExtensions =
             match fuid with
             | Some f -> State.createWithFuid(a, b, c, f)
             | None -> State.create(a, b, c)
-        ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid))
+        ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), rt.Context)
 
-    [<Extension>]
-    static member Update (state:State, ctx:IForestContext, operation:System.Action<IForestEngine>):ForestResult =
+    member __.Update (operation:System.Action<IForestEngine>) : ForestResult =
         try 
-            use rt = ForestRuntime.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+            use rt = ForestRuntime.Create(st.Hierarchy, st.ViewModels, st.ViewStates, ctx)
             let adapter = new ForestEngineAdapter(rt)
             operation.Invoke adapter
-            state |> StateExtensions.toResult rt None
+            let result = state |> Engine.toResult rt None
+            st <- result.State
+            result
         with
         | :? ForestException as e -> 
             let se = State.empty
             use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show rt
             // TODO: set error data
-            se |> StateExtensions.toResult rt None
-    [<Extension>]
-    static member Sync (state:State, ctx:IForestContext, changes:ChangeList):ForestResult =
+            let result = se |> Engine.toResult rt None
+            st <- result.State
+            result
+
+    member __.Sync (changes:ChangeList) : ForestResult =
         try 
-            use rt = ForestRuntime.Create(state.Hierarchy, state.ViewModels, state.ViewStates, ctx)
+            use rt = ForestRuntime.Create(st.Hierarchy, st.ViewModels, st.ViewStates, ctx)
             let rec _applyChangelog (ms: ForestRuntime) (cl: StateChange List) =
                 match cl with
                 | [] -> None
@@ -104,13 +115,18 @@ type StateExtensions =
                     match head |> ms.Apply with
                     | Some e -> Some e
                     | None -> _applyChangelog ms tail
-            match _applyChangelog rt (changes.ToList()) with
-            | None -> state |> StateExtensions.toResult rt (Some changes.Fuid)
-            | Some e -> failwith "error" //TODO
+            let result = 
+                match _applyChangelog rt (changes.ToList()) with
+                | None -> state |> Engine.toResult rt (Some changes.Fuid)
+                | Some e -> failwith "error" //TODO
+            st <- result.State
+            result
         with
         | :? ForestException as e -> 
             let se = State.empty
             use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show rt
             // TODO: set error data
-            se |> StateExtensions.toResult rt None
+            let result = se |> Engine.toResult rt None
+            st <- result.State
+            result

@@ -1,4 +1,4 @@
-﻿namespace Forest
+﻿namespace Forest.Collections
 
 open Forest
 
@@ -8,19 +8,19 @@ open System.Diagnostics
 
 [<Serializable>]
 [<DebuggerDisplay("{Hierarchy}")>]
-type [<Struct>] internal Hierarchy = {
+type [<Struct>] internal Tree = {
     [<DebuggerBrowsable(DebuggerBrowsableState.RootHidden)>]
     Hierarchy: Map<HierarchyKey, HierarchyKey list>;
 }
 
 [<RequireQualifiedAccess>]
-module internal Hierarchy =
-    let inline getChildren (id:HierarchyKey) (hierarchy:Hierarchy) : HierarchyKey list =
+module internal Tree =
+    let inline getChildren (id:HierarchyKey) (hierarchy:Tree) : HierarchyKey list =
         match hierarchy.Hierarchy.TryFind id with
         | Some data -> data
         | None -> List.empty
 
-    let insert (id:HierarchyKey) (hierarchy:Hierarchy) : Hierarchy =
+    let insert (id:HierarchyKey) (hierarchy:Tree) : Tree =
         match hierarchy.Hierarchy.TryFind id with
         | Some _ -> hierarchy // prevent multiple inserts
         | None ->
@@ -36,7 +36,7 @@ module internal Hierarchy =
                 |> Map.add id List.empty
             { Hierarchy = h }
 
-    let remove (id:HierarchyKey) (state:Hierarchy) : Hierarchy*HierarchyKey list =
+    let remove (id:HierarchyKey) (state:Tree) : Tree*HierarchyKey list =
         let rec doRemove parentID (st, lst) =
             match st |> getChildren parentID  with
             | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, parentID::lst)
@@ -55,7 +55,7 @@ module internal Hierarchy =
             else ({ Hierarchy = noContents.Hierarchy.Remove(parentID).Add(parentID, updatedSiblings) }, removedIDs)
         | true -> (noContents, removedIDs)
 
-    let tryFindView (id:HierarchyKey) (regionName:rname) (viewName:vname) (state:Hierarchy) : HierarchyKey option =
+    let tryFindView (id:HierarchyKey) (regionName:rname) (viewName:vname) (state:Tree) : HierarchyKey option =
         let cmp = StringComparer.Ordinal
         state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.View, viewName) )
 

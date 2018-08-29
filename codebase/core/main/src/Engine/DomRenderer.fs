@@ -1,40 +1,23 @@
-﻿namespace Forest.UI.Rendering
+﻿namespace Forest
 
-open Forest
-
-
-type [<Struct>] RenderNode = {
-    [<CompiledName("ID")>]
-    id:sname;
-    [<CompiledName("Model")>]
-    model:obj;
-    [<CompiledName("Region")>]
-    regions:Map<rname, RenderNode list>;
-    [<CompiledName("Commands")>]
-    commands:Map<cname, ICommandModel>;
-}
-
-type [<Interface>] IForestRenderer =
-    abstract member ProcessNode: RenderNode -> RenderNode
-
-type ForestRenderer private(chainRender:(RenderNode -> RenderNode)) =
+type internal ForestRenderer private(chainRender:(DomNode -> DomNode), ctx:IForestContext) =
     /// Stores the rendered node state
-    let mutable nodeMap:Map<string, RenderNode> = Map.empty
+    let mutable nodeMap:Map<string, DomNode> = Map.empty
     /// Stores the original viewmodel state. Used to determine which nodes to be re-rendered
     let mutable modelMap:Map<string, obj> = Map.empty
 
     let createCommandModel (descriptor:ICommandDescriptor) : (cname*ICommandModel) =
         (descriptor.Name, upcast Command.Model(descriptor.Name))
 
-    new (renderChain:IForestRenderer seq) = ForestRenderer(renderChain |> Seq.fold (fun acc f -> (acc >> f.ProcessNode)) (fun (r:RenderNode) -> r))
+    new (renderChain:IDomRenderer seq, ctx:IForestContext) = ForestRenderer(renderChain |> Seq.fold (fun acc f -> (acc >> f.ProcessNode)) (fun (r:DomNode) -> r), ctx)
 
     interface IForestStateVisitor with
-        member __.BFS key _ viewModel descriptor = 
+        member __.BFS key i model descriptor = 
             // go ahead top-to-bottom and collect the basic model data
-            let hash = key.Hash
-            let commands = descriptor.Commands |> Seq.map createCommandModel |> Map.ofSeq
-            let node = { id=hash;model=viewModel;regions=Map.empty;commands=commands }
-            nodeMap <- nodeMap |> Map.add node.id node
+            if descriptor |> ctx.SecurityManager.HasAccess  then
+                let commands = descriptor.Commands |> Seq.filter ctx.SecurityManager.HasAccess |> Seq.map createCommandModel |> Map.ofSeq
+                let node = { Key=key.Hash;Name=key.View;Index=i;Model=model;Regions=Map.empty;Commands=commands }
+                nodeMap <- nodeMap |> Map.add node.Key node
         member __.DFS key _ viewModel _ = 
             // go backwards bottom-to-top and properly update the hierarchy
             nodeMap <-
@@ -50,13 +33,13 @@ type ForestRenderer private(chainRender:(RenderNode -> RenderNode)) =
                     let processedNode = if canSkipRenderCall then node else chainRender node
                     let region = key.Region
                     let newRegionContents = 
-                        match parent.regions.TryFind region with
+                        match parent.Regions.TryFind region with
                         | Some nodes -> processedNode::nodes
                         | None -> List.singleton processedNode
-                    let newRegions = parent.regions |> Map.remove region |> Map.add region newRegionContents
+                    let newRegions = parent.Regions |> Map.remove region |> Map.add region newRegionContents
                     if canSkipRenderCall then nodeMap else nodeMap |> Map.remove key.Hash |> Map.add key.Hash processedNode
                     |> Map.remove parentKey
-                    |> Map.add parentKey { parent with regions=newRegions }
+                    |> Map.add parentKey { parent with Regions=newRegions }
                 | (_, None, Some node) ->
                     let processedNode = chainRender node
                     nodeMap |> Map.remove key.Hash |> Map.add key.Hash processedNode

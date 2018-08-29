@@ -1,18 +1,14 @@
 ﻿namespace Forest
 
+open Forest.Collections
+
 open System
 
 [<Serializable>]
-type [<Struct>] StateChange =
-    | ViewAdded of parent:HierarchyKey * viewModel:obj
-    | ViewModelUpdated of id:HierarchyKey * updatedViewModel:obj
-    | ViewDestroyed of destroyedViewID:HierarchyKey
-
-[<Serializable>]
-type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>, fuid: Fuid) =
-    internal new (hierarchy: Hierarchy, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
+type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>, fuid: Fuid) =
+    internal new (hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
-    static member empty = State(Hierarchy.empty, Map.empty, Map.empty, Fuid.empty)
+    static member empty = State(Tree.empty, Map.empty, Map.empty, Fuid.empty)
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates
@@ -30,16 +26,11 @@ type [<Sealed>] State internal(hierarchy: Hierarchy, viewModels: Map<string, obj
     override this.GetHashCode() = hash this.Hash
     interface IEquatable<State> with member this.Equals(other:State) = this.eq other
 
-type [<Interface>] IForestStateVisitor =
-    abstract member BFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member DFS: key:HierarchyKey -> index:int -> viewModel:obj -> descriptor:IViewDescriptor -> unit
-    abstract member Complete: unit -> unit
-
 [<RequireQualifiedAccess>]
-module State =
-    let internal create (hs, vm, vs) = State(hs, vm, vs)
-    let internal createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
-    let internal discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
+module internal State =
+    let create (hs, vm, vs) = State(hs, vm, vs)
+    let createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
+    let discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
 
     let rec private _traverseState (v:IForestStateVisitor) parent (ids:HierarchyKey list) (siblingsCount:int) (st:State) =
         match ids |> List.rev with

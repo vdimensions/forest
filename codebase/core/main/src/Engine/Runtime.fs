@@ -1,6 +1,7 @@
 ﻿namespace Forest
 
 open Forest
+open Forest.Collections
 open Forest.Events
 open Forest.NullHandling
 
@@ -35,7 +36,7 @@ module Runtime =
         // TODO
         | _ -> ()
 
-type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) as self = 
+type [<Sealed>] internal ForestRuntime private (hierarchy:Tree, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) as self = 
     let mutable hierarchy = hierarchy
     let eventBus:IEventBus = Event.createEventBus()
     let viewModels:System.Collections.Generic.Dictionary<sname, obj> = System.Collections.Generic.Dictionary(viewModels, StringComparer.Ordinal)
@@ -46,7 +47,7 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
         viewModels.[id] <- vm
         Ok ()
     let destroyView (id:HierarchyKey) : Result<unit, Runtime.Error> =
-        let (h, ids) = Hierarchy.remove id hierarchy
+        let (h, ids) = Tree.remove id hierarchy
         for removedID in ids do
             let removedIDHash = removedID.Hash
             viewModels.Remove removedIDHash |> ignore
@@ -104,7 +105,7 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             // this is a different error
             Error (Runtime.Error.ViewstateAbsent id.Hash)
     member private this.addViewState (id:HierarchyKey) : Result<unit, Runtime.Error> =
-        let hs = (Hierarchy.insert id hierarchy)
+        let hs = (Tree.insert id hierarchy)
         match this.createViewState id with
         | Ok viewState ->
             hierarchy <- hs
@@ -113,7 +114,7 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             viewState.Load()
             Ok ()
         | Error e -> Error e
-    static member Create (hierarchy:Hierarchy, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) = 
+    static member Create (hierarchy:Tree, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) = 
         (new ForestRuntime(hierarchy, viewModels, viewStates, ctx)).Init()
     member private this.Init() =
         for kvp in viewStates do 
@@ -155,7 +156,7 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Hierarchy, viewModels:
             match HierarchyKey.isShell id with
             | true -> Some (Runtime.Error.HierarchyElementAbsent(id))
             | false ->
-                let hs = hierarchy |> Hierarchy.insert id
+                let hs = hierarchy |> Tree.insert id
                 match viewModels.TryGetValue id.Hash with
                 | (true, _) -> Some (Runtime.Error.UnexpectedState id)
                 | (false, _) ->

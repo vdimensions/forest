@@ -7,10 +7,6 @@ open System.Text
 open System.Diagnostics
 open System.Runtime.CompilerServices
 
-type rname = string
-type vname = string
-type cname = string
-type sname = string
 
 [<DebuggerDisplay("{this.ToString()}")>]
 [<CustomComparison>]

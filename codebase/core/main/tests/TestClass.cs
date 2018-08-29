@@ -1,7 +1,5 @@
 ﻿using System;
 
-using Forest.UI.Rendering;
-
 using NUnit.Framework;
 
 
@@ -52,7 +50,7 @@ namespace Forest.Tests
         }
     }
 
-    internal class PrintVisitor : IStateVisitor
+    internal class PrintVisitor : IForestStateVisitor, IDomRenderer
     {
         public void BFS(HierarchyKey key, int index, object viewModel, IViewDescriptor descriptor)
         {
@@ -64,9 +62,15 @@ namespace Forest.Tests
             Console.WriteLine("<< DFS: {0} : {1}", index, key);
         }
 
-        public void Done()
+        public void Complete()
         {
             Console.WriteLine("--------------------------------------");
+        }
+
+        public DomNode ProcessNode(DomNode node)
+        {
+            Console.WriteLine("Node {0} {1}({2})", node.Index, node.Name, node.Key);
+            return node;
         }
     }
 
@@ -78,7 +82,7 @@ namespace Forest.Tests
         [SetUp]
         public void SetUp()
         {
-            _ctx = new DefaultForestContext(new View.Factory(), null);
+            _ctx = new DefaultForestContext(new View.Factory(), new NoopSecurityManager());
             _ctx.ViewRegistry.Register<Inner.View>();
             _ctx.ViewRegistry.Register<Outer.View>();
         }
@@ -86,8 +90,8 @@ namespace Forest.Tests
         [Test]
         public void TestMethod()
         {
-            var result = State.Empty.Update(
-                _ctx,
+            var engine = new ForestEngine(_ctx);
+            var result = engine.Update(
                 e =>
                 {
                     e.ActivateView<Inner.View>(Inner.ViewName);
@@ -98,25 +102,26 @@ namespace Forest.Tests
             //Assert.AreNotEqual(result.State.MachineToken, State.Empty.MachineToken);
 
             Console.WriteLine("--------------------------------------");
-            Renderer.traverse(new PrintVisitor(), result.State);
+            result.Render(new PrintVisitor());
         }
 
         [Test]
         public void TestStateTransferConsistency()
         {
-            var originalResult = State.Empty.Update(_ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
+            var engine1 = new ForestEngine(_ctx);
+            var originalResult = engine1.Update(e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(originalResult.State, State.Empty);
             Assert.AreNotEqual(originalResult.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(originalResult.State.MachineToken, State.Empty.MachineToken);
 
-            var compensatedResult = State.Empty.Sync(_ctx, originalResult.ChangeList);
+            var engine2 = new ForestEngine(_ctx);
+            var compensatedResult = engine2.Sync(originalResult.ChangeList);
 
-            Renderer.traverse(new PrintVisitor(), originalResult.State);
-            Renderer.traverse(new PrintVisitor(), compensatedResult.State);
+            originalResult.Render(new PrintVisitor());
+            compensatedResult.Render(new PrintVisitor());
 
             Assert.AreEqual(originalResult.State, compensatedResult.State);
-            //Assert.IsTrue(originalResult.State.Equals(compensatedResult.State));
             Assert.AreEqual(originalResult.State.Hash, compensatedResult.State.Hash);
             //Assert.AreEqual(originalResult.State.MachineToken, compensatedResult.State.MachineToken);
         }
@@ -134,20 +139,22 @@ namespace Forest.Tests
         [Test]
         public void TestAddingViewFormAnotherOne()
         {
-            var result1 = State.Empty.Update(_ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
+            var engine1 = new ForestEngine(_ctx);
+            var result1 = engine1.Update(e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result1.State, State.Empty);
             Assert.AreNotEqual(result1.State.Hash, State.Empty.Hash);
             //Assert.AreNotEqual(result1.State.MachineToken, State.Empty.MachineToken);
 
-            var result2 = result1.State.Update(_ctx, e => e.ActivateView<Outer.View>(Outer.ViewName));
+            var engine2 = new ForestEngine(_ctx);
+            var result2 = engine2.Update( e => e.ActivateView<Outer.View>(Outer.ViewName));
 
             Assert.AreNotEqual(result2.State, result1.State);
             Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);
             //Assert.AreEqual(result2.State.MachineToken, result1.State.MachineToken);
 
-            Renderer.traverse(new PrintVisitor(), result1.State);
-            Renderer.traverse(new PrintVisitor(), result2.State);
+            result1.Render(new PrintVisitor());
+            result2.Render(new PrintVisitor());
         }
 
     }

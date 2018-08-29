@@ -2,11 +2,6 @@
 
 open System
 
-type rname = string
-type vname = string
-type cname = string
-type sname = string
-
 type [<Sealed>] HierarchyKey =
     [<CompiledName("Shell")>]
     static member shell:HierarchyKey
