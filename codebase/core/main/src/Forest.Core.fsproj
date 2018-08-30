@@ -7,7 +7,6 @@
   <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <Name>Forest.Core</Name>
     <AssemblyName>Forest.Core</AssemblyName>
     <RootNamespace>Forest</RootNamespace>
@@ -64,11 +63,6 @@
     <None Include="restore.sh" />
     <None Include="Script.fsx" />
     <None Include="exampleTemplateDefinition.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
   </ItemGroup>
   <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />
