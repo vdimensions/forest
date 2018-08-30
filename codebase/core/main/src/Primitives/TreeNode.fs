@@ -11,15 +11,15 @@ open System.Runtime.CompilerServices
 [<DebuggerDisplay("{this.ToString()}")>]
 [<CustomComparison>]
 [<CustomEquality>]
-type HierarchyKey = 
+type TreeNode = 
     | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] Shell_
-    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:HierarchyKey * region:rname * view:vname * hash:sname
+    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:TreeNode * region:rname * view:vname * hash:hash
     [<CompiledName("Shell")>]
     static member shell = 
-        HierarchyKey.Shell_
+        TreeNode.Shell_
     [<CompiledName("NewKey")>]
     static member newKey region view parent = 
-        HierarchyKey.ViewID_(parent, region, view, Fuid.newID().Hash)
+        TreeNode.ViewID_(parent, region, view, Fuid.newID().Hash)
     member this.Parent 
         with get() = match this with Shell_ -> Shell_ | ViewID_ (p, _, _, _) -> p
     member this.Region 
@@ -29,16 +29,16 @@ type HierarchyKey =
     member this.Hash 
         with get() = match this with Shell_ -> Fuid.empty.Hash | ViewID_ (_, _, _, h) -> h
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
-    member private this.cmp (other:HierarchyKey) = 
+    member private this.cmp (other:TreeNode) = 
         StringComparer.Ordinal.Compare(this.Hash, other.Hash)
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>] 
-    member private this.eq (other: HierarchyKey) = 
+    member private this.eq (other: TreeNode) = 
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
     override this.Equals o = 
         match null2opt o with
         | Some v ->
             match v with
-            | :? HierarchyKey as other -> this.eq other
+            | :? TreeNode as other -> this.eq other
             | _ -> false
         | None -> false
     override this.GetHashCode() = 
@@ -56,19 +56,19 @@ type HierarchyKey =
         with get() = this.ToStringBuilder(true).ToString()
     override this.ToString() = 
         this.ToStringBuilder(false).ToString()
-    interface IComparable<HierarchyKey> with 
+    interface IComparable<TreeNode> with 
         member this.CompareTo other = this.cmp other
     interface IComparable with
         member this.CompareTo o = 
             match o with
-            | :? HierarchyKey as id -> this.cmp id
+            | :? TreeNode as id -> this.cmp id
             | :? IComparable as c -> (-1)*(c.CompareTo this)
             | _ -> raise (NotSupportedException ())
-    interface IEquatable<HierarchyKey> with 
+    interface IEquatable<TreeNode> with 
         member this.Equals other = this.eq other
 
-module internal HierarchyKey =
+module internal TreeNode =
     //let add id region name parent = HierarchyKey.ViewID_(parent, region, name, id)
     //let addNew region name parent = add (Fuid.newID().Hash) region name parent
-    let isShell (id:HierarchyKey) = match id with HierarchyKey.Shell_ -> true | _ -> false
+    let isShell (id:TreeNode) = match id with TreeNode.Shell_ -> true | _ -> false
     

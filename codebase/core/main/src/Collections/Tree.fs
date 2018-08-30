@@ -10,56 +10,56 @@ open System.Diagnostics
 [<DebuggerDisplay("{Hierarchy}")>]
 type [<Struct>] internal Tree = {
     [<DebuggerBrowsable(DebuggerBrowsableState.RootHidden)>]
-    Hierarchy: Map<HierarchyKey, HierarchyKey list>;
+    Hierarchy: Map<TreeNode, TreeNode list>;
 }
 
 [<RequireQualifiedAccess>]
 module internal Tree =
-    let inline getChildren (id:HierarchyKey) (hierarchy:Tree) : HierarchyKey list =
-        match hierarchy.Hierarchy.TryFind id with
+    let inline private getChildren (node:TreeNode) (tree:Tree) : TreeNode list =
+        match tree.Hierarchy.TryFind node with
         | Some data -> data
         | None -> List.empty
 
-    let insert (id:HierarchyKey) (hierarchy:Tree) : Tree =
-        match hierarchy.Hierarchy.TryFind id with
-        | Some _ -> hierarchy // prevent multiple inserts
+    let insert (node:TreeNode) (tree:Tree) : Tree =
+        match tree.Hierarchy.TryFind node with
+        | Some _ -> tree // prevent multiple inserts
         | None ->
-            let parent = id.Parent
+            let parent = node.Parent
             let list = 
-                match hierarchy.Hierarchy.TryFind parent with
+                match tree.Hierarchy.TryFind parent with
                 | Some list -> list
                 | None -> List.empty
             let h = 
-                hierarchy.Hierarchy
+                tree.Hierarchy
                 |> Map.remove parent 
-                |> Map.add parent (id::list)
-                |> Map.add id List.empty
+                |> Map.add parent (node::list)
+                |> Map.add node List.empty
             { Hierarchy = h }
 
-    let remove (id:HierarchyKey) (state:Tree) : Tree*HierarchyKey list =
+    let remove (node:TreeNode) (tree:Tree) : Tree*TreeNode list =
         let rec doRemove parentID (st, lst) =
             match st |> getChildren parentID  with
             | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, parentID::lst)
             | head::_ -> (st, lst) |> doRemove head |> doRemove parentID
 
-        let (noContents, removedIDs) = doRemove id (state, [])
+        let (noContents, removedNodes) = doRemove node (tree, [])
         
-        match HierarchyKey.isShell id.Parent with
+        match TreeNode.isShell node.Parent with
         | false ->
-            let parentID = id.Parent
-            let siblings = noContents |> getChildren parentID
-            let updatedSiblings = siblings |> List.except [id]
+            let parentNode = node.Parent
+            let siblings = noContents |> getChildren parentNode
+            let updatedSiblings = siblings |> List.except [node]
             
             if (updatedSiblings.Length = siblings.Length)
-            then (noContents, removedIDs)
-            else ({ Hierarchy = noContents.Hierarchy.Remove(parentID).Add(parentID, updatedSiblings) }, removedIDs)
-        | true -> (noContents, removedIDs)
+            then (noContents, removedNodes)
+            else ({ Hierarchy = noContents.Hierarchy.Remove(parentNode).Add(parentNode, updatedSiblings) }, removedNodes)
+        | true -> (noContents, removedNodes)
 
-    let tryFindView (id:HierarchyKey) (regionName:rname) (viewName:vname) (state:Tree) : HierarchyKey option =
+    let tryFindView (node:TreeNode) (region:rname) (view:vname) (tree:Tree) : TreeNode option =
         let cmp = StringComparer.Ordinal
-        state |> getChildren id |> List.filter (fun x -> cmp.Equals(x.Region, regionName) ) |> List.tryFind (fun x -> cmp.Equals(x.View, viewName) )
+        tree |> getChildren node |> List.filter (fun x -> cmp.Equals(x.Region, region) ) |> List.tryFind (fun x -> cmp.Equals(x.View, view) )
 
-    let empty = { 
-        Hierarchy = Map.empty.Add(HierarchyKey.shell, List.empty);
+    let root = { 
+        Hierarchy = Map.empty.Add(TreeNode.shell, List.empty);
     }
 

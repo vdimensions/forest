@@ -4,6 +4,6 @@ open System
 
 [<Serializable>]
 type [<Struct>] StateChange =
-    | ViewAdded of parent:HierarchyKey * viewModel:obj
-    | ViewModelUpdated of id:HierarchyKey * updatedViewModel:obj
-    | ViewDestroyed of destroyedViewID:HierarchyKey
+    | ViewAdded of parent:TreeNode * model:obj
+    | ViewModelUpdated of owner:TreeNode * newModel:obj
+    | ViewDestroyed of node:TreeNode

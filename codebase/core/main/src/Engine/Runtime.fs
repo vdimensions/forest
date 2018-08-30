@@ -11,23 +11,23 @@ open System.Collections.Generic
 [<RequireQualifiedAccess>]
 module Runtime =
     [<Serializable>]
+    [<CompiledName("Operation")>]
+    type [<Struct>] Operation =
+        | InstantiateView of node:TreeNode
+        | UpdateViewModel of parent:hash * viewModel:obj
+        | DestroyView of subtree:TreeNode
+        | InvokeCommand of owner:hash * commandName:cname * commandArg:obj
+        | PublishEvent of senderID:hash * message:obj * topics:string array
+        | Multiple of operations:Operation list
+
+    [<Serializable>]
     [<CompiledName("Error")>]
     type [<Struct>] Error =
         | ViewstateAbsent of view:vname
-        | UnexpectedState of identifier:HierarchyKey
+        | UnexpectedState of node:TreeNode
         | CommandError of commandErrorCause:Command.Error
         | ViewError of viewErrorCause:View.Error
-        | HierarchyElementAbsent of orphanIdentifier:HierarchyKey
-
-    [<Serializable>]
-    [<CompiledName("Operation")>]
-    type [<Struct>] Operation =
-        | InstantiateView of id:HierarchyKey
-        | UpdateViewModel of parent:sname * viewModel:obj
-        | DestroyView of identifier:HierarchyKey
-        | InvokeCommand of owner:sname * commandName:cname * commandArg:obj
-        | PublishEvent of senderID:sname * message:obj * topics:string array
-        | Multiple of operations:Operation list
+        | SubTreeAbsent of orphanIdentifier:TreeNode
 
     let resolveError (error:Error) =
         match error with
@@ -36,36 +36,36 @@ module Runtime =
         // TODO
         | _ -> ()
 
-type [<Sealed>] internal ForestRuntime private (hierarchy:Tree, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) as self = 
-    let mutable hierarchy = hierarchy
+type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, views:Map<hash, IRuntimeView>, ctx:IForestContext) as self = 
+    let mutable tree = t
     let eventBus:IEventBus = Event.createEventBus()
-    let viewModels:System.Collections.Generic.Dictionary<sname, obj> = System.Collections.Generic.Dictionary(viewModels, StringComparer.Ordinal)
-    let viewStates:System.Collections.Generic.Dictionary<sname, IViewState> = System.Collections.Generic.Dictionary(viewStates, StringComparer.Ordinal)
+    let models:System.Collections.Generic.Dictionary<hash, obj> = System.Collections.Generic.Dictionary(models, StringComparer.Ordinal)
+    let views:System.Collections.Generic.Dictionary<hash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
     let changeLog:System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
 
-    let updateViewModel (id:sname) (vm:obj) : Result<unit, Runtime.Error> =
-        viewModels.[id] <- vm
+    let updateViewModel (id:hash) (vm:obj) : Result<unit, Runtime.Error> =
+        models.[id] <- vm
         Ok ()
-    let destroyView (id:HierarchyKey) : Result<unit, Runtime.Error> =
-        let (h, ids) = Tree.remove id hierarchy
-        for removedID in ids do
-            let removedIDHash = removedID.Hash
-            viewModels.Remove removedIDHash |> ignore
-            viewStates.Remove removedIDHash |> ignore
-            changeLog.Add(StateChange.ViewDestroyed(removedID))
-        hierarchy <- h
+    let destroyView (node:TreeNode) : Result<unit, Runtime.Error> =
+        let (t, nodes) = Tree.remove node tree
+        for removedNode in nodes do
+            let removedHash = removedNode.Hash
+            models.Remove removedHash |> ignore
+            views.Remove removedHash |> ignore
+            changeLog.Add(StateChange.ViewDestroyed(removedNode))
+        tree <- t
         Ok ()
-    let executeCommand (stateKey:sname) (name:cname) (arg:obj) : Result<unit, Runtime.Error> =
-        match viewStates.TryGetValue stateKey with
-        | (true, vs) ->
-            match vs.Descriptor.Commands.TryFind name with
+    let executeCommand (stateKey:hash) (name:cname) (arg:obj) : Result<unit, Runtime.Error> =
+        match views.TryGetValue stateKey with
+        | (true, view) ->
+            match view.Descriptor.Commands.TryFind name with
             | Some cmd -> 
-                vs |> cmd.Invoke arg
+                view |> cmd.Invoke arg
                 Ok ()
-            | None ->  Error (Runtime.Error.CommandError <| Command.Error.CommandNotFound(vs.Descriptor.ViewType, name))
+            | None ->  Error (Runtime.Error.CommandError <| Command.Error.CommandNotFound(view.Descriptor.ViewType, name))
         | (false, _) -> (Error (Runtime.Error.ViewstateAbsent stateKey))
-    let publishEvent (id:sname) (message:'m) (topics:string array) : Result<unit, Runtime.Error> =
-        match viewStates.TryGetValue id with
+    let publishEvent (id:hash) (message:'m) (topics:string array) : Result<unit, Runtime.Error> =
+        match views.TryGetValue id with
         | (true, sender) -> 
             eventBus.Publish(sender, message, topics)
             Ok ()
@@ -74,10 +74,10 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Tree, viewModels:Map<s
         match operation with
         | Runtime.Operation.Multiple operations -> 
             iterateStates ctx operations
-        | Runtime.Operation.InstantiateView (id) -> 
-            self.addViewState id
-        | Runtime.Operation.UpdateViewModel (viewID, vm) -> 
-            updateViewModel viewID vm
+        | Runtime.Operation.InstantiateView (node) -> 
+            self.instantiateView node
+        | Runtime.Operation.UpdateViewModel (viewID, model) -> 
+            updateViewModel viewID model
         | Runtime.Operation.DestroyView viewID -> 
             destroyView viewID
         | Runtime.Operation.InvokeCommand (viewID, commandName, arg) -> 
@@ -93,110 +93,110 @@ type [<Sealed>] internal ForestRuntime private (hierarchy:Tree, viewModels:Map<s
             processChanges ctx head
             |> Result.map (fun _ -> tail)
             |> Result.bind (iterateStates ctx)
-    member private this.createViewState(id:HierarchyKey) =
-        match ctx.ViewRegistry.GetDescriptor(id.View) |> null2vopt with
+    member private this.createViewState(node:TreeNode) =
+        match ctx.ViewRegistry.GetDescriptor(node.View) |> null2vopt with
         | ValueSome vd ->
-            let vi = (ctx.ViewRegistry.Resolve id.View) :?> IViewState
-            vi.InstanceID <- id
-            vi.Descriptor <- vd
-            vi.AcquireRuntime this
-            Ok vi // will also set the view model
+            let view = (ctx.ViewRegistry.Resolve node.View) :?> IRuntimeView
+            view.InstanceID <- node
+            view.Descriptor <- vd
+            view.AcquireRuntime this
+            Ok view // will also set the view model
         | ValueNone -> 
             // this is a different error
-            Error (Runtime.Error.ViewstateAbsent id.Hash)
-    member private this.addViewState (id:HierarchyKey) : Result<unit, Runtime.Error> =
-        let hs = (Tree.insert id hierarchy)
-        match this.createViewState id with
-        | Ok viewState ->
-            hierarchy <- hs
-            viewStates.Add(id.Hash, viewState)
-            changeLog.Add(StateChange.ViewAdded(id, viewState.ViewModel))
-            viewState.Load()
+            Error (Runtime.Error.ViewstateAbsent node.Hash)
+    member private this.instantiateView (node:TreeNode) : Result<unit, Runtime.Error> =
+        let t = (Tree.insert node tree)
+        match this.createViewState node with
+        | Ok view ->
+            tree <- t
+            views.Add(node.Hash, view)
+            changeLog.Add(StateChange.ViewAdded(node, view.ViewModel))
+            view.Load()
             Ok ()
         | Error e -> Error e
-    static member Create (hierarchy:Tree, viewModels:Map<sname, obj>, viewStates:Map<sname, IViewState>, ctx:IForestContext) = 
-        (new ForestRuntime(hierarchy, viewModels, viewStates, ctx)).Init()
+    static member Create (tree:Tree, models:Map<hash, obj>, views:Map<hash, IRuntimeView>, ctx:IForestContext) = 
+        (new ForestRuntime(tree, models, views, ctx)).Init()
     member private this.Init() =
-        for kvp in viewStates do 
+        for kvp in views do 
             kvp.Value.AcquireRuntime this
-        for id in (upcast hierarchy.Hierarchy:IDictionary<_,_>).Keys do
-            if not <| viewStates.ContainsKey id.Hash then 
-                match this.createViewState id with
-                | Ok viewState ->
-                    viewStates.Add(id.Hash, viewState)
-                    viewState.Resume(viewModels.[id.Hash])
+        for node in (upcast tree.Hierarchy:IDictionary<_,_>).Keys do
+            if not <| views.ContainsKey node.Hash then 
+                match this.createViewState node with
+                | Ok view ->
+                    views.Add(node.Hash, view)
+                    view.Resume(models.[node.Hash])
                 | _ -> ignore()
         this
-    member internal this.ActivateView(id) =
-        Runtime.Operation.InstantiateView(id) |> this.Update |> ignore
-        match viewStates.TryGetValue id.Hash with
+    member internal this.ActivateView(node) =
+        Runtime.Operation.InstantiateView(node) |> this.Update |> ignore
+        match views.TryGetValue node.Hash with
         | (true, viewState) -> (upcast viewState:IView)
         | (false, _) -> nil<_>
     member internal this.ActivateAnonymousView<'v when 'v:>IView> parent region =
         let d = ctx.ViewRegistry.GetDescriptor typeof<'v>
         let view =
             if (d.Name |> String.IsNullOrEmpty |> not) then
-                let id = HierarchyKey.newKey region d.Name parent
-                this.ActivateView id
+                let node = TreeNode.newKey region d.Name parent
+                this.ActivateView node
             else ctx.ViewRegistry.Resolve typeof<'v>
         downcast view:'v
-    member internal this.GetOrActivateView (id:HierarchyKey) : 'TView when 'TView :> IView =
+    member internal this.GetOrActivateView (node:TreeNode) : 'TView when 'TView :> IView =
         let result =
-            match id.Hash |> viewStates.TryGetValue with
+            match node.Hash |> views.TryGetValue with
             | (true, viewState) -> (upcast viewState:IView)
-            | (false, _) -> this.ActivateView id
+            | (false, _) -> this.ActivateView node
         downcast result:'TView
-    member this.Update (operation:Runtime.Operation) =
+    member __.Update (operation:Runtime.Operation) =
         match processChanges ctx operation with
         | Ok _ -> ()
         | Error e -> Runtime.resolveError e
     member this.Apply (entry:StateChange) =
         match entry with
-        | StateChange.ViewAdded (id, vm) ->
-            match HierarchyKey.isShell id with
-            | true -> Some (Runtime.Error.HierarchyElementAbsent(id))
+        | StateChange.ViewAdded (node, model) ->
+            match TreeNode.isShell node with
+            | true -> Some (Runtime.Error.SubTreeAbsent node)
             | false ->
-                let hs = hierarchy |> Tree.insert id
-                match viewModels.TryGetValue id.Hash with
-                | (true, _) -> Some (Runtime.Error.UnexpectedState id)
+                let hs = tree |> Tree.insert node
+                match models.TryGetValue node.Hash with
+                | (true, _) -> Some (Runtime.Error.UnexpectedState node)
                 | (false, _) ->
-                    match this.createViewState id with
-                    | Ok viewState ->
-                        hierarchy <- hs
-                        viewStates.Add (id.Hash, viewState)
-                        viewState.Resume(vm)
+                    match this.createViewState node with
+                    | Ok view ->
+                        tree <- hs
+                        views.Add (node.Hash, view)
+                        view.Resume(model)
                         None
                     | Error e -> Some e
-        | StateChange.ViewDestroyed (id) ->
-            match destroyView id with Ok _ -> None | Error e -> Some e
-        | StateChange.ViewModelUpdated (id, vm) -> 
-            viewStates.[id.Hash].Resume(vm)
+        | StateChange.ViewDestroyed (node) ->
+            match destroyView node with Ok _ -> None | Error e -> Some e
+        | StateChange.ViewModelUpdated (node, model) -> 
+            views.[node.Hash].Resume model
             None
     member this.Dispose() = 
-        for kvp in viewStates do 
+        for kvp in views do 
             kvp.Value.AbandonRuntime this
         eventBus.Dispose()
     member internal __.Deconstruct() = 
         (
-            hierarchy, 
-            viewModels |> Seq.map (|KeyValue|) |> Map.ofSeq, 
-            viewStates |> Seq.map (|KeyValue|) |> Map.ofSeq, 
+            tree, 
+            models |> Seq.map (|KeyValue|) |> Map.ofSeq, 
+            views |> Seq.map (|KeyValue|) |> Map.ofSeq, 
             changeLog |> List.ofSeq
         )
     member __.Context with get() = ctx
 
     interface IForestRuntime with
-        member __.GetViewModel id = 
-            match viewModels.TryGetValue id.Hash with
-            | (true, v) -> Some v
+        member __.GetViewModel node = 
+            match models.TryGetValue node.Hash with
+            | (true, m) -> Some m
             | (false, _) -> None
-        member __.SetViewModel silent id vm = 
-            viewModels.[id.Hash] <- vm
-            if not silent then changeLog.Add(StateChange.ViewModelUpdated(id, vm))
-            vm
+        member __.SetViewModel silent node model = 
+            models.[node.Hash] <- model
+            if not silent then changeLog.Add(StateChange.ViewModelUpdated(node, model))
+            model
         member this.ActivateView parent region name =
-            let id = parent |> HierarchyKey.newKey region name 
-            this.ActivateView id
+            let node = parent |> TreeNode.newKey region name 
+            this.ActivateView node
         member this.ActivateAnonymousView<'v when 'v:>IView> parent region =
             this.ActivateAnonymousView<'v> parent region
         member this.PublishEvent sender message topics = 

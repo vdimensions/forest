@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<template>
+  <region name="header">
+    <template name="navigation" />
+  </region>
+  <region name="content">
+    <placeholder id="content" />
+  </region>
+  <region name="footer">
+    <placeholder id="footer" />
+  </region>
+</template>

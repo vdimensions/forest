@@ -14,7 +14,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable vm:'T = new 'T()
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable hierarchyKey:HierarchyKey = HierarchyKey.shell
+    let mutable hierarchyKey:TreeNode = TreeNode.shell
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable rt:IForestRuntime = nil<IForestRuntime>
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
@@ -33,7 +33,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
     member internal __.HierarchyKey
         with get() = hierarchyKey
          and set(NotNull "value" value) = hierarchyKey <- value
-    interface IViewState with
+    interface IRuntimeView with
         member this.Load () = this.Load()
         member this.Resume viewModel =
             vm <- rt.SetViewModel true hierarchyKey (downcast viewModel : 'T)
@@ -78,9 +78,9 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
 
 and private Region<'T when 'T: (new: unit -> 'T)>(regionName:string, view:AbstractView<'T>) =
     member __.ActivateView (NotNull "viewName" viewName:string) =
-        (upcast view:IViewState).Runtime.ActivateView view.HierarchyKey regionName viewName
+        (upcast view:IRuntimeView).Runtime.ActivateView view.HierarchyKey regionName viewName
     member __.ActivateView<'v when 'v:>IView> () : 'v =
-        (upcast view:IViewState).Runtime.ActivateAnonymousView view.HierarchyKey regionName
+        (upcast view:IRuntimeView).Runtime.ActivateAnonymousView view.HierarchyKey regionName
     member __.Name 
         with get() = regionName
     interface IRegion with

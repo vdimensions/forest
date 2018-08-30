@@ -1,85 +1,58 @@
 ﻿namespace Forest.UI
 
 open Forest
-open Forest.NullHandling
-
-open System
 
 
-type [<Interface>] ICommandDispatcher =
-    abstract member InvokeCommand: key:string -> command:cname -> arg:obj -> unit
+type internal NodeState =
+    | NewNode of node:DomNode
+    | UpdatedNode of node:DomNode
 
-type [<Interface>] IViewAdapter =
-    inherit IDisposable
-    abstract member Update: viewModel:obj -> unit
-    abstract member InvokeCommand: name:cname -> arg:obj -> unit
-    abstract member Key:string
+type [<AbstractClass>] AbstractUIAdapter() =
+    let mutable adapters: Map<hash, IViewAdapter> = Map.empty
+    let mutable parentChildMap: Map<hash, hash*rname> = Map.empty
+    let mutable deletedNodes: Set<hash> = Set.empty
+    let mutable nodeStates: List<NodeState> = List.empty
 
-type [<AbstractClass>] AbstractViewAdapter(commandDispatcher:ICommandDispatcher, key:HierarchyKey) =
-    do 
-        ignore <| isNotNull "commandDispatcher" commandDispatcher
-        ignore <| isNotNull "key" key
-    let mutable vm:obj = nil<obj>
-    
-    abstract member Refresh: viewModel:obj -> unit
-    abstract member Dispose: disposing:bool -> unit
-        
-    interface IViewAdapter with
-        member __.InvokeCommand (NotNull "name" name) (arg) =
-            commandDispatcher.InvokeCommand key.Hash name arg
-        member this.Update (NotNull "viewModel" viewModel:obj) =
-            let update = 
-                match null2vopt vm with
-                | ValueSome value -> not <| obj.Equals(value, viewModel)
-                | ValueNone -> true
-            if update then
-                vm <- viewModel
-                this.Refresh viewModel
-        member __.Key with get() = key.Hash
-    interface IDisposable with
-        member this.Dispose() = this.Dispose(true)
+    abstract member CreateViewAdapter: key:hash * viewModel:obj -> IViewAdapter
+    abstract member CreateNestedViewAdapter: key:hash * viewModel:obj * parentAdapter:IViewAdapter * region:rname -> IViewAdapter
 
-
-type [<AbstractClass>] AbstractUIVisitor() =
-    let mutable map: Map<string, IViewAdapter> = Map.empty
-    let mutable keys: Set<string> = Set.empty
-
-    abstract member CreateAdapter: key:sname -> viewModel:obj -> IViewAdapter
-
-    member this.Visit (key:HierarchyKey) _ viewModel =
-        let hash = key.Hash
-        match map.TryFind hash with
-        | Some adapter -> adapter.Update viewModel
-        | None -> 
-            let adapter = (this.CreateAdapter key.Hash viewModel)
-            adapter.Update viewModel
-            map <- map |> Map.add hash adapter
-        keys <- keys |> Set.remove hash
-
-    interface IDomRenderer with
-        member this.ProcessNode n =
-            match map.TryFind n.Key with
-            | Some adapter -> adapter.Update n.Model
-            | None -> 
-                let adapter = (this.CreateAdapter n.Key n.Model)
-                // TODO: nest adapter in hierarchy
-                adapter.Update n.Model
-                map <- map |> Map.add n.Key adapter
-            keys <- keys |> Set.remove n.Key
+    interface IDomProcessor with
+        member __.ProcessNode n =
+            nodeStates <- 
+                match adapters.TryFind n.Hash with
+                | Some _ -> (UpdatedNode n)::nodeStates
+                | None -> (NewNode n)::nodeStates
+            deletedNodes <- deletedNodes |> Set.remove n.Hash
+            for kvp in n.Regions do 
+                for childNode in kvp.Value do
+                    parentChildMap <- parentChildMap |> Map.add childNode.Hash (n.Hash, kvp.Key)
             n
 
-    interface IForestStateVisitor with
-        member this.BFS key index viewModel _ = 
-            this.Visit key index viewModel
-        member __.DFS _ _ _ _ = 
-            ()
-        member __.Complete() = 
-            for k in keys do 
-                match map.TryFind k with
-                | Some v -> 
-                    v.Dispose()
-                    map <- map |> Map.remove k
-                | None -> ()
-            keys <- map |> Seq.map (fun a -> a.Key) |> Set.ofSeq
-            ()
+        member this.Complete() = 
+            for k in deletedNodes do 
+                adapters <- 
+                    match adapters.TryFind k with
+                    | Some v -> 
+                        v.Dispose()
+                        adapters |> Map.remove k
+                    | None -> adapters
 
+            for nodeState in nodeStates do
+                match nodeState with
+                | NewNode n ->
+                    adapters <- 
+                        match parentChildMap.TryFind n.Hash with
+                        | None -> adapters |> Map.add n.Hash (this.CreateViewAdapter(n.Hash, n.Model))
+                        | Some (h, r) -> 
+                            match adapters.TryFind h with
+                            | None -> failwithf "Could not locate view adaper for %s" h
+                            | Some a -> adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n.Hash, n.Model, a, r))
+                | UpdatedNode n ->
+                    match adapters.TryFind n.Hash with
+                    | None -> failwithf "Could not locate view adaper for %s" n.Hash
+                    | Some a -> a.Update n.Model
+
+            nodeStates <- List.empty
+            parentChildMap <- Map.empty
+            deletedNodes <- adapters |> Seq.map (fun a -> a.Key) |> Set.ofSeq
+            ()

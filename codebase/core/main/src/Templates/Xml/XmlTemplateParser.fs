@@ -22,7 +22,7 @@ type [<Sealed>] XmlTemplateParser() =
         for e in elements do
             match e with
             | TagName "content" v ->
-                let id = v.Attribute("id" |> XName.Get).Value
+                let id = v.Attribute("placeholder" |> XName.Get).Value
                 let contents = v.Elements() |> this.ReadRegionContents
                 result <- (this.CreateContentDefinition id contents)::result
             | _ -> ignore()

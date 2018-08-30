@@ -50,18 +50,8 @@ namespace Forest.Tests
         }
     }
 
-    internal class PrintVisitor : IForestStateVisitor, IDomRenderer
+    internal class PrintVisitor : IDomProcessor
     {
-        public void BFS(HierarchyKey key, int index, object viewModel, IViewDescriptor descriptor)
-        {
-            Console.WriteLine(">> BFS: {0} : {1}", index, key);
-        }
-
-        public void DFS(HierarchyKey key, int index, object viewModel, IViewDescriptor descriptor)
-        {
-            Console.WriteLine("<< DFS: {0} : {1}", index, key);
-        }
-
         public void Complete()
         {
             Console.WriteLine("--------------------------------------");
@@ -69,7 +59,7 @@ namespace Forest.Tests
 
         public DomNode ProcessNode(DomNode node)
         {
-            Console.WriteLine("Node {0} {1}({2})", node.Index, node.Name, node.Key);
+            Console.WriteLine("Node {0} {1}({2})", node.Index, node.Name, node.Hash);
             return node;
         }
     }

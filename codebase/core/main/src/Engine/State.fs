@@ -5,10 +5,10 @@ open Forest.Collections
 open System
 
 [<Serializable>]
-type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>, fuid: Fuid) =
-    internal new (hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IViewState>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
+type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>, fuid: Fuid) =
+    internal new (hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
-    static member empty = State(Tree.empty, Map.empty, Map.empty, Fuid.empty)
+    static member empty = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates
@@ -23,7 +23,7 @@ type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, 
         match o with
         | :? State as other -> this.eq other
         | _ -> false
-    override this.GetHashCode() = hash this.Hash
+    override this.GetHashCode() = this.Hash.GetHashCode()
     interface IEquatable<State> with member this.Equals(other:State) = this.eq other
 
 [<RequireQualifiedAccess>]
@@ -32,7 +32,7 @@ module internal State =
     let createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
     let discardViewStates (st: State) = State(st.Hierarchy, st.ViewModels, Map.empty)
 
-    let rec private _traverseState (v:IForestStateVisitor) parent (ids:HierarchyKey list) (siblingsCount:int) (st:State) =
+    let rec private _traverseState (v:IForestStateVisitor) parent (ids:TreeNode list) (siblingsCount:int) (st:State) =
         match ids |> List.rev with
         | [] -> ()
         | head::tail ->
@@ -52,8 +52,8 @@ module internal State =
             ()
 
     [<CompiledName("Traverse")>]
-    let traverse (v: IForestStateVisitor) (st: State) =
-        let root = HierarchyKey.shell
+    let traverse (v:IForestStateVisitor) (st: State) =
+        let root = TreeNode.shell
         match st.Hierarchy.Hierarchy.TryFind root with
         | Some ch -> _traverseState v root ch ch.Length st
         | None -> ()

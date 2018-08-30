@@ -3,16 +3,12 @@
 
 type [<Struct>] TemplateDefinition = 
     {
-        [<CompiledName("Name")>] 
         name:string; 
-        [<CompiledName("Contents")>] 
         contents:ViewContents list;
     }
  and [<Struct>] ContentDefinition =
     {
-        [<CompiledName("Placeholder")>] 
         placeholder:string;
-        [<CompiledName("Contents")>] 
         contents:RegionContents list
     }
  and [<Struct>] Template = 
@@ -21,7 +17,6 @@ type [<Struct>] TemplateDefinition =
  and ViewContents =
     | Region of name:string * contents:RegionContents list
     | InlinedTemplate of template:string
-    //| Content of definition:ContentDefinition
  and [<Struct>] RegionContents =
     | Placeholder of id:string
     | Template of template:string
@@ -32,7 +27,6 @@ type [<Interface>] ITemplateProvider =
     abstract member Load: name:string -> Template
 
 [<RequireQualifiedAccess>]
-[<CompiledName("RawTemplatesModule")>]
 module Raw =
     /// <summary>
     /// Expands a given <c>template</c>'s hierarchy to a <see cref="TemplateDefinition">template definition</see> 
