@@ -10,6 +10,56 @@ using NUnit.Framework;
 
 namespace Forest.Tests
 {
+    public static class Navigation
+    {
+        internal class ViewModel { }
+
+        [View("Navigation")]
+        internal class View : AbstractView<ViewModel>
+        {
+            public override void Load()
+            {
+            }
+        }
+    }
+    public static class SimpleFooter
+    {
+        internal class ViewModel { }
+
+        [View("SimpleFooter")]
+        internal class View : AbstractView<ViewModel>
+        {
+            public override void Load()
+            {
+            }
+        }
+    }
+    public static class Concrete
+    {
+        internal class ViewModel { }
+
+        [View("Concrete")]
+        internal class View : AbstractView<ViewModel>
+        {
+            public override void Load()
+            {
+            }
+        }
+
+    }
+    public static class SomeView
+    {
+        internal class ViewModel { }
+
+        [View("SomeView")]
+        internal class View : AbstractView<ViewModel>
+        {
+            public override void Load()
+            {
+            }
+        }
+    }
+
     [TestFixture]
     public class TemplateParsing
     {
@@ -24,6 +74,7 @@ namespace Forest.Tests
             }
 
             private AbstractTemplateParser _parser;
+
 
             public TestTemplateProvider(AbstractTemplateParser parser)
             {
@@ -40,12 +91,18 @@ namespace Forest.Tests
         }
         
         private XmlTemplateParser _parser;
+        private IForestContext _ctx;
         private ITemplateProvider _templateProvider;
 
         [SetUp]
         public void SetUp()
         {
             _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
+            _ctx = new DefaultForestContext(new View.Factory(), new NoopSecurityManager());
+            _ctx.ViewRegistry.Register<Navigation.View>();
+            _ctx.ViewRegistry.Register<Concrete.View>();
+            _ctx.ViewRegistry.Register<SomeView.View>();
+            _ctx.ViewRegistry.Register<SimpleFooter.View>();
         }
 
         [Test]
@@ -67,16 +124,23 @@ namespace Forest.Tests
         }
 
         [Test]
-        public void ParseSlave1Template()
+        public void ParseConcreteTemplate()
         {
-            var template = Raw.loadTemplate(_templateProvider, "Slave1");
+            var template = Raw.loadTemplate(_templateProvider, "Concrete");
             Assert.IsNotNull(template);
-            Assert.AreEqual("Slave1", template.name);
+            Assert.AreEqual("Concrete", template.name);
             Assert.IsNotEmpty(template.contents);
             Assert.AreEqual(template.contents.Length, 3);
 
             var compiled = TemplateCompiler.Compile(template);
             Assert.IsNotNull(compiled);
+        }
+
+        [Test]
+        public void LoadConcreteTemplate()
+        {
+            var engine = new ForestEngine(_ctx);
+            var r = engine.LoadTemplate(_templateProvider, "Concrete");
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <template>
   <region name="header">
-    <template name="navigation" />
+    <template name="Navigation" />
   </region>
   <region name="content">
     <placeholder id="content" />

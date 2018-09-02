@@ -8,7 +8,7 @@ open System
 type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>, fuid: Fuid) =
     internal new (hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
-    static member empty = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
+    static member initial = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
     member internal __.Hierarchy with get() = hierarchy
     member internal __.ViewModels with get() = viewModels
     member internal __.ViewStates with get() = viewStates

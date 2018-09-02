@@ -54,7 +54,7 @@
     <Content Include="Templates\Navigation.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Templates\Slave1.xml">
+    <Content Include="Templates\Concrete.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Templates\Master.xml">

@@ -8,10 +8,10 @@ type internal NodeState =
     | UpdatedNode of node:DomNode
 
 type [<AbstractClass>] AbstractUIAdapter() =
-    let mutable adapters: Map<hash, IViewAdapter> = Map.empty
-    let mutable parentChildMap: Map<hash, hash*rname> = Map.empty
-    let mutable deletedNodes: Set<hash> = Set.empty
-    let mutable nodeStates: List<NodeState> = List.empty
+    let mutable adapters:Map<hash, IViewAdapter> = Map.empty
+    let mutable parentChildMap:Map<hash, hash*rname> = Map.empty
+    let mutable deletedNodes:Set<hash> = Set.empty
+    let mutable nodeStates:List<NodeState> = List.empty
 
     abstract member CreateViewAdapter: key:hash * viewModel:obj -> IViewAdapter
     abstract member CreateNestedViewAdapter: key:hash * viewModel:obj * parentAdapter:IViewAdapter * region:rname -> IViewAdapter
@@ -30,27 +30,25 @@ type [<AbstractClass>] AbstractUIAdapter() =
 
         member this.Complete() = 
             for k in deletedNodes do 
-                adapters <- 
-                    match adapters.TryFind k with
-                    | Some v -> 
-                        v.Dispose()
-                        adapters |> Map.remove k
-                    | None -> adapters
+                match adapters.TryFind k with
+                | Some v -> 
+                    v.Dispose()
+                    adapters <- adapters |> Map.remove k
+                | None -> ()
 
             for nodeState in nodeStates do
                 match nodeState with
                 | NewNode n ->
-                    adapters <- 
-                        match parentChildMap.TryFind n.Hash with
-                        | None -> adapters |> Map.add n.Hash (this.CreateViewAdapter(n.Hash, n.Model))
-                        | Some (h, r) -> 
-                            match adapters.TryFind h with
-                            | None -> failwithf "Could not locate view adaper for %s" h
-                            | Some a -> adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n.Hash, n.Model, a, r))
+                    match parentChildMap.TryFind n.Hash with
+                    | Some (h, r) -> 
+                        match adapters.TryFind h with
+                        | Some a -> adapters <- adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n.Hash, n.Model, a, r))
+                        | None -> failwithf "Could not locate view adapter for %s" h
+                    | None -> adapters <- adapters |> Map.add n.Hash (this.CreateViewAdapter(n.Hash, n.Model))
                 | UpdatedNode n ->
                     match adapters.TryFind n.Hash with
-                    | None -> failwithf "Could not locate view adaper for %s" n.Hash
                     | Some a -> a.Update n.Model
+                    | None -> failwithf "Could not locate view adapter for %s" n.Hash
 
             nodeStates <- List.empty
             parentChildMap <- Map.empty

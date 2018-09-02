@@ -21,12 +21,13 @@ type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList, ctx:I
     member internal __.State with get() = state
     member __.ChangeList with get() = changeList
 
-type [<Sealed>] private ForestEngineAdapter(runtime:ForestRuntime) =
+type [<Sealed>] internal ForestEngineAdapter(runtime:ForestRuntime) =
     let mutable _messageDispatcher = nil<MessageDispatcher.View>
     do
         MessageDispatcher.Reg runtime.Context
         _messageDispatcher <- runtime |> MessageDispatcher.Get
         ()
+    member internal __.Runtime with get() = runtime
     interface IForestEngine with
         member __.ActivateView (name) : 'a when 'a:>IView = 
             let result = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.ActivateView
@@ -41,7 +42,7 @@ type [<Sealed>] private ForestEngineAdapter(runtime:ForestRuntime) =
 [<CompiledName("ForestEngine")>]
 type Engine private(ctx:IForestContext, state:State) =
     let mutable st:State = state
-    new (ctx:IForestContext) = Engine(ctx, State.empty)
+    new (ctx:IForestContext) = Engine(ctx, State.initial)
 
     static member inline private toResult (rt:ForestRuntime) (fuid:Fuid option) (state:State) =
         match rt.Deconstruct() with 
@@ -62,7 +63,7 @@ type Engine private(ctx:IForestContext, state:State) =
             result
         with
         | :? ForestException as e -> 
-            let se = State.empty
+            let se = State.initial
             use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show rt
             // TODO: set error data
@@ -88,7 +89,7 @@ type Engine private(ctx:IForestContext, state:State) =
             result
         with
         | :? ForestException as e -> 
-            let se = State.empty
+            let se = State.initial
             use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show rt
             // TODO: set error data

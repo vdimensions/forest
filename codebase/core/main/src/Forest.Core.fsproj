@@ -53,6 +53,7 @@
     <Compile Include="Templates\TemplateParsing.fs" />
     <Compile Include="Templates\TemplateCompiler.fs" />
     <Compile Include="Templates\Xml\XmlTemplateParser.fs" />
+    <Compile Include="Templates\TemplateExtensions.fs" />
     <Content Include="doc.txt" />
     <None Include="build.sh" />
     <None Include="mason.properties" />
@@ -61,8 +62,6 @@
     <None Include="paket.references" />
     <None Include="Properties\AssemblyInfo.fs.template" />
     <None Include="restore.sh" />
-    <None Include="Script.fsx" />
-    <None Include="exampleTemplateDefinition.json" />
   </ItemGroup>
   <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />

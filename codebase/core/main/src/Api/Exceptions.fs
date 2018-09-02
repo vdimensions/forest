@@ -23,3 +23,7 @@ type ViewTypeIsAbstractException(viewType:Type, inner:Exception) =
 type ViewTypeIsNotGenericException(viewType:Type, inner:Exception) =
     inherit AbstractViewException(String.Format("Provided view type `{0}` does not implement the `{1}` interface.", (isNotNull "viewType" viewType).FullName, typeof<IView<_>>.FullName), inner)
     new (viewType:Type) = ViewTypeIsNotGenericException(viewType, null)
+
+type ViewInstantiationException(viewType:Type, inner:Exception) =
+    inherit AbstractViewException(String.Format("Unable to resolve view `{0}` .", (isNotNull "viewType" viewType).FullName), inner)
+    new (viewType:Type) = ViewInstantiationException(viewType, null)
