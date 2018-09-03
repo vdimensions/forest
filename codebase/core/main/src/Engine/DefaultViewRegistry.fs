@@ -19,7 +19,8 @@ type [<AbstractClass>] AbstractViewRegistry(factory:IViewFactory) =
 
     abstract member CreateViewDescriptor: anonymousView:bool -> t:Type -> Result<IViewDescriptor, ViewRegistryError>
     member __.InstantiateView viewMetadata = 
-        factory.Resolve viewMetadata
+        try factory.Resolve viewMetadata
+        with e -> raise <| ViewInstantiationException(viewMetadata.ViewType, e)
     member this.ResolveError (e:ViewRegistryError) : Exception = 
         match e with
         | ViewError ve -> (this.ResolveViewError ve)

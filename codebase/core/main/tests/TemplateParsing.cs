@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 
+using Forest.Reflection;
 using Forest.Templates;
 using Forest.Templates.Raw;
 using Forest.Templates.Xml;
@@ -97,12 +98,14 @@ namespace Forest.Tests
         [SetUp]
         public void SetUp()
         {
-            _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
-            _ctx = new DefaultForestContext(new View.Factory(), new NoopSecurityManager());
+            var f = new View.Factory();
+            var rp = new DefaultReflectionProvider();
+            _ctx = new DefaultForestContext(new DefaultViewRegistry(f, rp), new NoopSecurityManager());
             _ctx.ViewRegistry.Register<Navigation.View>();
             _ctx.ViewRegistry.Register<Concrete.View>();
             _ctx.ViewRegistry.Register<SomeView.View>();
             _ctx.ViewRegistry.Register<SimpleFooter.View>();
+            _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
         }
 
         [Test]

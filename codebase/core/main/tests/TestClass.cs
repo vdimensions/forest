@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Forest.Reflection;
+
 using NUnit.Framework;
 
 
@@ -72,7 +74,9 @@ namespace Forest.Tests
         [SetUp]
         public void SetUp()
         {
-            _ctx = new DefaultForestContext(new View.Factory(), new NoopSecurityManager());
+            var f = new View.Factory();
+            var rp = new DefaultReflectionProvider();
+            _ctx = new DefaultForestContext(new DefaultViewRegistry(f, rp), new NoopSecurityManager());
             _ctx.ViewRegistry.Register<Inner.View>();
             _ctx.ViewRegistry.Register<Outer.View>();
         }
