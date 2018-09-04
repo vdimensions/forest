@@ -4,7 +4,9 @@ open Forest.Collections
 
 open System
 
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
+#endif
 type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>, fuid: Fuid) =
     internal new (hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]

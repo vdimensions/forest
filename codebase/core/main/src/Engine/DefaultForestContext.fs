@@ -1,7 +1,5 @@
 namespace Forest
 
-open Forest.Reflection
-
 
 type [<AbstractClass>] AbstractForestContext (viewRegistry:IViewRegistry, securityManager:ISecurityManager) =
     member __.ViewRegistry with get() : IViewRegistry = viewRegistry

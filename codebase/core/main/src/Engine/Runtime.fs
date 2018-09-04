@@ -10,7 +10,9 @@ open System.Collections.Generic
 
 [<RequireQualifiedAccess>]
 module Runtime =
-    [<Serializable>]
+    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    [<System.Serializable>]
+    #endif
     [<CompiledName("Operation")>]
     type [<Struct>] Operation =
         | InstantiateView of node:TreeNode
@@ -20,7 +22,9 @@ module Runtime =
         | PublishEvent of senderID:hash * message:obj * topics:string array
         | Multiple of operations:Operation list
 
+    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [<Serializable>]
+    #endif
     [<CompiledName("Error")>]
     type [<Struct>] Error =
         | ViewstateAbsent of view:vname

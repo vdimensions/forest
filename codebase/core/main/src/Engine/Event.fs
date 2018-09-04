@@ -21,6 +21,9 @@ open Forest.Reflection
 
 open System
 open System.Collections.Generic
+#if NETSTANDARD
+open System.Reflection
+#endif
 
 
 module Event = 
@@ -53,7 +56,11 @@ module Event =
 
     let inline private _isForMessageType<'M> (x:Type): bool = 
         let messageType = typeof<'M>
+        #if NETSTANDARD
+        messageType = x || x.GetTypeInfo().IsAssignableFrom(messageType.GetTypeInfo())
+        #else
         messageType = x || x.IsAssignableFrom(messageType)
+        #endif
 
     type [<Sealed>] private T() = 
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 

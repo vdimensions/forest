@@ -85,7 +85,9 @@ type [<Interface>] IEventBus =
     abstract MessageType:Type with get
     abstract Receiver:IView
 
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
+#endif
 type ForestException(message:string, inner:Exception) =
     inherit Exception(isNotNull "message" message, inner)
     new (message:string) = ForestException(message, null)

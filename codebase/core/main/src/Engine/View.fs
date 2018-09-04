@@ -110,8 +110,12 @@ module View =
         | ViewTypeIsAbstract of abstractViewType:Type
         | NonGenericView of nonGenericViewType:Type
 
-    let inline private _selectViewModelTypes (tt:Type) = 
+    let inline private _selectViewModelTypes (tt:Type) =
+        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         let isGenericView = tt.IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)
+        #else
+        let isGenericView = tt.GetTypeInfo().IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)
+        #endif
         match isGenericView with
         | true -> Some (tt.GetGenericArguments().[0])
         | false -> None

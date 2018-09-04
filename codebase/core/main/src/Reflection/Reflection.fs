@@ -67,11 +67,17 @@ type [<Sealed>] DefaultReflectionProvider() =
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
     member inline private __.isOfType<'a> obj = (obj.GetType() = typeof<'a>)
     member inline private __.getAttributes(mi:#MemberInfo):seq<'a:>Attribute> =
+        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         let getAttributesInternal = 
             mi.GetCustomAttributes 
             >> Seq.filter __.isOfType<'a>  
             >> Seq.map(fun attr -> (downcast attr:'a)) 
         getAttributesInternal(true)
+        #else
+        mi.GetCustomAttributes(true)
+        |> Seq.filter __.isOfType<'a> 
+        |> Seq.map(fun attr -> (downcast attr:'a)) 
+        #endif
     member inline private __.getMethods (f) (t:Type) = 
         t.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
     member inline private __.getCommandAttribs (methodInfo:MethodInfo): seq<CommandAttribute> = 
@@ -80,7 +86,11 @@ type [<Sealed>] DefaultReflectionProvider() =
         __.getAttributes methodInfo
     interface IReflectionProvider with
         member __.GetViewAttribute viewType =
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
             match (viewType |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
+            #else
+            match (viewType.GetTypeInfo() |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
+            #endif
             | Some p -> p
             | None -> nil<ViewAttribute>            
         member __.GetCommandMethods viewType =

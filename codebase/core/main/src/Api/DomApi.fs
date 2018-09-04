@@ -1,6 +1,9 @@
 ﻿namespace Forest
 
 
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+[<System.Serializable>]
+#endif
 type [<Struct>] DomNode = {
     Hash:hash;
     Index:int;

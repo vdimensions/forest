@@ -6,7 +6,9 @@ open System
 open System.Diagnostics
 
 
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
+#endif
 [<DebuggerDisplay("{Hierarchy}")>]
 type [<Struct>] internal Tree = {
     [<DebuggerBrowsable(DebuggerBrowsableState.RootHidden)>]

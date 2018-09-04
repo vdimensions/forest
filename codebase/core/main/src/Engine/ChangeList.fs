@@ -6,6 +6,9 @@ open System.Collections
 open System.Collections.Generic
 
 
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+[<System.Serializable>]
+#endif
 type [<Sealed>] ChangeList internal (previousStateHash:string, changes:StateChange list, currentStateFuid:Fuid) =
     do
         ignore <| isNotNull "previousStateHash" previousStateHash
