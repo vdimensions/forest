@@ -10,8 +10,7 @@ module TemplateCompiler =
         let mutable result = [(Runtime.Operation.InstantiateView node)]
         for vc in vcl do
             match vc with
-            | Region (name, contents) ->
-                for op in expandRegion node name contents do result <- op::result
+            | Region (name, contents) -> result <- expandRegion node name contents @ result
         result
     and private expandRegion (parent:TreeNode) (region:rname) (rcl:RegionContents list) =
         let mutable result = List.empty
@@ -19,7 +18,7 @@ module TemplateCompiler =
             match rc with
             | View (name, contents) ->
                 let node = TreeNode.newKey region name parent
-                for op in expandView node contents do result <- op::result
+                result <- expandView node contents @ result
         result
     [<CompiledName("Compile")>]
     let compile (template:TemplateDefinition) =
