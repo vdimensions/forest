@@ -47,13 +47,13 @@
     <Compile Include="Engine\MessageDispatcher.fs" />
     <Compile Include="Engine\Error.fs" />
     <Compile Include="Engine\Engine.fs" />
-    <Compile Include="UI\ViewAdapter.fs" />
-    <Compile Include="UI\UIAdpter.fs" />
     <Compile Include="Templates\RawTemplates.fs" />
     <Compile Include="Templates\TemplateParsing.fs" />
     <Compile Include="Templates\TemplateCompiler.fs" />
     <Compile Include="Templates\Xml\XmlTemplateParser.fs" />
     <Compile Include="Templates\TemplateExtensions.fs" />
+    <Compile Include="UI\ViewAdapter.fs" />
+    <Compile Include="UI\UIAdpter.fs" />
     <Content Include="doc.txt" />
     <None Include="build.sh" />
     <None Include="mason.properties" />
