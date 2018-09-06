@@ -61,10 +61,12 @@ type [<Sealed>] XmlTemplateParser() =
         result |> List.rev
 
     override this.Parse name stream =
-        let template = XDocument.Load(stream, LoadOptions.None).Root
-        let master = template.Attribute("master" |> XName.Get)
+        let template = XDocument.Load(stream, LoadOptions.None)
+        this.ParseXml name template
+    member this.ParseXml name doc =
+        let master = doc.Root.Attribute("master" |> XName.Get)
         match null2vopt master with
-        | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderDefinitions(template.Elements()))
-        | ValueNone -> this.ReadViewContents(template.Elements()) |> this.CreateTemplateDefinition name |> Root
+        | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderDefinitions(doc.Elements()))
+        | ValueNone -> this.ReadViewContents(doc.Elements()) |> this.CreateTemplateDefinition name |> Root
 
 
