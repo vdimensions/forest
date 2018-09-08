@@ -1,4 +1,4 @@
-framework: net45
+framework: net45, net40
 
 source https://nuget.org/api/v2
   nuget FSharp.Core

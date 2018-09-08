@@ -101,9 +101,7 @@ type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, v
         match ctx.ViewRegistry.GetDescriptor(node.View) |> null2vopt with
         | ValueSome vd ->
             let view = (ctx.ViewRegistry.Resolve node.View) :?> IRuntimeView
-            view.InstanceID <- node
-            view.Descriptor <- vd
-            view.AcquireRuntime this
+            view.AcquireRuntime node vd this 
             Ok view // will also set the view model
         | ValueNone -> 
             // this is a different error
@@ -122,7 +120,8 @@ type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, v
         (new ForestRuntime(tree, models, views, ctx)).Init()
     member private this.Init() =
         for kvp in views do 
-            kvp.Value.AcquireRuntime this
+            let (view, n, d) = (kvp.Value, kvp.Value.InstanceID, kvp.Value.Descriptor)
+            this |> view.AcquireRuntime n d 
         for node in (upcast tree.Hierarchy:IDictionary<_,_>).Keys do
             if not <| views.ContainsKey node.Hash then 
                 match this.createViewState node with

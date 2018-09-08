@@ -1,5 +1,7 @@
 namespace Forest
 
+open Forest.Reflection
+
 
 type [<AbstractClass>] AbstractForestContext (viewRegistry:IViewRegistry, securityManager:ISecurityManager) =
     member __.ViewRegistry with get() : IViewRegistry = viewRegistry
@@ -13,5 +15,5 @@ type NoopSecurityManager() =
         member __.HasAccess(_:ICommandDescriptor) = true
         member __.HasAccess(_:IViewDescriptor) = true
 
-type DefaultForestContext(viewRegistry:IViewRegistry, securityManager:ISecurityManager) =
-    inherit AbstractForestContext(viewRegistry, securityManager)
+type DefaultForestContext(viewFactory:IViewFactory, reflectionProvider:IReflectionProvider, securityManager:ISecurityManager) =
+    inherit AbstractForestContext(DefaultViewRegistry(viewFactory, reflectionProvider), securityManager)

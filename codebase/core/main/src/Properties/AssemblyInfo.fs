@@ -20,9 +20,9 @@ open System.Runtime.InteropServices
 [<assembly: Guid("7CBDBFBD-F8FD-4C48-AF8E-0D77923DDF42")>]
 #endif
 
-[<assembly: AssemblyVersion("2.0.0.147")>]
-[<assembly: AssemblyFileVersion("2.0.0.147")>]
-[<assembly: AssemblyInformationalVersion("2.0.0.147")>]
+[<assembly: AssemblyVersion("2.0.0.154")>]
+[<assembly: AssemblyFileVersion("2.0.0.154")>]
+[<assembly: AssemblyInformationalVersion("2.0.0.154")>]
 
 [<assembly: InternalsVisibleTo("Forest.Core.Tests")>]
 

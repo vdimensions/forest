@@ -67,6 +67,6 @@ type [<Sealed>] XmlTemplateParser() =
         let master = doc.Root.Attribute("master" |> XName.Get)
         match null2vopt master with
         | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderDefinitions(doc.Elements()))
-        | ValueNone -> this.ReadViewContents(doc.Elements()) |> this.CreateTemplateDefinition name |> Root
+        | ValueNone -> this.ReadViewContents(doc.Root.Elements()) |> this.CreateTemplateDefinition name |> Root
 
 

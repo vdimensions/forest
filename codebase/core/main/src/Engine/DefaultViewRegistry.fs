@@ -66,7 +66,7 @@ type [<AbstractClass>] AbstractViewRegistry(factory:IViewFactory) =
         member this.GetDescriptor(name:string) = this.GetViewDescriptor name
         member this.GetDescriptor(viewType:Type) = this.GetViewDescriptor viewType
 
-type [<Sealed>] DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
+type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)
     [<Obsolete>] new (factory: IViewFactory) = DefaultViewRegistry(factory, DefaultReflectionProvider())
     override __.CreateViewDescriptor (anonymousView:bool) (NotNull "viewType" viewType) =

@@ -10,54 +10,65 @@ open System.Reflection
 open System.Diagnostics
 
 
-type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
+type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)>() =
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
+    [<DefaultValue>]
+    val mutable private hierarchyKey:TreeNode
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
+    [<DefaultValue>]
+    val mutable private rt:IForestRuntime
+    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
+    [<DefaultValue>]
+    val mutable private descriptor:IViewDescriptor
+    //new() = { hierarchyKey = TreeNode.shell }
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable vm:'T = new 'T()
-    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable hierarchyKey:TreeNode = TreeNode.shell
-    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable rt:IForestRuntime = nil<IForestRuntime>
-    [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable descriptor:IViewDescriptor = nil<IViewDescriptor>
 
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
-        rt.PublishEvent this message topics
+        this.rt.PublishEvent this message topics
     abstract member Load: unit -> unit
     abstract member Resume: unit -> unit
     default __.Resume() = ()
     member this.FindRegion (NotNull "name" name) = 
         upcast Region(name, this) : IRegion
-    member __.ViewModel
+    member this.ViewModel
         with get ():'T = vm
-         and set (NotNull "value" value: 'T) = vm <- (rt.SetViewModel false hierarchyKey value)
-    member internal __.HierarchyKey
-        with get() = hierarchyKey
-         and set(NotNull "value" value) = hierarchyKey <- value
+         and set (NotNull "value" value: 'T) = 
+            match null2vopt this.rt with
+            | ValueSome rt -> 
+                // The default behaviour
+                vm <- (rt.SetViewModel false this.hierarchyKey value)
+            | ValueNone -> 
+                // This case is entered if the view model is set at construction time, for example, by a DI container.
+                vm <-value
+    member internal this.HierarchyKey
+        with get() = this.hierarchyKey
+    //     and set(NotNull "value" value) = this.hierarchyKey <- value
     interface IRuntimeView with
         member this.Load () = this.Load()
         member this.Resume viewModel =
-            vm <- rt.SetViewModel true hierarchyKey (downcast viewModel : 'T)
+            vm <- this.rt.SetViewModel true this.hierarchyKey (downcast viewModel : 'T)
             this.Resume()
         member this.InstanceID
             with get() = this.HierarchyKey
-             and set value = this.HierarchyKey <- value
-        member __.Descriptor
-            with get() = descriptor
-             and set v = descriptor <- v
-        member __.Runtime
-            with get() = rt
-        member this.AcquireRuntime (NotNull "runtime" runtime:IForestRuntime) =
-            match null2vopt rt with
+        member this.Descriptor
+            with get() = this.descriptor
+        member this.Runtime
+            with get() = this.rt
+        member this.AcquireRuntime (node:TreeNode) (vd:IViewDescriptor) (NotNull "runtime" runtime:IForestRuntime) =
+            match null2vopt this.rt with
             | ValueNone ->
+                this.descriptor <- vd
+                this.hierarchyKey <- node
                 match runtime.GetViewModel this.HierarchyKey with
                 | Some viewModelFromState -> vm <- (downcast viewModelFromState : 'T)
                 | None -> ignore <| runtime.SetViewModel true this.HierarchyKey vm
                 runtime.SubscribeEvents this
-                rt <- runtime
+                this.rt <- runtime
                 ()
-            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", hierarchyKey.View)))
+            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", this.hierarchyKey.View)))
         member this.AbandonRuntime (_) =
-            match null2vopt rt with
+            match null2vopt this.rt with
             | ValueSome currentModifier ->
                 currentModifier.UnsubscribeEvents this
                 match currentModifier.GetViewModel this.HierarchyKey with
@@ -65,7 +76,7 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)> () =
                     vm <- (downcast viewModelFromState : 'T)
                     ()
                 | None -> () 
-                rt <- nil<IForestRuntime>
+                this.rt <- nil<IForestRuntime>
             | ValueNone -> ()
     interface IView<'T> with 
         member this.ViewModel

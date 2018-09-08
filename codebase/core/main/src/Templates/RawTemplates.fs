@@ -57,10 +57,10 @@ module Raw =
                     |> Seq.map (fun a -> (a.placeholder, a.contents)) 
                     |> Map.ofSeq
                 let newContents = 
-                     result.contents 
-                     |> inlineTemplates provider
-                     |> processPlaceholders placeholderMap
-                     |> expandTemplates provider
+                    result.contents 
+                    |> inlineTemplates provider
+                    |> processPlaceholders placeholderMap
+                    |> expandTemplates provider
                 { result with contents = newContents }
             |> flattenTemplate provider tail
     /// Locates and expands any `InlinedTemplate` item

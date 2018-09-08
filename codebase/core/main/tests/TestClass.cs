@@ -76,7 +76,7 @@ namespace Forest.Tests
         {
             var f = new View.Factory();
             var rp = new DefaultReflectionProvider();
-            _ctx = new DefaultForestContext(new DefaultViewRegistry(f, rp), new NoopSecurityManager());
+            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager());
             _ctx.ViewRegistry.Register<Inner.View>();
             _ctx.ViewRegistry.Register<Outer.View>();
         }

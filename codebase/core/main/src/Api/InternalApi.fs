@@ -4,14 +4,14 @@ namespace Forest
 type [<Interface>] internal IRuntimeView =
     inherit IView
 
-    abstract member AcquireRuntime: runtime:IForestRuntime -> unit
+    abstract member AcquireRuntime: node:TreeNode -> vd:IViewDescriptor -> runtime:IForestRuntime -> unit
     abstract member AbandonRuntime: runtime:IForestRuntime -> unit
 
     abstract member Load: unit -> unit
     abstract member Resume: viewModel:obj -> unit
 
-    abstract InstanceID:TreeNode with get, set
-    abstract Descriptor:IViewDescriptor with get, set
+    abstract InstanceID:TreeNode with get
+    abstract Descriptor:IViewDescriptor with get
     abstract Runtime:IForestRuntime with get
 
   and [<Interface>] internal IForestRuntime =
