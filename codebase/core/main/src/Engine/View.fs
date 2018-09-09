@@ -10,7 +10,7 @@ open System.Reflection
 open System.Diagnostics
 
 
-type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)>() =
+type [<AbstractClass>] AbstractView<'T>(vm:'T) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private hierarchyKey:TreeNode
@@ -20,10 +20,10 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)>() =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private descriptor:IViewDescriptor
-    //new() = { hierarchyKey = TreeNode.shell }
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable vm:'T = new 'T()
-
+    let mutable vm:'T = vm
+    //new() = { hierarchyKey = TreeNode.shell }
+    new() = AbstractView(downcast Activator.CreateInstance(typeof<'T>))
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         this.rt.PublishEvent this message topics
     abstract member Load: unit -> unit
@@ -87,11 +87,11 @@ type [<AbstractClass>] AbstractView<'T when 'T: (new: unit -> 'T)>() =
         member this.FindRegion name = this.FindRegion name
         member this.ViewModel with get() = upcast this.ViewModel
 
-and private Region<'T when 'T: (new: unit -> 'T)>(regionName:string, view:AbstractView<'T>) =
+ and private Region(regionName:string, view:IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName:string) =
-        (upcast view:IRuntimeView).Runtime.ActivateView view.HierarchyKey regionName viewName
+        view.Runtime.ActivateView view.InstanceID regionName viewName
     member __.ActivateView<'v when 'v:>IView> () : 'v =
-        (upcast view:IRuntimeView).Runtime.ActivateAnonymousView view.HierarchyKey regionName
+        view.Runtime.ActivateAnonymousView view.InstanceID regionName
     member __.Name 
         with get() = regionName
     interface IRegion with

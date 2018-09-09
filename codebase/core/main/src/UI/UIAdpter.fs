@@ -7,14 +7,14 @@ type internal NodeState =
     | NewNode of node:DomNode
     | UpdatedNode of node:DomNode
 
-type [<AbstractClass>] AbstractUIAdapter() =
-    let mutable adapters:Map<hash, IViewAdapter> = Map.empty
+type [<AbstractClass>] AbstractUIAdapter<'A when 'A:> IViewAdapter>() =
+    let mutable adapters:Map<hash, 'A> = Map.empty
     let mutable parentChildMap:Map<hash, hash*rname> = Map.empty
-    let mutable deletedNodes:Set<hash> = Set.empty
+    let mutable nodesToDelete:Set<hash> = Set.empty
     let mutable nodeStates:List<NodeState> = List.empty
 
-    abstract member CreateViewAdapter: key:hash * viewModel:obj -> IViewAdapter
-    abstract member CreateNestedViewAdapter: key:hash * viewModel:obj * parentAdapter:IViewAdapter * region:rname -> IViewAdapter
+    abstract member CreateViewAdapter: key:hash * viewModel:obj -> 'A
+    abstract member CreateNestedViewAdapter: key:hash * viewModel:obj * parentAdapter:'A * region:rname -> 'A
 
     interface IDomProcessor with
         member __.ProcessNode n =
@@ -22,14 +22,14 @@ type [<AbstractClass>] AbstractUIAdapter() =
                 match adapters.TryFind n.Hash with
                 | Some _ -> (UpdatedNode n)::nodeStates
                 | None -> (NewNode n)::nodeStates
-            deletedNodes <- deletedNodes |> Set.remove n.Hash
+            nodesToDelete <- nodesToDelete |> Set.remove n.Hash
             for kvp in n.Regions do 
                 for childNode in kvp.Value do
                     parentChildMap <- parentChildMap |> Map.add childNode.Hash (n.Hash, kvp.Key)
             n
 
         member this.Complete() = 
-            for k in deletedNodes do 
+            for k in nodesToDelete do 
                 match adapters.TryFind k with
                 | Some v -> 
                     v.Dispose()
@@ -43,7 +43,7 @@ type [<AbstractClass>] AbstractUIAdapter() =
                     | Some (h, r) -> 
                         match adapters.TryFind h with
                         | Some a -> adapters <- adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n.Hash, n.Model, a, r))
-                        | None -> failwithf "Could not locate view adapter for %s" h
+                        | None -> failwithf "Could not locate view adapter %s that should parent %s" h n.Hash
                     | None -> adapters <- adapters |> Map.add n.Hash (this.CreateViewAdapter(n.Hash, n.Model))
                 | UpdatedNode n ->
                     match adapters.TryFind n.Hash with
@@ -52,5 +52,7 @@ type [<AbstractClass>] AbstractUIAdapter() =
 
             nodeStates <- List.empty
             parentChildMap <- Map.empty
-            deletedNodes <- adapters |> Seq.map (fun a -> a.Key) |> Set.ofSeq
+            // Update the nodes to delete to include the entire tree. 
+            // Each node that should be retained will be removed form the list during traversal
+            nodesToDelete <- adapters |> Seq.map (fun a -> a.Key) |> Set.ofSeq
             ()
