@@ -22,7 +22,6 @@ type [<AbstractClass>] AbstractView<'T>(vm:'T) =
     val mutable private descriptor:IViewDescriptor
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable vm:'T = vm
-    //new() = { hierarchyKey = TreeNode.shell }
     new() = AbstractView(downcast Activator.CreateInstance(typeof<'T>))
     member this.Publish<'M> (message: 'M, [<ParamArray>] topics: string[]) = 
         this.rt.PublishEvent this message topics
@@ -34,23 +33,21 @@ type [<AbstractClass>] AbstractView<'T>(vm:'T) =
     member this.ViewModel
         with get ():'T = vm
          and set (NotNull "value" value: 'T) = 
-            match null2vopt this.rt with
-            | ValueSome rt -> 
+            vm <- 
+                match null2vopt this.rt with
                 // The default behaviour
-                vm <- (rt.SetViewModel false this.hierarchyKey value)
-            | ValueNone -> 
+                | ValueSome rt -> (rt.SetViewModel false this.hierarchyKey value)
                 // This case is entered if the view model is set at construction time, for example, by a DI container.
-                vm <-value
+                | ValueNone -> value
     member internal this.HierarchyKey
         with get() = this.hierarchyKey
-    //     and set(NotNull "value" value) = this.hierarchyKey <- value
     interface IRuntimeView with
         member this.Load () = this.Load()
         member this.Resume viewModel =
             vm <- this.rt.SetViewModel true this.hierarchyKey (downcast viewModel : 'T)
             this.Resume()
         member this.InstanceID
-            with get() = this.HierarchyKey
+            with get() = this.hierarchyKey
         member this.Descriptor
             with get() = this.descriptor
         member this.Runtime
@@ -78,7 +75,7 @@ type [<AbstractClass>] AbstractView<'T>(vm:'T) =
                 | None -> () 
                 this.rt <- nil<IForestRuntime>
             | ValueNone -> ()
-    interface IView<'T> with 
+    interface IView<'T> with
         member this.ViewModel
             with get() = this.ViewModel
              and set v = this.ViewModel <- v
@@ -116,22 +113,25 @@ module View =
             member this.Commands = this.Commands
             member this.Events = this.Events
 
-    type [<Struct>] Error = 
+    type [<Struct>] Error =
         | ViewAttributeMissing of nonAnnotatedViewType:Type
         | ViewTypeIsAbstract of abstractViewType:Type
         | NonGenericView of nonGenericViewType:Type
 
+    #if NETSTANDARD
+    let inline private _selectViewModelTypes (tt:TypeInfo) =
+    #else
     let inline private _selectViewModelTypes (tt:Type) =
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    #endif
         let isGenericView = tt.IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)
-        #else
-        let isGenericView = tt.GetTypeInfo().IsGenericType && (tt.GetGenericTypeDefinition() = typedefof<IView<_>>)
-        #endif
         match isGenericView with
         | true -> Some (tt.GetGenericArguments().[0])
         | false -> None
     let inline private _tryGetViewModelType (t:Type) = 
         t.GetInterfaces()
+        #if NETSTANDARD
+        |> Seq.map (fun t -> t.GetTypeInfo())
+        #endif
         |> Seq.choose _selectViewModelTypes
         |> Seq.tryHead
     let getViewModelType (NotNull "viewType" viewType:Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
