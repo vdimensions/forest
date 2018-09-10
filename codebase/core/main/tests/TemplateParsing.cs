@@ -100,12 +100,12 @@ namespace Forest.Tests
         {
             var f = new View.Factory();
             var rp = new DefaultReflectionProvider();
-            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager());
+            _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
+            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager(), _templateProvider);
             _ctx.ViewRegistry.Register<Navigation.View>();
             _ctx.ViewRegistry.Register<Concrete.View>();
             _ctx.ViewRegistry.Register<SomeView.View>();
             _ctx.ViewRegistry.Register<SimpleFooter.View>();
-            _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
         }
 
         [Test]
@@ -143,7 +143,7 @@ namespace Forest.Tests
         public void LoadConcreteTemplate()
         {
             var engine = new ForestEngine(_ctx);
-            var r = engine.LoadTemplate(_templateProvider, "Concrete");
+            var r = engine.LoadTemplate("Concrete");
         }
     }
 }

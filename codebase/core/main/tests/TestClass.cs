@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Forest.Reflection;
+using Forest.Templates.Xml;
 
 using NUnit.Framework;
 
@@ -76,7 +77,8 @@ namespace Forest.Tests
         {
             var f = new View.Factory();
             var rp = new DefaultReflectionProvider();
-            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager());
+            var templateProvider = new TemplateParsing.TestTemplateProvider(new XmlTemplateParser());
+            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager(), templateProvider);
             _ctx.ViewRegistry.Register<Inner.View>();
             _ctx.ViewRegistry.Register<Outer.View>();
         }

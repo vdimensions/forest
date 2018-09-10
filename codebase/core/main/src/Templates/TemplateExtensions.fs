@@ -9,7 +9,8 @@ open System.Runtime.CompilerServices
 [<Extension>]
 type TemplateExtensions =
     [<Extension>]
-    static member LoadTemplate(engine:Engine, NotNull "provider" provider:ITemplateProvider, NotNull "name" name:string) =
+    static member LoadTemplate(engine:Engine, NotNull "name" name:string) =
+        let provider = engine.Context.TemplateProvider
         engine.Update(
             fun e -> 
                 name 

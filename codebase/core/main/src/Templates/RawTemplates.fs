@@ -1,31 +1,6 @@
 ﻿namespace Forest.Templates.Raw
 
 
-type [<Struct>] TemplateDefinition = 
-    {
-        name:string; 
-        contents:ViewContents list;
-    }
- and [<Struct>] ContentDefinition =
-    {
-        placeholder:string;
-        contents:RegionContents list
-    }
- and [<Struct>] Template = 
-    | Root of TemplateDefinition
-    | Mastered of master:string * definition:ContentDefinition list
- and ViewContents =
-    | Region of name:string * contents:RegionContents list
-    | InlinedTemplate of template:string
- and [<Struct>] RegionContents =
-    | Placeholder of id:string
-    | Template of template:string
-    | View of name:string * contents:ViewContents list
-    | ClearInstruction
-
-type [<Interface>] ITemplateProvider =
-    abstract member Load: name:string -> Template
-
 [<RequireQualifiedAccess>]
 module Raw =
     /// <summary>

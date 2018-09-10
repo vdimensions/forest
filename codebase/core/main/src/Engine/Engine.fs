@@ -53,6 +53,8 @@ type Engine private(ctx:IForestContext, state:State) =
             | None -> State.create(a, b, c)
         ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), rt.Context)
 
+    member internal __.Context with get() = ctx
+
     member __.Update (operation:System.Action<IForestEngine>) : ForestResult =
         try 
             use rt = ForestRuntime.Create(st.Hierarchy, st.ViewModels, st.ViewStates, ctx)

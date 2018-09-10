@@ -15,7 +15,7 @@ type [<Interface>] IViewAdapter =
     abstract member InvokeCommand: name:cname -> arg:obj -> unit
     abstract member Hash:hash
 
-type [<AbstractClass>] AbstractViewAdapter(commandDispatcher:ICommandDispatcher, key:TreeNode) =
+type [<AbstractClass;NoComparison>] AbstractViewAdapter(commandDispatcher:ICommandDispatcher, key:TreeNode) =
     do 
         ignore <| isNotNull "commandDispatcher" commandDispatcher
         ignore <| isNotNull "key" key

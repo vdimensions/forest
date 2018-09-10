@@ -7,6 +7,13 @@ open System
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
+type ForestException(message:string, inner:Exception) =
+    inherit Exception(isNotNull "message" message, inner)
+    new (message:string) = ForestException(message, null)
+
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+[<Serializable>]
+#endif
 type AbstractViewException(message:string, inner:Exception) =
     inherit ForestException(isNotNull "message" message, inner)
     new (message:string) = AbstractViewException(message, null)
