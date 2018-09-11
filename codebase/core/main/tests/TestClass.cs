@@ -53,7 +53,7 @@ namespace Forest.Tests
         }
     }
 
-    internal class PrintVisitor : IDomProcessor
+    internal class PrintProcessor : IDomProcessor
     {
         public void Complete()
         {
@@ -98,7 +98,7 @@ namespace Forest.Tests
             //Assert.AreNotEqual(result.State.MachineToken, State.Empty.MachineToken);
 
             Console.WriteLine("--------------------------------------");
-            result.Render(new PrintVisitor());
+            result.Render(new PrintProcessor());
         }
 
         [Test]
@@ -114,8 +114,8 @@ namespace Forest.Tests
             var engine2 = new ForestEngine(_ctx);
             var compensatedResult = engine2.Sync(originalResult.ChangeList);
 
-            originalResult.Render(new PrintVisitor());
-            compensatedResult.Render(new PrintVisitor());
+            originalResult.Render(new PrintProcessor());
+            compensatedResult.Render(new PrintProcessor());
 
             Assert.AreEqual(originalResult.State, compensatedResult.State);
             Assert.AreEqual(originalResult.State.Hash, compensatedResult.State.Hash);
@@ -149,8 +149,8 @@ namespace Forest.Tests
             Assert.AreNotEqual(result2.State.Hash, result1.State.Hash);
             //Assert.AreEqual(result2.State.MachineToken, result1.State.MachineToken);
 
-            result1.Render(new PrintVisitor());
-            result2.Render(new PrintVisitor());
+            result1.Render(new PrintProcessor());
+            result2.Render(new PrintProcessor());
         }
 
     }

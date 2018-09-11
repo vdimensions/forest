@@ -75,7 +75,7 @@ type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionPr
             match View.getViewModelType viewType with
             | Ok vmt -> Ok (viewType, vmt)
             | Error e -> Error e
-        let inline getViewAttribute (anonymousView:bool) (rp:IReflectionProvider) (viewType:Type,viewModelType:Type) = 
+        let inline getViewAttribute (anonymousView:bool) (rp:IReflectionProvider) (viewType:Type, viewModelType:Type) = 
             let viewName =
                 viewType
                 |> rp.GetViewAttribute
@@ -108,7 +108,6 @@ type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionPr
                 else
                     let parameterType = 
                         match mi.ParameterTypes with
-                        | [||] -> ValueNone
                         | [|pt|] -> ValueSome pt
                         | _ -> ValueNone
                     match parameterType with
@@ -124,25 +123,25 @@ type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionPr
             let commandDescriptorFailures = commandDescriptorResults |> Seq.choose Result.error |> List.ofSeq
             let eventDescriptorFailures = eventDescriptorResults |> Seq.choose Result.error |> List.ofSeq
             match (commandDescriptorFailures, eventDescriptorFailures) with
-            | ([], []) -> 
+            | ([], []) ->
                 let inline folder (m:Dictionary<string, ICommandDescriptor>) (e:ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
                     m.Add(e.Name, e)
                     m
                 // TODO "This could fail if multiple commands share the same name! Add a respective error case"
                 let commandsIndex = 
-                    commandDescriptorResults 
+                    commandDescriptorResults
                     |> Seq.choose Result.ok
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
                     |> Index
                 let eventSubscriptions = 
-                    eventDescriptorResults 
-                    |> Seq.choose Result.ok 
+                    eventDescriptorResults
+                    |> Seq.choose Result.ok
                     |> Array.ofSeq
                 Ok (upcast View.Descriptor(viewName, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
-            | (ce, ee) -> 
+            | (ce, ee) ->
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
                 Error <| BindingError (ce', ee')
-        viewType 
+        viewType
         |> getViewModelType
         |> Result.bind (getViewAttribute anonymousView reflectionProvider)
         |> Result.mapError ViewError

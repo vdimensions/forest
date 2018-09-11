@@ -11,7 +11,7 @@ module internal MessageDispatcher =
         override __.Equals _ = true
     [<View(Name)>]
     type [<Sealed>] View() =
-        inherit AbstractView<ViewModel>() with
+        inherit AbstractView<ViewModel>(ViewModel()) with
         override __.Load() = ()
     let Reg (ctx:IForestContext) = 
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with

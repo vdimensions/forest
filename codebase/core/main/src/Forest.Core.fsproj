@@ -58,7 +58,6 @@
     <Compile Include="Templates\TemplateExtensions.fs" />
     <Compile Include="UI\ViewAdapter.fs" />
     <Compile Include="UI\UIAdpter.fs" />
-    <Content Include="doc.txt" />
     <None Include="build.sh" />
     <None Include="mason.properties" />
     <None Include="paket.dependencies" />
