@@ -15,6 +15,7 @@ type [<Struct>] ViewRegistryError =
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
 type [<AbstractClass>] AbstractViewRegistry(factory:IViewFactory) = 
+    do ignore <| isNotNull "factory" factory
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
     abstract member CreateViewDescriptor: anonymousView:bool -> t:Type -> Result<IViewDescriptor, ViewRegistryError>
@@ -85,7 +86,7 @@ type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionPr
             | (None, true) -> Ok ("", viewType, viewModelType)
             | (None, false) -> Error <| View.Error.ViewAttributeMissing viewType
         let inline getViewDescriptor (viewName:string, viewType:Type, viewModelType:Type) =
-            let inline createCommandMetadata (mi: ICommandMethod) =
+            let inline createCommandDescriptor (mi: ICommandMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error (Command.Error.NonVoidReturnType(mi))
                 else
@@ -99,11 +100,9 @@ type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionPr
                     | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
             let inline getCommandDescriptors (rp:IReflectionProvider) t = 
                 rp.GetCommandMethods t
-                |> Seq.map createCommandMetadata
+                |> Seq.map createCommandDescriptor
                 |> Seq.cache
-            //let inline getMethods (f) = 
-            //    viewType.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
-            let inline createEventMetadata (mi: IEventMethod) =
+            let inline createEventDescriptor (mi: IEventMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error <| Event.Error.NonVoidReturnType(mi)
                 else
@@ -118,7 +117,7 @@ type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionPr
             let inline getEventDescriptors (rp:IReflectionProvider) t = 
                 t
                 |> rp.GetSubscriptionMethods
-                |> Seq.map createEventMetadata
+                |> Seq.map createEventDescriptor
                 |> Seq.cache
             let commandDescriptorResults = getCommandDescriptors reflectionProvider viewType
             let eventDescriptorResults = getEventDescriptors reflectionProvider viewType
