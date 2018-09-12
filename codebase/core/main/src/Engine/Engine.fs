@@ -1,49 +1,45 @@
 ﻿namespace Forest
 
-open Forest.NullHandling
 open System
 
+open Forest.NullHandling
+open Forest.UI
 
-type [<Interface>] IForestEngine =
-    abstract member ActivateView: name:vname -> 'a when 'a:>IView
-    abstract member GetOrActivateView: name:vname -> 'a when 'a:>IView
-    abstract member SendMessage: message:'M -> unit
-    abstract member ExecuteCommand: target:hash -> command:cname -> arg:'M -> unit
 
 type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList, ctx:IForestContext) = 
     do
         ignore <| isNotNull "state" state
         ignore <| isNotNull "changeList" changeList
-
     member __.Render ([<ParamArray>]renderers:IDomProcessor array) =
         state |> State.traverse (ForestDomRenderer(renderers |> Seq.ofArray, ctx))
-
-    member internal __.State with get() = state
-    member __.ChangeList with get() = changeList
+    member internal __.State 
+        with get() = state
+    member __.ChangeList 
+        with get() = changeList
 
 type [<Sealed>] internal ForestEngineAdapter(runtime:ForestRuntime) =
-    let mutable _messageDispatcher = nil<MessageDispatcher.View>
-    do
-        MessageDispatcher.Reg runtime.Context
-        _messageDispatcher <- runtime |> MessageDispatcher.Get
-        ()
-    member internal __.Runtime with get() = runtime
+    member __.ExcuteCommand target command message = 
+        Runtime.Operation.InvokeCommand(target, command, message) |> runtime.Update
+    member internal __.Runtime 
+        with get() = runtime
     interface IForestEngine with
         member __.ActivateView (name) : 'a when 'a:>IView = 
             let result = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.ActivateView
             downcast result:'a
         member __.GetOrActivateView name = 
             TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.GetOrActivateView
-        member __.ExecuteCommand target command message = 
-            Runtime.Operation.InvokeCommand(target, command, message) |> runtime.Update
+    interface ICommandDispatcher with
+        member this.ExecuteCommand target command message = 
+            this.ExcuteCommand target command message
+    interface IMessageDispatcher with
         member __.SendMessage message = 
-            _messageDispatcher.Publish(message, System.String.Empty)
+            let messageDispatcher = runtime |> MessageDispatcher.Get
+            messageDispatcher.Publish(message, System.String.Empty)
 
 [<CompiledName("ForestEngine")>]
 type Engine private(ctx:IForestContext, state:State) =
     let mutable st:State = state
     new (ctx:IForestContext) = Engine(ctx, State.initial)
-
     static member inline private toResult (rt:ForestRuntime) (fuid:Fuid option) (state:State) =
         match rt.Deconstruct() with 
         | (a, b, c, cl) -> 

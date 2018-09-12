@@ -10,7 +10,7 @@ open System.Text
 [<CustomComparison>]
 [<CustomEquality>]
 type internal Fuid =
-    static member inline private hex2Str (bytes:byte seq) =
+    static member inline private hex2Str (bytes:byte seq) : thash =
         let inline folder (sb:StringBuilder) (x:byte) = sb.AppendFormat("{0:x2}", x)
         let sb = bytes |> Seq.fold folder (StringBuilder())
         sb.ToString()

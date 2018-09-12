@@ -13,7 +13,7 @@ open System.Runtime.CompilerServices
 [<CustomEquality>]
 type TreeNode = 
     | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] Shell_
-    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:TreeNode * region:rname * view:vname * hash:hash
+    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:TreeNode * region:rname * view:vname * hash:thash
     [<CompiledName("Shell")>]
     static member shell = 
         TreeNode.Shell_

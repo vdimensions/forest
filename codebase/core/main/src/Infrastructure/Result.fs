@@ -1,5 +1,4 @@
 ﻿#!fsharp
-
 namespace Forest
 
 
@@ -26,8 +25,3 @@ module Result =
 
         [<CompiledName("Some")>]
         static member inline some err opt = match opt with Some value -> Ok value | None -> Error err
-
-        //[<CompiledName("Split")>]
-        //static member inline split succeed fail result = match result with Ok ok -> succeed ok | Error e -> fail e
-
-    //let inline (>>!) f g = _composeError f g

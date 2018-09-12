@@ -2,6 +2,7 @@
 using System.IO;
 
 using Forest.Reflection;
+using Forest.Security;
 using Forest.Templates;
 using Forest.Templates.Raw;
 using Forest.Templates.Xml;

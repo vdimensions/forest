@@ -7,34 +7,6 @@ open System
 open System.Reflection
 
 
-type IMethod = interface 
-    abstract member Invoke: target:obj -> args:obj array -> obj
-    abstract member ParameterTypes:Type array with get
-    abstract member ReturnType:Type with get
-    abstract member Name:string with get
-end
-type ICommandMethod = interface 
-    inherit IMethod
-    abstract member CommandName:string with get
-end
-type IEventMethod = interface 
-    inherit IMethod
-    abstract member Topic:string with get
-end
-
-type IProperty = interface
-    abstract member GetValue: target:obj -> obj
-    abstract member SetValue: target:obj -> value:obj -> unit
-    abstract member Name:string with get
-end
-
-type IReflectionProvider = interface
-    abstract member GetViewAttribute: viewType:Type -> ViewAttribute
-    abstract member GetCommandMethods: viewType:Type -> ICommandMethod array
-    abstract member GetSubscriptionMethods: viewType:Type -> IEventMethod array
-    abstract member GetLocalizeableProperties: vmType:Type -> IProperty array
-end
-
 type [<AbstractClass>] private AbstractMethod(method:MethodInfo) =
     do ignore <| isNotNull "method" method
     interface IMethod with
@@ -67,17 +39,9 @@ type [<Sealed>] DefaultReflectionProvider() =
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
     member inline private __.isOfType<'a> obj = (obj.GetType() = typeof<'a>)
     member inline private __.getAttributes(mi:#MemberInfo):seq<'a:>Attribute> =
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        let getAttributesInternal = 
-            mi.GetCustomAttributes 
-            >> Seq.filter __.isOfType<'a>  
-            >> Seq.map(fun attr -> (downcast attr:'a)) 
-        getAttributesInternal(true)
-        #else
         mi.GetCustomAttributes(true)
         |> Seq.filter __.isOfType<'a> 
         |> Seq.map(fun attr -> (downcast attr:'a)) 
-        #endif
     member inline private __.getMethods (f) (t:Type) = 
         t.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
     member inline private __.getCommandAttribs (methodInfo:MethodInfo): seq<CommandAttribute> = 

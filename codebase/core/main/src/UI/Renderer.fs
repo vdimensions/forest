@@ -2,21 +2,21 @@
 
 open Forest
 
-[<NoComparison>]
-type internal NodeState =
+
+type [<NoComparison;StructuralEquality>] internal NodeState =
     | NewNode of node:DomNode
     | UpdatedNode of node:DomNode
 
-type [<AbstractClass;NoComparison>] AbstractUIAdapter<'A when 'A:> IViewAdapter> =
-    val mutable private adapters:Map<hash, 'A>
-    val mutable private parentChildMap:Map<hash, hash*rname>
-    val mutable private nodesToDelete:Set<hash>
+type [<AbstractClass;NoComparison>] AbstractUIRenderer<'A when 'A:> IViewRenderer> =
+    val mutable private adapters:Map<thash, 'A>
+    val mutable private parentChildMap:Map<thash, thash*rname>
+    val mutable private nodesToDelete:Set<thash>
     val mutable private nodeStates:List<NodeState>
 
     new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = Set.empty; nodeStates = List.empty }
 
-    abstract member CreateViewAdapter: key:hash * viewModel:obj -> 'A
-    abstract member CreateNestedViewAdapter: key:hash * viewModel:obj * parentAdapter:'A * region:rname -> 'A
+    abstract member CreateViewAdapter: key:thash * viewModel:obj -> 'A
+    abstract member CreateNestedViewAdapter: key:thash * viewModel:obj * parentAdapter:'A * region:rname -> 'A
 
     interface IDomProcessor with
         member this.ProcessNode n =

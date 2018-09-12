@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Forest.Reflection;
+using Forest.Security;
 using Forest.Templates.Xml;
 
 using NUnit.Framework;
@@ -123,7 +124,7 @@ namespace Forest.Tests
         }
 
         [Test]
-        public void TestStateTransferConsistency100()
+        public void TestStateTransferConsistency1000()
         {
             for (var i = 0; i < 1000; i++)
             {

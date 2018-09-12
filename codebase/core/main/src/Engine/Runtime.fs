@@ -16,10 +16,10 @@ module Runtime =
     [<CompiledName("Operation")>]
     type [<Struct>] Operation =
         | InstantiateView of node:TreeNode
-        | UpdateViewModel of parent:hash * viewModel:obj
+        | UpdateViewModel of parent:thash * viewModel:obj
         | DestroyView of subtree:TreeNode
-        | InvokeCommand of owner:hash * commandName:cname * commandArg:obj
-        | PublishEvent of senderID:hash * message:obj * topics:string array
+        | InvokeCommand of owner:thash * commandName:cname * commandArg:obj
+        | PublishEvent of senderID:thash * message:obj * topics:string array
         | Multiple of operations:Operation list
 
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -40,14 +40,14 @@ module Runtime =
         // TODO
         | _ -> ()
 
-type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, views:Map<hash, IRuntimeView>, ctx:IForestContext) as self = 
+type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<thash, obj>, views:Map<thash, IRuntimeView>, ctx:IForestContext) as self = 
     let mutable tree = t
     let eventBus:IEventBus = Event.createEventBus()
-    let models:System.Collections.Generic.Dictionary<hash, obj> = System.Collections.Generic.Dictionary(models, StringComparer.Ordinal)
-    let views:System.Collections.Generic.Dictionary<hash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
+    let models:System.Collections.Generic.Dictionary<thash, obj> = System.Collections.Generic.Dictionary(models, StringComparer.Ordinal)
+    let views:System.Collections.Generic.Dictionary<thash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
     let changeLog:System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
 
-    let updateViewModel (id:hash) (vm:obj) : Result<unit, Runtime.Error> =
+    let updateViewModel (id:thash) (vm:obj) : Result<unit, Runtime.Error> =
         models.[id] <- vm
         Ok ()
     let destroyView (node:TreeNode) : Result<unit, Runtime.Error> =
@@ -59,7 +59,7 @@ type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, v
             changeLog.Add(StateChange.ViewDestroyed(removedNode))
         tree <- t
         Ok ()
-    let executeCommand (stateKey:hash) (name:cname) (arg:obj) : Result<unit, Runtime.Error> =
+    let executeCommand (stateKey:thash) (name:cname) (arg:obj) : Result<unit, Runtime.Error> =
         match views.TryGetValue stateKey with
         | (true, view) ->
             match view.Descriptor.Commands.TryFind name with
@@ -68,7 +68,7 @@ type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, v
                 Ok ()
             | None ->  Error (Runtime.Error.CommandError <| Command.Error.CommandNotFound(view.Descriptor.ViewType, name))
         | (false, _) -> (Error (Runtime.Error.ViewstateAbsent stateKey))
-    let publishEvent (id:hash) (message:'m) (topics:string array) : Result<unit, Runtime.Error> =
+    let publishEvent (id:thash) (message:'m) (topics:string array) : Result<unit, Runtime.Error> =
         match views.TryGetValue id with
         | (true, sender) -> 
             eventBus.Publish(sender, message, topics)
@@ -116,7 +116,7 @@ type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<hash, obj>, v
             view.Load()
             Ok ()
         | Error e -> Error e
-    static member Create (tree:Tree, models:Map<hash, obj>, views:Map<hash, IRuntimeView>, ctx:IForestContext) = 
+    static member Create (tree:Tree, models:Map<thash, obj>, views:Map<thash, IRuntimeView>, ctx:IForestContext) = 
         (new ForestRuntime(tree, models, views, ctx)).Init()
     member private this.Init() =
         for kvp in views do 

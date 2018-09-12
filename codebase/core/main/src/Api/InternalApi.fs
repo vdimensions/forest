@@ -14,7 +14,7 @@ type [<Interface>] internal IRuntimeView =
     abstract Descriptor:IViewDescriptor with get
     abstract Runtime:IForestRuntime with get
 
-  and [<Interface>] internal IForestRuntime =
+ and [<Interface>] internal IForestRuntime =
     abstract member SubscribeEvents: receiver:IRuntimeView -> unit
     abstract member UnsubscribeEvents: receiver:IRuntimeView -> unit
 

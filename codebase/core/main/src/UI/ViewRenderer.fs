@@ -6,16 +6,13 @@ open Forest.NullHandling
 open System
 
 
-type [<Interface>] ICommandDispatcher =
-    abstract member InvokeCommand: hash:hash -> command:cname -> arg:obj -> unit
-
-type [<Interface>] IViewAdapter =
+type [<Interface>] IViewRenderer =
     inherit IDisposable
     abstract member Update: viewModel:obj -> unit
     abstract member InvokeCommand: name:cname -> arg:obj -> unit
-    abstract member Hash:hash
+    abstract member Hash:thash
 
-type [<AbstractClass;NoComparison>] AbstractViewAdapter(commandDispatcher:ICommandDispatcher, key:TreeNode) =
+type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:ICommandDispatcher, key:TreeNode) =
     do 
         ignore <| isNotNull "commandDispatcher" commandDispatcher
         ignore <| isNotNull "key" key
@@ -24,10 +21,13 @@ type [<AbstractClass;NoComparison>] AbstractViewAdapter(commandDispatcher:IComma
     
     abstract member Refresh: viewModel:obj -> unit
     abstract member Dispose: disposing:bool -> unit
+
+    override this.Finalize() = 
+        this.Dispose(false)
         
-    interface IViewAdapter with
+    interface IViewRenderer with
         member __.InvokeCommand (NotNull "name" name) arg =
-            commandDispatcher.InvokeCommand key.Hash name arg
+            commandDispatcher.ExecuteCommand key.Hash name arg
         member this.Update (NotNull "model" model:obj) =
             let update = 
                 match null2vopt vm with
@@ -38,4 +38,6 @@ type [<AbstractClass;NoComparison>] AbstractViewAdapter(commandDispatcher:IComma
                 this.Refresh model
         member __.Hash with get() = key.Hash
     interface IDisposable with
-        member this.Dispose() = this.Dispose(true)
+        member this.Dispose() = 
+            this.Dispose(true)
+            GC.SuppressFinalize(this)

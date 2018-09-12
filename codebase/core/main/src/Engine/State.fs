@@ -7,8 +7,8 @@ open System
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>, fuid: Fuid) =
-    internal new (hierarchy:Tree, viewModels: Map<string, obj>, viewStates:  Map<string, IRuntimeView>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
+type [<Sealed>] internal State internal(hierarchy:Tree, viewModels: Map<thash, obj>, viewStates:  Map<thash, IRuntimeView>, fuid: Fuid) =
+    internal new (hierarchy:Tree, viewModels: Map<thash, obj>, viewStates:  Map<thash, IRuntimeView>) = State(hierarchy, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
     static member initial = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
     member internal __.Hierarchy with get() = hierarchy

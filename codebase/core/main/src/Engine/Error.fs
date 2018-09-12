@@ -10,7 +10,7 @@ module internal Error =
     type ViewModel() = class end
     [<View(Name)>]
     type View() =
-        inherit AbstractView<ViewModel>() with
+        inherit AbstractView<ViewModel>(ViewModel()) with
         override __.Load() = ()
     let Reg (ctx:IForestContext) = 
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with

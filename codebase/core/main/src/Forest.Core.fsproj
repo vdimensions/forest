@@ -16,14 +16,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.fs" />
-    <Compile Include="Utils\NullHandling.fs" />
-    <Compile Include="Utils\Result.fs" />
-    <Compile Include="Primitives\Types.fs" />
-    <Compile Include="Primitives\Fuid.fs" />
-    <Compile Include="Primitives\TreeNode.fsi" />
-    <Compile Include="Primitives\TreeNode.fs" />
-    <Compile Include="Primitives\StateChange.fs" />
-    <Compile Include="Primitives\TemplateTypes.fs" />
+    <Compile Include="Infrastructure\NullHandling.fs" />
+    <Compile Include="Infrastructure\Result.fs" />
+    <Compile Include="Types\Types.fs" />
+    <Compile Include="Types\Fuid.fs" />
+    <Compile Include="Types\TreeNode.fsi" />
+    <Compile Include="Types\TreeNode.fs" />
+    <Compile Include="Types\StateChange.fs" />
+    <Compile Include="Types\TemplateTypes.fs" />
     <Compile Include="Collections\Tree.fs" />
     <Compile Include="Collections\Index.fs" />
     <Compile Include="Api\Attributes.fs" />
@@ -37,7 +37,9 @@
     <Compile Include="Api\StateApi.fs" />
     <Compile Include="Api\InternalApi.fs" />
     <Compile Include="Api\DomApi.fs" />
-    <Compile Include="Reflection\Reflection.fs" />
+    <Compile Include="Api\EngineApi.fs" />
+    <Compile Include="Api\ReflectionApi.fs" />
+    <Compile Include="Engine\Reflection.fs" />
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\Event.fs" />
@@ -56,8 +58,8 @@
     <Compile Include="Templates\TemplateCompiler.fs" />
     <Compile Include="Templates\Xml\XmlTemplateParser.fs" />
     <Compile Include="Templates\TemplateExtensions.fs" />
-    <Compile Include="UI\ViewAdapter.fs" />
-    <Compile Include="UI\UIAdpter.fs" />
+    <Compile Include="UI\ViewRenderer.fs" />
+    <Compile Include="UI\Renderer.fs" />
     <None Include="build.sh" />
     <None Include="mason.properties" />
     <None Include="paket.dependencies" />

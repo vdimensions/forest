@@ -2,9 +2,9 @@
 
 type [<Sealed>] internal ForestDomRenderer private(chainRender:(DomNode -> DomNode), complete:(unit -> unit), ctx:IForestContext) =
     /// Stores the rendered node state
-    let mutable nodeMap:Map<string, DomNode> = Map.empty
+    let mutable nodeMap:Map<thash, DomNode> = Map.empty
     /// Stores the original viewmodel state. Used to determine which nodes to be re-rendered
-    let mutable modelMap:Map<string, obj> = Map.empty
+    let mutable modelMap:Map<thash, obj> = Map.empty
 
     let createCommandModel (descriptor:ICommandDescriptor) : (cname*ICommandModel) =
         (descriptor.Name, upcast Command.Model(descriptor.Name))

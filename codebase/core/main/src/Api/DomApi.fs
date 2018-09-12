@@ -5,7 +5,7 @@
 [<System.Serializable>]
 #endif
 type [<Struct>] DomNode = {
-    Hash:hash;
+    Hash:thash;
     Index:int;
     Name:vname;
     Model:obj;
