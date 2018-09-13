@@ -15,8 +15,8 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'A when 'A:> IViewRendere
 
     new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = Set.empty; nodeStates = List.empty }
 
-    abstract member CreateViewAdapter: key:thash * viewModel:obj -> 'A
-    abstract member CreateNestedViewAdapter: key:thash * viewModel:obj * parentAdapter:'A * region:rname -> 'A
+    abstract member CreateViewAdapter: n:DomNode -> 'A
+    abstract member CreateNestedViewAdapter: n:DomNode * parentAdapter:'A * region:rname -> 'A
 
     interface IDomProcessor with
         member this.ProcessNode n =
@@ -44,9 +44,9 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'A when 'A:> IViewRendere
                     match this.parentChildMap.TryFind n.Hash with
                     | Some (h, r) -> 
                         match this.adapters.TryFind h with
-                        | Some a -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n.Hash, n.Model, a, r))
+                        | Some a -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n, a, r))
                         | None -> failwithf "Could not locate view adapter %s that should parent %s" h n.Hash
-                    | None -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateViewAdapter(n.Hash, n.Model))
+                    | None -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateViewAdapter(n))
                 | UpdatedNode n ->
                     match this.adapters.TryFind n.Hash with
                     | Some a -> a.Update n.Model
