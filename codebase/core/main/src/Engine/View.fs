@@ -6,11 +6,11 @@ open Forest.NullHandling
 
 open System
 open System.Collections.Generic
-open System.Reflection
 open System.Diagnostics
+open System.Reflection
 
 
-type [<AbstractClass;NoComparison>] AbstractView<'T>(vm:'T) =
+type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm:'T) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private hierarchyKey:TreeNode
