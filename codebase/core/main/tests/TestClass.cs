@@ -76,10 +76,8 @@ namespace Forest.Tests
         [SetUp]
         public void SetUp()
         {
-            var f = new View.Factory();
-            var rp = new DefaultReflectionProvider();
             var templateProvider = new TemplateParsing.TestTemplateProvider(new XmlTemplateParser());
-            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager(), templateProvider);
+            _ctx = new DefaultForestContext(new View.Factory(), new DefaultReflectionProvider(), new NoopSecurityManager(), templateProvider);
             _ctx.ViewRegistry.Register<Inner.View>();
             _ctx.ViewRegistry.Register<Outer.View>();
         }

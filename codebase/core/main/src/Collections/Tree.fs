@@ -10,7 +10,7 @@ open System.Diagnostics
 [<Serializable>]
 #endif
 [<DebuggerDisplay("{Hierarchy}")>]
-type [<Struct>] internal Tree = {
+type [<Struct;NoComparison;StructuralEquality>] internal Tree = {
     [<DebuggerBrowsable(DebuggerBrowsableState.RootHidden)>]
     Hierarchy: Map<TreeNode, TreeNode list>;
 }

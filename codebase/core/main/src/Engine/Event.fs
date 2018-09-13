@@ -27,7 +27,7 @@ open System.Reflection
 
 
 module Event = 
-    type [<Sealed>] internal Descriptor(mt:Type, mi:IEventMethod, topic:string) =
+    type [<Sealed;NoComparison>] internal Descriptor(mt:Type, mi:IEventMethod, topic:string) =
         member __.Trigger (NotNull "view" view:IView) (NotNull "message" message:obj) = ignore <| mi.Invoke(view, [|message|])
         member __.MessageType with get () = mt
         member __.Topic with get () = topic
@@ -36,13 +36,13 @@ module Event =
             member this.MessageType = this.MessageType
             member this.Topic = this.Topic
 
-    type [<Sealed>] internal Handler(descriptor:IEventDescriptor, receiver:IView) =
+    type [<Sealed;NoComparison>] internal Handler(descriptor:IEventDescriptor, receiver:IView) =
         interface ISubscriptionHandler with
             member __.MessageType = descriptor.MessageType
             member __.Invoke message = descriptor.Trigger receiver message
             member __.Receiver = receiver
 
-    type Error =
+    type [<Struct;NoComparison>] Error =
         | InvocationError of cause:exn
         | NonVoidReturnType of methodWithReturnValue:IEventMethod
         | BadEventSignature of badEventSignatureMethod:IEventMethod
@@ -62,7 +62,7 @@ module Event =
         messageType = x || x.IsAssignableFrom(messageType)
         #endif
 
-    type [<Sealed>] private T() = 
+    type [<Sealed;NoComparison>] private T() = 
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
         member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =

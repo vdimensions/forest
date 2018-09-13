@@ -9,7 +9,7 @@ open System.Collections.Generic
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<System.Serializable>]
 #endif
-type [<Sealed>] ChangeList internal (previousStateHash:thash, changes:StateChange list, currentStateFuid:Fuid) =
+type [<Sealed;NoComparison>] ChangeList internal (previousStateHash:thash, changes:StateChange list, currentStateFuid:Fuid) =
     do
         ignore <| isNotNull "previousStateHash" previousStateHash
         ignore <| isNotNull "changes" changes

@@ -5,7 +5,7 @@ open System.Collections.Generic;
 
 
 [<AutoOpen>]
-type [<Sealed>] Index<'T, 'TKey> internal(dict:IDictionary<'TKey, 'T>) =
+type [<Sealed;NoComparison>] Index<'T, 'TKey> internal(dict:IDictionary<'TKey, 'T>) =
     member __.Contains item = dict.Values.Contains item
     member __.ContainsKey key = dict.ContainsKey key
     member __.TryFind key =

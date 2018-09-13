@@ -14,7 +14,7 @@ module Runtime =
     [<System.Serializable>]
     #endif
     [<CompiledName("Operation")>]
-    type [<Struct>] Operation =
+    type [<Struct;NoComparison>] Operation =
         | InstantiateView of node:TreeNode
         | UpdateViewModel of parent:thash * viewModel:obj
         | DestroyView of subtree:TreeNode
@@ -26,7 +26,7 @@ module Runtime =
     [<Serializable>]
     #endif
     [<CompiledName("Error")>]
-    type [<Struct>] Error =
+    type [<Struct;NoComparison>] Error =
         | ViewstateAbsent of view:vname
         | UnexpectedState of node:TreeNode
         | CommandError of commandErrorCause:Command.Error
@@ -40,7 +40,7 @@ module Runtime =
         // TODO
         | _ -> ()
 
-type [<Sealed>] internal ForestRuntime private (t:Tree, models:Map<thash, obj>, views:Map<thash, IRuntimeView>, ctx:IForestContext) as self = 
+type [<Sealed;NoComparison>] internal ForestRuntime private (t:Tree, models:Map<thash, obj>, views:Map<thash, IRuntimeView>, ctx:IForestContext) as self = 
     let mutable tree = t
     let eventBus:IEventBus = Event.createEventBus()
     let models:System.Collections.Generic.Dictionary<thash, obj> = System.Collections.Generic.Dictionary(models, StringComparer.Ordinal)

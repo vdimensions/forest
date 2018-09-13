@@ -69,7 +69,7 @@ namespace Forest.Tests
         {
             internal static Stream OpenTemplate(string name)
             {
-                var fullName = string.Format("Templates/{0}.xml", name);
+                var fullName = $"Templates/{name}.xml";
                 var searchPath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
                 var path = Path.Combine(searchPath, fullName);
                 return File.OpenRead(path);
@@ -92,17 +92,14 @@ namespace Forest.Tests
             }
         }
         
-        private XmlTemplateParser _parser;
         private IForestContext _ctx;
         private ITemplateProvider _templateProvider;
 
         [SetUp]
         public void SetUp()
         {
-            var f = new View.Factory();
-            var rp = new DefaultReflectionProvider();
             _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
-            _ctx = new DefaultForestContext(f, rp, new NoopSecurityManager(), _templateProvider);
+            _ctx = new DefaultForestContext(new View.Factory(), new DefaultReflectionProvider(), new NoopSecurityManager(), _templateProvider);
             _ctx.ViewRegistry.Register<Navigation.View>();
             _ctx.ViewRegistry.Register<Concrete.View>();
             _ctx.ViewRegistry.Register<SomeView.View>();
@@ -145,6 +142,7 @@ namespace Forest.Tests
         {
             var engine = new ForestEngine(_ctx);
             var r = engine.LoadTemplate("Concrete");
+            Assert.IsNotNull(r);
         }
     }
 }

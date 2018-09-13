@@ -7,7 +7,7 @@ open System
 open System.Reflection
 
 
-type [<AbstractClass>] private AbstractMethod(method:MethodInfo) =
+type [<AbstractClass;NoComparison>] private AbstractMethod(method:MethodInfo) =
     do ignore <| isNotNull "method" method
     interface IMethod with
         member __.Invoke target args = method.Invoke(target, args)
@@ -15,26 +15,26 @@ type [<AbstractClass>] private AbstractMethod(method:MethodInfo) =
         member __.ReturnType with get() = method.ReturnType
         member __.Name with get() = method.Name
 
-type [<Sealed>] private DefaultCommandMethod(method:MethodInfo, commandName:string) =
+type [<Sealed;NoComparison>] private DefaultCommandMethod(method:MethodInfo, commandName:string) =
     inherit AbstractMethod(method)
     do ignore <| isNotNull "commandName" commandName
     interface ICommandMethod with 
         member __.CommandName with get() = commandName
 
-type [<Sealed>] private DefaultEventMethod(method:MethodInfo, topic:string) =
+type [<Sealed;NoComparison>] private DefaultEventMethod(method:MethodInfo, topic:string) =
     inherit AbstractMethod(method)
     do ignore <| isNotNull "topic" topic
     interface IEventMethod with 
         member __.Topic with get() = topic
 
-type [<Sealed>] private DefaultProperty(property: PropertyInfo) =
+type [<Sealed;NoComparison>] private DefaultProperty(property: PropertyInfo) =
     do ignore <| isNotNull "property" property
     interface IProperty with
         member __.GetValue target = property.GetValue(target)
         member __.SetValue target value = property.SetValue(target, value)
         member __.Name with get() = property.Name
 
-type [<Sealed>] DefaultReflectionProvider() =
+type [<Sealed;NoComparison>] DefaultReflectionProvider() =
     [<Literal>]
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
     member inline private __.isOfType<'a> obj = (obj.GetType() = typeof<'a>)

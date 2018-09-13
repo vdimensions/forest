@@ -8,7 +8,7 @@ open System
 [<RequireQualifiedAccess>]
 [<CompiledName("Command")>]
 module Command = 
-    type [<Struct>] Error =
+    type [<Struct;NoComparison>] Error =
         | CommandNotFound of owner:Type * command:cname
         | InvocationError of cause:exn
         | NonVoidReturnType of methodWithReturnValue:ICommandMethod
@@ -16,7 +16,7 @@ module Command =
         | MultipleErrors of errors:Error list
 
     // TODO: argument verification
-    type [<Sealed>] internal Descriptor(argType:Type, method:ICommandMethod) = 
+    type [<Sealed;NoComparison>] internal Descriptor(argType:Type, method:ICommandMethod) = 
         do
             ignore <| isNotNull "argType" argType
             ignore <| isNotNull "mi" method
@@ -28,7 +28,7 @@ module Command =
             member this.Invoke arg view = this.Invoke arg view
 
     [<CompiledName("CommandModel")>]
-    type [<Sealed>] internal Model(name:cname, displayName:string, tooltip:string, description:string) =
+    type [<Sealed;NoComparison>] internal Model(name:cname, displayName:string, tooltip:string, description:string) =
         new (name:cname) = Model(name, String.Empty, String.Empty, String.Empty)
         member __.Name with get() = name
         member val DisplayName = displayName with get, set

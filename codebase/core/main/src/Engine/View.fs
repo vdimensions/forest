@@ -10,7 +10,7 @@ open System.Reflection
 open System.Diagnostics
 
 
-type [<AbstractClass>] AbstractView<'T>(vm:'T) =
+type [<AbstractClass;NoComparison>] AbstractView<'T>(vm:'T) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private hierarchyKey:TreeNode
@@ -100,7 +100,7 @@ type [<AbstractClass>] AbstractView<'T>(vm:'T) =
 [<CompiledName("View")>]
 module View =
     // TODO: argument verification
-    type [<Sealed>] internal Descriptor internal (name:vname, viewType:Type, viewModelType:Type, commands:Index<ICommandDescriptor, cname>, events:IEventDescriptor array) = 
+    type [<Sealed;NoComparison>] internal Descriptor internal (name:vname, viewType:Type, viewModelType:Type, commands:Index<ICommandDescriptor, cname>, events:IEventDescriptor array) = 
         member __.Name with get() = name
         member __.ViewType with get() = viewType
         member __.ViewModelType with get() = viewModelType
@@ -113,7 +113,7 @@ module View =
             member this.Commands = this.Commands
             member this.Events = this.Events
 
-    type [<Struct>] Error =
+    type [<Struct;NoComparison>] Error =
         | ViewAttributeMissing of nonAnnotatedViewType:Type
         | ViewTypeIsAbstract of abstractViewType:Type
         | NonGenericView of nonGenericViewType:Type
@@ -141,7 +141,7 @@ module View =
         | NonGenericView vt -> raise <| ViewTypeIsNotGenericException vt
         | _ -> ()
 
-    type [<Sealed>] Factory() = 
+    type [<Sealed;NoComparison>] Factory() = 
         member __.Resolve (NotNull "descriptor" descriptor:IViewDescriptor) : IView = 
             let flags = BindingFlags.Public|||BindingFlags.Instance
             let constructors = 

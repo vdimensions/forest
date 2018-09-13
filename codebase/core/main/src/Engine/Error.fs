@@ -7,9 +7,8 @@ module internal Error =
     [<Literal>]
     let Name = "Error"
     let private Key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region Name
-    type ViewModel() = class end
-    [<View(Name)>]
-    type View() =
+    type [<Sealed;NoComparison>] ViewModel() = class end
+    type [<Sealed;View(Name);NoComparison>] View() =
         inherit AbstractView<ViewModel>(ViewModel()) with
         override __.Load() = ()
     let Reg (ctx:IForestContext) = 

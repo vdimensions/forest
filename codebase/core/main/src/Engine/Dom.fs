@@ -1,6 +1,6 @@
 ﻿namespace Forest
 
-type [<Sealed>] internal ForestDomRenderer private(chainRender:(DomNode -> DomNode), complete:(unit -> unit), ctx:IForestContext) =
+type [<Sealed;NoComparison>] internal ForestDomRenderer private(chainRender:(DomNode -> DomNode), complete:(unit -> unit), ctx:IForestContext) =
     /// Stores the rendered node state
     let mutable nodeMap:Map<thash, DomNode> = Map.empty
     /// Stores the original viewmodel state. Used to determine which nodes to be re-rendered

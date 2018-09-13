@@ -6,7 +6,7 @@ open Forest.NullHandling
 open Forest.UI
 
 
-type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList, ctx:IForestContext) = 
+type [<Sealed;NoComparison>] ForestResult internal (state:State, changeList:ChangeList, ctx:IForestContext) = 
     do
         ignore <| isNotNull "state" state
         ignore <| isNotNull "changeList" changeList
@@ -17,7 +17,7 @@ type [<Sealed>] ForestResult internal (state:State, changeList:ChangeList, ctx:I
     member __.ChangeList 
         with get() = changeList
 
-type [<Sealed>] internal ForestEngineAdapter(runtime:ForestRuntime) =
+type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime:ForestRuntime) =
     member __.ExcuteCommand target command message = 
         Runtime.Operation.InvokeCommand(target, command, message) |> runtime.Update
     member internal __.Runtime 
@@ -33,11 +33,11 @@ type [<Sealed>] internal ForestEngineAdapter(runtime:ForestRuntime) =
             this.ExcuteCommand target command message
     interface IMessageDispatcher with
         member __.SendMessage message = 
-            let messageDispatcher = runtime |> MessageDispatcher.Get
+            let messageDispatcher = runtime |> MessageDispatcher.Show
             messageDispatcher.Publish(message, System.String.Empty)
 
 [<CompiledName("ForestEngine")>]
-type Engine private(ctx:IForestContext, state:State) =
+type [<Sealed;NoComparison>] Engine private(ctx:IForestContext, state:State) =
     let mutable st:State = state
     new (ctx:IForestContext) = Engine(ctx, State.initial)
     static member inline private toResult (rt:ForestRuntime) (fuid:Fuid option) (state:State) =
@@ -53,7 +53,7 @@ type Engine private(ctx:IForestContext, state:State) =
 
     member __.Update (operation:System.Action<IForestEngine>) : ForestResult =
         try 
-            use rt = ForestRuntime.Create(st.Hierarchy, st.ViewModels, st.ViewStates, ctx)
+            use rt = ForestRuntime.Create(st.Tree, st.ViewModels, st.ViewStates, ctx)
             let adapter = new ForestEngineAdapter(rt)
             operation.Invoke adapter
             let result = state |> Engine.toResult rt None
@@ -62,7 +62,7 @@ type Engine private(ctx:IForestContext, state:State) =
         with
         | :? ForestException as e -> 
             let se = State.initial
-            use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
+            use rt = ForestRuntime.Create(se.Tree, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show rt
             // TODO: set error data
             let result = se |> Engine.toResult rt None
@@ -71,7 +71,7 @@ type Engine private(ctx:IForestContext, state:State) =
 
     member __.Sync (changes:ChangeList) : ForestResult =
         try 
-            use rt = ForestRuntime.Create(st.Hierarchy, st.ViewModels, st.ViewStates, ctx)
+            use rt = ForestRuntime.Create(st.Tree, st.ViewModels, st.ViewStates, ctx)
             let rec _applyChangelog (ms: ForestRuntime) (cl: StateChange List) =
                 match cl with
                 | [] -> None
@@ -88,7 +88,7 @@ type Engine private(ctx:IForestContext, state:State) =
         with
         | :? ForestException as e -> 
             let se = State.initial
-            use rt = ForestRuntime.Create(se.Hierarchy, se.ViewModels, se.ViewStates, ctx)
+            use rt = ForestRuntime.Create(se.Tree, se.ViewModels, se.ViewStates, ctx)
             let errorView = Error.Show rt
             // TODO: set error data
             let result = se |> Engine.toResult rt None

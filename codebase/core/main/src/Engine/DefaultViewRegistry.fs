@@ -10,11 +10,11 @@ open System
 open System.Collections.Generic
 
 
-type [<Struct>] ViewRegistryError = 
+type [<Struct;NoComparison>] ViewRegistryError = 
     | ViewError of viewError: View.Error
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
-type [<AbstractClass>] AbstractViewRegistry(factory:IViewFactory) = 
+type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) = 
     do ignore <| isNotNull "factory" factory
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
@@ -67,9 +67,8 @@ type [<AbstractClass>] AbstractViewRegistry(factory:IViewFactory) =
         member this.GetDescriptor(name:string) = this.GetViewDescriptor name
         member this.GetDescriptor(viewType:Type) = this.GetViewDescriptor viewType
 
-type [<Sealed>] internal DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
+type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)
-    [<Obsolete>] new (factory: IViewFactory) = DefaultViewRegistry(factory, DefaultReflectionProvider())
     override __.CreateViewDescriptor (anonymousView:bool) (NotNull "viewType" viewType) =
         let inline getViewModelType (viewType: Type) = 
             match View.getViewModelType viewType with
