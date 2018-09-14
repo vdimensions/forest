@@ -5,7 +5,6 @@ open Forest.NullHandling
 
 open System
 open System.Reflection
-open System.Windows.Input
 
 
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> IView>(method:MethodInfo, md:Action<'TT, 'T>) =

@@ -40,6 +40,10 @@ type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime:ForestRuntime)
 type [<Sealed;NoComparison>] Engine private(ctx:IForestContext, state:State) =
     let mutable st:State = state
     new (ctx:IForestContext) = Engine(ctx, State.initial)
+    
+    member __.InitialResult 
+        with get() = ForestResult(State.initial, ChangeList(State.initial.Hash, List.empty, State.initial.Fuid), ctx)
+
     static member inline private toResult (rt:ForestRuntime) (fuid:Fuid option) (state:State) =
         match rt.Deconstruct() with 
         | (a, b, c, cl) -> 

@@ -12,10 +12,10 @@ type [<Interface>] IViewRenderer =
     abstract member InvokeCommand: name:cname -> arg:obj -> unit
     abstract member Hash:thash
 
-type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:ICommandDispatcher, key:TreeNode) =
+type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:ICommandDispatcher, hash:thash) =
     do 
         ignore <| isNotNull "commandDispatcher" commandDispatcher
-        ignore <| isNotNull "key" key
+        ignore <| isNotNull "hash" hash
 
     let mutable vm:obj = nil<obj>
     
@@ -27,7 +27,7 @@ type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:IComm
         
     interface IViewRenderer with
         member __.InvokeCommand (NotNull "name" name) arg =
-            commandDispatcher.ExecuteCommand key.Hash name arg
+            commandDispatcher.ExecuteCommand hash name arg
         member this.Update (NotNull "model" model:obj) =
             let update = 
                 match null2vopt vm with
@@ -36,7 +36,7 @@ type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:IComm
             if update then
                 vm <- model
                 this.Refresh model
-        member __.Hash with get() = key.Hash
+        member __.Hash with get() = hash
     interface IDisposable with
         member this.Dispose() = 
             this.Dispose(true)

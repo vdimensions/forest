@@ -7,16 +7,16 @@ type [<NoComparison;StructuralEquality>] internal NodeState =
     | NewNode of node:DomNode
     | UpdatedNode of node:DomNode
 
-type [<AbstractClass;NoComparison>] AbstractUIRenderer<'A when 'A:> IViewRenderer> =
-    val mutable private adapters:Map<thash, 'A>
+type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRenderer> =
+    val mutable private adapters:Map<thash, 'R>
     val mutable private parentChildMap:Map<thash, thash*rname>
     val mutable private nodesToDelete:Set<thash>
     val mutable private nodeStates:List<NodeState>
 
     new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = Set.empty; nodeStates = List.empty }
 
-    abstract member CreateViewAdapter: n:DomNode -> 'A
-    abstract member CreateNestedViewAdapter: n:DomNode * parentAdapter:'A * region:rname -> 'A
+    abstract member CreateViewRenderer: n:DomNode -> 'R
+    abstract member CreateNestedViewRenderer: n:DomNode * parent:'R * region:rname -> 'R
 
     interface IDomProcessor with
         member this.ProcessNode n =
@@ -44,9 +44,9 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'A when 'A:> IViewRendere
                     match this.parentChildMap.TryFind n.Hash with
                     | Some (h, r) -> 
                         match this.adapters.TryFind h with
-                        | Some a -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateNestedViewAdapter(n, a, r))
+                        | Some a -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateNestedViewRenderer(n, a, r))
                         | None -> failwithf "Could not locate view adapter %s that should parent %s" h n.Hash
-                    | None -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateViewAdapter(n))
+                    | None -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateViewRenderer(n))
                 | UpdatedNode n ->
                     match this.adapters.TryFind n.Hash with
                     | Some a -> a.Update n.Model
