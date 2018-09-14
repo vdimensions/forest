@@ -28,7 +28,7 @@ open System.Reflection
 
 module Event = 
     type [<Sealed;NoComparison>] internal Descriptor(mt:Type, mi:IEventMethod, topic:string) =
-        member __.Trigger (NotNull "view" view:IView) (NotNull "message" message:obj) = ignore <| mi.Invoke(view, [|message|])
+        member __.Trigger (NotNull "view" view:IView) (NotNull "message" message:obj) = ignore <| mi.Invoke view message
         member __.MessageType with get () = mt
         member __.Topic with get () = topic
         interface IEventDescriptor with

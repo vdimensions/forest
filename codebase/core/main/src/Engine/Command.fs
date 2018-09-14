@@ -20,8 +20,8 @@ module Command =
         do
             ignore <| isNotNull "argType" argType
             ignore <| isNotNull "mi" method
+        member __.Invoke (arg:obj) (view:IView) : unit = method.Invoke view arg
         member __.ArgumentType with get() = argType
-        member __.Invoke (arg:obj) (view:IView) : unit = method.Invoke(view, [|arg|]) |> ignore
         interface ICommandDescriptor with
             member __.Name = method.Name
             member this.ArgumentType = this.ArgumentType

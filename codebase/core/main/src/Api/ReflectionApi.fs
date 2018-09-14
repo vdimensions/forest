@@ -6,7 +6,7 @@ open System
 
 
 type IMethod = interface 
-    abstract member Invoke: target:obj -> args:obj array -> obj
+    abstract member Invoke: target:IView -> arg:obj -> unit
     abstract member ParameterTypes:Type array with get
     abstract member ReturnType:Type with get
     abstract member Name:string with get

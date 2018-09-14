@@ -5,24 +5,29 @@ open Forest.NullHandling
 
 open System
 open System.Reflection
+open System.Windows.Input
 
 
-type [<AbstractClass;NoComparison>] private AbstractMethod(method:MethodInfo) =
-    do ignore <| isNotNull "method" method
+type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> IView>(method:MethodInfo, md:Action<'TT, 'T>) =
+    do 
+        ignore <| isNotNull "method" method
+        ignore <| isNotNull "md" md
+    new (method:MethodInfo) = AbstractMethod(method, (downcast method.CreateDelegate(typeof<Action<'TT, 'T>>):Action<'TT, 'T>))
+
     interface IMethod with
-        member __.Invoke target args = method.Invoke(target, args)
+        member __.Invoke target arg = md.Invoke((downcast target:'TT), (downcast arg:'T)) |> ignore
         member __.ParameterTypes with get() = method.GetParameters() |> Array.map (fun p -> p.ParameterType)
         member __.ReturnType with get() = method.ReturnType
         member __.Name with get() = method.Name
 
-type [<Sealed;NoComparison>] private DefaultCommandMethod(method:MethodInfo, commandName:string) =
-    inherit AbstractMethod(method)
+type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT, 'T when 'TT :> IView>(method:MethodInfo, commandName:cname) =
+    inherit AbstractMethod<'TT, 'T>(method)
     do ignore <| isNotNull "commandName" commandName
     interface ICommandMethod with 
         member __.CommandName with get() = commandName
 
-type [<Sealed;NoComparison>] private DefaultEventMethod(method:MethodInfo, topic:string) =
-    inherit AbstractMethod(method)
+type [<Sealed;NoComparison>] private DefaultEventMethod<'TT, 'T when 'TT :> IView>(method:MethodInfo, topic:string) =
+    inherit AbstractMethod<'TT, 'T>(method)
     do ignore <| isNotNull "topic" topic
     interface IEventMethod with 
         member __.Topic with get() = topic
@@ -35,6 +40,17 @@ type [<Sealed;NoComparison>] private DefaultProperty(property: PropertyInfo) =
         member __.Name with get() = property.Name
 
 type [<Sealed;NoComparison>] DefaultReflectionProvider() =
+
+    let createCmd (method:MethodInfo) (name:string) : ICommandMethod =
+        let lastParam = method.GetParameters() |> Seq.last
+        let mt = typedefof<DefaultCommandMethod<_,_>>.MakeGenericType(method.DeclaringType, lastParam.ParameterType)
+        downcast Activator.CreateInstance(mt, method, name)
+
+    let createEvt (method:MethodInfo) (name:string) : IEventMethod =
+        let lastParam = method.GetParameters() |> Seq.last
+        let mt = typedefof<DefaultEventMethod<_,_>>.MakeGenericType(method.DeclaringType, lastParam.ParameterType)
+        downcast Activator.CreateInstance(mt, method, name)
+
     [<Literal>]
     let flags = BindingFlags.Instance|||BindingFlags.NonPublic|||BindingFlags.Public
     member inline private __.isOfType<'a> obj = (obj.GetType() = typeof<'a>)
@@ -62,14 +78,14 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             |> __.getMethods flags 
             |> Seq.map (fun x -> (x |> __.getCommandAttribs) |> Seq.map (fun a -> a.Name), x)
             |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
-            |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> upcast DefaultCommandMethod(m, x) : ICommandMethod))
+            |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createCmd m x))
             |> Seq.toArray
         member __.GetSubscriptionMethods viewType = 
             viewType
             |> __.getMethods flags 
             |> Seq.map (fun x -> (x |> __.getEventAttribs) |> Seq.map (fun a -> a.Topic), x)
             |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
-            |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> upcast DefaultEventMethod(m, x) : IEventMethod))
+            |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createEvt m x))
             |> Seq.toArray
         member __.GetLocalizeableProperties vmType = 
             // TODO

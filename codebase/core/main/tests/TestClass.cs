@@ -25,6 +25,9 @@ namespace Forest.Tests
             public override void Load()
             {
             }
+
+            [Command("command")]
+            internal void CommandExample(string arg) { }
         }
     }
 
