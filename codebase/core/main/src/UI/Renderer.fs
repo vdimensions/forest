@@ -54,7 +54,7 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
 
             this.nodeStates <- List.empty
             this.parentChildMap <- Map.empty
-            // Update the nodes to delete to include the entire tree. 
+            // Update the nodes to be deleted to include the entire tree. 
             // Each node that should be retained will be removed form the list during traversal
             this.nodesToDelete <- this.adapters |> Seq.map (fun a -> a.Key) |> Set.ofSeq
             ()
