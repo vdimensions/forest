@@ -7,17 +7,35 @@ open System
 open System.Reflection
 
 
+type [<AbstractClass;NoComparison>] private AbstractMethod<'TT when 'TT :> IView>(method:MethodInfo, md:Action<'TT>) =
+    do 
+        ignore <| isNotNull "method" method
+        ignore <| isNotNull "md" md
+    new (method:MethodInfo) = AbstractMethod(method, (downcast method.CreateDelegate(typeof<Action<'TT>>):Action<'TT>))
+
+    interface IMethod with
+        member __.Invoke target _ = md.Invoke((downcast target:'TT)) |> ignore
+        member __.ParameterTypes with get() = method.GetParameters() |> Array.map (fun p -> p.ParameterType)
+        member __.ReturnType with get() = method.ReturnType
+        member __.Name with get() = method.Name
+
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> IView>(method:MethodInfo, md:Action<'TT, 'T>) =
     do 
         ignore <| isNotNull "method" method
         ignore <| isNotNull "md" md
-    new (method:MethodInfo) = AbstractMethod(method, (downcast method.CreateDelegate(typeof<Action<'TT, 'T>>):Action<'TT, 'T>))
+    new (method:MethodInfo) = AbstractMethod<'TT, 'T>(method, (downcast method.CreateDelegate(typeof<Action<'TT, 'T>>):Action<'TT, 'T>))
 
     interface IMethod with
         member __.Invoke target arg = md.Invoke((downcast target:'TT), (downcast arg:'T)) |> ignore
         member __.ParameterTypes with get() = method.GetParameters() |> Array.map (fun p -> p.ParameterType)
         member __.ReturnType with get() = method.ReturnType
         member __.Name with get() = method.Name
+
+type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT when 'TT :> IView>(method:MethodInfo, commandName:cname) =
+    inherit AbstractMethod<'TT>(method)
+    do ignore <| isNotNull "commandName" commandName
+    interface ICommandMethod with 
+        member __.CommandName with get() = commandName
 
 type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT, 'T when 'TT :> IView>(method:MethodInfo, commandName:cname) =
     inherit AbstractMethod<'TT, 'T>(method)
@@ -41,8 +59,10 @@ type [<Sealed;NoComparison>] private DefaultProperty(property: PropertyInfo) =
 type [<Sealed;NoComparison>] DefaultReflectionProvider() =
 
     let createCmd (method:MethodInfo) (name:string) : ICommandMethod =
-        let lastParam = method.GetParameters() |> Seq.last
-        let mt = typedefof<DefaultCommandMethod<_,_>>.MakeGenericType(method.DeclaringType, lastParam.ParameterType)
+        let mt = 
+            match method.GetParameters() |> Seq.tryLast with
+            | Some lastParam -> typedefof<DefaultCommandMethod<_,_>>.MakeGenericType(method.DeclaringType, lastParam.ParameterType)
+            | None -> typedefof<DefaultCommandMethod<_>>.MakeGenericType(method.DeclaringType)
         downcast Activator.CreateInstance(mt, method, name)
 
     let createEvt (method:MethodInfo) (name:string) : IEventMethod =

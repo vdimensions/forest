@@ -28,6 +28,9 @@ namespace Forest.Tests
 
             [Command("command")]
             internal void CommandExample(string arg) { }
+
+            [Command("commandNoArgs")]
+            internal void CommandExample2() { }
         }
     }
 
