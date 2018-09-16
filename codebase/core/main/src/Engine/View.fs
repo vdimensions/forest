@@ -96,6 +96,11 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
         member this.ActivateView (viewName: string) = this.ActivateView viewName
         member this.ActivateView<'v when 'v:>IView>() = this.ActivateView<'v>()
 
+type [<AbstractClass>] AbstractView() =
+    inherit AbstractView<Unit>(())
+    override __.Load() = ()
+
+
 [<RequireQualifiedAccessAttribute>]
 [<CompiledName("View")>]
 module View =
