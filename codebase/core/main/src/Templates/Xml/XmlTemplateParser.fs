@@ -64,9 +64,10 @@ type [<Sealed>] XmlTemplateParser() =
         let template = XDocument.Load(stream, LoadOptions.None)
         this.ParseXml name template
     member this.ParseXml name doc =
-        let master = doc.Root.Attribute("master" |> XName.Get)
+        let root = doc.Root
+        let master = root.Attribute("master" |> XName.Get)
         match null2vopt master with
-        | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderDefinitions(doc.Elements()))
-        | ValueNone -> this.ReadViewContents(doc.Root.Elements()) |> this.CreateTemplateDefinition name |> Root
+        | ValueSome master -> Mastered(master.Value, this.ReadPlaceHolderDefinitions(root.Elements()))
+        | ValueNone -> this.ReadViewContents(root.Elements()) |> this.CreateTemplateDefinition name |> Root
 
 
