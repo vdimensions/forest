@@ -1,4 +1,8 @@
-﻿namespace Forest.UI
+﻿open Forest
+
+namespace Forest.UI
+
+open System
 
 open Forest
 
@@ -20,14 +24,16 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
 
     interface IDomProcessor with
         member this.ProcessNode n =
-            this.nodeStates <- 
-                match this.adapters.TryFind n.Hash with
-                | Some _ -> (UpdatedNode n)::this.nodeStates
-                | None -> (NewNode n)::this.nodeStates
             this.nodesToDelete <- this.nodesToDelete |> Set.remove n.Hash
-            for kvp in n.Regions do 
-                for childNode in kvp.Value do
-                    this.parentChildMap <- this.parentChildMap |> Map.add childNode.Hash (n.Hash, kvp.Key)
+            // Message dispatcher is an internal component and must not be rendered
+            if not(StringComparer.Ordinal.Equals(n.Name, MessageDispatcher.Name)) then
+                this.nodeStates <- 
+                    match this.adapters.TryFind n.Hash with
+                    | Some _ -> (UpdatedNode n)::this.nodeStates
+                    | None -> (NewNode n)::this.nodeStates
+                for kvp in n.Regions do 
+                    for childNode in kvp.Value do
+                        this.parentChildMap <- this.parentChildMap |> Map.add childNode.Hash (n.Hash, kvp.Key)
             n
 
         member this.Complete() = 

@@ -7,7 +7,7 @@ module internal MessageDispatcher =
     [<Literal>]
     let Name = "MessageDispatcher"
     let private Key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region Name
-    type [<Sealed;View(Name);NoComparison>] View() = inherit AbstractView<Unit>(()) with override __.Load() = ()
+    type [<Sealed;View(Name);NoComparison>] View() = inherit AbstractView()
     let Show (runtime:ForestRuntime) : View = 
         match null2opt <| runtime.Context.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
