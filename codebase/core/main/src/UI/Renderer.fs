@@ -1,6 +1,4 @@
-﻿open Forest
-
-namespace Forest.UI
+﻿namespace Forest.UI
 
 open System
 

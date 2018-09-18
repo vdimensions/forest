@@ -66,11 +66,15 @@ module Event =
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
         member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
-            let subscriptions =  
-                topicSubscriptionHandlers.Keys 
-                |> Seq.filter _isForMessageType<'M>
-                |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (_subscribersFilter sender))
-            for subscription in subscriptions do subscription.Invoke message
+            //let subscriptions =  
+            //    topicSubscriptionHandlers.Keys 
+            //    |> Seq.filter _isForMessageType<'M>
+            //    |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (_subscribersFilter sender))
+            //for subscription in subscriptions do subscription.Invoke message
+            for key in topicSubscriptionHandlers.Keys do
+                if _isForMessageType<'M> key then
+                    for subscription in topicSubscriptionHandlers.[key] do
+                        if _subscribersFilter sender subscription then subscription.Invoke message
         member __.Dispose () =
             for value in subscriptions.Values do value.Clear()
             subscriptions.Clear()
@@ -103,7 +107,7 @@ module Event =
             this
         member this.Unsubscribe (NotNull "receiver" receiver:IView) : T =
             for topicSubscriptionHandlers in subscriptions.Values |> Seq.collect (fun x -> x.Values) do
-                for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) do
+                for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) |> Seq.toArray do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
             this
         interface IEventBus with

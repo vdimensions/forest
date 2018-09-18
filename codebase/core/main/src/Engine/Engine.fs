@@ -34,7 +34,7 @@ type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime:ForestRuntime)
     interface IMessageDispatcher with
         member __.SendMessage message = 
             let messageDispatcher = runtime |> MessageDispatcher.Show
-            messageDispatcher.Publish(message, System.String.Empty)
+            messageDispatcher.Publish(message)
 
 [<CompiledName("ForestEngine")>]
 type [<Sealed;NoComparison>] Engine private(ctx:IForestContext, state:State) =
