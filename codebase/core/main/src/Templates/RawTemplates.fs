@@ -57,8 +57,8 @@ module Raw =
                         let newNestedViewContents = nestedViewContents |> inlineTemplates provider 
                         newRegionContents <- View (name, newNestedViewContents)::newRegionContents
                     | any -> newRegionContents <- any::newRegionContents
-                result <- Region (name, newRegionContents |> List.rev)::result
-        result |> List.rev
+                result <- Region (name, List.rev newRegionContents)::result
+        result
     /// Inlines the contents of any accumulated `Placeholders` into the respective `Content` items
     and private processPlaceholders (placeholderData:Map<string, RegionContents list>) (current:ViewContents list):ViewContents list =
         if placeholderData |> Map.isEmpty |> not 
@@ -82,10 +82,10 @@ module Raw =
                                 pd <- pd.Remove placeholder
                         | View (name, nestedViewContents) ->
                             let newNestedViewContents = nestedViewContents |> processPlaceholders pd 
-                            newRegionContents <- View (name, newNestedViewContents)::newRegionContents
+                            newRegionContents <- View(name, newNestedViewContents)::newRegionContents
                         | Template _ -> newRegionContents <- rc::newRegionContents
-                    result <- Region (name, newRegionContents |> List.rev)::result
-            result |> List.rev
+                    result <- Region (name, List.rev newRegionContents)::result
+            result
         else current
     /// expands any `Template` items to a fully flattened template 
     and private expandTemplates (provider:ITemplateProvider) (current:ViewContents list):ViewContents list =
@@ -102,6 +102,6 @@ module Raw =
                         let newNestedViewContents = nestedViewContents |> expandTemplates provider 
                         newRegionContents <- View (name, newNestedViewContents)::newRegionContents
                     | Template t -> newRegionContents <- View(t, (loadTemplate provider t).contents)::newRegionContents
-                result <- Region (name, newRegionContents |> List.rev)::result
+                result <- Region (name, List.rev newRegionContents)::result
             | any -> result <- any::result
-        result |> List.rev
+        result

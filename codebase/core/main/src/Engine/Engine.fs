@@ -57,42 +57,48 @@ type [<Sealed;NoComparison>] Engine private(ctx:IForestContext, state:State) =
 
     member internal __.Context with get() = ctx
 
-    member private this.WrapAction f =
+    member inline private this.WrapAction (s:State option) action =
+        let actionInitialState = match s with Some x -> x | None -> st
         let result =
             try match this._rt with
                 | ValueNone -> 
-                    use rt = ForestRuntime.Create(st.Tree, st.ViewModels, st.ViewStates, ctx)
+                    use rt = ForestRuntime.Create(actionInitialState.Tree, actionInitialState.ViewModels, actionInitialState.ViewStates, ctx)
                     this._rt <- ValueSome rt
-                    let result = f rt
+                    let result = actionInitialState |> Engine.toResult rt (action rt)
                     this._rt <- ValueNone
                     result
-                | ValueSome rt -> f rt
+                | ValueSome rt -> actionInitialState |> Engine.toResult rt (action rt)
             with :? ForestException as e -> 
-                let se = State.initial
-                use rt = ForestRuntime.Create(se.Tree, se.ViewModels, se.ViewStates, ctx)
+                let resetState = State.initial
+                use rt = ForestRuntime.Create(resetState.Tree, resetState.ViewModels, resetState.ViewStates, ctx)
                 let errorView = Error.Show rt
                 // TODO: set error data
-                se |> Engine.toResult rt (Some st.Fuid)
+                resetState |> Engine.toResult rt (Some st.Fuid)
         st <- result.State
         result
 
-    member this.Update (operation:System.Action<IForestEngine>) : ForestResult =
+    member internal this.SwapState (initialState:State option) (operation:Runtime.Operation) : ForestResult =
+        (fun (rt:ForestRuntime) ->
+            operation |> rt.Update
+            None
+        ) |> this.WrapAction initialState
+
+    member this.Update (operation:System.Action<IForestEngine>) : ForestResult = 
         (fun rt ->
-            let adapter = new ForestEngineAdapter(rt)
-            operation.Invoke adapter
-            state |> Engine.toResult rt None
-        ) |> this.WrapAction
+            ForestEngineAdapter(rt) |> operation.Invoke
+            None
+        ) |> this.WrapAction None
 
     member this.Sync (changes:ChangeList) : ForestResult =
-        let rec _applyChangelog (ms: ForestRuntime) (cl: StateChange List) =
+        let rec _applyChangelog (rt:ForestRuntime) (cl:StateChange List) =
             match cl with
             | [] -> None
             | head::tail -> 
-                match head |> ms.Apply with
+                match head |> rt.Apply with
                 | Some e -> Some e
-                | None -> _applyChangelog ms tail
+                | None -> _applyChangelog rt tail
         (fun rt ->
             match _applyChangelog rt (changes.ToList()) with
-            | None -> state |> Engine.toResult rt (Some changes.Fuid)
+            | None -> Some changes.Fuid
             | Some e -> failwith "error" //TODO
-        ) |> this.WrapAction
+        ) |> this.WrapAction None

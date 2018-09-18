@@ -10,11 +10,8 @@ open System.Runtime.CompilerServices
 type TemplateExtensions =
     [<Extension>]
     static member LoadTemplate(engine:Engine, NotNull "name" name:string) =
-        let provider = engine.Context.TemplateProvider
-        engine.Update(
-            fun e -> 
-                name 
-                |> Raw.loadTemplate provider
-                |> TemplateCompiler.compile
-                |> (downcast e:ForestEngineAdapter).Runtime.Update)
+        name 
+        |> Raw.loadTemplate engine.Context.TemplateProvider
+        |> TemplateCompiler.compile
+        |> engine.SwapState (Some State.initial)
 

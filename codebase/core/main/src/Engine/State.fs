@@ -35,7 +35,7 @@ module internal State =
     let discardViewStates (st: State) = State(st.Tree, st.ViewModels, Map.empty)
 
     let rec private _traverseState (v:IForestStateVisitor) parent (ids:TreeNode list) (siblingsCount:int) (st:State) =
-        match ids |> List.rev with
+        match ids with
         | [] -> ()
         | head::tail ->
             let ix = siblingsCount - ids.Length // TODO
@@ -48,7 +48,7 @@ module internal State =
             _traverseState v parent tail siblingsCount st
             // visit children
             match st.Tree.Hierarchy.TryFind head with
-            | Some children -> _traverseState v head children children.Length st
+            | Some children -> _traverseState v head (children |> List.rev) children.Length st
             | None -> ()
             v.DFS head ix vm descriptor
             ()
