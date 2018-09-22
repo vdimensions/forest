@@ -51,28 +51,15 @@ module Event =
     let resolveError(e:Error) =
         ()
 
-    let private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
+    let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
-
-    let private _isForMessageType<'M> (x:Type): bool = 
-        let messageType = typeof<'M>
-        #if NETSTANDARD
-        messageType = x || x.GetTypeInfo().IsAssignableFrom(messageType.GetTypeInfo())
-        #else
-        messageType = x || x.IsAssignableFrom(messageType)
-        #endif
 
     type [<Sealed;NoComparison>] private T() = 
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
         member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
-            //let subscriptions =  
-            //    topicSubscriptionHandlers.Keys 
-            //    |> Seq.filter _isForMessageType<'M>
-            //    |> Seq.collect (fun key -> topicSubscriptionHandlers.[key] |> Seq.filter (_subscribersFilter sender))
-            //for subscription in subscriptions do subscription.Invoke message
             for key in topicSubscriptionHandlers.Keys do
-                if _isForMessageType<'M> key then
+                if key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo())  then
                     for subscription in topicSubscriptionHandlers.[key] do
                         if _subscribersFilter sender subscription then subscription.Invoke message
         member __.Dispose () =
