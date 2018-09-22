@@ -13,5 +13,5 @@ type TemplateExtensions =
         name 
         |> Raw.loadTemplate engine.Context.TemplateProvider
         |> TemplateCompiler.compile
-        |> engine.SwapState (Some State.initial)
+        |> engine.SwapState None
 

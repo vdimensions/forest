@@ -26,6 +26,9 @@ type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime:ForestRuntime)
         member __.ActivateView (name) : 'a when 'a:>IView = 
             let result = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.ActivateView
             downcast result:'a
+        member __.ActivateView<'a, 'm when 'a:>IView<'m>> (name, model:'m) : 'a = 
+            let result = runtime.ActivateView(model, TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name)
+            downcast result:'a
         member __.GetOrActivateView name = 
             TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.GetOrActivateView
     interface ICommandDispatcher with

@@ -2,8 +2,5 @@ namespace Forest
 
 
 type [<Interface>] IViewFactory = 
-    abstract member Resolve: vm:IViewDescriptor -> IView
-
-type [<Interface>] IView<'T> =
-    inherit IView
-    abstract ViewModel:'T with get, set
+    abstract member Resolve: vd:IViewDescriptor -> IView
+    abstract member Resolve: vd:IViewDescriptor * vm:obj -> IView

@@ -27,7 +27,9 @@ type [<Interface>] IViewDescriptor =
     abstract member Register: t:Type -> IViewRegistry
     abstract member Register<'T when 'T:>IView> : unit -> IViewRegistry
     abstract member Resolve: name:vname -> IView
+    abstract member Resolve: name:vname * model:obj -> IView
     abstract member Resolve: viewType:Type -> IView
+    abstract member Resolve: viewType:Type * model:obj -> IView
     abstract member GetDescriptor: name:vname -> IViewDescriptor
     abstract member GetDescriptor: viewType:Type -> IViewDescriptor
 
@@ -36,9 +38,16 @@ type [<Interface>] IViewDescriptor =
     abstract member FindRegion: regionName:rname -> IRegion
     abstract ViewModel:obj
 
+ and [<Interface>] IView<'T> =
+    inherit IView
+    abstract ViewModel:'T with get, set
+
  and [<Interface>] IRegion = 
     abstract member ActivateView: name:vname -> IView
+    abstract member ActivateView<'m> : name:vname * model:'m -> IView<'m>
     abstract member ActivateView<'v when 'v:>IView> : unit -> 'v
+    abstract member ActivateView<'v, 'm when 'v:>IView<'m>> : model:'m -> 'v
+    abstract member Clear:unit -> IRegion
     abstract Name:rname with get
     //abstract Item: string -> IView with get
 
@@ -47,4 +56,3 @@ type [<Interface>] ICommandModel =
     abstract member Description:string with get
     abstract member DisplayName:string with get
     abstract member Tooltip:string with get
-

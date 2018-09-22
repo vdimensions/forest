@@ -13,4 +13,5 @@ type [<Interface>] IForestEngine =
     inherit ICommandDispatcher
     inherit IMessageDispatcher
     abstract member ActivateView: name:vname -> 'a when 'a:>IView
+    abstract member ActivateView<'a, 'm when 'a:>IView<'m>> : name:vname * model:'m -> 'a
     abstract member GetOrActivateView: name:vname -> 'a when 'a:>IView

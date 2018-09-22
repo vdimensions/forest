@@ -22,6 +22,8 @@ namespace Forest.Tests
         [View(ViewName)]
         internal class View : AbstractView<ViewModel>
         {
+            public View(ViewModel model) : base(model) {}
+
             public override void Load()
             {
             }
@@ -44,12 +46,11 @@ namespace Forest.Tests
         {
             public override void Load()
             {
-                var region = FindRegion("SomeRegion");
+                var region = FindRegion("SomeRegion").Clear();
                 var count = new Random().Next(1, 10);
                 for (var i = 0; i < count; i++)
                 {
-                    var innerView = (Inner.View) region.ActivateView(Inner.ViewName);
-                    innerView.ViewModel = new Inner.ViewModel();
+                    var innerView = (Inner.View) region.ActivateView(Inner.ViewName, new Inner.ViewModel());
                 }
                 var count2 = new Random().Next(0, 10);
                 for (var i = 10; i <= count2; i++)
@@ -95,7 +96,7 @@ namespace Forest.Tests
             var result = engine.Update(
                 e =>
                 {
-                    e.ActivateView<Inner.View>(Inner.ViewName);
+                    e.ActivateView<Inner.View, Inner.ViewModel>(Inner.ViewName, new Inner.ViewModel());
                 });
 
             Assert.AreNotEqual(result.State, State.Empty);

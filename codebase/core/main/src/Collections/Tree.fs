@@ -41,21 +41,26 @@ module internal Tree =
     let remove (node:TreeNode) (tree:Tree) : Tree*TreeNode list =
         let rec doRemove parentID (st, lst) =
             match st |> getChildren parentID  with
-            | [] -> ({ Hierarchy = st.Hierarchy.Remove(parentID) }, parentID::lst)
-            | head::_ -> (st, lst) |> doRemove head |> doRemove parentID
-
-        let (noContents, removedNodes) = doRemove node (tree, [])
+            | [] -> 
+                let mutable ns = list.Empty
+                for s in (List.rev st.Hierarchy.[parentID.Parent]) do
+                    if not(s.Equals(parentID)) then ns <- s::ns
+                let newHierarchy = 
+                    st.Hierarchy 
+                    |> Map.remove parentID.Parent 
+                    |> Map.add parentID.Parent ns
+                    |> Map.remove parentID
+                ({ Hierarchy = newHierarchy }, parentID::lst)
+            | head::_ -> 
+                (st, lst) |> doRemove head |> doRemove parentID
+        (tree, []) |> doRemove node 
         
-        match TreeNode.isShell node.Parent with
-        | false ->
-            let parentNode = node.Parent
-            let siblings = noContents |> getChildren parentNode
-            let updatedSiblings = siblings |> List.except [node]
-            
-            if (updatedSiblings.Length = siblings.Length)
-            then (noContents, removedNodes)
-            else ({ Hierarchy = noContents.Hierarchy.Remove(parentNode).Add(parentNode, updatedSiblings) }, removedNodes)
-        | true -> (noContents, removedNodes)
+    let filter (node:TreeNode) (matcher:(TreeNode -> bool)) (tree:Tree) : TreeNode list =
+        let mutable matches = List.empty
+        for child in getChildren node tree do
+            if matcher(child) then
+               matches <- child :: matches
+        matches
 
     let tryFindView (node:TreeNode) (region:rname) (view:vname) (tree:Tree) : TreeNode option =
         let cmp = StringComparer.Ordinal

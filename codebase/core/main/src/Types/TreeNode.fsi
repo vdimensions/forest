@@ -13,7 +13,7 @@ type [<Sealed>] TreeNode =
     [<CompiledName("NewKey")>]
     /// Generates a new key and a corresponding entry in the view composition hierarchy
     static member newKey: region:rname -> view:vname -> parent:TreeNode -> TreeNode
-    /// A reference to the current node's parrent in the view composition hierarchy
+    /// A reference to the current node's parent in the view composition hierarchy
     member Parent:TreeNode with get
     /// The name of the region that hosts the view object represented by the current node
     member Region:rname with get

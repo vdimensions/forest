@@ -29,6 +29,7 @@ module TemplateCompiler =
         result
     [<CompiledName("Compile")>]
     let compile (template:TemplateDefinition) =
-        let templateNode = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region template.name
-        let ops = expandView templateNode template.contents |> List.rev
+        let (templateParentNode, templateRegion) = (TreeNode.shell, TreeNode.shell.Region)
+        let templateNode = templateParentNode |> TreeNode.newKey templateRegion template.name
+        let ops = Runtime.Operation.ClearRegion(templateParentNode, templateRegion)::(expandView templateNode template.contents |> List.rev)
         Runtime.Operation.Multiple ops

@@ -51,10 +51,10 @@ module Event =
     let resolveError(e:Error) =
         ()
 
-    let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
+    let private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
 
-    let inline private _isForMessageType<'M> (x:Type): bool = 
+    let private _isForMessageType<'M> (x:Type): bool = 
         let messageType = typeof<'M>
         #if NETSTANDARD
         messageType = x || x.GetTypeInfo().IsAssignableFrom(messageType.GetTypeInfo())

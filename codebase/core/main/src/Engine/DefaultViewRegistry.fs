@@ -19,8 +19,10 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) =
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
     abstract member CreateViewDescriptor: anonymousView:bool -> t:Type -> Result<IViewDescriptor, ViewRegistryError>
-    member __.InstantiateView viewMetadata = 
-        try factory.Resolve viewMetadata
+    member private __.InstantiateView model viewMetadata = 
+        try match model with
+            | Some m -> factory.Resolve(viewMetadata, m)
+            | None -> factory.Resolve viewMetadata
         with e -> raise <| ViewInstantiationException(viewMetadata.ViewType, e)
     member this.ResolveError (e:ViewRegistryError) : Exception = 
         match e with
@@ -48,13 +50,21 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) =
         this.Register typeof<'T>
     member this.Resolve (NotNull "viewType" viewType:Type) =
         match null2vopt <| this.GetViewDescriptor viewType with
-        | ValueSome vd -> vd |> this.InstantiateView
+        | ValueSome vd -> vd |> this.InstantiateView None
         | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "name" name:string) = 
+    member this.Resolve (NotNull "viewType" viewType:Type, model:obj) =
+        match null2vopt <| this.GetViewDescriptor viewType with
+        | ValueSome vd -> vd |> this.InstantiateView (Some model)
+        | ValueNone ->  invalidArg "viewType" "Invalid view type"
+    member this.Resolve (NotNull "name" name:vname) = 
         match storage.TryGetValue name with 
-        | (true, viewMetadata) -> this.InstantiateView viewMetadata
+        | (true, viewMetadata) -> this.InstantiateView None viewMetadata
         | (false, _) -> invalidArg "name" "No such view was registered"
-    member __.GetViewDescriptor (NotNull "name" name:string) = 
+    member this.Resolve (NotNull "name" name:vname, NotNull "model" model:obj) = 
+        match storage.TryGetValue name with 
+        | (true, viewMetadata) -> this.InstantiateView (Some model) viewMetadata
+        | (false, _) -> invalidArg "name" "No such view was registered"
+    member __.GetViewDescriptor (NotNull "name" name:vname) = 
         match (storage.TryGetValue name) with
         | (true, d) -> d
         | (false, _) -> nil<IViewDescriptor>
@@ -62,9 +72,11 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) =
     interface IViewRegistry with
         member this.Register t = this.Register t
         member this.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member this.Resolve(name:string) = name |> this.Resolve 
-        member this.Resolve(viewType:Type) = viewType |> this.Resolve 
-        member this.GetDescriptor(name:string) = this.GetViewDescriptor name
+        member this.Resolve(name:vname) = this.Resolve name
+        member this.Resolve(name:vname, model:obj) = this.Resolve(name, model)
+        member this.Resolve(viewType:Type) = this.Resolve viewType
+        member this.Resolve(viewType:Type, model:obj) = this.Resolve(viewType, model)
+        member this.GetDescriptor(name:vname) = this.GetViewDescriptor name
         member this.GetDescriptor(viewType:Type) = this.GetViewDescriptor viewType
 
 type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 

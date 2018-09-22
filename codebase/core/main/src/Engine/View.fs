@@ -84,17 +84,27 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
         member this.FindRegion name = this.FindRegion name
         member this.ViewModel with get() = upcast this.ViewModel
 
- and private Region(regionName:string, view:IRuntimeView) =
-    member __.ActivateView (NotNull "viewName" viewName:string) =
-        view.Runtime.ActivateView view.InstanceID regionName viewName
+ and private Region(regionName:rname, view:IRuntimeView) =
+    member __.ActivateView (NotNull "viewName" viewName:vname) =
+        view.Runtime.ActivateView(viewName, regionName, view.InstanceID)
+    member __.ActivateView (NotNull "viewName" viewName:vname, NotNull "model" model:'m) =
+        view.Runtime.ActivateView(model, viewName, regionName, view.InstanceID)
     member __.ActivateView<'v when 'v:>IView> () : 'v =
-        view.Runtime.ActivateAnonymousView view.InstanceID regionName
+        view.Runtime.ActivateAnonymousView(regionName, view.InstanceID)
+    member __.ActivateView<'v, 'm when 'v:>IView<'m>> (model:'m) : 'v =
+        view.Runtime.ActivateAnonymousView(model, regionName, view.InstanceID)
+    member this.Clear() =
+        view.Runtime.ClearRegion view.InstanceID regionName
+        this
     member __.Name 
         with get() = regionName
     interface IRegion with
-        member this.Name = this.Name
-        member this.ActivateView (viewName: string) = this.ActivateView viewName
+        member this.ActivateView (viewName:vname) = this.ActivateView viewName
         member this.ActivateView<'v when 'v:>IView>() = this.ActivateView<'v>()
+        member this.ActivateView<'m> (viewName:vname, model:'m) = this.ActivateView<'m>(viewName, model)
+        member this.ActivateView<'v, 'm when 'v:>IView<'m>>(model:'m) = this.ActivateView<'v, 'm>(model)
+        member this.Clear() = upcast this.Clear()
+        member this.Name = this.Name
 
 type [<AbstractClass>] AbstractView() =
     inherit AbstractView<Unit>(())
@@ -156,5 +166,16 @@ module View =
             match constructors with
             | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", descriptor.ViewType.FullName)))
             | head::_ -> downcast head.Invoke([||]) : IView
+        member __.Resolve (NotNull "descriptor" descriptor:IViewDescriptor, NotNull "model" model:obj) : IView = 
+            let flags = BindingFlags.Public|||BindingFlags.Instance
+            let constructors = 
+                descriptor.ViewType.GetConstructors(flags) 
+                |> Array.toList
+                |> List.filter (fun c -> c.GetParameters().Length = 1 && c.GetParameters().[0].ParameterType.GetTypeInfo().IsAssignableFrom(model.GetType().GetTypeInfo())) 
+            match constructors with
+            | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", descriptor.ViewType.FullName)))
+            | head::_ -> downcast head.Invoke([|model|]) : IView
         
-        interface IViewFactory with member this.Resolve m = this.Resolve m
+        interface IViewFactory with 
+            member this.Resolve d = this.Resolve d
+            member this.Resolve (d, m) = this.Resolve(d, m)
