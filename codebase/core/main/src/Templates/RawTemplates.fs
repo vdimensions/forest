@@ -24,20 +24,21 @@ module Raw =
         match templates with
         | [] -> result
         | head::tail -> 
-            match head with
-            | Root d -> { result with contents = d.contents }
-            | Mastered (_, contentDefinitions) ->
-                let placeholderMap = 
-                    contentDefinitions 
-                    |> Seq.map (fun a -> (a.placeholder, a.contents)) 
-                    |> Map.ofSeq
-                let newContents = 
-                    result.contents 
-                    |> inlineTemplates provider
-                    |> processPlaceholders placeholderMap
-                    |> expandTemplates provider
-                { result with contents = newContents }
-            |> flattenTemplate provider tail
+            let (placeholderMap, res) = 
+                match head with
+                | Root d -> (Map.empty, { result with contents = d.contents })
+                | Mastered (_, contentDefinitions) ->
+                    let placeholderMap = 
+                        contentDefinitions 
+                        |> Seq.map (fun a -> (a.placeholder, a.contents)) 
+                        |> Map.ofSeq
+                    (placeholderMap, result)
+            let newContents = 
+                res.contents 
+                |> inlineTemplates provider
+                |> processPlaceholders placeholderMap
+                |> expandTemplates provider
+            { res with contents = newContents } |> flattenTemplate provider tail
     /// Locates and expands any `InlinedTemplate` item
     and private inlineTemplates (provider:ITemplateProvider) (current:ViewContents list):ViewContents list =
         let mutable result = List.empty
