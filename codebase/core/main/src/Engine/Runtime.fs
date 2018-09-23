@@ -64,14 +64,29 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t:Tree, models:Map<
         tree <- t
         Ok ()
 
-    let clearRegion (owner:TreeNode) (region:string) =
-        let mutable errors = List.empty<Runtime.Error>
+    let getRegionContents (owner:TreeNode) (region:rname) =
         let isInRegion (node:TreeNode) = StringComparer.Ordinal.Equals(region, node.Region)
-        for child in tree |> Tree.filter owner isInRegion do
+        tree |> Tree.filter owner isInRegion
+
+    let clearRegion (owner:TreeNode) (region:rname) =
+        let mutable errors = List.empty<Runtime.Error>
+        for child in getRegionContents owner region do
             errors <- 
                 match destroyView child with
                 | Ok _ -> errors
                 | Error e -> e::errors
+        match errors with
+        | [] -> Ok()
+        | list -> Error <| Runtime.Error.Multiple list
+
+    let removeViewsFromRegion (owner:TreeNode) (region:rname) (predicate:System.Predicate<IView>)=
+        let mutable errors = List.empty<Runtime.Error>
+        for child in getRegionContents owner region do
+            if (predicate.Invoke(views.[child.Hash])) then
+                errors <- 
+                    match destroyView child with
+                    | Ok _ -> errors
+                    | Error e -> e::errors
         match errors with
         | [] -> Ok()
         | list -> Error <| Runtime.Error.Multiple list
@@ -264,32 +279,50 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t:Tree, models:Map<
             match models.TryGetValue node.Hash with
             | (true, m) -> Some m
             | (false, _) -> None
+
         member __.SetViewModel silent node model = 
             models.[node.Hash] <- model
             if not silent then changeLog.Add(StateChange.ViewModelUpdated(node, model))
             model
+
         member this.ActivateView(name, region, parent) =
             let node = parent |> TreeNode.newKey region name 
             this.ActivateView node
+
         member this.ActivateView(model:'m, name, region, parent) =
             let node = parent |> TreeNode.newKey region name 
             this.ActivateView(model, node)
+
         member this.ActivateAnonymousView<'v when 'v:>IView>(region, parent) =
             this.ActivateAnonymousView<'v>(region, parent)
+
         member this.ActivateAnonymousView<'v, 'm when 'v:>IView<'m>>(model, region, parent) =
             this.ActivateAnonymousView<'v, 'm>(model, region, parent)
+
         member __.ClearRegion node region =
             clearRegion node region |> ignore
+
+        member __.GetRegionContents node region =
+            getRegionContents node region 
+            |> Seq.map (fun node -> (upcast views.[node.Hash] : IView))
+
+        member __.RemoveViewFromRegion node region predicate =
+            removeViewsFromRegion node region predicate |> ignore
+
         member this.PublishEvent sender message topics = 
             Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update |> ignore
+
         member this.ExecuteCommand issuer command arg =
             Runtime.Operation.InvokeCommand(issuer.InstanceID.Hash, command, arg) |> this.Update |> ignore
+
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do
                 let handler = Event.Handler(event, view)
                 eventBus.Subscribe handler event.Topic |> ignore
+
         member __.UnsubscribeEvents view =
             eventBus.Unsubscribe view |> ignore
+
     interface IDisposable with 
         member this.Dispose() = 
             this.Dispose()

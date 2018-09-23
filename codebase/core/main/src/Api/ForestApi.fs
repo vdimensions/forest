@@ -7,52 +7,54 @@ open System.Collections.Generic
 
 
 type [<Interface>] IViewDescriptor = 
-    abstract Name:vname with get
-    abstract ViewType:Type with get
-    abstract ViewModelType:Type with get
-    abstract Commands:Index<ICommandDescriptor, cname> with get
-    abstract Events:IEnumerable<IEventDescriptor> with get
+    abstract Name : vname with get
+    abstract ViewType : Type with get
+    abstract ViewModelType : Type with get
+    abstract Commands : Index<ICommandDescriptor, cname> with get
+    abstract Events : IEventDescriptor seq with get
 
  and [<Interface>] ICommandDescriptor = 
-    abstract Name:cname with get
-    abstract ArgumentType:Type with get
-    abstract member Invoke: arg:obj -> v:IView -> unit
+    abstract member Invoke : arg : obj -> v : IView -> unit
+    abstract Name : cname with get
+    abstract ArgumentType : Type with get
 
  and [<Interface>] IEventDescriptor =
-    abstract Topic:string with get
-    abstract MessageType:Type with get
-    abstract member Trigger: view:IView -> message:obj -> unit
+    abstract member Trigger : view : IView -> message : obj -> unit
+    abstract Topic : string with get
+    abstract MessageType : Type with get
 
  and [<Interface>] IViewRegistry =
-    abstract member Register: t:Type -> IViewRegistry
+    abstract member Register : t : Type -> IViewRegistry
     abstract member Register<'T when 'T:>IView> : unit -> IViewRegistry
-    abstract member Resolve: name:vname -> IView
-    abstract member Resolve: name:vname * model:obj -> IView
-    abstract member Resolve: viewType:Type -> IView
-    abstract member Resolve: viewType:Type * model:obj -> IView
-    abstract member GetDescriptor: name:vname -> IViewDescriptor
-    abstract member GetDescriptor: viewType:Type -> IViewDescriptor
+    abstract member Resolve : name : vname -> IView
+    abstract member Resolve : name : vname * model:obj -> IView
+    abstract member Resolve : viewType : Type -> IView
+    abstract member Resolve : viewType : Type * model : obj -> IView
+    abstract member GetDescriptor : name : vname -> IViewDescriptor
+    abstract member GetDescriptor : viewType : Type -> IViewDescriptor
 
  and [<Interface>] IView =
     abstract Publish<'M> : message:'M * [<ParamArray>] topics:string[] -> unit
-    abstract member FindRegion: regionName:rname -> IRegion
+    abstract member FindRegion : regionName : rname -> IRegion
     abstract ViewModel:obj
 
  and [<Interface>] IView<'T> =
     inherit IView
-    abstract ViewModel:'T with get, set
+    abstract ViewModel : 'T with get, set
 
  and [<Interface>] IRegion = 
-    abstract member ActivateView: name:vname -> IView
-    abstract member ActivateView<'m> : name:vname * model:'m -> IView<'m>
-    abstract member ActivateView<'v when 'v:>IView> : unit -> 'v
-    abstract member ActivateView<'v, 'm when 'v:>IView<'m>> : model:'m -> 'v
-    abstract member Clear:unit -> IRegion
-    abstract Name:rname with get
-    //abstract Item: string -> IView with get
+    abstract member ActivateView : name : vname -> IView
+    abstract member ActivateView<'m> : name : vname * model : 'm -> IView<'m>
+    abstract member ActivateView<'v when 'v :> IView> : unit -> 'v
+    abstract member ActivateView<'v, 'm when 'v :> IView<'m>> : model:'m -> 'v
+    abstract member Clear : unit -> IRegion
+    abstract member Remove : System.Predicate<IView> -> IRegion
+    abstract Name : rname with get
+    abstract Views : IView seq with get
+    //abstract Item: vname -> IView with get
 
 type [<Interface>] ICommandModel =
-    abstract member Name:string with get
-    abstract member Description:string with get
-    abstract member DisplayName:string with get
-    abstract member Tooltip:string with get
+    abstract member Name : cname with get
+    abstract member Description : string with get
+    abstract member DisplayName : string with get
+    abstract member Tooltip : string with get
