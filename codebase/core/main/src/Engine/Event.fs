@@ -57,14 +57,24 @@ module Event =
     type [<Sealed;NoComparison>] private T() = 
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
+
         member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
+            // Collect the event subscriptions before invocation. 
+            // This is necessary, as some commands may cause view disposal and event unsubscription in result, 
+            // which is undesired while iterating over the subscription collections
+            let mutable subscriptionsToCall = List.empty
             for key in topicSubscriptionHandlers.Keys do
                 if key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo())  then
                     for subscription in topicSubscriptionHandlers.[key] do
-                        if _subscribersFilter sender subscription then subscription.Invoke message
+                        if _subscribersFilter sender subscription then 
+                            subscriptionsToCall <- subscription::subscriptionsToCall
+            // Now that we've collected all potential subscribers, it is safe to invoke them
+            for s in subscriptionsToCall do s.Invoke message
+
         member __.Dispose () =
             for value in subscriptions.Values do value.Clear()
             subscriptions.Clear()
+
         member this.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, NotNull "topics" topics:string[]) : unit =
             match topics with
             | [||] ->
@@ -75,6 +85,7 @@ module Event =
                     match subscriptions.TryGetValue(topic) with
                     | (true, topicSubscriptionHandlers) -> this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
                     | (false, _) -> ()
+
         member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler:ISubscriptionHandler, NotNull "topic" topic:string) : T =
             let topicSubscriptionHandlers = 
                 match subscriptions.TryGetValue(topic) with
@@ -92,15 +103,18 @@ module Event =
                     tmp
             subscriptionList.Add subscriptionHandler
             this
+
         member this.Unsubscribe (NotNull "receiver" receiver:IView) : T =
             for topicSubscriptionHandlers in subscriptions.Values |> Seq.collect (fun x -> x.Values) do
                 for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) |> Seq.toArray do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
             this
+
         interface IEventBus with
             member this.Publish<'M> (sender:IView, message:'M, topics:string[]) : unit = this.Publish<'M>(sender, message, topics)
             member this.Subscribe x y = upcast this.Subscribe (x, y)
             member this.Unsubscribe receiver = upcast this.Unsubscribe receiver
+
         interface IDisposable with 
             member this.Dispose() = this.Dispose()
 

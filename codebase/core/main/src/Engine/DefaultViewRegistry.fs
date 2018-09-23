@@ -97,7 +97,7 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory,
             | (None, true) -> Ok ("", viewType, viewModelType)
             | (None, false) -> Error <| View.Error.ViewAttributeMissing viewType
         let inline getViewDescriptor (viewName:string, viewType:Type, viewModelType:Type) =
-            let inline createCommandDescriptor (mi: ICommandMethod) =
+            let inline createCommandDescriptor (mi:ICommandMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error (Command.Error.NonVoidReturnType(mi))
                 else

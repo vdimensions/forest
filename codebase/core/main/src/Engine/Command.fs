@@ -23,7 +23,7 @@ module Command =
         member __.Invoke (arg:obj) (view:IView) : unit = method.Invoke view arg
         member __.ArgumentType with get() = argType
         interface ICommandDescriptor with
-            member __.Name = method.Name
+            member __.Name = method.CommandName
             member this.ArgumentType = this.ArgumentType
             member this.Invoke arg view = this.Invoke arg view
 
