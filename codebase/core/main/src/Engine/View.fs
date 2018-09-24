@@ -29,6 +29,7 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
         this.rt.PublishEvent this message topics
 
     abstract member Load: unit -> unit
+    default __.Load() = ()
 
     abstract member Resume: unit -> unit
     default __.Resume() = ()
@@ -137,10 +138,7 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
         member this.Name = this.Name
         member this.Views = this.GetContents()
 
-type [<AbstractClass>] AbstractView() =
-    inherit AbstractView<Unit>(())
-    override __.Load() = ()
-
+type [<AbstractClass>] AbstractView() = inherit AbstractView<Unit>(())
 
 [<RequireQualifiedAccessAttribute>]
 [<CompiledName("View")>]
