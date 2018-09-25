@@ -4,9 +4,3 @@ storage: none
 source https://nuget.org/api/v2
   nuget FSharp.Core >= 4.5
 
-group build
-  source ../../../../submodules/mason/dist
-    nuget Mason.Targets.Packager
-    nuget Mason.Targets.Preprocessor
-    nuget Mason.Targets.Verman
-

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AssemblyInfoDirectory>$(MSBuildProjectDirectory)\$(AppDesignerFolder)</AssemblyInfoDirectory>
+    <GeneratedFSharpAssemblyVersionFile>$(AssemblyInfoDirectory)\AssemblyInfo.$(TargetFramework).fs</GeneratedFSharpAssemblyVersionFile>
+  </PropertyGroup>
+
+  <Target Name="GenerateAssemblyFileVersion"
+          BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_AssemblyVersionAttributes Include="AssemblyTitle">
+        <_Parameter1>$(AssemblyTitle)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyProduct">
+        <_Parameter1>$(AssemblyProduct)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyDescription">
+        <_Parameter1>$(AssemblyDescription)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyCompany">
+        <_Parameter1>$(AssemblyCompany)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyCopyright">
+        <_Parameter1>$(AssemblyCopyright)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyVersion">
+        <_Parameter1>$(AssemblyVersion)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyFileVersion">
+        <_Parameter1>$(AssemblyFileVersion)</_Parameter1>
+      </_AssemblyVersionAttributes>
+      <_AssemblyVersionAttributes Include="AssemblyInformationalVersion">
+        <_Parameter1>$(AssemblyInformationalVersion)</_Parameter1>
+      </_AssemblyVersionAttributes>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_LinesToWrite Include="// &lt;auto-generated&gt;" />
+      <_LinesToWrite Include="namespace $(RootNamespace)" />
+      <_LinesToWrite Include="open System" />
+      <_LinesToWrite Include="open System.Reflection" />
+      <_LinesToWrite Include="//" />
+      <_LinesToWrite Include="[&lt;assembly: %(_AssemblyVersionAttributes.Identity)(&quot;%(_AssemblyVersionAttributes._Parameter1)&quot;)&gt;]" />
+      <_LinesToWrite Include="//" />
+      <_LinesToWrite Include="do()" />
+
+      <FileWrites Include="$(GeneratedFSharpAssemblyVersionFile)" />
+    </ItemGroup>
+
+    <!-- Delete generated assembly info file so that each build uses the latest version number  -->
+    <Delete Files="$(GeneratedFSharpAssemblyVersionFile)" Condition="Exists('$(GeneratedFSharpAssemblyVersionFile)')" /> 
+    <WriteLinesToFile File="$(GeneratedFSharpAssemblyVersionFile)"
+                      Lines="@(_LinesToWrite)"
+                      Overwrite="false"
+                      Encoding="Unicode"
+                      Condition="!Exists('$(GeneratedFSharpAssemblyVersionFile)')" />
+
+    <Message Text="Using generated assembly info file: $(GeneratedFSharpAssemblyVersionFile)" Importance="High" />
+    <Message Text="Assembly info target location: $(AssemblyInfoDirectory)" Importance="High" />
+    <Message Text="TargetFramework = $(TargetFramework)" Importance="High" />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="$(GeneratedFSharpAssemblyVersionFile)"/>
+  </ItemGroup>
+</Project>

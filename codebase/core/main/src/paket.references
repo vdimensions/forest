@@ -1,4 +1,1 @@
 FSharp.Core
-
-group build
-  Mason.Targets.Preprocessor

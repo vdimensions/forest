@@ -3,19 +3,21 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard1.6;net46;net45</TargetFrameworks>
   </PropertyGroup>
-  <Import Project="../../../../submodules/msbuild-dotnet-multitargeting/src/MultitargetingFrameworkSupport.targets" />
   <PropertyGroup>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Name>Forest.Core</Name>
     <AssemblyName>Forest.Core</AssemblyName>
+    <Description>Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer.</Description>
     <RootNamespace>Forest</RootNamespace>
     <ProjectGuid>{7CBDBFBD-F8FD-4C48-AF8E-0D77923DDF42}</ProjectGuid>
     <OutputType>Library</OutputType>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
+  <Import Project="../../../Forest.Common.props" />
+  <Import Project="../../../FSharpAssemblyInfo.targets" />
+  <Import Project="../../../../submodules/msbuild-dotnet-multitargeting/src/MultitargetingFrameworkSupport.targets" />
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.fs" />
+    <!-- <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" /> -->
     <Compile Include="Infrastructure\NullHandling.fs" />
     <Compile Include="Infrastructure\Result.fs" />
     <Compile Include="Types\Types.fs" />
@@ -68,6 +70,5 @@
     <None Include="Properties\AssemblyInfo.fs.template" />
     <None Include="restore.sh" />
   </ItemGroup>
-  <Import Project="packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets" Condition="Exists('packages\build\Mason.Targets.Preprocessor\build\Mason.Targets.Preprocessor.targets')" Label="Paket" />
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

@@ -431,10 +431,3 @@ NUGET
       Microsoft.NETCore.Platforms (>= 1.1) - restriction: || (== net45) (&& (== net46) (< net451)) (&& (== net46) (< portable-net451+win81+wpa81)) (== netstandard1.6) (== netstandard2.0)
       Microsoft.NETCore.Targets (>= 1.1) - restriction: || (== net45) (&& (== net46) (< net451)) (&& (== net46) (< portable-net451+win81+wpa81)) (== netstandard1.6) (== netstandard2.0)
       System.Runtime (>= 4.3) - restriction: || (== net45) (&& (== net46) (< net451)) (&& (== net46) (< portable-net451+win81+wpa81)) (== netstandard1.6) (== netstandard2.0)
-
-GROUP build
-NUGET
-  remote: ../../../../submodules/mason/dist
-    Mason.Targets.Packager (0.2.0.41)
-    Mason.Targets.Preprocessor (0.2.0.78)
-    Mason.Targets.Verman (0.2.0.51)

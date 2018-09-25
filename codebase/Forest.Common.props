@@ -1,16 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup>
-    <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
-    <AssemblyProduct>$(AssemblyTitle)</AssemblyProduct>
-    <AssemblyCompany>Virtual Dimensions</AssemblyCompany>
-    <Copyright>Copyright © $(AssemblyCompany) 2013-2018</Copyright>
-    <Authors>$(AssemblyCompany)</Authors>
-    <Description>Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer.</Description>
     <!-- Versioning properties -->
+    <Deterministic>false</Deterministic>
     <Build>$([System.DateTime]::op_Subtraction($([System.DateTime]::get_Now().get_Date()),$([System.DateTime]::new(2000,1,1))).get_TotalDays())</Build>
     <Revision>$([MSBuild]::Divide($([System.DateTime]::get_Now().get_TimeOfDay().get_TotalSeconds()), 2).ToString('F0'))</Revision>
     <Version>2.0.$(Build).$(Revision)</Version>
+    <!-- Copyright info -->
+    <Company>Virtual Dimensions</Company>
+    <Copyright>Copyright © $(Company) 2013-2018</Copyright>
+    <Authors>$(Company)</Authors>
+    <!-- Common props -->
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <DocumentationFile>$(OutputPath)\$(AssemblyName).xml</DocumentationFile>
+    <!-- Assembly props -->
+    <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
+    <AssemblyProduct>$(AssemblyTitle)</AssemblyProduct>
+    <AssemblyDescription>$(Description)</AssemblyDescription>
+    <AssemblyCompany>$(Company)</AssemblyCompany>
+    <AssemblyCopyright>$(Copyright)</AssemblyCopyright>    
     <AssemblyVersion>$(Version)</AssemblyVersion>
     <AssemblyFileVersion>$(Version)</AssemblyFileVersion>
     <AssemblyInformationalVersion>$(Version)</AssemblyInformationalVersion>
