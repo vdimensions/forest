@@ -14,8 +14,8 @@
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <Import Project="../../../Forest.Common.props" />
-  <Import Project="../../../../submodules/msbuild-dotnet-multitargeting/src/MultitargetingFrameworkSupport.targets" />
-  <Import Project="../../../FSharpAssemblyInfo.targets" />
+  <Import Project="../../../../submodules/vdimensions_msbuild_sdk/src/MultitargetingFrameworkSupport.targets" />
+  <Import Project="../../../../submodules/vdimensions_msbuild_sdk/src/AssemblyLevelProperties.targets" />
   <ItemGroup>
     <!-- <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" /> -->
     <Compile Include="Infrastructure\NullHandling.fs" />
