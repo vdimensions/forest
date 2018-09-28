@@ -9,4 +9,4 @@ if [ -z "$branch" ]; then
 fi
 cd "$scriptdir/../"
 git fetch $remote && git pull $remote $branch
-git submodule foreach git fetch origin && git submodule foreach git reset origin/master --hard
+git submodule init && git submodule update && git submodule foreach git fetch origin && git submodule foreach git reset origin/master --hard
