@@ -34,6 +34,7 @@ type [<Interface>] IViewDescriptor =
     abstract member GetDescriptor : viewType : Type -> IViewDescriptor
 
  and [<Interface>] IView =
+    inherit IDisposable
     abstract Publish<'M> : message:'M * [<ParamArray>] topics:string[] -> unit
     abstract member FindRegion : regionName : rname -> IRegion
     abstract ViewModel:obj

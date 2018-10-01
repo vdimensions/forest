@@ -58,6 +58,8 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t:Tree, models:Map<
         let (t, nodes) = tree |> Tree.remove node
         for removedNode in nodes do
             let removedHash = removedNode.Hash
+            let view = views.[removedHash]
+            view.Dispose()
             models.Remove removedHash |> ignore
             views.Remove removedHash |> ignore
             changeLog.Add(StateChange.ViewDestroyed(removedNode))

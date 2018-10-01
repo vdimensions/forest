@@ -25,14 +25,20 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
 
     new() = AbstractView(downcast Activator.CreateInstance(typeof<'T>))
 
+    override this.Finalize() =
+        this.Dispose(false)
+
     member this.Publish<'M> (message : 'M, [<ParamArray>] topics : string[]) = 
         this.rt.PublishEvent this message topics
 
-    abstract member Load: unit -> unit
+    abstract member Load : unit -> unit
     default __.Load() = ()
 
-    abstract member Resume: unit -> unit
+    abstract member Resume : unit -> unit
     default __.Resume() = ()
+
+    abstract member Dispose : bool -> unit
+    default __.Dispose(_) = ()
 
     member this.FindRegion (NotNull "name" name) = 
         upcast Region(name, this) : IRegion
@@ -100,6 +106,11 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
         member this.Publish (m, t) = this.Publish (m, t)
         member this.FindRegion name = this.FindRegion name
         member this.ViewModel with get() = upcast this.ViewModel
+
+    interface IDisposable with
+        member this.Dispose() =
+            this.Dispose(true)
+            this |> GC.SuppressFinalize
 
  and private Region(regionName:rname, owner:IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName:vname) =
