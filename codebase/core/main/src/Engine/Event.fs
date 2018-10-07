@@ -36,19 +36,19 @@ module Event =
             member this.MessageType = this.MessageType
             member this.Topic = this.Topic
 
-    type [<Sealed;NoComparison>] internal Handler(descriptor:IEventDescriptor, receiver:IView) =
+    type [<Sealed;NoComparison>] internal Handler(descriptor : IEventDescriptor, receiver : IView) =
         interface ISubscriptionHandler with
             member __.MessageType = descriptor.MessageType
             member __.Invoke message = descriptor.Trigger receiver message
             member __.Receiver = receiver
 
     type [<Struct;NoComparison>] Error =
-        | InvocationError of cause:exn
-        | NonVoidReturnType of methodWithReturnValue:IEventMethod
-        | BadEventSignature of badEventSignatureMethod:IEventMethod
-        | MultipleErrors of errors:Error list
+        | InvocationError of cause : exn
+        | NonVoidReturnType of methodWithReturnValue : IEventMethod
+        | BadEventSignature of badEventSignatureMethod : IEventMethod
+        | MultipleErrors of errors : Error list
 
-    let resolveError(e:Error) =
+    let resolveError(e : Error) =
         ()
 
     let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =

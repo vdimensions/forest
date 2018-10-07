@@ -7,8 +7,8 @@ open System
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed;NoComparison>] internal State internal(tree:Tree, viewModels: Map<thash, obj>, viewStates:  Map<thash, IRuntimeView>, fuid: Fuid) =
-    internal new (tree:Tree, viewModels: Map<thash, obj>, viewStates:  Map<thash, IRuntimeView>) = State(tree, viewModels, viewStates, Fuid.newID())
+type [<Sealed;NoComparison>] internal State internal(tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, fuid: Fuid) =
+    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>) = State(tree, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
     static member initial = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
     member internal __.Tree with get() = tree
@@ -17,11 +17,11 @@ type [<Sealed;NoComparison>] internal State internal(tree:Tree, viewModels: Map<
     member internal __.Fuid with get() = fuid
     member __.Hash with get() = fuid.Hash
     //member __.MachineToken with get() = fuid.MachineToken
-    member private this.eq (other:State):bool =
+    member private this.eq (other : State) : bool =
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
         && LanguagePrimitives.GenericEqualityComparer.Equals(this.Tree, other.Tree)
         && System.Object.Equals(this.ViewModels, other.ViewModels)
-    override this.Equals(o:obj):bool =
+    override this.Equals(o : obj):bool =
         match o with
         | :? State as other -> this.eq other
         | _ -> false
@@ -32,9 +32,9 @@ type [<Sealed;NoComparison>] internal State internal(tree:Tree, viewModels: Map<
 module internal State =
     let create (hs, vm, vs) = State(hs, vm, vs)
     let createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
-    let discardViewStates (st: State) = State(st.Tree, st.ViewModels, Map.empty)
+    let discardViewStates (st : State) = State(st.Tree, st.ViewModels, Map.empty)
 
-    let rec private _traverseState (v:IForestStateVisitor) parent (ids:TreeNode list) (siblingsCount:int) (st:State) =
+    let rec private _traverseState (v : IForestStateVisitor) parent (ids : TreeNode list) (siblingsCount : int) (st : State) =
         match ids with
         | [] -> ()
         | head::tail ->
@@ -54,7 +54,7 @@ module internal State =
             ()
 
     [<CompiledName("Traverse")>]
-    let traverse (v:IForestStateVisitor) (st: State) =
+    let traverse (v : IForestStateVisitor) (st : State) =
         let root = TreeNode.shell
         match st.Tree.Hierarchy.TryFind root with
         | Some ch -> _traverseState v root ch ch.Length st

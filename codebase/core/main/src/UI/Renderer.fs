@@ -49,12 +49,12 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
                     | Some (h, r) -> 
                         match this.adapters.TryFind h with
                         | Some a -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateNestedViewRenderer(n, a, r))
-                        | None -> failwithf "Could not locate view adapter %s that should parent %s" h n.Hash
+                        | None -> invalidOp(String.Format("Could not locate view adapter {0} that should parent {1}", h, n.Hash))
                     | None -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateViewRenderer(n))
                 | UpdatedNode n ->
                     match this.adapters.TryFind n.Hash with
-                    | Some a -> a.Update n.Model
-                    | None -> failwithf "Could not locate view adapter for %s" n.Hash
+                    | Some a -> a.Update n
+                    | None -> invalidOp(String.Format("Could not locate view adapter for {0}", n.Hash))
 
             this.nodeStates <- List.empty
             this.parentChildMap <- Map.empty

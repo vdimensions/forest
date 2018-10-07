@@ -53,9 +53,3 @@ type [<Interface>] IViewDescriptor =
     abstract Name : rname with get
     abstract Views : IView seq with get
     //abstract Item: vname -> IView with get
-
-type [<Interface>] ICommandModel =
-    abstract member Name : cname with get
-    abstract member Description : string with get
-    abstract member DisplayName : string with get
-    abstract member Tooltip : string with get

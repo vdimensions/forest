@@ -26,6 +26,8 @@
     <Compile Include="Types\TreeNode.fs" />
     <Compile Include="Types\StateChange.fs" />
     <Compile Include="Types\TemplateTypes.fs" />
+    <Compile Include="Types\CommandModel.fs" />
+    <Compile Include="Types\DomNode.fs" />
     <Compile Include="Collections\Tree.fs" />
     <Compile Include="Collections\Index.fs" />
     <Compile Include="Api\Attributes.fs" />

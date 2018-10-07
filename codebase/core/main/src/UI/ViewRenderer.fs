@@ -8,19 +8,20 @@ open System
 
 type [<Interface>] IViewRenderer =
     inherit IDisposable
-    abstract member Update: viewModel:obj -> unit
-    abstract member InvokeCommand: name:cname -> arg:obj -> unit
-    abstract member Hash:thash
+    abstract member Update : node : DomNode -> unit
+    abstract member InvokeCommand : name : cname -> arg : obj -> unit
+    abstract member Hash : thash
 
-type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:ICommandDispatcher, hash:thash) =
+type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher : ICommandDispatcher, hash : thash) =
     do 
         ignore <| isNotNull "commandDispatcher" commandDispatcher
         ignore <| isNotNull "hash" hash
 
-    let mutable vm:obj = nil<obj>
+    [<DefaultValue>]
+    val mutable private _node : DomNode voption
     
-    abstract member Refresh: viewModel:obj -> unit
-    abstract member Dispose: disposing:bool -> unit
+    abstract member Refresh : node : DomNode -> unit
+    abstract member Dispose : disposing : bool -> unit
 
     override this.Finalize() = 
         this.Dispose(false)
@@ -28,14 +29,14 @@ type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher:IComm
     interface IViewRenderer with
         member __.InvokeCommand (NotNull "name" name) arg =
             commandDispatcher.ExecuteCommand hash name arg
-        member this.Update (NotNull "model" model:obj) =
+        member this.Update (NotNull "node" node : DomNode) =
             let update = 
-                match null2vopt vm with
-                | ValueSome value -> not <| obj.Equals(value, model)
+                match this._node with
+                | ValueSome value -> not <| obj.Equals(value, node)
                 | ValueNone -> true
             if update then
-                vm <- model
-                this.Refresh model
+                this._node <- ValueSome node
+                this.Refresh node
         member __.Hash with get() = hash
     interface IDisposable with
         member this.Dispose() = 

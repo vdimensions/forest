@@ -1,19 +1,19 @@
 ﻿namespace Forest
 
-type [<Sealed;NoComparison>] internal ForestDomRenderer private(chainRender:(DomNode -> DomNode), complete:(unit -> unit), ctx:IForestContext) =
+type [<Sealed;NoComparison>] internal ForestDomRenderer private(chainRender : (DomNode -> DomNode), complete : (unit -> unit), ctx : IForestContext) =
     /// Stores the rendered node state
-    let mutable nodeMap:Map<thash, DomNode> = Map.empty
+    let mutable nodeMap : Map<thash, DomNode> = Map.empty
     /// Stores the original view-model state. Used to determine which nodes to be re-rendered
-    let mutable modelMap:Map<thash, obj> = Map.empty
+    let mutable modelMap : Map<thash, obj> = Map.empty
     /// A list holding the tuples of a view's hash and a boolean telling whether the view should be refreshed
-    let mutable changeStateList:List<thash*bool> = List.empty
+    let mutable changeStateList : List<thash*bool> = List.empty
 
-    let createCommandModel (descriptor:ICommandDescriptor) : (cname*ICommandModel) =
+    let createCommandModel (descriptor : ICommandDescriptor) : (cname*ICommandModel) =
         (descriptor.Name, upcast Command.Model(descriptor.Name))
 
-    new (renderChain:IDomProcessor seq, ctx:IForestContext) = 
+    new (renderChain : IDomProcessor seq, ctx : IForestContext) = 
         ForestDomRenderer(
-            renderChain |> Seq.fold (fun acc f -> (acc >> f.ProcessNode)) (fun (r:DomNode) -> r), 
+            renderChain |> Seq.fold (fun acc f -> (acc >> f.ProcessNode)) (fun (node : DomNode) -> node), 
             renderChain |> Seq.fold (fun acc f -> (acc >> f.Complete)) ignore, 
             ctx)
 
