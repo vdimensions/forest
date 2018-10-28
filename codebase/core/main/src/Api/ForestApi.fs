@@ -37,7 +37,8 @@ type [<Interface>] IViewDescriptor =
     inherit IDisposable
     abstract Publish<'M> : message:'M * [<ParamArray>] topics:string[] -> unit
     abstract member FindRegion : regionName : rname -> IRegion
-    abstract ViewModel:obj
+    abstract member Close : unit -> unit
+    abstract ViewModel : obj
 
  and [<Interface>] IView<'T> =
     inherit IView
@@ -47,7 +48,7 @@ type [<Interface>] IViewDescriptor =
     abstract member ActivateView : name : vname -> IView
     abstract member ActivateView<'m> : name : vname * model : 'm -> IView<'m>
     abstract member ActivateView<'v when 'v :> IView> : unit -> 'v
-    abstract member ActivateView<'v, 'm when 'v :> IView<'m>> : model:'m -> 'v
+    abstract member ActivateView<'v, 'm when 'v :> IView<'m>> : model : 'm -> 'v
     abstract member Clear : unit -> IRegion
     abstract member Remove : System.Predicate<IView> -> IRegion
     abstract Name : rname with get

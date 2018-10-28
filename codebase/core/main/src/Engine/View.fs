@@ -5,23 +5,22 @@ open Forest.Collections
 open Forest.NullHandling
 
 open System
-open System.Collections.Generic
 open System.Diagnostics
 open System.Reflection
 
 
-type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm:'T) =
+type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm : 'T) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
-    val mutable private hierarchyKey:TreeNode
+    val mutable private hierarchyKey : TreeNode
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
-    val mutable private rt:IForestRuntime
+    val mutable private rt : IForestRuntime
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
-    val mutable private descriptor:IViewDescriptor
+    val mutable private descriptor : IViewDescriptor
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable vm:'T = vm
+    let mutable vm : 'T = vm
 
     new() = AbstractView(downcast Activator.CreateInstance(typeof<'T>))
 
@@ -42,6 +41,14 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
 
     member this.FindRegion (NotNull "name" name) = 
         upcast Region(name, this) : IRegion
+
+    member this.Close() =
+        match null2vopt this.rt with
+        | ValueNone ->
+            invalidOp("No runtime available!")
+        | ValueSome rt -> 
+            let (parent, region) = (this.hierarchyKey.Parent, this.hierarchyKey.Region)
+            rt.RemoveViewFromRegion parent region (System.Predicate(fun v -> obj.ReferenceEquals(v, this)))
 
     member this.ViewModel
         with get ():'T = vm
@@ -84,7 +91,7 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
                 runtime.SubscribeEvents this
                 this.rt <- runtime
                 ()
-            | ValueSome _ -> raise (InvalidOperationException(String.Format("View {0} is already within a modification scope", this.hierarchyKey.View)))
+            | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a runtime", this.hierarchyKey.View))
         member this.AbandonRuntime (_) =
             match null2vopt this.rt with
             | ValueSome currentModifier ->
@@ -105,6 +112,7 @@ type [<AbstractClass;NoComparison>] AbstractView<[<EqualityConditionalOn>]'T>(vm
     interface IView with
         member this.Publish (m, t) = this.Publish (m, t)
         member this.FindRegion name = this.FindRegion name
+        member this.Close() = this.Close()
         member this.ViewModel with get() = upcast this.ViewModel
 
     interface IDisposable with
