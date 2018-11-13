@@ -26,7 +26,7 @@ NUGET
       System.Threading.Thread (>= 4.0) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
       System.Threading.ThreadPool (>= 4.0.10) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
       System.Threading.Timer (>= 4.0.1) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
-    Microsoft.NETCore.Platforms (2.1.1) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wpa81)) (== netstandard1.6)
+    Microsoft.NETCore.Platforms (2.1.2) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wpa81)) (== netstandard1.6)
     Microsoft.NETCore.Targets (2.1) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (== netstandard1.6)
     runtime.debian.8-x64.runtime.native.System.Security.Cryptography.OpenSsl (4.3.3) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (== netstandard1.6)
     runtime.debian.9-x64.runtime.native.System.Security.Cryptography.OpenSsl (4.3.3) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netstandard1.6) (< portable-net45+win8+wp8+wpa81)) (== netstandard1.6)

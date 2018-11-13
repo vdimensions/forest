@@ -6,7 +6,7 @@ open Forest.NullHandling
 open Forest.UI
 
 
-type [<Sealed;NoComparison>] ForestResult internal (state:State, changeList:ChangeList, ctx:IForestContext) = 
+type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : ChangeList, ctx : IForestContext) = 
     do
         ignore <| isNotNull "state" state
         ignore <| isNotNull "changeList" changeList
@@ -42,9 +42,9 @@ type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime:ForestRuntime)
 [<CompiledName("ForestEngine")>]
 type [<Sealed;NoComparison>] Engine private(ctx:IForestContext, state:State) =
     [<DefaultValue>]
-    val mutable private _rt:ForestRuntime voption
-    let mutable st:State = state
-    new (ctx:IForestContext) = Engine(ctx, State.initial)
+    val mutable private _rt : ForestRuntime voption
+    let mutable st : State = state
+    new (ctx : IForestContext) = Engine(ctx, State.initial)
     
     member __.InitialResult 
         with get() = ForestResult(State.initial, ChangeList(State.initial.Hash, List.empty, State.initial.Fuid), ctx)

@@ -12,17 +12,17 @@ type [<NoComparison;StructuralEquality>] internal NodeState =
 type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRenderer> =
     val mutable private adapters:Map<thash, 'R>
     val mutable private parentChildMap:Map<thash, thash*rname>
-    val mutable private nodesToDelete:Set<thash>
-    val mutable private nodeStates:List<NodeState>
+    val mutable private nodesToDelete:thash list
+    val mutable private nodeStates:NodeState list
 
-    new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = Set.empty; nodeStates = List.empty }
+    new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = List.empty; nodeStates = List.empty }
 
     abstract member CreateViewRenderer: n:DomNode -> 'R
     abstract member CreateNestedViewRenderer: n:DomNode * parent:'R * region:rname -> 'R
 
     interface IDomProcessor with
         member this.ProcessNode n =
-            this.nodesToDelete <- this.nodesToDelete |> Set.remove n.Hash
+            this.nodesToDelete <- this.nodesToDelete |> List.except [n.Hash]
             // Message dispatcher is an internal component and must not be rendered
             if not(StringComparer.Ordinal.Equals(n.Name, MessageDispatcher.Name)) then
                 this.nodeStates <- 
@@ -42,6 +42,8 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
                     this.adapters <- this.adapters |> Map.remove k
                 | None -> ()
 
+            this.nodesToDelete <- List.empty
+
             for nodeState in this.nodeStates do
                 match nodeState with
                 | NewNode n ->
@@ -51,14 +53,16 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
                         | Some a -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateNestedViewRenderer(n, a, r))
                         | None -> invalidOp(String.Format("Could not locate view adapter {0} that should parent {1}", h, n.Hash))
                     | None -> this.adapters <- this.adapters |> Map.add n.Hash (this.CreateViewRenderer(n))
+                    this.nodesToDelete <- n.Hash :: this.nodesToDelete
                 | UpdatedNode n ->
                     match this.adapters.TryFind n.Hash with
                     | Some a -> a.Update n
                     | None -> invalidOp(String.Format("Could not locate view adapter for {0}", n.Hash))
+                    this.nodesToDelete <- n.Hash :: this.nodesToDelete
 
             this.nodeStates <- List.empty
             this.parentChildMap <- Map.empty
             // Update the nodes to be deleted to include the entire tree. 
             // Each node that should be retained will be removed form the list during traversal
-            this.nodesToDelete <- this.adapters |> Seq.map (fun a -> a.Key) |> Set.ofSeq
+            //this.nodesToDelete <- this.adapters |> Seq.map (fun a -> a.Key) |> List.ofSeq
             ()
