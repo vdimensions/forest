@@ -12,17 +12,20 @@ type [<NoComparison;StructuralEquality>] internal NodeState =
 type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRenderer> =
     val mutable private adapters:Map<thash, 'R>
     val mutable private parentChildMap:Map<thash, thash*rname>
+    /// Contains a list of nodes to be deleted upon traversal completion. They represent removed views.
     val mutable private nodesToDelete:thash list
+    /// Contains a list of nodes to be retained as they represent present views.
+    val mutable private nodesToPreserve:thash list
     val mutable private nodeStates:NodeState list
 
-    new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = List.empty; nodeStates = List.empty }
+    new() = { adapters = Map.empty; parentChildMap = Map.empty; nodesToDelete = List.empty; nodesToPreserve = List.empty; nodeStates = List.empty }
 
     abstract member CreateViewRenderer: n:DomNode -> 'R
     abstract member CreateNestedViewRenderer: n:DomNode * parent:'R * region:rname -> 'R
 
     interface IDomProcessor with
         member this.ProcessNode n =
-            this.nodesToDelete <- this.nodesToDelete |> List.except [n.Hash]
+            this.nodesToPreserve <- n.Hash::this.nodesToPreserve
             // Message dispatcher is an internal component and must not be rendered
             if not(StringComparer.Ordinal.Equals(n.Name, MessageDispatcher.Name)) then
                 this.nodeStates <- 
@@ -35,15 +38,16 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
             n
 
         member this.Complete() = 
-            for k in this.nodesToDelete do 
+            for k in this.nodesToDelete |> List.except this.nodesToPreserve do 
                 match this.adapters.TryFind k with
                 | Some v -> 
                     v.Dispose()
                     this.adapters <- this.adapters |> Map.remove k
                 | None -> ()
 
+            this.nodesToPreserve <- List.empty
             this.nodesToDelete <- List.empty
-
+            
             for nodeState in this.nodeStates do
                 match nodeState with
                 | NewNode n ->
@@ -62,7 +66,4 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'R when 'R:> IViewRendere
 
             this.nodeStates <- List.empty
             this.parentChildMap <- Map.empty
-            // Update the nodes to be deleted to include the entire tree. 
-            // Each node that should be retained will be removed form the list during traversal
-            //this.nodesToDelete <- this.adapters |> Seq.map (fun a -> a.Key) |> List.ofSeq
             ()
