@@ -6,13 +6,13 @@ open Forest.NullHandling
 open System
 
 
-type [<Interface>] IViewRenderer =
+type [<Interface>] IPhysicalView =
     inherit IDisposable
     abstract member Update : node : DomNode -> unit
     abstract member InvokeCommand : name : cname -> arg : obj -> unit
     abstract member Hash : thash
 
-type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher : ICommandDispatcher, hash : thash) =
+type [<AbstractClass;NoComparison>] AbstractPhysicalView(commandDispatcher : ICommandDispatcher, hash : thash) =
     do 
         ignore <| isNotNull "commandDispatcher" commandDispatcher
         ignore <| isNotNull "hash" hash
@@ -26,7 +26,7 @@ type [<AbstractClass;NoComparison>] AbstractViewRenderer(commandDispatcher : ICo
     override this.Finalize() = 
         this.Dispose(false)
         
-    interface IViewRenderer with
+    interface IPhysicalView with
         member __.InvokeCommand (NotNull "name" name) arg =
             commandDispatcher.ExecuteCommand hash name arg
         member this.Update (NotNull "node" node : DomNode) =

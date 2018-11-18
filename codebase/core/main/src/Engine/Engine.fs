@@ -12,10 +12,13 @@ type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : 
         ignore <| isNotNull "changeList" changeList
     member __.Render ([<ParamArray>]renderers:IDomProcessor array) =
         state |> State.traverse (ForestDomRenderer(renderers |> Seq.ofArray, ctx))
-    member internal __.State 
-        with get() = state
-    member __.ChangeList 
-        with get() = changeList
+
+    override __.ToString() = 
+        state.Tree.ToString()
+
+    member internal __.State with get() = state
+    member __.ChangeList with get() = changeList
+
 
 type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime:ForestRuntime) =
     member __.ExcuteCommand target command message = 
