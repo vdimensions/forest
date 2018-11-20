@@ -7,12 +7,12 @@ module Raw =
     /// Expands a given <c>template</c>'s hierarchy to a <see cref="TemplateDefinition">template definition</see> 
     /// list with the top-hierarchy root the last
     /// </summary>
-    let rec private expand (provider:ITemplateProvider) (template:Template) : Template list =
+    let rec private expand (provider : ITemplateProvider) (template : Template) : Template list =
         match template with
         | Root _ -> [template]
         | Mastered (master, _) -> template::(master |> provider.Load |> expand provider)
 
-    let rec loadTemplate (provider:ITemplateProvider) (name:string) =
+    let rec loadTemplate (provider : ITemplateProvider) (name : string) =
         let hierarchy =
             name 
             |> provider.Load 
@@ -20,7 +20,7 @@ module Raw =
             |> List.rev 
         { name = name; contents = List.empty } |> flattenTemplate provider hierarchy
 
-    and private flattenTemplate (provider:ITemplateProvider) (templates:Template list) (result:TemplateDefinition) : TemplateDefinition =
+    and private flattenTemplate (provider : ITemplateProvider) (templates : Template list) (result : TemplateDefinition) : TemplateDefinition =
         match templates with
         | [] -> result
         | head::tail -> 
@@ -40,7 +40,7 @@ module Raw =
                 |> expandTemplates provider
             { res with contents = newContents } |> flattenTemplate provider tail
     /// Locates and expands any `InlinedTemplate` item
-    and private inlineTemplates (provider:ITemplateProvider) (current:ViewContents list):ViewContents list =
+    and private inlineTemplates (provider : ITemplateProvider) (current : ViewContents list) : ViewContents list =
         let mutable result = List.empty
         for vc in current do
             match vc with 
@@ -61,9 +61,8 @@ module Raw =
                 result <- Region (name, List.rev newRegionContents)::result
         result
     /// Inlines the contents of any accumulated `Placeholders` into the respective `Content` items
-    and private processPlaceholders (placeholderData:Map<string, RegionContents list>) (current:ViewContents list):ViewContents list =
-        if placeholderData |> Map.isEmpty |> not 
-        then
+    and private processPlaceholders (placeholderData : Map<string, RegionContents list>) (current : ViewContents list) : ViewContents list =
+        if placeholderData |> Map.isEmpty |> not then
             let mutable result = List.empty
             let mutable pd = placeholderData
             for vc in current do
@@ -89,7 +88,7 @@ module Raw =
             result
         else current
     /// expands any `Template` items to a fully flattened template 
-    and private expandTemplates (provider:ITemplateProvider) (current:ViewContents list):ViewContents list =
+    and private expandTemplates (provider : ITemplateProvider) (current : ViewContents list) : ViewContents list =
         let mutable result = List.empty
         for vc in current do
             match vc with 

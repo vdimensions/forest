@@ -36,11 +36,11 @@ type [<Interface>] IEventBus =
     /// <exception cref="ArgumentNullException">
     /// <paramref name="sender"/> is <c>null</c>
     /// </exception>
-    abstract member Publish<'M> : sender:IView * message:'M * [<ParamArray>] topics:string[] -> unit
-    abstract member Subscribe: subscriptionHandler:ISubscriptionHandler -> topic:string -> IEventBus
-    abstract member Unsubscribe : sender:IView -> IEventBus
+    abstract member Publish<'M> : sender : IView * message : 'M * [<ParamArray>] topics : string[] -> unit
+    abstract member Subscribe: subscriptionHandler : ISubscriptionHandler -> topic : string -> IEventBus
+    abstract member Unsubscribe: sender : IView -> IEventBus
 
  and [<Interface>] ISubscriptionHandler =
-    abstract member Invoke: arg:obj -> unit
-    abstract MessageType:Type with get
-    abstract Receiver:IView
+    abstract member Invoke: arg : obj -> unit
+    abstract MessageType: Type with get
+    abstract Receiver: IView

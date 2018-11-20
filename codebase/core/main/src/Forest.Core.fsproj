@@ -47,6 +47,7 @@
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\Event.fs" />
+    <Compile Include="Engine\LogicalView.fs" />
     <Compile Include="Engine\View.fs" />
     <Compile Include="Engine\DefaultViewRegistry.fs" />
     <Compile Include="Engine\NoopSecurityManager.fs" />

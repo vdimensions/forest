@@ -12,12 +12,12 @@ open System.Xml.Linq
 type [<Sealed>] XmlTemplateParser() =
     inherit AbstractTemplateParser()
 
-    let (|TagName|_|) (tag:string) (e:XElement) =
+    let (|TagName|_|) (tag : string) (e : XElement) =
         if StringComparer.Ordinal.Equals(e.Name.LocalName, tag) 
         then Some e
         else None
 
-    member private this.ReadPlaceHolderDefinitions(elements:IEnumerable<XElement>) =
+    member private this.ReadPlaceHolderDefinitions(elements : IEnumerable<XElement>) =
         let mutable result = List.empty
         for e in elements do
             match e with
@@ -28,7 +28,7 @@ type [<Sealed>] XmlTemplateParser() =
             | _ -> ignore()
         result |> List.rev
 
-    member private this.ReadViewContents(elements:IEnumerable<XElement>) =
+    member private this.ReadViewContents(elements : IEnumerable<XElement>) =
         let mutable result = List.empty
         for e in elements do
             match e with
@@ -41,7 +41,7 @@ type [<Sealed>] XmlTemplateParser() =
                 result <- (this.CreateInlinedTemplate name)::result
             | _ -> ignore()
         result |> List.rev
-    member private this.ReadRegionContents(elements:IEnumerable<XElement>) =
+    member private this.ReadRegionContents(elements : IEnumerable<XElement>) =
         let mutable result = List.empty
         for e in elements do
             match e with

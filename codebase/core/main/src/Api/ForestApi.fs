@@ -7,7 +7,7 @@ open System
 type [<Interface>] IViewDescriptor = 
     abstract Name : vname with get
     abstract ViewType : Type with get
-    abstract ViewModelType : Type with get
+    abstract ModelType : Type with get
     abstract Commands : Index<ICommandDescriptor, cname> with get
     abstract Events : IEventDescriptor seq with get
 
@@ -25,7 +25,7 @@ and [<Interface>] IViewRegistry =
     abstract member Register : t : Type -> IViewRegistry
     abstract member Register<'T when 'T:>IView> : unit -> IViewRegistry
     abstract member Resolve : name : vname -> IView
-    abstract member Resolve : name : vname * model:obj -> IView
+    abstract member Resolve : name : vname * model : obj -> IView
     abstract member Resolve : viewType : Type -> IView
     abstract member Resolve : viewType : Type * model : obj -> IView
     abstract member GetDescriptor : name : vname -> IViewDescriptor
@@ -38,13 +38,14 @@ and [<Interface>] IViewRegistry =
 and [<Interface>] IView =
     inherit IDisposable
     abstract Publish<'M> : message : 'M * [<ParamArray>] topics : string[] -> unit
-    abstract member FindRegion : regionName : rname -> IRegion
+    abstract member FindRegion : name : rname -> IRegion
     abstract member Close : unit -> unit
-    abstract ViewModel : obj
+    abstract Model : obj
 
 and [<Interface>] IView<'T> =
     inherit IView
-    abstract ViewModel : 'T with get, set
+    abstract member UpdateModel : Func<'T, 'T> -> unit
+    abstract Model : 'T with get
 
 and [<Interface>] IRegion = 
     abstract member ActivateView : name : vname -> IView

@@ -17,7 +17,7 @@ module Runtime =
     type [<NoComparison>] Operation =
         | InstantiateView of node : TreeNode
         | InstantiateViewWithModel of node : TreeNode * model : obj
-        | UpdateViewModel of node : thash * model : obj
+        | UpdateModel of node : thash * model : obj
         | DestroyView of subtree : TreeNode
         | InvokeCommand of node : thash * command : cname * commandArg : obj
         | PublishEvent of node : thash * message : obj * topics : string array
@@ -50,8 +50,8 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
     let views : System.Collections.Generic.Dictionary<thash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
     let changeLog : System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
 
-    let updateViewModel (id : thash) (vm : obj) : Result<unit, Runtime.Error> =
-        models.[id] <- vm
+    let updateModel (id : thash) (m : obj) : Result<unit, Runtime.Error> =
+        models.[id] <- m
         Ok ()
 
     let destroyView (node : TreeNode) : Result<unit, Runtime.Error> =
@@ -118,8 +118,8 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
             self.instantiateView node None
         | Runtime.Operation.InstantiateViewWithModel (node, model) -> 
             self.instantiateView node (Some model)
-        | Runtime.Operation.UpdateViewModel (viewID, model) -> 
-            updateViewModel viewID model
+        | Runtime.Operation.UpdateModel (viewID, model) -> 
+            updateModel viewID model
         | Runtime.Operation.DestroyView viewID -> 
             destroyView viewID
         | Runtime.Operation.InvokeCommand (viewID, commandName, arg) -> 
@@ -160,7 +160,7 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
             views.Add(node.Hash, view)
             match model with
             | Some m -> StateChange.ViewAddedWithModel(node, m)
-            | None -> StateChange.ViewAdded(node, view.ViewModel)
+            | None -> StateChange.ViewAdded(node, view.Model)
             |> changeLog.Add
             view.Load()
             Ok ()
@@ -258,7 +258,7 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
                     | Error e -> Some e
         | StateChange.ViewDestroyed (node) ->
             match destroyView node with Ok _ -> None | Error e -> Some e
-        | StateChange.ViewModelUpdated (node, model) -> 
+        | StateChange.ModelUpdated (node, model) -> 
             views.[node.Hash].Resume model
             None
 
@@ -284,7 +284,7 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
 
         member __.SetViewModel silent node model = 
             models.[node.Hash] <- model
-            if not silent then changeLog.Add(StateChange.ViewModelUpdated(node, model))
+            if not silent then changeLog.Add(StateChange.ModelUpdated(node, model))
             model
 
         member this.ActivateView(name, region, parent) =
@@ -326,5 +326,4 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
             eventBus.Unsubscribe view |> ignore
 
     interface IDisposable with 
-        member this.Dispose() = 
-            this.Dispose()
+        member this.Dispose() = this.Dispose()

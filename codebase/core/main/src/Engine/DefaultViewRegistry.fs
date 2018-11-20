@@ -41,26 +41,26 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) =
         | Command.Error.MoreThanOneArgument mi -> upcast InvalidOperationException()
         | Command.Error.NonVoidReturnType mi -> upcast InvalidOperationException()
         | Command.Error.MultipleErrors e -> upcast InvalidOperationException()
-    member this.Register (NotNull "t" t:Type) = 
+    member this.Register (NotNull "t" t : Type) = 
         match this.CreateViewDescriptor false t with
         | Ok metadata -> storage.[metadata.Name] <- metadata
         | Error e -> raise (e |> this.ResolveError)
         upcast this: IViewRegistry
-    member this.Register<'T when 'T:> IView> () = 
+    member this.Register<'T when 'T :> IView> () = 
         this.Register typeof<'T>
-    member this.Resolve (NotNull "viewType" viewType:Type) =
+    member this.Resolve (NotNull "viewType" viewType : Type) =
         match null2vopt <| this.GetViewDescriptor viewType with
         | ValueSome vd -> vd |> this.InstantiateView None
         | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "viewType" viewType:Type, model:obj) =
+    member this.Resolve (NotNull "viewType" viewType : Type, model : obj) =
         match null2vopt <| this.GetViewDescriptor viewType with
         | ValueSome vd -> vd |> this.InstantiateView (Some model)
         | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "name" name:vname) = 
+    member this.Resolve (NotNull "name" name : vname) = 
         match storage.TryGetValue name with 
         | (true, viewMetadata) -> this.InstantiateView None viewMetadata
         | (false, _) -> invalidArg "name" "No such view was registered"
-    member this.Resolve (NotNull "name" name:vname, NotNull "model" model:obj) = 
+    member this.Resolve (NotNull "name" name : vname, NotNull "model" model : obj) = 
         match storage.TryGetValue name with 
         | (true, viewMetadata) -> this.InstantiateView (Some model) viewMetadata
         | (false, _) -> invalidArg "name" "No such view was registered"
@@ -72,21 +72,21 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) =
     interface IViewRegistry with
         member this.Register t = this.Register t
         member this.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member this.Resolve(name:vname) = this.Resolve name
-        member this.Resolve(name:vname, model:obj) = this.Resolve(name, model)
-        member this.Resolve(viewType:Type) = this.Resolve viewType
-        member this.Resolve(viewType:Type, model:obj) = this.Resolve(viewType, model)
-        member this.GetDescriptor(name:vname) = this.GetViewDescriptor name
-        member this.GetDescriptor(viewType:Type) = this.GetViewDescriptor viewType
+        member this.Resolve(name : vname) = this.Resolve name
+        member this.Resolve(name : vname, model : obj) = this.Resolve(name, model)
+        member this.Resolve(viewType : Type) = this.Resolve viewType
+        member this.Resolve(viewType : Type, model : obj) = this.Resolve(viewType, model)
+        member this.GetDescriptor(name : vname) = this.GetViewDescriptor name
+        member this.GetDescriptor(viewType : Type) = this.GetViewDescriptor viewType
 
-type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory, reflectionProvider:IReflectionProvider) = 
+type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactory, reflectionProvider : IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)
     override __.CreateViewDescriptor (anonymousView:bool) (NotNull "viewType" viewType) =
-        let inline getViewModelType (viewType: Type) = 
-            match View.getViewModelType viewType with
+        let inline getViewModelType (viewType : Type) = 
+            match View.getModelType viewType with
             | Ok vmt -> Ok (viewType, vmt)
             | Error e -> Error e
-        let inline getViewAttribute (anonymousView:bool) (rp:IReflectionProvider) (viewType:Type, viewModelType:Type) = 
+        let inline getViewAttribute (anonymousView : bool) (rp : IReflectionProvider) (viewType : Type, viewModelType : Type) = 
             let viewName =
                 viewType
                 |> rp.GetViewAttribute
@@ -96,8 +96,8 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory,
             | (Some viewName, _) -> Ok (viewName, viewType, viewModelType)
             | (None, true) -> Ok ("", viewType, viewModelType)
             | (None, false) -> Error <| View.Error.ViewAttributeMissing viewType
-        let inline getViewDescriptor (viewName:string, viewType:Type, viewModelType:Type) =
-            let inline createCommandDescriptor (mi:ICommandMethod) =
+        let inline getViewDescriptor (viewName : string, viewType : Type, viewModelType : Type) =
+            let inline createCommandDescriptor (mi : ICommandMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error (Command.Error.NonVoidReturnType(mi))
                 else
@@ -109,11 +109,11 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory,
                     match parameterType with
                     | ValueSome parameterType -> Ok <| Command.Descriptor(parameterType, mi)
                     | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
-            let inline getCommandDescriptors (rp:IReflectionProvider) t = 
+            let inline getCommandDescriptors (rp : IReflectionProvider) t = 
                 rp.GetCommandMethods t
                 |> Seq.map createCommandDescriptor
                 |> Seq.cache
-            let inline createEventDescriptor (mi: IEventMethod) =
+            let inline createEventDescriptor (mi : IEventMethod) =
                 if mi.ReturnType <> typeof<Void> 
                 then Error <| Event.Error.NonVoidReturnType(mi)
                 else
@@ -124,7 +124,7 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory,
                     match parameterType with
                     | ValueSome parameterType -> Ok <| (upcast Event.Descriptor(parameterType, mi, mi.Topic) : IEventDescriptor)
                     | ValueNone -> Error <| Event.Error.BadEventSignature mi
-            let inline getEventDescriptors (rp:IReflectionProvider) t = 
+            let inline getEventDescriptors (rp : IReflectionProvider) t = 
                 t
                 |> rp.GetSubscriptionMethods
                 |> Seq.map createEventDescriptor
@@ -135,7 +135,7 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory,
             let eventDescriptorFailures = eventDescriptorResults |> Seq.choose Result.error |> List.ofSeq
             match (commandDescriptorFailures, eventDescriptorFailures) with
             | ([], []) ->
-                let inline folder (m:Dictionary<string, ICommandDescriptor>) (e:ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
+                let inline folder (m : Dictionary<string, ICommandDescriptor>) (e : ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
                     m.Add(e.Name, e)
                     m
                 // TODO "This could fail if multiple commands share the same name! Add a respective error case"
@@ -157,7 +157,7 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory:IViewFactory,
         |> Result.bind (getViewAttribute anonymousView reflectionProvider)
         |> Result.mapError ViewError
         |> Result.bind getViewDescriptor 
-    override this.GetViewDescriptor (NotNull "viewType" viewType:Type) = 
+    override this.GetViewDescriptor (NotNull "viewType" viewType : Type) = 
         match null2vopt <| reflectionProvider.GetViewAttribute viewType with
         | ValueSome va -> this.GetViewDescriptor va.Name
         | ValueNone -> 

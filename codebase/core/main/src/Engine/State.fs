@@ -7,12 +7,12 @@ open System
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed;NoComparison>] internal State internal(tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, fuid: Fuid) =
+type [<Sealed;NoComparison>] internal State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, fuid: Fuid) =
     internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>) = State(tree, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
     static member initial = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
     member internal __.Tree with get() = tree
-    member internal __.ViewModels with get() = viewModels
+    member internal __.Models with get() = models
     member internal __.ViewStates with get() = viewStates
     member internal __.Fuid with get() = fuid
     member __.Hash with get() = fuid.Hash
@@ -20,7 +20,7 @@ type [<Sealed;NoComparison>] internal State internal(tree : Tree, viewModels : M
     member private this.eq (other : State) : bool =
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
         && LanguagePrimitives.GenericEqualityComparer.Equals(this.Tree, other.Tree)
-        && System.Object.Equals(this.ViewModels, other.ViewModels)
+        && System.Object.Equals(this.Models, other.Models)
     override this.Equals(o : obj):bool =
         match o with
         | :? State as other -> this.eq other
@@ -30,9 +30,9 @@ type [<Sealed;NoComparison>] internal State internal(tree : Tree, viewModels : M
 
 [<RequireQualifiedAccess>]
 module internal State =
-    let create (hs, vm, vs) = State(hs, vm, vs)
-    let createWithFuid (hs, vm, vs, fuid) = State(hs, vm, vs, fuid)
-    let discardViewStates (st : State) = State(st.Tree, st.ViewModels, Map.empty)
+    let create (hs, m, vs) = State(hs, m, vs)
+    let createWithFuid (hs, m, vs, fuid) = State(hs, m, vs, fuid)
+    let discardViewStates (st : State) = State(st.Tree, st.Models, Map.empty)
 
     let rec private _traverseState (v : IForestStateVisitor) parent (ids : TreeNode list) (siblingsCount : int) (st : State) =
         match ids with
@@ -40,7 +40,7 @@ module internal State =
         | head::tail ->
             let ix = siblingsCount - ids.Length // TODO
             let hash = head.Hash
-            let vm = st.ViewModels.[hash]
+            let vm = st.Models.[hash]
             let vs = st.ViewStates.[hash]
             let descriptor = vs.Descriptor
             v.BFS head ix vm descriptor

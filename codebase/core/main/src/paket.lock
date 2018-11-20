@@ -2,7 +2,7 @@ STORAGE: NONE
 RESTRICTION: || (== net45) (== net46) (== netstandard1.6) (== netstandard2.0)
 NUGET
   remote: https://www.nuget.org/api/v2
-    FSharp.Core (4.5.2)
+    FSharp.Core (4.5.3)
       System.Collections (>= 4.0.11) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
       System.Console (>= 4.0) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
       System.Diagnostics.Debug (>= 4.0.11) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
