@@ -87,13 +87,13 @@ type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state :
             None
         ) |> this.WrapAction initialState
 
-    member this.Update (operation : System.Action<IForestEngine>) : ForestResult = 
+    member internal this.Update (operation : System.Action<IForestEngine>) : ForestResult = 
         (fun rt ->
             ForestEngineAdapter(rt) |> operation.Invoke
             None
         ) |> this.WrapAction None
 
-    member this.Sync (changes : ChangeList) : ForestResult =
+    member internal this.Sync (changes : ChangeList) : ForestResult =
         let rec _applyChangelog (rt : ForestRuntime) (cl : StateChange List) =
             match cl with
             | [] -> None
@@ -108,4 +108,4 @@ type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state :
         ) |> this.WrapAction None
 
     member internal __.Context with get() = ctx
-    member __.InitialResult with get() = ForestResult(State.initial, ChangeList(State.initial.Hash, List.empty, State.initial.Fuid), ctx)
+    member internal __.InitialResult with get() = ForestResult(State.initial, ChangeList(State.initial.Hash, List.empty, State.initial.Fuid), ctx)

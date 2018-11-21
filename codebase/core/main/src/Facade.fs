@@ -13,9 +13,19 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
     
     let engine = ForestEngine(ctx)
 
+    [<DefaultValue>]
+    val mutable private _pvd : PhysicalViewDomProcessor<'PV> voption
+
     abstract member Render: res : ForestResult -> unit
     default this.Render res =
-        let domProcessor  = upcast PhysicalViewDomProcessor(this, renderer) : IDomProcessor
+        let domProcessor : IDomProcessor =
+            match this._pvd with
+            | ValueNone -> 
+                let viewDomProcessor = PhysicalViewDomProcessor<'PV>(this, renderer)
+                this._pvd <- ValueSome viewDomProcessor
+                viewDomProcessor
+            | ValueSome viewDomProcessor -> viewDomProcessor
+            :> IDomProcessor
         res.Render domProcessor
 
     abstract member ExecuteCommand: thash -> cname -> obj -> ForestResult
