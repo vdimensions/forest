@@ -65,6 +65,7 @@
     <Compile Include="Templates\TemplateExtensions.fs" />
     <Compile Include="UI\PhysicalView.fs" />
     <Compile Include="UI\Renderer.fs" />
+    <Compile Include="Facade.fs" />
     <None Include="build.sh" />
     <None Include="mason.properties" />
     <None Include="paket.dependencies" />

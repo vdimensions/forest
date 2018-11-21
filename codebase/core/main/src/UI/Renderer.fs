@@ -4,20 +4,30 @@ open System
 open Forest
 
 
-type [<NoComparison;StructuralEquality>] internal NodeState =
-    | NewNode of node:DomNode
-    | UpdatedNode of node:DomNode
+type [<Interface>] IPhysicalViewRenderer<'PV when 'PV :> IPhysicalView> =
+    abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
+    abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
 
-type [<AbstractClass;NoComparison>] AbstractUIRenderer<'PV when 'PV :> IPhysicalView> =
+type [<NoComparison;StructuralEquality>] internal NodeState =
+    | NewNode of node : DomNode
+    | UpdatedNode of node : DomNode
+
+type [<Sealed;NoComparison;NoEquality>] internal PhysicalViewDomProcessor<'PV when 'PV :> IPhysicalView> =
     val mutable private renderers : Map<thash, 'PV>
     /// Contains a list of nodes to be retained as they represent present views.
     val mutable private nodesToPreserve : thash Set
     val mutable private nodeStates : NodeState list
+    val private _commandDispatcher : ICommandDispatcher
+    val private _renderer : IPhysicalViewRenderer<'PV>
 
-    new() = { renderers = Map.empty; nodesToPreserve = Set.empty; nodeStates = List.empty }
-
-    abstract member CreatePhysicalView: n : DomNode -> 'PV
-    abstract member CreateNestedPhysicalView: n : DomNode * parent : 'PV -> 'PV
+    new (commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer<'PV>) = 
+        { 
+            _commandDispatcher = commandDispatcher; 
+            _renderer = renderer; 
+            renderers = Map.empty; 
+            nodesToPreserve = Set.empty; 
+            nodeStates = List.empty 
+        }
 
     interface IDomProcessor with
         member this.ProcessNode n =
@@ -52,7 +62,7 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'PV when 'PV :> IPhysical
                 | (Some p, isNewView) -> 
                     match (isNewView, dictTryFind(renderers, p.Hash), dictTryFind(renderers, n.Hash)) with
                     | (true, Some parent, None) ->
-                        let renderer = this.CreateNestedPhysicalView(n, parent)
+                        let renderer = this._renderer.CreateNestedPhysicalView this._commandDispatcher parent n
                         updateCalls <- (renderer,n)::updateCalls
                         renderers.Add(n.Hash, renderer)
                     | (true, Some _, Some _) ->
@@ -68,7 +78,7 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'PV when 'PV :> IPhysical
                     | (true, Some _) ->
                         invalidOp(String.Format("Physical view {0} #{1} already exists", n.Name, n.Hash))
                     | (true, None) ->
-                        let renderer = this.CreatePhysicalView(n)
+                        let renderer = this._renderer.CreatePhysicalView this._commandDispatcher n
                         updateCalls <- (renderer,n)::updateCalls
                         renderers.Add(n.Hash, renderer)
                     | (false, None) -> 
@@ -87,3 +97,11 @@ type [<AbstractClass;NoComparison>] AbstractUIRenderer<'PV when 'PV :> IPhysical
             // At this point, invoking those update calls is permitted.
             for (renderer,n) in updateCalls do 
                 renderer.Update n
+
+type [<AbstractClass;NoComparison>] AbstractPhysicalViewRenderer<'PV when 'PV :> IPhysicalView>() =
+    abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
+    abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
+
+    interface IPhysicalViewRenderer<'PV> with
+        member this.CreatePhysicalView commandDispatcher n = this.CreatePhysicalView commandDispatcher n
+        member this.CreateNestedPhysicalView commandDispatcher parent n = this.CreateNestedPhysicalView commandDispatcher parent n

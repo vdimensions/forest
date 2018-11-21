@@ -10,6 +10,7 @@ type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : 
     do
         ignore <| isNotNull "state" state
         ignore <| isNotNull "changeList" changeList
+
     member __.Render ([<ParamArray>] renderers : IDomProcessor array) =
         state |> State.traverse (ForestDomRenderer(renderers |> Seq.ofArray, ctx))
 
