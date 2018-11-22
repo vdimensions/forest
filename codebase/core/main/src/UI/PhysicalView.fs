@@ -23,12 +23,12 @@ type [<AbstractClass;NoComparison>] AbstractPhysicalView(commandDispatcher : ICo
     abstract member Refresh : node : DomNode -> unit
     abstract member Dispose : disposing : bool -> unit
 
-    override this.Finalize() = 
-        this.Dispose(false)
+    member __.ExecuteCommand (NotNull "name" name) arg = commandDispatcher.ExecuteCommand hash name arg
+
+    override this.Finalize() = this.Dispose(false)
         
     interface IPhysicalView with
-        member __.InvokeCommand (NotNull "name" name) arg =
-            commandDispatcher.ExecuteCommand hash name arg
+        member this.InvokeCommand (NotNull "name" name) arg = this.ExecuteCommand name arg
         member this.Update (NotNull "node" node : DomNode) =
             let update = 
                 match this._node with
@@ -38,6 +38,7 @@ type [<AbstractClass;NoComparison>] AbstractPhysicalView(commandDispatcher : ICo
                 this._node <- ValueSome node
                 this.Refresh node
         member __.Hash with get() = hash
+
     interface IDisposable with
         member this.Dispose() = 
             this.Dispose(true)
