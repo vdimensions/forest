@@ -29,8 +29,9 @@ type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(dispatcher, hash) =
     abstract member InstantiateTemplate: unit -> 'T
 
     override this.Refresh n = 
+        let model = (n.Model :?> 'M)
         this._doc <- ValueNone
-        this._template <- this.InstantiateTemplate() |> this.DataBind (n.Model :?> 'M) |> this.HookCommands n.Commands |> ValueSome
+        this._template <- this.InstantiateTemplate() |> this.DataBind model |> this.HookCommands model n.Commands |> ValueSome
 
     override this.Doc() =
         match (this._doc) with
@@ -44,8 +45,8 @@ type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(dispatcher, hash) =
     abstract member DataBind: model : 'M -> template : 'T -> 'T
     default __.DataBind _ t = t
 
-    abstract member HookCommands: commands : Map<cname, ICommandModel> -> template : 'T -> 'T
-    default __.HookCommands _ t = t
+    abstract member HookCommands: m : 'M -> commands : Map<cname, ICommandModel> -> template : 'T -> 'T
+    default __.HookCommands _ _ t = t
 
     abstract member ToDoc: 'T -> Doc list
 
