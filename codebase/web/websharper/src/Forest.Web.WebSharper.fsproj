@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Name>Forest.Web.WebSharper</Name>
+    <AssemblyName>Forest.Web.WebSharper</AssemblyName>
+    <Description>A library to integrate WebSharper with Forest.</Description>
+    <RootNamespace>Forest.Web.WebSharper</RootNamespace>
+    <ProjectGuid>{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}</ProjectGuid>
+    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+  </PropertyGroup>
+
+  <Import Project="../../../Forest.Common.props" />
+  <Import Project="../../../../submodules/vdimensions_msbuild_sdk/src/MultitargetingFrameworkSupport.targets" />
+  <Import Project="../../../../submodules/vdimensions_msbuild_sdk/src/AssemblyLevelProperties.targets" />
+
+  <ItemGroup>
+    <Compile Include="PhysicalView.fs" />
+    <Compile Include="TemplateRegistry.fs" />
+    <Compile Include="DocumentRenderer.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="paket.dependencies" />
+    <None Include="paket.lock" />
+    <None Include="paket.references" />
+    <None Include="restore.sh" />
+  </ItemGroup>
+
+  <Import Project=".paket\Paket.Restore.targets" />
+</Project>
