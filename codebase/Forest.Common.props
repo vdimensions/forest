@@ -33,7 +33,7 @@
     <PackageProjectUrl></PackageProjectUrl>
     <PackageIconUri></PackageIconUri>
     <PackageVersion>$(Version)</PackageVersion>
-    <PackageTags>Forest</PackageTags>
+    <PackageTags Condition="'$(PackageTags)' == ''">Forest</PackageTags>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\..\..\..\dist</PackageOutputPath>
     <AllowedOutputExtensionsInPackageBuildOutputFolder Condition="'$(Configuration)' == 'Debug'">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
