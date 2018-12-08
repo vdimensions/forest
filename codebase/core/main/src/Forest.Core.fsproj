@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard1.6;net46;net45</TargetFrameworks>
   </PropertyGroup>
+  
   <PropertyGroup>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Name>Forest.Core</Name>
@@ -13,9 +14,9 @@
     <OutputType>Library</OutputType>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
   </PropertyGroup>
+
   <Import Project="../../../Forest.Common.props" />
-  <Import Project="../../../../submodules/vdimensions_msbuild_sdk/src/MultitargetingFrameworkSupport.targets" />
-  <Import Project="../../../../submodules/vdimensions_msbuild_sdk/src/AssemblyLevelProperties.targets" />
+
   <ItemGroup>
     <!-- <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" /> -->
     <Compile Include="Infrastructure\NullHandling.fs" />
