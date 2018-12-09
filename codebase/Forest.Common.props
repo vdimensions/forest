@@ -8,15 +8,16 @@
     <Trademark></Trademark>
     <License>http://www.apache.org/licenses/LICENSE-2.0</License>
   </PropertyGroup>
+
   <!-- Common props -->
   <PropertyGroup>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <DocumentationFile>$(BaseOutputPath)\$(AssemblyName).xml</DocumentationFile>
-    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AppDesignerFolder Condition=" '$(AppDesignerFolder)' == '' ">Properties</AppDesignerFolder>
+    <DocumentationFile Condition=" '$(DocumentationFile)' == '' ">$(BaseOutputPath)\$(AssemblyName).xml</DocumentationFile>
+    <GenerateAssemblyInfo Condition=" '$(GenerateAssemblyInfo)' == '' ">true</GenerateAssemblyInfo>
   </PropertyGroup>
   
-  <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\MultitargetingFrameworkSupport.targets" />
-  <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\AssemblyLevelProperties.targets" />
+  <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\VDimensions.MSBuild.Sdk.targets" />
+
   <!-- Versioning properties -->
   <PropertyGroup>
     <Deterministic>false</Deterministic>
@@ -39,7 +40,8 @@
   <!-- nuget package properties -->
   <PropertyGroup>
     <ContentTargetFolders>content</ContentTargetFolders>
-    <PackageLicenseUrl>$(License)</PackageLicenseUrl>
+    <PackageLicense>$(License)</PackageLicense>
+    <PackageLicenseUrl>$(PackageLicense)</PackageLicenseUrl>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageIconUri></PackageIconUri>
     <PackageVersion Condition=" '$(PackageVersion)' == '' ">$(Version)</PackageVersion>

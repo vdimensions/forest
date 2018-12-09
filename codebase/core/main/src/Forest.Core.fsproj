@@ -8,17 +8,24 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Name>Forest.Core</Name>
     <AssemblyName>Forest.Core</AssemblyName>
-    <Description>Forest (Front-end over REST) is an UI abstraction framework for creating functional applications while being agnostic of the presentation layer.</Description>
     <RootNamespace>Forest</RootNamespace>
     <ProjectGuid>{7CBDBFBD-F8FD-4C48-AF8E-0D77923DDF42}</ProjectGuid>
     <OutputType>Library</OutputType>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <Description>Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer</Description>
   </PropertyGroup>
 
   <Import Project="../../../Forest.Common.props" />
 
   <ItemGroup>
-    <!-- <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" /> -->
+    <None Include="build.sh" />
+    <None Include="restore.sh" />
+    <None Include="paket.dependencies" />
+    <None Include="paket.references" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" />
     <Compile Include="Infrastructure\NullHandling.fs" />
     <Compile Include="Infrastructure\Result.fs" />
     <Compile Include="Types\Types.fs" />
@@ -67,13 +74,6 @@
     <Compile Include="UI\PhysicalView.fs" />
     <Compile Include="UI\Renderer.fs" />
     <Compile Include="Facade.fs" />
-    <None Include="build.sh" />
-    <None Include="mason.properties" />
-    <None Include="paket.dependencies" />
-    <None Include="paket.dependencies.template" />
-    <None Include="paket.references" />
-    <None Include="Properties\AssemblyInfo.fs.template" />
-    <None Include="restore.sh" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>
