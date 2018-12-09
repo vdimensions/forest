@@ -3,10 +3,17 @@
   <!-- Copyright info -->
   <PropertyGroup>
     <Company>Virtual Dimensions</Company>
-    <Copyright>Copyright © $(Company) 2013-$([System.DateTime]::get_Now().get_Year())</Copyright>
+    <CopyrightYearSince>2013</CopyrightYearSince>
     <Authors>$(Company)</Authors>
     <Trademark></Trademark>
     <License>http://www.apache.org/licenses/LICENSE-2.0</License>
+  </PropertyGroup>
+
+  <!-- Versioning properties -->
+  <PropertyGroup>
+    <Deterministic>false</Deterministic>
+    <VersionMajor>2</VersionMajor>
+    <VersionMinor>0</VersionMinor>
   </PropertyGroup>
 
   <!-- Common props -->
@@ -20,9 +27,7 @@
 
   <!-- Versioning properties -->
   <PropertyGroup>
-    <Deterministic>false</Deterministic>
-    <VersionMajor>2</VersionMajor>
-    <VersionMinor>0</VersionMinor>
+    <Copyright>Copyright © $(Company) $(CopyrightYearSince)-$(CopyrightYearCurrent)</Copyright>
     <Version>$(VersionMajor).$(VersionMinor).$(VersionBuild).$(VersionRevision)</Version>
   </PropertyGroup>
   <!-- Assembly props -->
