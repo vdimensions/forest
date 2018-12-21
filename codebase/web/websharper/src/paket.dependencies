@@ -4,9 +4,9 @@ storage: none
 source ../../../../dist/
   nuget Forest.Core >= 2.0
 
-source https://nuget.org/api/v2
-  nuget FSharp.Core >= 4.5
+source https://api.nuget.org/v3/index.json
   nuget WebSharper.UI >= 4.5.5.155
   nuget WebSharper
   nuget WebSharper.FSharp
+  nuget FSharp.Core
 

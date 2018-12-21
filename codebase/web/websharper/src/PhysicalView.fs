@@ -18,6 +18,17 @@ type [<AbstractClass>] WebSharperPhysicalView(dispatcher, hash) =
         regionMap <- regionMap |> Map.add region (match regionMap.TryFind region with Some data -> pv::data | None -> List.singleton pv)
         pv
     abstract member Doc: unit -> Doc list
+    
+type [<Sealed;NoComparison>] private TopLevelPhysicalView (commandDispatcher, hash, origin : WebSharperPhysicalView, list : List<WebSharperPhysicalView>) =
+    inherit WebSharperPhysicalView(commandDispatcher, hash)
+    override __.Refresh node = 
+        origin.Refresh node
+    override __.Doc() = 
+        origin.Doc()
+    override __.Dispose disposing = 
+        list.Remove origin |> ignore
+        origin.Dispose disposing
+    member __.Origin = origin
 
 type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(dispatcher, hash) =
     inherit WebSharperPhysicalView(dispatcher, hash)
@@ -56,14 +67,7 @@ type [<AbstractClass>] WebSharperDocumentView<'M>(dispatcher, hash) =
     inherit WebSharperTemplateView<'M, Doc list>(dispatcher, hash)
     override __.InstantiateTemplate() = List.empty
     override __.ToDoc template = template
-    
-type [<Sealed;NoComparison>] private TopLevelPhysicalView (commandDispatcher, hash, origin : WebSharperPhysicalView, list : List<WebSharperPhysicalView>) =
-    inherit WebSharperPhysicalView(commandDispatcher, hash)
-    override __.Refresh node = 
-        origin.Refresh node
-    override __.Doc() = 
-        origin.Doc()
-    override __.Dispose disposing = 
-        list.Remove origin |> ignore
-        origin.Dispose disposing
-    member __.Origin = origin
+
+//type [<AbstractClass>] WebSharperView<'M>(dispatcher, hash) =
+//    inherit WebSharperTemplateView<'M, View<'M>>(dispatcher, hash)
+//    override __.ToDoc x  = [ x ]
