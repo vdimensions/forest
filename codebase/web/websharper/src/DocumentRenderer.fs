@@ -12,6 +12,7 @@ type [<Interface>] IDocumentRenderer =
 type [<Sealed;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharperTemplateRegistry) =
     inherit AbstractPhysicalViewRenderer<WebSharperPhysicalView>()
     let list = List<WebSharperPhysicalView>()
+    let result = Var.Create Doc.Empty
 
     override __.CreatePhysicalView commandDispatcher domNode = 
         let origin = domNode |> registry.Get commandDispatcher 
@@ -26,6 +27,5 @@ type [<Sealed;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharp
 
     interface IDocumentRenderer with 
         member __.Doc() = 
-            match list |> Seq.collect (fun x -> x.Doc()) |> Seq.tryHead with
-            | Some doc -> doc
-            | None -> Doc.Empty
+            list |> Seq.collect (fun x -> x.Doc()) |> Seq.tryHead |> Option.defaultWith (fun _ -> Doc.Empty) |> result.Set
+            result.Value
