@@ -1,5 +1,7 @@
 FSharp.Core
 Forest.Core
+Axle.Forest
+Axle.Web.WebSharper
 WebSharper
 WebSharper.FSharp
 WebSharper.UI

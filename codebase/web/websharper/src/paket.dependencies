@@ -10,3 +10,7 @@ source https://api.nuget.org/v3/index.json
   nuget WebSharper.FSharp
   nuget FSharp.Core
 
+source ../../../../../axle/dist/
+  nuget Axle.Forest
+  nuget Axle.Web.WebSharper
+
