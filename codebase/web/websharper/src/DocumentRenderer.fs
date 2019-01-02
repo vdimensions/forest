@@ -12,7 +12,7 @@ type [<Interface>] IDocumentRenderer =
     [<System.Obsolete>]
     abstract member DocVar: unit -> Var<Doc>
 
-type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher, hash, registry : IWebSharperTemplateRegistry, state : Var<Map<thash, DomNode>>) =
+type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher, hash, registry : IWebSharperTemplateRegistry, state : Var<Map<thash, Doc>>) =
     inherit AbstractPhysicalView(commandDispatcher, hash)
     let mutable regionMap : Map<rname, WebSharperPhysicalViewWrapper list> = Map.empty
 
@@ -20,9 +20,9 @@ type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher,
         let map = state.Value
         state.Value <- 
             match map.TryFind hash with
-            | Some x -> map |> Map.remove x.Hash
+            | Some _ -> map |> Map.remove node.Hash
             | None -> map 
-            |> Map.add hash node
+            |> Map.add node.Hash (node |> WebSharperPhysicalViewWrapper.toDoc registry regionMap)
 
     member __.Embed region pv =
         regionMap <- regionMap |> Map.add region (match regionMap.TryFind region with Some data -> pv::data | None -> List.singleton pv)
@@ -31,27 +31,26 @@ type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher,
     override __.Dispose _ = 
         state.Value <- state.Value |> Map.remove hash
 
-    static member private toDoc (hash : thash) (registry : IWebSharperTemplateRegistry) (regionMap : Map<rname, WebSharperPhysicalViewWrapper list>) (stateData : Map<thash, DomNode>) : Doc =
+    static member private toDoc (registry : IWebSharperTemplateRegistry) (regionMap : Map<rname, WebSharperPhysicalViewWrapper list>) (node : DomNode) : Doc =
         let inline mapPVWrapper (pvw : WebSharperPhysicalViewWrapper list) = 
             pvw |> List.map (fun x -> x :> IDocProvider )
         let inline mapRegionContents (rm : Map<rname, WebSharperPhysicalViewWrapper list>) = 
             rm |> Map.map (fun _ v -> v |> mapPVWrapper)
-        let (h, rm) = (hash, regionMap)
-        stateData.TryFind h 
-        |> Option.map (registry.Get >> (fun pv -> rm |> mapRegionContents |> pv.Doc) )
-        |> Option.defaultWith (fun _ -> Doc.Empty)
+        let rm = regionMap
+        node |> (registry.Get >> (fun pv -> rm |> mapRegionContents |> pv.Doc))
 
     member __.Doc () : Doc =
-        let (h, r, rm) = (hash, registry, regionMap)
-        state.Value |> (WebSharperPhysicalViewWrapper.toDoc h r rm)
+        let h = hash
+        state.Value.TryFind h |> Option.defaultWith (fun () -> Doc.Empty)
 
     member __.DocView () : View<Doc> =
-        let (h, r, rm) = (hash, registry, regionMap)
-        state.View.MapCached (WebSharperPhysicalViewWrapper.toDoc h r rm)
+        let h = hash
+        //state.View.MapCached (fun m -> m.TryFind h |> Option.defaultWith (fun () -> Doc.Empty) )
+        state.View.MapSeqCached (fun a b -> ())
 
     member __.DocVar () : Var<Doc> =
-        let (h, r, rm) = (hash, registry, regionMap)
-        state.Lens (WebSharperPhysicalViewWrapper.toDoc h r rm) (fun a _ -> a )
+        let h = hash
+        state.Lens (fun m -> m.TryFind h |> Option.defaultWith (fun () -> Doc.Empty)) (fun a _ -> a)
 
     interface IDocProvider with
         member this.Doc() = this.Doc()
@@ -67,7 +66,7 @@ type [<Sealed;NoComparison>] internal WebSharperTopLevelPhysicalViewWrapper(comm
 
 type [<Sealed;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharperTemplateRegistry) =
     inherit AbstractPhysicalViewRenderer<WebSharperPhysicalViewWrapper>()
-    let state : Var<Map<thash, DomNode>> = Var.Create Map.empty
+    let state : Var<Map<thash, Doc>> = Var.Create Map.empty
     let topLevelViews = List<WebSharperTopLevelPhysicalViewWrapper>()
 
     override __.CreatePhysicalView commandDispatcher domNode = 
