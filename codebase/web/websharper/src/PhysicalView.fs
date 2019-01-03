@@ -4,35 +4,30 @@ open Forest
 open WebSharper
 open WebSharper.UI
 
-type ClientNode<'T> =
-    {
-        Hash: thash;
-        Name: vname;
-        Model: 'T;
-        Regions: Map<rname, thash list>
-    }
 
 type [<Interface>] IDocProvider =
     abstract member Doc: unit -> Doc
     abstract member DocView: unit -> View<Doc>
     abstract member DocVar: unit -> Var<Doc>
 
-type [<AbstractClass>] WebSharperPhysicalView private (nodeVar : Var<DomNode>) =
-    new (node : DomNode) = WebSharperPhysicalView(Var.Create node)
+type [<AbstractClass;JavaScriptExport>] WebSharperPhysicalView() =
     abstract member Doc: Map<rname, IDocProvider list> -> Doc
-    member internal __.NodeVar with get() = nodeVar
 
-type [<AbstractClass>] WebSharperDocumentView<'M>(node) =
-    inherit WebSharperPhysicalView(node)
+type [<AbstractClass>] WebSharperDocumentView<'M>(node : INode) =
+    inherit WebSharperPhysicalView()
+    [<JavaScriptExport>]
     abstract member Render: model : 'M  -> rdata : Map<rname, IDocProvider list> -> Doc
     override this.Doc rdata =
         let model = (node.Model :?> 'M)
         this.Render model rdata
-    abstract member ToDoc: ClientNode<'M> -> Doc
+    [<JavaScriptExport>]
+    member this.ToDoc (node: INode): Doc =
+        let model = (node.Model :?> 'M)
+        this.Render model Map.empty
     [<JavaScript>]
-    member this.ToClientDoc node = this.ToDoc node
+    member this.ToClientDoc (node: INode) = this.ToDoc node
     
-type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(node) =
+type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(node : INode) =
     inherit WebSharperDocumentView<'M>(node)
     abstract member InstantiateTemplate: unit -> 'T
     abstract member RenderTemplate: model : 'M -> template : 'T -> rdata : Map<rname, IDocProvider list> -> Doc

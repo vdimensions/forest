@@ -16,6 +16,7 @@
   <Import Project="../../../Forest.Common.props" />
 
   <ItemGroup>
+    <Compile Include="Node.fs" />
     <Compile Include="PhysicalView.fs" />
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
     <Compile Include="TemplateRegistry.fs" />
@@ -24,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Client.fs" />
     <None Include="paket.dependencies" />
     <None Include="paket.lock" />
     <None Include="paket.references" />

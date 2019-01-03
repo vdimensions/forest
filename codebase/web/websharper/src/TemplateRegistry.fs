@@ -1,8 +1,8 @@
 ﻿namespace Forest.Web.WebSharper
 open Forest
 
-type WebSharperPhysicalViewFactory = DomNode -> WebSharperPhysicalView
+type WebSharperPhysicalViewFactory = INode -> WebSharperPhysicalView
 
 type [<Interface>] IWebSharperTemplateRegistry =
     abstract member Register: name : vname -> factory : WebSharperPhysicalViewFactory -> IWebSharperTemplateRegistry
-    abstract member Get: domNode : DomNode -> WebSharperPhysicalView
+    abstract member Get: domNode : INode -> WebSharperPhysicalView

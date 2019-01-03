@@ -24,25 +24,25 @@ and [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, r
 
 and [<Sealed>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
     inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
-    
-and [<Sealed;NoEquality;NoComparison>] Client =
+   
+and [<Sealed;NoEquality;NoComparison>] Remoting =
     [<DefaultValue>]
     static val mutable private _facade : PerSessionWebSharperForestFacade voption
 
     static member internal Init (value : PerSessionWebSharperForestFacade) =
-        match Client._facade with
-        | ValueNone -> Client._facade <- ValueSome value
+        match Remoting._facade with
+        | ValueNone -> Remoting._facade <- ValueSome value
         | ValueSome _ -> invalidOp "A forest facade is already initialized"
 
     static member Facade 
         with get() = 
-            match Client._facade with
+            match Remoting._facade with
             | ValueSome f -> f.Current :> IForestFacade
             | ValueNone -> invalidOp "A forest facade has not been initialized yet"
 
 and [<Sealed;Module;RequiresForest;RequiresWebSharper;RequiresAspNetSession>] 
     internal ForestWebSharperModule private (registeredPhysicalViewFacories : ConcurrentDictionary<string, WebSharperPhysicalViewFactory>, forestContext : IForestContext, perSessionForestFacadeProvider : PerSessionWebSharperForestFacade, logger : ILogger) = 
-    do Client.Init perSessionForestFacadeProvider
+    do Remoting.Init perSessionForestFacadeProvider
     public new (forestContext : IForestContext, accessor : IHttpContextAccessor, logger : ILogger) = ForestWebSharperModule(ConcurrentDictionary<_, _>(StringComparer.Ordinal), forestContext, new PerSessionWebSharperForestFacade(accessor), logger)
         
     [<ModuleTerminate>]
