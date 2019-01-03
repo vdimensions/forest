@@ -25,7 +25,7 @@ and [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, r
 and [<Sealed>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
     inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
     
-and Client =
+and [<Sealed;NoEquality;NoComparison>] Client =
     [<DefaultValue>]
     static val mutable private _facade : PerSessionWebSharperForestFacade voption
 
@@ -72,7 +72,6 @@ and [<Sealed;Module;RequiresForest;RequiresWebSharper;RequiresAspNetSession>]
  
     interface IDocumentRenderer with 
         member __.Doc() = (perSessionForestFacadeProvider.Current.Renderer :> IDocumentRenderer).Doc()
-        member __.DocVar() = (perSessionForestFacadeProvider.Current.Renderer :> IDocumentRenderer).DocVar()
 
     interface IWebSharperTemplateRegistry with
         member this.Register (NotNullOrEmpty "name" name) (NotNull "factory" factory : WebSharperPhysicalViewFactory) =

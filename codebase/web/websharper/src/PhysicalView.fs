@@ -1,7 +1,16 @@
 namespace Forest.Web.WebSharper
 
 open Forest
+open WebSharper
 open WebSharper.UI
+
+type ClientNode<'T> =
+    {
+        Hash: thash;
+        Name: vname;
+        Model: 'T;
+        Regions: Map<rname, thash list>
+    }
 
 type [<Interface>] IDocProvider =
     abstract member Doc: unit -> Doc
@@ -19,6 +28,9 @@ type [<AbstractClass>] WebSharperDocumentView<'M>(node) =
     override this.Doc rdata =
         let model = (node.Model :?> 'M)
         this.Render model rdata
+    abstract member ToDoc: ClientNode<'M> -> Doc
+    [<JavaScript>]
+    member this.ToClientDoc node = this.ToDoc node
     
 type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(node) =
     inherit WebSharperDocumentView<'M>(node)

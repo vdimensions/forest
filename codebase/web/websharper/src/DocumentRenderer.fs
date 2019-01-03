@@ -9,8 +9,6 @@ open WebSharper.UI.Client
 
 type [<Interface>] IDocumentRenderer =
     abstract member Doc: unit -> Doc
-    [<System.Obsolete>]
-    abstract member DocVar: unit -> Var<Doc>
 
 type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher, hash, registry : IWebSharperTemplateRegistry, state : Var<Map<thash, Doc>>) =
     inherit AbstractPhysicalView(commandDispatcher, hash)
@@ -45,8 +43,8 @@ type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher,
 
     member __.DocView () : View<Doc> =
         let h = hash
-        //state.View.MapCached (fun m -> m.TryFind h |> Option.defaultWith (fun () -> Doc.Empty) )
-        state.View.MapSeqCached (fun a b -> ())
+        state.View.MapCached (fun m -> m.TryFind h |> Option.defaultWith (fun () -> Doc.Empty) )
+        //state.View.MapSeqCached (fun a b -> ())
 
     member __.DocVar () : Var<Doc> =
         let h = hash
@@ -57,7 +55,7 @@ type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher,
         member this.DocView() = this.DocView()
         member this.DocVar() = this.DocVar()
 
-type [<Sealed;NoComparison>] internal WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, hash, registry : IWebSharperTemplateRegistry, state, topLevelViews : List<WebSharperTopLevelPhysicalViewWrapper>) =
+type [<Sealed;NoComparison>] internal WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, hash, registry : IWebSharperTemplateRegistry, state, topLevelViews : List<WebSharperTopLevelPhysicalViewWrapper>, topLevelNodes : List<thash>) =
     inherit WebSharperPhysicalViewWrapper(commandDispatcher, hash, registry, state)
     member private __.base_Dispose disposing = base.Dispose disposing
     override this.Dispose disposing = 
@@ -68,16 +66,19 @@ type [<Sealed;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharp
     inherit AbstractPhysicalViewRenderer<WebSharperPhysicalViewWrapper>()
     let state : Var<Map<thash, Doc>> = Var.Create Map.empty
     let topLevelViews = List<WebSharperTopLevelPhysicalViewWrapper>()
+    let topLevelNodes = List<thash>()
 
     override __.CreatePhysicalView commandDispatcher domNode = 
-        let result = new WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, domNode.Hash, registry, state, topLevelViews)
+        //let rec domNode2ClientNode (dn : DomNode) : ClientNode =
+        //    { Hash = dn.Hash; Name = dn.Name; Model = dn.Model; Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map domNode2ClientNode)  }
+        topLevelNodes.Add (domNode.Hash)
+        let result = new WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, domNode.Hash, registry, state, topLevelViews, topLevelNodes)
         topLevelViews.Add result
         upcast result
 
     override __.CreateNestedPhysicalView commandDispatcher parent domNode =
-        let embedFn = (match parent with :? WebSharperTopLevelPhysicalViewWrapper as t -> t.Embed domNode.Region | _ -> id)
         new WebSharperPhysicalViewWrapper(commandDispatcher, domNode.Hash, registry, state)
-        |> embedFn
+        |> parent.Embed domNode.Region
 
     interface IDocumentRenderer with 
         member __.Doc() = 
@@ -87,10 +88,3 @@ type [<Sealed;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharp
             | list -> list |> Doc.Concat
             //|> List.tryHead
             //|> Option.defaultWith (fun () -> Doc.Empty)
-        member __.DocVar() = 
-            match topLevelViews |> List.ofSeq |> List.map (fun x -> x.DocVar()) with
-            | [] -> [Var.Create Doc.Empty]
-            | [x] -> [x]
-            | list -> list
-            |> List.tryHead
-            |> Option.defaultWith (fun () -> Var.Create Doc.Empty)
