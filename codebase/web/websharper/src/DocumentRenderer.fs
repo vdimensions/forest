@@ -3,94 +3,194 @@ namespace Forest.Web.WebSharper
 open System.Collections.Generic
 open Forest
 open Forest.UI
+open WebSharper
 open WebSharper.UI
-open WebSharper.UI.Client
-    
+open Axle.Web.AspNetCore.Session
+open Microsoft.AspNetCore.Http
+
 
 type [<Interface>] IDocumentRenderer =
     abstract member Doc: unit -> Doc
 
-type [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher, node: INode, registry : IWebSharperTemplateRegistry, state : Var<Map<thash, Doc>>) =
-    inherit AbstractPhysicalView(commandDispatcher, node.Hash)
+type [<Interface>] INodeStateProvider =
+    abstract member Nodes: Node array with get
+
+type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, renderer : IPhysicalViewRenderer<WebSharperPhysicalViewWrapper>) =
+    inherit DefaultForestFacade<WebSharperPhysicalViewWrapper>(forestContext, renderer)
+    member __.Renderer with get() = renderer
+
+and [<Sealed>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
+    inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
+    interface INodeStateProvider with
+        member this.Nodes with get() = (this.Current.Renderer :?> INodeStateProvider).Nodes
+
+and [<NoComparison>] WebSharperPhysicalViewWrapper internal (commandDispatcher, hash, allNodes : IDictionary<thash, Node>, registry : IWebSharperTemplateRegistry) =
+    inherit AbstractPhysicalView(commandDispatcher, hash)
     let mutable regionMap : Map<rname, WebSharperPhysicalViewWrapper list> = Map.empty
 
-    static member domNode2ClientNode dn =
-        let rec re (dn : DomNode) : Node =
-            { Hash = dn.Hash; Name = dn.Name; Model = dn.Model; Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map re)  }
-        dn |> re
+    static member domNode2Node dn =
+        { Hash = dn.Hash; Name = dn.Name; Model = dn.Model; Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map (fun x -> x.Hash) |> Array.ofList ) |> Map.toArray}
 
     override __.Refresh node = 
-        let map = state.Value
-        state.Value <- 
-            match map.TryFind node.Hash with
-            | Some _ -> map |> Map.remove node.Hash
-            | None -> map 
-            |> Map.add node.Hash (node |> WebSharperPhysicalViewWrapper.domNode2ClientNode |> WebSharperPhysicalViewWrapper.toDoc registry regionMap)
+        allNodes.[node.Hash] <- node |> WebSharperPhysicalViewWrapper.domNode2Node
 
     member __.Embed region pv =
         regionMap <- regionMap |> Map.add region (match regionMap.TryFind region with Some data -> pv::data | None -> List.singleton pv)
         pv
 
     override __.Dispose _ = 
-        state.Value <- state.Value |> Map.remove node.Hash
+        hash |> allNodes.Remove |> ignore
 
-    static member private toDoc (registry : IWebSharperTemplateRegistry) (regionMap : Map<rname, WebSharperPhysicalViewWrapper list>) (node : Node) : Doc =
-        let inline mapPVWrapper (pvw : WebSharperPhysicalViewWrapper list) = 
-            pvw |> List.map (fun x -> x :> IDocProvider )
-        let inline mapRegionContents (rm : Map<rname, WebSharperPhysicalViewWrapper list>) = 
-            rm |> Map.map (fun _ v -> v |> mapPVWrapper)
-        let rm = regionMap
-        node |> (registry.Get >> (fun pv -> rm |> mapRegionContents |> pv.Doc))
+    member __.Doc (rdata) : Doc =
+        let node = allNodes.[hash]
+        let x = node.Name |> registry.Get 
+        x.Doc rdata node
 
-    member __.Doc () : Doc =
-        let h = node.Hash
-        state.Value.TryFind h |> Option.defaultWith (fun () -> Doc.Empty)
+type [<Sealed;NoEquality;NoComparison>] Remoting =
+    [<DefaultValue>]
+    static val mutable private _facade : PerSessionWebSharperForestFacade voption
+    [<DefaultValue>]
+    static val mutable private _nodeProvider : INodeStateProvider voption
 
-    member __.DocView () : View<Doc> =
-        let h = node.Hash
-        state.View.MapCached (fun m -> m.TryFind h |> Option.defaultWith (fun () -> Doc.Empty) )
-        //state.View.MapSeqCached (fun a b -> ())
+    static member internal Init (forest : PerSessionWebSharperForestFacade) =
+        match Remoting._facade with
+        | ValueNone -> 
+            Remoting._facade <- ValueSome forest
+            Remoting._nodeProvider <- ValueSome <| upcast forest
+        | ValueSome _ -> invalidOp "A forest facade is already initialized"
 
-    member __.DocVar () : Var<Doc> =
-        let h = node.Hash
-        state.Lens (fun m -> m.TryFind h |> Option.defaultWith (fun () -> Doc.Empty)) (fun a _ -> a)
+    static member Facade 
+        with get() = 
+            match Remoting._facade with
+            | ValueSome f -> f.Current :> IForestFacade
+            | ValueNone -> invalidOp "A forest facade has not been initialized yet"
 
-    interface IDocProvider with
-        member this.Doc() = this.Doc()
-        member this.DocView() = this.DocView()
-        member this.DocVar() = this.DocVar()
+    [<Rpc>]
+    static member GetNodes () : Async<Node array> = 
+        async {
+            let nodes =
+                match Remoting._nodeProvider with
+                | ValueSome p -> p.Nodes
+                | ValueNone -> Array.empty
+            return nodes
+        }
+    [<Rpc>]
+    static member ExecuteCommand hash cmd (arg : obj) : unit = 
+        async {
+            Remoting.Facade.ExecuteCommand hash cmd arg |> ignore
+        }
+        |> Async.Start
 
-type [<Sealed;NoComparison>] internal WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, hash, registry : IWebSharperTemplateRegistry, state, topLevelViews : List<WebSharperTopLevelPhysicalViewWrapper>, topLevelNodes : List<INode>) =
-    inherit WebSharperPhysicalViewWrapper(commandDispatcher, hash, registry, state)
+[<JavaScript>]
+module ClientCode =
+    open WebSharper.UI.Client
+    open WebSharper.UI.Html
+
+    let private _nodes : Var<Node array> = Var.Create <| Array.empty
+    let private _views : Var<Map<vname, WebSharperPhysicalView>> = Var.Create <| Map.empty
+
+    let setNodes nodes = nodes |> _nodes.Set
+    let setViews nodes = nodes |> _views.Set
+
+    let private syncNodes () : unit =
+        async {
+            let! n = Remoting.GetNodes()
+            n |> _nodes.Set
+        }
+        |> Async.Start
+
+    let afterRender (_ : JavaScript.Dom.Element) = 
+        if (_nodes.Value.Length = 0) then syncNodes()
+
+    let forestInit() : Doc =
+        div [ on.afterRender <@ afterRender @> ] []
+    
+    // --------------------------------------
+    let private tree () : View<Map<thash,Node*WebSharperPhysicalView*array<rname*array<thash>>>> =
+        View.Map2
+            (fun (a : Node seq) b -> 
+                let phase1 = a |> Seq.map (fun z -> z.Hash, z) |> Map.ofSeq
+                let phase2 =
+                    phase1 
+                    |> Map.toList
+                    |> Seq.map (fun (a, c) -> a, c, (b |> Map.tryFind c.Name), phase1)
+                    |> Seq.map (fun (a, b, c, d) -> match c with | None -> None | Some c1 -> Some (a, (b, c1), d))
+                    |> Seq.choose id
+                    |> Seq.map (fun (a, (b, c), d) ->
+                        let rdata = b.Regions |> Map.ofArray
+                        (a, ((b, c, rdata), d))
+                    )
+                    |> Map.ofSeq
+                phase2
+                |> Map.map (fun _ ((a, b, rdata), c) ->
+                    let resolvedRdata = 
+                        rdata 
+                        //|> Map.map (fun _ hs -> hs |> Array.map (fun g -> phase2 |> Map.tryFind g) |> Array.choose id |> Array.map (fun ((d, e, _), _) -> d, e))
+                        |> Map.toArray
+                    a, b, resolvedRdata
+                )
+            )
+            (_nodes.View |> View.MapSeqCached id)
+            (_views.View)
+        
+    let private directDoc (docView : View<Doc>) = 
+        docView |> Doc.EmbedView
+    let inline private clientDoc (docView : View<Doc>) : Doc =
+        client <@ docView |> directDoc @>
+
+    let rec private processDocInternal (t : Map<thash,Node*WebSharperPhysicalView*array<rname*array<thash>>>) (hash : thash) : Doc =
+        match t |> Map.tryFind hash with
+        | None -> Doc.Empty
+        | Some (node, pv, rdata) ->
+            let regionDocs = 
+                rdata 
+                |> Array.map (fun (rname, v) -> rname, v |> Array.map (fun x -> processDocInternal t x) |> Doc.Concat)
+            pv.Doc regionDocs node
+    let private processDoc (wrapper : View<Doc> -> Doc) (tree : View<Map<thash,Node*WebSharperPhysicalView*array<rname*array<thash>>>>) (hash : thash) : Doc =
+        tree |> View.Map (fun t -> processDocInternal t hash) |> wrapper
+    let render hash =
+        client <@ tree() |> View.Map (fun t -> processDocInternal t hash) |> Doc.EmbedView @>
+
+    let renderRegionsOnServer (rdata : array<rname * thash array>) = 
+        rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc clientDoc (tree()) h) |> Doc.Concat )
+    let renderRegionsOnClient (rdata : array<rname * thash array>) = 
+        rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc directDoc (tree()) h) |> Doc.Concat)
+    // --------------------------------------
+
+    let executeCommand hash cmd (arg : obj) =
+        Remoting.ExecuteCommand hash cmd arg
+        syncNodes()
+
+type [<Sealed;NoComparison>] internal WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, hash, topLevelViews: List<WebSharperTopLevelPhysicalViewWrapper>, allNodes, registry) =
+    inherit WebSharperPhysicalViewWrapper(commandDispatcher, hash, allNodes, registry)
     member private __.base_Dispose disposing = base.Dispose disposing
     override this.Dispose disposing = 
         topLevelViews.Remove this |> ignore
         this.base_Dispose disposing
+    member __.Node with get() = allNodes.[hash]
 
 type [<Sealed;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharperTemplateRegistry) =
     inherit AbstractPhysicalViewRenderer<WebSharperPhysicalViewWrapper>()
-    let state : Var<Map<thash, Doc>> = Var.Create Map.empty
     let topLevelViews = List<WebSharperTopLevelPhysicalViewWrapper>()
-    let topLevelNodes = List<INode>()
+    let allNodes = Dictionary<thash,Node>(System.StringComparer.Ordinal)
 
     override __.CreatePhysicalView commandDispatcher domNode = 
-        let node = WebSharperPhysicalViewWrapper.domNode2ClientNode(domNode)
-        topLevelNodes.Add <| node
-        let result = new WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, node, registry, state, topLevelViews, topLevelNodes)
+        let hash = domNode.Hash
+        let result = new WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, hash, topLevelViews, allNodes, registry)
         topLevelViews.Add result
         upcast result
 
     override __.CreateNestedPhysicalView commandDispatcher parent domNode =
-        let node = WebSharperPhysicalViewWrapper.domNode2ClientNode(domNode)
-        // TODO: register node
-        new WebSharperPhysicalViewWrapper(commandDispatcher, node, registry, state)
+        new WebSharperPhysicalViewWrapper(commandDispatcher, domNode.Hash, allNodes, registry)
         |> parent.Embed domNode.Region
 
     interface IDocumentRenderer with 
         member __.Doc() = 
-            match topLevelViews |> List.ofSeq |> List.map (fun x -> x.Doc()) with
+            match topLevelViews |> List.ofSeq |> List.map (fun x -> x.Doc (x.Node.Regions |> ClientCode.renderRegionsOnServer)) with
             | [] -> Doc.Empty
             | [x] -> x
             | list -> list |> Doc.Concat
             //|> List.tryHead
             //|> Option.defaultWith (fun () -> Doc.Empty)
+    interface INodeStateProvider with
+        member __.Nodes with get() = allNodes.Values |> Array.ofSeq

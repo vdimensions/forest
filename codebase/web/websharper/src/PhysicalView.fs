@@ -5,32 +5,27 @@ open WebSharper
 open WebSharper.UI
 
 
-type [<Interface>] IDocProvider =
-    abstract member Doc: unit -> Doc
-    abstract member DocView: unit -> View<Doc>
-    abstract member DocVar: unit -> Var<Doc>
+[<JavaScriptExport>]
+type [<AbstractClass>] WebSharperPhysicalView() =
+    [<JavaScriptExport>]
+    abstract member Doc: array<rname*Doc> -> Node -> Doc
 
-type [<AbstractClass;JavaScriptExport>] WebSharperPhysicalView() =
-    abstract member Doc: Map<rname, IDocProvider list> -> Doc
-
-type [<AbstractClass>] WebSharperDocumentView<'M>(node : INode) =
+[<JavaScriptExport>]
+type [<AbstractClass>] WebSharperDocumentView<'M>() =
     inherit WebSharperPhysicalView()
     [<JavaScriptExport>]
-    abstract member Render: model : 'M  -> rdata : Map<rname, IDocProvider list> -> Doc
-    override this.Doc rdata =
-        let model = (node.Model :?> 'M)
-        this.Render model rdata
-    [<JavaScriptExport>]
-    member this.ToDoc (node: INode): Doc =
-        let model = (node.Model :?> 'M)
-        this.Render model Map.empty
-    [<JavaScript>]
-    member this.ToClientDoc (node: INode) = this.ToDoc node
+    abstract member Render: hash : thash -> model : 'M  -> rdata : array<rname*Doc> -> Doc
     
-type [<AbstractClass>] WebSharperTemplateView<'M, 'T>(node : INode) =
-    inherit WebSharperDocumentView<'M>(node)
+    [<JavaScriptExport>]
+    override this.Doc rdata node =
+        let model = (node.Model :?> 'M)
+        this.Render node.Hash model rdata
+    
+[<JavaScriptExport>]
+type [<AbstractClass>] WebSharperTemplateView<'M, 'T>() =
+    inherit WebSharperDocumentView<'M>()
     abstract member InstantiateTemplate: unit -> 'T
-    abstract member RenderTemplate: model : 'M -> template : 'T -> rdata : Map<rname, IDocProvider list> -> Doc
-    override this.Render model rdata =
+    abstract member RenderTemplate: hash : thash -> model : 'M -> template : 'T -> rdata : array<rname*Doc> -> Doc
+    override this.Render hash model rdata =
         let template = this.InstantiateTemplate()
-        this.RenderTemplate model template rdata
+        this.RenderTemplate hash model template rdata
