@@ -16,7 +16,7 @@
   <Import Project="../../../Forest.Common.props" />
 
   <ItemGroup>
-    <Compile Include="Node.fs" />
+    <Compile Include="Api.fs" />
     <Compile Include="PhysicalView.fs" />
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
     <Compile Include="TemplateRegistry.fs" />
