@@ -106,29 +106,14 @@ module ClientCode =
         div [ on.afterRender <@ afterRender @> ] []
     
     // --------------------------------------
-    let private tree () : View<Map<thash,Node*WebSharperPhysicalView*array<rname*array<thash>>>> =
+    let private tree () : View<Map<thash,Node*WebSharperPhysicalView>> =
         View.Map2
             (fun (a : Node seq) b -> 
-                let phase1 = a |> Seq.map (fun z -> z.Hash, z) |> Map.ofSeq
-                let phase2 =
-                    phase1 
-                    |> Map.toList
-                    |> Seq.map (fun (a, c) -> a, c, (b |> Map.tryFind c.Name), phase1)
-                    |> Seq.map (fun (a, b, c, d) -> match c with | None -> None | Some c1 -> Some (a, (b, c1), d))
-                    |> Seq.choose id
-                    |> Seq.map (fun (a, (b, c), d) ->
-                        let rdata = b.Regions |> Map.ofArray
-                        (a, ((b, c, rdata), d))
-                    )
-                    |> Map.ofSeq
-                phase2
-                |> Map.map (fun _ ((a, b, rdata), c) ->
-                    let resolvedRdata = 
-                        rdata 
-                        //|> Map.map (fun _ hs -> hs |> Array.map (fun g -> phase2 |> Map.tryFind g) |> Array.choose id |> Array.map (fun ((d, e, _), _) -> d, e))
-                        |> Map.toArray
-                    a, b, resolvedRdata
-                )
+                a 
+                |> Seq.map (fun (a) -> a.Hash, a, (b |> Map.tryFind a.Name))
+                |> Seq.map (fun (a, b, c) -> match c with | None -> None | Some c1 -> Some (a, (b, c1)))
+                |> Seq.choose id
+                |> Map.ofSeq
             )
             (_nodes.View |> View.MapSeqCached id)
             (_views.View)
@@ -138,15 +123,15 @@ module ClientCode =
     let inline private clientDoc (docView : View<Doc>) : Doc =
         client <@ docView |> directDoc @>
 
-    let rec private processDocInternal (t : Map<thash,Node*WebSharperPhysicalView*array<rname*array<thash>>>) (hash : thash) : Doc =
+    let rec private processDocInternal (t : Map<thash,Node*WebSharperPhysicalView>) (hash : thash) : Doc =
         match t |> Map.tryFind hash with
         | None -> Doc.Empty
-        | Some (node, pv, rdata) ->
+        | Some (node, pv) ->
             let regionDocs = 
-                rdata 
+                node.Regions 
                 |> Array.map (fun (rname, v) -> rname, v |> Array.map (fun x -> processDocInternal t x) |> Doc.Concat)
             pv.Doc regionDocs node
-    let private processDoc (wrapper : View<Doc> -> Doc) (tree : View<Map<thash,Node*WebSharperPhysicalView*array<rname*array<thash>>>>) (hash : thash) : Doc =
+    let private processDoc (wrapper : View<Doc> -> Doc) (tree : View<Map<thash,Node*WebSharperPhysicalView>>) (hash : thash) : Doc =
         tree |> View.Map (fun t -> processDocInternal t hash) |> wrapper
     let render hash =
         client <@ tree() |> View.Map (fun t -> processDocInternal t hash) |> Doc.EmbedView @>
