@@ -10,6 +10,6 @@ module Client =
         {
             Hash: thash;
             Name: vname;
-            Model: obj
+            Model: obj;
             Regions: array<rname*thash array>
         }

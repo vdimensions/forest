@@ -21,10 +21,11 @@
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
     <Compile Include="TemplateRegistry.fs" />
     <Compile Include="DocumentRenderer.fs" />
-    <Compile Include="AxleModule.fs" />
+    <Compile Include="ForestWebSharperModule.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Sitelets\ForestSiteletModule.fs" />
     <Compile Include="Client.fs" />
     <None Include="paket.dependencies" />
     <None Include="paket.lock" />
