@@ -65,7 +65,7 @@ module ClientCode =
         client <@ tree() |> View.Map (fun t -> processDocInternal t hash) |> Doc.EmbedView @>
 
     let renderRegionsOnServer (rdata : array<rname * thash array>) = 
-        rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc clientDoc (tree()) h) |> Doc.Concat )
+        rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc clientDoc (tree()) h) |> Doc.Concat)
     let renderRegionsOnClient (rdata : array<rname * thash array>) = 
         rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc directDoc (tree()) h) |> Doc.Concat)
     // --------------------------------------

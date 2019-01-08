@@ -25,6 +25,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Sitelets\IDocumentOutlineBuilder.fs" />
+    <Compile Include="Sitelets\ForestEndPoint.fs" />
+    <Compile Include="Sitelets\ForestSitelet.fs" />
     <Compile Include="Sitelets\ForestSiteletModule.fs" />
     <Compile Include="Client.fs" />
     <None Include="paket.dependencies" />
