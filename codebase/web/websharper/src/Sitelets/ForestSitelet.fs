@@ -16,6 +16,6 @@ module internal ForestSitelet =
             match endpoint with
             | ForestEndPoint.ForestTree tree -> f.LoadTemplate tree
             | ForestEndPoint.ForestCommand (hash, name, arg) -> f.ExecuteCommand hash name arg
-            dop h (client <@ ((ClientCode.render shellHash :: b) |> Doc.Concat) @>)
+            dop h ((div [ on.afterRender <@ ClientCode.afterRender @> ] [])::[client <@ (ClientCode.render shellHash) @>] |> Doc.Concat)
             |> Content.Page
         )

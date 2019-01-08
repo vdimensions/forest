@@ -14,25 +14,23 @@ module ClientCode =
     open WebSharper.UI.Client
     open WebSharper.UI.Html
 
-    let private _nodes : Var<Node array> = Var.Create <| Array.empty
+    let private _nodes = List.empty |> ListModel.Create<obj,Node> (fun n -> n.Model)
     let private _views : Var<Map<vname, WebSharperPhysicalView>> = Var.Create <| Map.empty
 
     let setNodes nodes = nodes |> _nodes.Set
     let setViews nodes = nodes |> _views.Set
 
-    let private syncNodes () : unit =
-        async {
-            let! n = Remoting.GetNodes()
-            n |> _nodes.Set
-        }
-        |> Async.Start
+    let private syncNodes(force) : unit =
+        if (force || _nodes.Value |> Seq.isEmpty) then
+            async {
+                let! n = Remoting.GetNodes()
+                n |> _nodes.Set
+            }
+            |> Async.StartImmediate
 
     let afterRender (_ : JavaScript.Dom.Element) = 
-        if (_nodes.Value.Length = 0) then syncNodes()
+        syncNodes(false)
 
-    let forestInit() : Doc =
-        div [ on.afterRender <@ afterRender @> ] []
-    
     // --------------------------------------
     let private tree () : View<Map<thash,Node*WebSharperPhysicalView>> =
         View.Map2
@@ -43,7 +41,7 @@ module ClientCode =
                 |> Seq.choose id
                 |> Map.ofSeq
             )
-            (_nodes.View |> View.MapSeqCached id)
+            (_nodes.View)
             (_views.View)
         
     let private directDoc (docView : View<Doc>) = 
@@ -62,17 +60,15 @@ module ClientCode =
     let private processDoc (wrapper : View<Doc> -> Doc) (tree : View<Map<thash,Node*WebSharperPhysicalView>>) (hash : thash) : Doc =
         tree |> View.Map (fun t -> processDocInternal t hash) |> wrapper
     let render hash =
-        client <@ tree() |> View.Map (fun t -> processDocInternal t hash) |> Doc.EmbedView @>
+        client <@ syncNodes(false); tree() |> Doc.BindView (fun t -> processDocInternal t hash) @>
 
     let renderRegionsOnServer (rdata : array<rname * thash array>) = 
         rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc clientDoc (tree()) h) |> Doc.Concat)
-    let renderRegionsOnClient (rdata : array<rname * thash array>) = 
-        rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc directDoc (tree()) h) |> Doc.Concat)
     // --------------------------------------
 
     let internal executeCommand hash cmd (arg : obj) =
         Remoting.ExecuteCommand hash cmd arg
-        syncNodes()
+        syncNodes(true)
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =

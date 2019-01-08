@@ -44,7 +44,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
             bodyDocs <- body::bodyDocs
             upcast this
         member this.AddAfterRender (NotNull "callback" callback) = 
-            afterRenderCallbacks <- (script [ callback |> on.afterRender ] [])::afterRenderCallbacks
+            afterRenderCallbacks <- (div [ callback |> on.afterRender ] [])::afterRenderCallbacks
             upcast this
 
     interface ISiteletProvider with
