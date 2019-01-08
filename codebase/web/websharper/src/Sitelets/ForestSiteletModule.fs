@@ -50,7 +50,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
     interface ISiteletProvider with
         member this.RegisterSitelets registry =
             let h = headerDocs |> Seq.rev |> Doc.Concat
-            let a = (script [ on.afterRender <@ ClientCode.afterRender @> ] []) :: (afterRenderCallbacks |> List.rev)
+            let a = (script [ on.afterRender <@ fun _ -> ClientCode.init() @> ] []) :: (afterRenderCallbacks |> List.rev)
             let b = bodyDocs |> List.rev
             let dop a b =
                 match this._documentOutlineProvider with

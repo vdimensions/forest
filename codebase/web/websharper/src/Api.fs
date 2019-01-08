@@ -4,7 +4,7 @@ open Forest
 open WebSharper
 open WebSharper.UI
 
-
+[<NoComparison;JavaScriptExport>]
 type Node =
     {
         Hash: thash;
@@ -12,9 +12,6 @@ type Node =
         Model: obj;
         Regions: array<rname*thash array>
     }
-
-type [<Interface>] IDocumentRenderer =
-    abstract member Doc: unit -> Doc
 
 type [<Interface>] INodeStateProvider =
     abstract member Nodes: Node array with get

@@ -48,7 +48,6 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperTopLevelPhysicalViewW
     override this.Dispose disposing = 
         topLevelViews.Remove this |> ignore
         this.base_Dispose disposing
-    member __.Node with get() = allNodes.[hash]
 
 type [<Sealed;NoEquality;NoComparison>] WebSharperPhysicalViewRenderer(registry : IWebSharperTemplateRegistry) =
     inherit AbstractPhysicalViewRenderer<WebSharperPhysicalViewWrapper>()
@@ -65,13 +64,6 @@ type [<Sealed;NoEquality;NoComparison>] WebSharperPhysicalViewRenderer(registry 
         new WebSharperPhysicalViewWrapper(commandDispatcher, domNode.Hash, allNodes, registry)
         |> parent.Embed domNode.Region
 
-    interface IDocumentRenderer with 
-        member __.Doc() = 
-            match topLevelViews |> List.ofSeq |> List.map (fun x -> x.Doc (x.Node.Regions |> ClientCode.renderRegionsOnServer)) with
-            | [] -> Doc.Empty
-            | [x] -> x
-            | list -> list |> Doc.Concat
-            //|> List.tryHead
-            //|> Option.defaultWith (fun () -> Doc.Empty)
     interface INodeStateProvider with
-        member __.Nodes with get() = allNodes.Values |> Array.ofSeq
+        member __.Nodes 
+            with get() = allNodes.Values |> Array.ofSeq

@@ -21,17 +21,16 @@ module ClientCode =
     let setViews nodes = nodes |> _views.Set
 
     let private syncNodes(force) : unit =
-        if (force || _nodes.Value |> Seq.isEmpty) then
+        if (force || _nodes.Length = 0) then
             async {
                 let! n = Remoting.GetNodes()
-                n |> _nodes.Set
+                n |> setNodes
             }
             |> Async.StartImmediate
 
-    let afterRender (_ : JavaScript.Dom.Element) = 
+    let init () = 
         syncNodes(false)
 
-    // --------------------------------------
     let private tree () : View<Map<thash,Node*WebSharperPhysicalView>> =
         View.Map2
             (fun (a : Node seq) b -> 
@@ -43,31 +42,33 @@ module ClientCode =
             )
             (_nodes.View)
             (_views.View)
-        
-    let private directDoc (docView : View<Doc>) = 
-        docView |> Doc.EmbedView
-    let inline private clientDoc (docView : View<Doc>) : Doc =
-        client <@ docView |> directDoc @>
 
-    let rec private processDocInternal (t : Map<thash,Node*WebSharperPhysicalView>) (hash : thash) : Doc =
+    let private treeRooted (t : Map<thash,Node*WebSharperPhysicalView>) =
+        let mutable rootKeys = t |> Seq.map (fun x -> x.Key) |> Set.ofSeq
+        for (n, _) in t |> Seq.map (fun x -> x.Value) do
+            for (_, rs) in n.Regions do
+                for h in rs do
+                    rootKeys <- rootKeys |> Set.remove h
+        rootKeys |> Set.toArray, t
+        
+    let rec private traverseTree (t : Map<thash,Node*WebSharperPhysicalView>) (hash : thash) : Doc =
         match t |> Map.tryFind hash with
         | None -> Doc.Empty
         | Some (node, pv) ->
             let regionDocs = 
                 node.Regions 
-                |> Array.map (fun (rname, v) -> rname, v |> Array.map (fun x -> processDocInternal t x) |> Doc.Concat)
+                |> Array.map (fun (rname, v) -> rname, v |> Array.map (fun x -> traverseTree t x) |> Doc.Concat)
             pv.Doc regionDocs node
-    let private processDoc (wrapper : View<Doc> -> Doc) (tree : View<Map<thash,Node*WebSharperPhysicalView>>) (hash : thash) : Doc =
-        tree |> View.Map (fun t -> processDocInternal t hash) |> wrapper
-    let render hash =
-        client <@ syncNodes(false); tree() |> Doc.BindView (fun t -> processDocInternal t hash) @>
 
-    let renderRegionsOnServer (rdata : array<rname * thash array>) = 
-        rdata |> Array.map (fun (r, hs) -> r, hs |> Array.map (fun h -> processDoc clientDoc (tree()) h) |> Doc.Concat)
-    // --------------------------------------
+    let renderNode hash =
+        client <@ tree() |> Doc.BindView (fun t -> traverseTree t hash) @>
+
+    let render () =
+        client <@ tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat); @>
 
     let internal executeCommand hash cmd (arg : obj) =
         Remoting.ExecuteCommand hash cmd arg
+        // TODO: call sync nodes after execute command has finished
         syncNodes(true)
 
 [<JavaScriptExport>]

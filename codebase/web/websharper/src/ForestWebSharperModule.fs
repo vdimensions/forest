@@ -62,7 +62,5 @@ and [<Sealed;Module;RequiresForest;RequiresWebSharper;RequiresAspNetSession>]
             | (false, _) -> invalidOp(String.Format("A physical view with the provided name '{0}' could not be found", name))
 
     interface IForestFacadeProvider with
-        member __.ForestFacade with get() = upcast perSessionForestFacadeProvider
- 
-    interface IDocumentRenderer with
-        member __.Doc() = (perSessionForestFacadeProvider.Current.Renderer :?> IDocumentRenderer).Doc()
+        member __.ForestFacade 
+            with get() = upcast perSessionForestFacadeProvider
