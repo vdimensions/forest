@@ -67,9 +67,11 @@ module ClientCode =
         client <@ tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat); @>
 
     let internal executeCommand hash cmd (arg : obj) =
-        Remoting.ExecuteCommand hash cmd arg
-        // TODO: call sync nodes after execute command has finished
-        syncNodes(true)
+        async {
+            let! _ = Remoting.ExecuteCommand hash cmd arg            
+            syncNodes(true)
+        }
+        |> Async.Start
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =
