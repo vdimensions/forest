@@ -32,6 +32,9 @@ module ClientCode =
             }
             |> Async.StartImmediate
 
+    let internal emptyDoc () =
+        Doc.Empty
+
     let init () = 
         syncNodes(false)
 
@@ -65,15 +68,15 @@ module ClientCode =
             pv.Doc regionDocs node
 
     let renderNode hash =
-        client <@ tree() |> Doc.BindView (fun t -> traverseTree t hash) @>
+        tree() |> Doc.BindView (fun t -> traverseTree t hash)
 
     let render () =
-        client <@ tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat); @>
+        tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat)
 
     let internal executeCommand cmd hash (arg : obj) =
         async {
-            let! _ = Remoting.ExecuteCommand cmd hash arg            
-            syncNodes(true)
+            let! nodes = Remoting.ExecuteCommand cmd hash arg            
+            setNodes nodes
         }
         |> Async.Start
 
@@ -86,18 +89,20 @@ type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'M>() =
     inherit WebSharperPhysicalView<'M>()
     [<JavaScriptExport>]
-    abstract member Render: hash : thash -> model : 'M  -> rdata : array<rname*Doc> -> Doc
+    abstract member Render: hash : thash -> model : 'M  -> renderRegion : (rname -> Doc) -> Doc
     
     [<JavaScriptExport>]
     override this.Doc rdata node =
         let model = (node.Model :?> 'M)
-        this.Render node.Hash model rdata
+        let rdataArr = rdata |> Map.ofArray
+        let renderRegion r = rdataArr.TryFind r |> Option.defaultWith ClientCode.emptyDoc
+        this.Render node.Hash model renderRegion
     
 [<JavaScriptExport>]
 type [<AbstractClass>] WebSharperTemplateView<'M, 'T>() =
     inherit WebSharperDocumentView<'M>()
     abstract member InstantiateTemplate: unit -> 'T
-    abstract member RenderTemplate: hash : thash -> model : 'M -> template : 'T -> rdata : array<rname*Doc> -> Doc
-    override this.Render hash model rdata =
+    abstract member RenderTemplate: hash : thash -> model : 'M -> template : 'T -> renderRegion : (rname -> Doc) -> Doc
+    override this.Render hash model renderRegion =
         let template = this.InstantiateTemplate()
-        this.RenderTemplate hash model template rdata
+        this.RenderTemplate hash model template renderRegion

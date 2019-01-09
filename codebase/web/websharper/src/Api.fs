@@ -30,12 +30,6 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
             Remoting._nodeProvider <- (forest :?> INodeStateProvider) |> ValueSome
         | ValueSome _ -> invalidOp "A forest facade is already initialized"
 
-    static member private Facade 
-        with get() = 
-            match Remoting._facade with
-            | ValueSome f -> f
-            | ValueNone -> invalidOp "A forest facade has not been initialized yet"
-
     [<Rpc>]
     static member GetNodes () : Async<Node array> =
         async {
@@ -48,5 +42,11 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
     [<Rpc>]
     static member ExecuteCommand cmd hash (arg : obj) =
         async { 
-            return Remoting.Facade.ExecuteCommand cmd hash arg |> ignore 
+            let result =
+                match (Remoting._facade, Remoting._nodeProvider) with
+                | (ValueSome facade, ValueSome nodeProvider) -> 
+                    facade.ExecuteCommand cmd hash arg |> ignore 
+                    nodeProvider.Nodes
+                | _ -> invalidOp "A forest facade has not been initialized yet"
+            return result
         }
