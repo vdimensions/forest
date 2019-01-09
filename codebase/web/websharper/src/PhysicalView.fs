@@ -19,6 +19,10 @@ module ClientCode =
 
     let setNodes nodes = nodes |> _nodes.Set
     let setViews nodes = nodes |> _views.Set
+    let registerView name pv =
+        _views.Value
+        |> Map.add name pv
+        |> setViews
 
     let private syncNodes(force) : unit =
         if (force || _nodes.Length = 0) then

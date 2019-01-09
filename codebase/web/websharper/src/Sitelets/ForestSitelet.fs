@@ -18,10 +18,8 @@ module internal ForestSitelet =
             | ForestEndPoint.ForestCommand (name, hash, arg) -> f.ExecuteCommand name hash arg
             let shellID = "shell"
             let body = [
-                div [ Attr.Create "id" shellID ] []
-                script [ on.afterRender <@ fun _ -> ClientCode.render() |> Doc.RunReplaceById shellID @> ] []
-                script [ on.afterRender <@ fun _ -> ClientCode.init() @> ] []
+                div [ attr.id shellID; on.afterRender <@ fun this -> ClientCode.init(); ClientCode.render() |> Doc.RunReplace this @> ] []
             ] 
-            dop h (body |> Doc.Concat)
+            dop h (b @ body |> Doc.Concat)
             |> Content.Page
         )

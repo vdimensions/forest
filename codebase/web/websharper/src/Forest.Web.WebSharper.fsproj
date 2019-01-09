@@ -19,12 +19,12 @@
     <Compile Include="Api.fs" />
     <Compile Include="PhysicalView.fs" />
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
-    <Compile Include="TemplateRegistry.fs" />
     <Compile Include="DocumentRenderer.fs" />
     <Compile Include="ForestWebSharperModule.fs" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="Sitelets\TemplateRegistry.fs" />
     <Compile Include="Sitelets\IDocumentOutlineBuilder.fs" />
     <Compile Include="Sitelets\ForestEndPoint.fs" />
     <Compile Include="Sitelets\ForestSitelet.fs" />
