@@ -8,7 +8,7 @@ open System.Threading
 type [<Interface>] IForestFacade = 
     inherit ICommandDispatcher
     inherit IMessageDispatcher
-    abstract member LoadTemplate: template : string -> unit
+    abstract member LoadTree: tree : string -> unit
 
 type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalView>(ctx : IForestContext, renderer : IPhysicalViewRenderer<'PV>) =
     
@@ -36,19 +36,19 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
             :> IDomProcessor
         res.Render domProcessor
 
-    abstract member ExecuteCommand: thash -> cname -> obj -> ForestResult
-    default __.ExecuteCommand target name arg = engine.Update(fun e -> e.ExecuteCommand target name arg)
+    abstract member ExecuteCommand: cname -> thash -> obj -> ForestResult
+    default __.ExecuteCommand name target arg = engine.Update(fun e -> e.ExecuteCommand name target arg)
 
     abstract member SendMessage: 'M -> ForestResult
     default __.SendMessage message = engine.Update(fun e -> e.SendMessage message)
 
-    abstract member LoadTemplate: string -> ForestResult
-    default __.LoadTemplate template = engine.LoadTemplate template
+    abstract member LoadTree: string -> ForestResult
+    default __.LoadTree tree = engine.LoadTree tree
 
     interface ICommandDispatcher with
-        member this.ExecuteCommand target name arg = 
+        member this.ExecuteCommand name target arg = 
             let before = Interlocked.Increment(nestingCount)
-            let result = arg |> this.ExecuteCommand target name
+            let result = arg |> this.ExecuteCommand name target
             let after = Interlocked.Decrement(nestingCount)
             if (before - after) = 1 then this.Render result
 
@@ -60,8 +60,8 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
             if (before - after) = 1 then this.Render result
 
     interface IForestFacade with
-        member this.LoadTemplate name = 
+        member this.LoadTree tree = 
             let before = Interlocked.Increment(nestingCount)
-            let result = name |> this.LoadTemplate
+            let result = tree |> this.LoadTree
             let after = Interlocked.Decrement(nestingCount)
             if (before - after) = 1 then this.Render result

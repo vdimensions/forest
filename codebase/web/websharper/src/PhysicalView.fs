@@ -66,9 +66,9 @@ module ClientCode =
     let render () =
         client <@ tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat); @>
 
-    let internal executeCommand hash cmd (arg : obj) =
+    let internal executeCommand cmd hash (arg : obj) =
         async {
-            let! _ = Remoting.ExecuteCommand hash cmd arg            
+            let! _ = Remoting.ExecuteCommand cmd hash arg            
             syncNodes(true)
         }
         |> Async.Start
@@ -76,7 +76,7 @@ module ClientCode =
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =
     inherit WebSharperPhysicalView()
-    member __.ExecuteCommand hash name arg = ClientCode.executeCommand hash name arg
+    member __.ExecuteCommand name hash arg = ClientCode.executeCommand name hash arg
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'M>() =

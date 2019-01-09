@@ -16,8 +16,8 @@ and [<Sealed;NoComparison;>] internal PerSessionWebSharperForestFacade(httpConte
     inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
     member private this.Facade with get() : IForestFacade = upcast this.Current
     interface INodeStateProvider with member this.Nodes with get() = (this.Current.Renderer :?> INodeStateProvider).Nodes
-    interface IForestFacade with member this.LoadTemplate template = this.Facade.LoadTemplate template
-    interface ICommandDispatcher with member this.ExecuteCommand h c a = this.Facade.ExecuteCommand h c a
+    interface IForestFacade with member this.LoadTree tree = this.Facade.LoadTree tree
+    interface ICommandDispatcher with member this.ExecuteCommand c h a = this.Facade.ExecuteCommand c h a
     interface IMessageDispatcher with member this.SendMessage m = this.Facade.SendMessage m
 
 and [<NoComparison;NoEquality>] WebSharperPhysicalViewWrapper internal (commandDispatcher, hash, allNodes : IDictionary<thash, Node>, registry : IWebSharperTemplateRegistry) =

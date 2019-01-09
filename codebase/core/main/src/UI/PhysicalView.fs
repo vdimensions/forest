@@ -23,7 +23,7 @@ type [<AbstractClass;NoComparison>] AbstractPhysicalView(commandDispatcher : ICo
     abstract member Refresh : node : DomNode -> unit
     abstract member Dispose : disposing : bool -> unit
 
-    member __.ExecuteCommand (NotNull "name" name) arg = commandDispatcher.ExecuteCommand hash name arg
+    member __.ExecuteCommand (NotNull "name" name) arg = commandDispatcher.ExecuteCommand name hash arg
 
     override this.Finalize() = this.Dispose(false)
         

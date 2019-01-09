@@ -19,7 +19,7 @@ module Runtime =
         | InstantiateViewWithModel of node : TreeNode * model : obj
         | UpdateModel of node : thash * model : obj
         | DestroyView of subtree : TreeNode
-        | InvokeCommand of node : thash * command : cname * commandArg : obj
+        | InvokeCommand of command : cname * node : thash * commandArg : obj
         | PublishEvent of node : thash * message : obj * topics : string array
         | ClearRegion of owner : TreeNode * region : rname
         | Multiple of operations : Operation list
@@ -93,7 +93,7 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
         | [] -> Ok()
         | list -> Error <| Runtime.Error.Multiple list
 
-    let executeCommand (stateKey : thash) (name : cname) (arg : obj) : Result<unit, Runtime.Error> =
+    let executeCommand (name : cname) (stateKey : thash) (arg : obj) : Result<unit, Runtime.Error> =
         match views.TryGetValue stateKey with
         | (true, view) ->
             match view.Descriptor.Commands.TryFind name with
@@ -122,8 +122,8 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
             updateModel viewID model
         | Runtime.Operation.DestroyView viewID -> 
             destroyView viewID
-        | Runtime.Operation.InvokeCommand (viewID, commandName, arg) -> 
-            executeCommand viewID commandName arg
+        | Runtime.Operation.InvokeCommand (commandName, viewID, arg) -> 
+            executeCommand commandName viewID arg
         | Runtime.Operation.PublishEvent (senderID, message, topics) -> 
             publishEvent senderID message topics
         | Runtime.Operation.ClearRegion (owner, region) ->
@@ -314,8 +314,8 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
         member this.PublishEvent sender message topics = 
             Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update |> ignore
 
-        member this.ExecuteCommand issuer command arg =
-            Runtime.Operation.InvokeCommand(issuer.InstanceID.Hash, command, arg) |> this.Update |> ignore
+        member this.ExecuteCommand command issuer arg =
+            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) |> this.Update |> ignore
 
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do

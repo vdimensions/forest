@@ -14,8 +14,8 @@ module internal ForestSitelet =
     let Run (f : IForestFacade) (dop : (Doc -> Doc -> Doc)) (h : Doc) (b : Doc list) =
         Application.MultiPage (fun _ endpoint ->
             match endpoint with
-            | ForestEndPoint.ForestTree tree -> f.LoadTemplate tree
-            | ForestEndPoint.ForestCommand (hash, name, arg) -> f.ExecuteCommand hash name arg
+            | ForestEndPoint.ForestTree tree -> f.LoadTree tree
+            | ForestEndPoint.ForestCommand (name, hash, arg) -> f.ExecuteCommand name hash arg
             let shellID = "shell"
             let body = [
                 div [ Attr.Create "id" shellID ] []

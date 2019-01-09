@@ -46,7 +46,7 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
             return nodes
         }
     [<Rpc>]
-    static member ExecuteCommand hash cmd (arg : obj) =
+    static member ExecuteCommand cmd hash (arg : obj) =
         async { 
-            return Remoting.Facade.ExecuteCommand hash cmd arg |> ignore 
+            return Remoting.Facade.ExecuteCommand cmd hash arg |> ignore 
         }
