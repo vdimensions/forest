@@ -4,7 +4,7 @@ open Forest
 
 
 type [<Interface>] ICommandDispatcher =
-    abstract member ExecuteCommand: hash : thash -> command : cname -> arg : obj -> unit
+    abstract member ExecuteCommand: command : cname -> hash : thash -> arg : obj -> unit
 
 type [<Interface>] IMessageDispatcher =
     abstract member SendMessage: message : 'M -> unit

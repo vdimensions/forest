@@ -23,7 +23,7 @@ type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : 
 
 type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime : ForestRuntime) =
 
-    member __.ExcuteCommand target command message = Runtime.Operation.InvokeCommand(target, command, message) |> runtime.Update
+    member __.ExcuteCommand command target message = Runtime.Operation.InvokeCommand(command, target, message) |> runtime.Update
 
     member internal __.Runtime with get() = runtime
 
@@ -38,8 +38,8 @@ type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime : ForestRuntim
             TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.GetOrActivateView
 
     interface ICommandDispatcher with
-        member this.ExecuteCommand target command message = 
-            this.ExcuteCommand target command message
+        member this.ExecuteCommand command target message = 
+            this.ExcuteCommand command target message
 
     interface IMessageDispatcher with
         member __.SendMessage message = 
