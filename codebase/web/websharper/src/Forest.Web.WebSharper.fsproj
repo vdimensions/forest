@@ -16,11 +16,12 @@
   <Import Project="../../../Forest.Common.props" />
 
   <ItemGroup>
-    <Compile Include="Api.fs" />
-    <Compile Include="PhysicalView.fs" />
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
+    <Compile Include="Node.fs" />
+    <Compile Include="Remoting.fs" />
     <Compile Include="DocumentRenderer.fs" />
     <Compile Include="ForestWebSharperModule.fs" />
+    <Compile Include="UI\Client.fs" />
   </ItemGroup>
 
   <ItemGroup>

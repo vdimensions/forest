@@ -1,18 +1,18 @@
 namespace Forest.Web.WebSharper
 
 open System.Collections.Generic
+open Axle.Web.AspNetCore.Session
 open Forest
 open Forest.UI
 open WebSharper.UI
-open Axle.Web.AspNetCore.Session
 open Microsoft.AspNetCore.Http
 
 
-type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, renderer : IPhysicalViewRenderer<WebSharperPhysicalViewWrapper>) =
-    inherit DefaultForestFacade<WebSharperPhysicalViewWrapper>(forestContext, renderer)
+type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
+    inherit DefaultForestFacade<RemotingPhysicalView>(forestContext, renderer)
     member __.Renderer with get() = renderer
 
-and [<Sealed;NoComparison;>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
+and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
     inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
     member private this.Facade with get() : IForestFacade = upcast this.Current
     interface INodeStateProvider with member this.Nodes with get() = (this.Current.Renderer :?> INodeStateProvider).Nodes
@@ -20,15 +20,15 @@ and [<Sealed;NoComparison;>] internal PerSessionWebSharperForestFacade(httpConte
     interface ICommandDispatcher with member this.ExecuteCommand c h a = this.Facade.ExecuteCommand c h a
     interface IMessageDispatcher with member this.SendMessage m = this.Facade.SendMessage m
 
-and [<NoComparison;NoEquality>] WebSharperPhysicalViewWrapper internal (commandDispatcher, hash, allNodes : IDictionary<thash, Node>) =
+and [<NoComparison;NoEquality>] internal RemotingPhysicalView (commandDispatcher, hash, allNodes : IDictionary<thash, Node>) =
     inherit AbstractPhysicalView(commandDispatcher, hash)
-    let mutable regionMap : Map<rname, WebSharperPhysicalViewWrapper list> = Map.empty
+    let mutable regionMap : Map<rname, RemotingPhysicalView list> = Map.empty
 
-    static member domNode2Node dn =
+    static member domNode2Node (dn : DomNode) =
         { Hash = dn.Hash; Name = dn.Name; Model = dn.Model; Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map (fun x -> x.Hash) |> Array.ofList ) |> Map.toArray }
 
     override __.Refresh node = 
-        allNodes.[node.Hash] <- node |> WebSharperPhysicalViewWrapper.domNode2Node
+        allNodes.[node.Hash] <- node |> RemotingPhysicalView.domNode2Node
 
     member __.Embed region pv =
         regionMap <- regionMap |> Map.add region (match regionMap.TryFind region with Some data -> pv::data | None -> List.singleton pv)
@@ -37,25 +37,25 @@ and [<NoComparison;NoEquality>] WebSharperPhysicalViewWrapper internal (commandD
     override __.Dispose _ = 
         hash |> allNodes.Remove |> ignore
 
-type [<Sealed;NoEquality;NoComparison>] internal WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, hash, topLevelViews: List<WebSharperTopLevelPhysicalViewWrapper>, allNodes) =
-    inherit WebSharperPhysicalViewWrapper(commandDispatcher, hash, allNodes)
+type [<Sealed;NoEquality;NoComparison>] internal RemotingRootPhysicalView(commandDispatcher, hash, topLevelViews: List<RemotingRootPhysicalView>, allNodes) =
+    inherit RemotingPhysicalView(commandDispatcher, hash, allNodes)
     member private __.base_Dispose disposing = base.Dispose disposing
     override this.Dispose disposing = 
         topLevelViews.Remove this |> ignore
         this.base_Dispose disposing
 
-type [<Sealed;NoEquality;NoComparison>] WebSharperPhysicalViewRenderer() =
-    inherit AbstractPhysicalViewRenderer<WebSharperPhysicalViewWrapper>()
-    let topLevelViews = List<WebSharperTopLevelPhysicalViewWrapper>()
+type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer() =
+    inherit AbstractPhysicalViewRenderer<RemotingPhysicalView>()
+    let topLevelViews = List<RemotingRootPhysicalView>()
     let allNodes = Dictionary<thash,Node>(System.StringComparer.Ordinal)
 
     override __.CreatePhysicalView commandDispatcher domNode = 
-        let result = new WebSharperTopLevelPhysicalViewWrapper(commandDispatcher, domNode.Hash, topLevelViews, allNodes)
+        let result = new RemotingRootPhysicalView(commandDispatcher, domNode.Hash, topLevelViews, allNodes)
         topLevelViews.Add result
         upcast result
 
     override __.CreateNestedPhysicalView commandDispatcher parent domNode =
-        new WebSharperPhysicalViewWrapper(commandDispatcher, domNode.Hash, allNodes)
+        new RemotingPhysicalView(commandDispatcher, domNode.Hash, allNodes)
         |> parent.Embed domNode.Region
 
     interface INodeStateProvider with

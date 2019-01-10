@@ -8,6 +8,7 @@ open Axle.Verification
 open Axle.Web.WebSharper.Sitelets
 open Forest
 open Forest.Web.WebSharper
+open Forest.Web.WebSharper.UI
 open WebSharper.UI
 open WebSharper.UI.Html
 open WebSharper.UI.Server

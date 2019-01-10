@@ -1,20 +1,9 @@
 ﻿namespace Forest.Web.WebSharper
 
 open Forest
+open Forest.Web.WebSharper
 open WebSharper
 open WebSharper.UI
-
-[<NoComparison;JavaScriptExport>]
-type Node =
-    {
-        Hash: thash;
-        Name: vname;
-        Model: obj;
-        Regions: array<rname*thash array>
-    }
-
-type [<Interface>] INodeStateProvider =
-    abstract member Nodes: Node array with get
 
 type [<Sealed;NoEquality;NoComparison>] Remoting =
     [<DefaultValue>]
@@ -31,7 +20,7 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
         | ValueSome _ -> invalidOp "A forest facade is already initialized"
 
     [<Rpc>]
-    static member GetNodes () : Async<Node array> =
+    static member GetNodes() : Async<Node array> =
         async {
             let nodes =
                 match Remoting._nodeProvider with

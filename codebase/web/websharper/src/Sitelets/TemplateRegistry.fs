@@ -1,6 +1,6 @@
 ﻿namespace Forest.Web.WebSharper.Sitelets
 open Forest
-open Forest.Web.WebSharper
+open Forest.Web.WebSharper.UI
 
 
 type [<Interface>] IWebSharperTemplateRegistry =

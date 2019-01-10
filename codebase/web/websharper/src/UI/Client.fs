@@ -1,8 +1,10 @@
-namespace Forest.Web.WebSharper
+namespace Forest.Web.WebSharper.UI
 
 open Forest
+open Forest.Web.WebSharper
 open WebSharper
 open WebSharper.UI
+
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView() =
@@ -10,9 +12,18 @@ type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView() =
     abstract member Doc: array<rname*Doc> -> Node -> Doc
 
 [<JavaScript>]
-module ClientCode =
+module Client =
     open WebSharper.UI.Client
-    open WebSharper.UI.Html
+
+    type ExecuteCommandCall = (cname -> obj -> unit)
+    type RenderRegionCall = (rname -> Doc)
+
+    [<NoEquality;NoComparison>]
+    type Engine =
+        {
+            executeCommand : ExecuteCommandCall;
+            renderRegion : RenderRegionCall;
+        }
 
     let private _nodes = List.empty |> ListModel.Create<obj,Node> (fun n -> n.Model)
     let private _views : Var<Map<vname, WebSharperPhysicalView>> = Var.Create <| Map.empty
@@ -83,26 +94,33 @@ module ClientCode =
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =
     inherit WebSharperPhysicalView()
-    member __.ExecuteCommand name hash arg = ClientCode.executeCommand name hash arg
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'M>() =
     inherit WebSharperPhysicalView<'M>()
     [<JavaScriptExport>]
-    abstract member Render: hash : thash -> model : 'M  -> renderRegion : (rname -> Doc) -> Doc
+    abstract member Render: model : 'M  -> client : Client.Engine -> Doc list
     
     [<JavaScriptExport>]
     override this.Doc rdata node =
         let model = (node.Model :?> 'M)
+
         let rdataArr = rdata |> Map.ofArray
-        let renderRegion r = rdataArr.TryFind r |> Option.defaultWith ClientCode.emptyDoc
-        this.Render node.Hash model renderRegion
+        let rr r = 
+            rdataArr.TryFind r |> Option.defaultWith Client.emptyDoc
+
+        let hash = node.Hash
+        let ec cmd (arg : obj) = 
+            Client.executeCommand cmd hash arg
+
+        let client : Client.Engine = { renderRegion = rr; executeCommand = ec}
+        this.Render model client |> Doc.Concat
     
 [<JavaScriptExport>]
 type [<AbstractClass>] WebSharperTemplateView<'M, 'T>() =
     inherit WebSharperDocumentView<'M>()
     abstract member InstantiateTemplate: unit -> 'T
-    abstract member RenderTemplate: hash : thash -> model : 'M -> template : 'T -> renderRegion : (rname -> Doc) -> Doc
-    override this.Render hash model renderRegion =
+    abstract member RenderTemplate: model : 'M -> template : 'T -> client : Client.Engine -> Doc
+    override this.Render model client =
         let template = this.InstantiateTemplate()
-        this.RenderTemplate hash model template renderRegion
+        [this.RenderTemplate model template client]

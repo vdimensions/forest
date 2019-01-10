@@ -1,7 +1,7 @@
 ﻿namespace Forest.Web.WebSharper.Sitelets
 
 open Forest
-open Forest.Web.WebSharper
+open Forest.Web.WebSharper.UI
 open WebSharper
 open WebSharper.Sitelets
 open WebSharper.UI
@@ -18,7 +18,7 @@ module internal ForestSitelet =
             | ForestEndPoint.ForestCommand (name, hash, arg) -> f.ExecuteCommand name hash arg
             let shellID = "shell"
             let body = [
-                div [ attr.id shellID; on.afterRender <@ fun this -> ClientCode.init(); ClientCode.render() |> Doc.RunReplace this @> ] []
+                div [ attr.id shellID; on.afterRender <@ fun this -> Client.init(); Client.render() |> Doc.RunReplace this @> ] []
             ] 
             dop h (b @ body |> Doc.Concat)
             |> Content.Page
