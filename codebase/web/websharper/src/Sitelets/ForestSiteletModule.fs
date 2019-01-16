@@ -1,6 +1,7 @@
 ﻿namespace Forest.Web.WebSharper.Sitelets
 
 open System
+open System.Collections.Generic
 open System.Collections.Concurrent
 open Axle.Logging
 open Axle.Modularity
@@ -9,6 +10,8 @@ open Axle.Web.WebSharper.Sitelets
 open Forest
 open Forest.Web.WebSharper
 open Forest.Web.WebSharper.UI
+open WebSharper.AspNetCore
+open WebSharper.Sitelets
 open WebSharper.UI
 open WebSharper.UI.Html
 open WebSharper.UI.Server
@@ -19,11 +22,19 @@ type [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface
 and [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>] UtilizesForestSiteletAttribute() = 
     inherit UtilizesAttribute(typeof<ForestSiteletModule>)
 
-and [<Interface;RequiresForestSiteletAttribute>] IDocumentOutlineProvider =
+and [<Interface;RequiresForestSitelet>] IDocumentOutlineProvider =
     abstract member GetDocumentOutline: header: Doc -> body: Doc -> Doc
 
-and [<Interface;RequiresForestSiteletAttribute>] IWebSharperTemplateConfigurer =
+and [<Interface;RequiresForestSitelet>] IWebSharperTemplateConfigurer =
     abstract member Configure: registry : IWebSharperTemplateRegistry -> unit
+
+and [<Interface;RequiresForestSitelet>] IForestSiteletService =
+    abstract member Render : ForestEndPoint<_> -> Async<Content<_>>
+
+and [<Sealed>] internal ForestSiteletService (f : IForestFacade, pvs : IDictionary<vname, WebSharperPhysicalView> , dop : (Doc -> Doc -> Doc), h : Doc, b : Doc list) =
+    //inherit SiteletService<ForestEndPoint>()
+    interface IForestSiteletService with 
+        member __.Render e = ForestSitelet.Render f (pvs |> Seq.map ``|KeyValue|`` |> Array.ofSeq) dop h b e
 
 and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
     internal ForestSiteletModule private (registeredPhysicalViewFacories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestFacade, logger : ILogger) = 
@@ -44,6 +55,15 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
     member internal this.DependencyInitialized(c : IWebSharperTemplateConfigurer) =
         this |> c.Configure
 
+    [<ModuleInit>]
+    member internal this.Init(exp : ModuleExporter) =
+        let dop a b =
+            match this._documentOutlineProvider with
+            | ValueSome d -> d.GetDocumentOutline a b
+            | ValueNone -> Doc.Empty
+        ForestSiteletService(forest, registeredPhysicalViewFacories, dop, Doc.Empty, [])
+        |> exp.Export
+        |> ignore
     [<ModuleTerminate>]
     member internal __.Terminated() =
         registeredPhysicalViewFacories.Clear()
@@ -56,22 +76,11 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
             afterRenderCallbacks <- (div [ callback |> on.afterRender ] [])::afterRenderCallbacks
             upcast this
 
-    interface ISiteletProvider with
-        member this.RegisterSitelets registry =
-            let h = headerDocs |> Seq.rev |> Doc.Concat
-            //let a = (script [ on.afterRender <@ fun _ -> ClientCode.init() @> ] []) :: (afterRenderCallbacks |> List.rev)
-            let a = (afterRenderCallbacks |> List.rev)
-            let dop a b =
-                match this._documentOutlineProvider with
-                | ValueSome d -> d.GetDocumentOutline a b
-                | ValueNone -> Doc.Empty
-            ignore <| registry.RegisterSitelet(ForestSitelet.Run forest dop h a) 
-
     interface IWebSharperTemplateRegistry with
-        member this.Register (NotNullOrEmpty "name" name) (NotNull "physicalViewExpr" physicalViewExpr : Quotations.Expr<WebSharperPhysicalView>) =
-            //ignore <| registeredPhysicalViewFacories.AddOrUpdate(
-            //    name,
-            //    factory,
-            //    Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
+        member this.Register (NotNullOrEmpty "name" name) (NotNull "physicalView" physicalView : WebSharperPhysicalView) =
+            ignore <| registeredPhysicalViewFacories.AddOrUpdate(
+                name,
+                physicalView,
+                Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
             //ClientCode.registerView name physicalViewExpr.m
             upcast this

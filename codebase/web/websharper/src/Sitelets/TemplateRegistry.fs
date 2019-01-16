@@ -4,8 +4,8 @@ open Forest.Web.WebSharper.UI
 
 
 type [<Interface>] IWebSharperTemplateRegistry =
-    abstract member Register: name : vname -> physicalViewExpr : Quotations.Expr<WebSharperPhysicalView> -> IWebSharperTemplateRegistry
+    abstract member Register: name : vname -> physicalViewExpr : WebSharperPhysicalView -> IWebSharperTemplateRegistry
 
 module TemplateRegistry =
-    let register (name : vname) (physicalViewExpr : Quotations.Expr<WebSharperPhysicalView>) (registry : IWebSharperTemplateRegistry) =
-        registry.Register name physicalViewExpr
+    let register (name : vname) (physicalView : WebSharperPhysicalView) (registry : IWebSharperTemplateRegistry) =
+        registry.Register name physicalView
