@@ -14,20 +14,18 @@
 // limitations under the License.
 //
 namespace Forest.Events
-
-open Forest
-open Forest.NullHandling
-open Forest.Reflection
-
 open System
 open System.Collections.Generic
 #if NETSTANDARD
 open System.Reflection
 #endif
+open Axle.Verification
+open Forest
+open Forest.Reflection
 
 
 module Event = 
-    type [<Sealed;NoComparison>] internal Descriptor(mt:Type, mi:IEventMethod, topic:string) =
+    type [<Sealed;NoComparison>] internal Descriptor(mt : Type, mi : IEventMethod, topic : string) =
         member __.Trigger (NotNull "view" view:IView) (NotNull "message" message:obj) = ignore <| mi.Invoke view message
         member __.MessageType with get () = mt
         member __.Topic with get () = topic

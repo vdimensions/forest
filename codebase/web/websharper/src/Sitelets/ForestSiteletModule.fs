@@ -10,7 +10,6 @@ open Axle.Web.WebSharper.Sitelets
 open Forest
 open Forest.Web.WebSharper
 open Forest.Web.WebSharper.UI
-open WebSharper.AspNetCore
 open WebSharper.Sitelets
 open WebSharper.UI
 open WebSharper.UI.Html

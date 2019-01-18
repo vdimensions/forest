@@ -1,9 +1,7 @@
 ﻿namespace Forest
-
-open Forest.NullHandling
-open Forest.Reflection
-
 open System
+open Axle.Verification
+open Forest.Reflection
 
 [<RequireQualifiedAccess>]
 [<CompiledName("Command")>]
@@ -18,8 +16,8 @@ module Command =
     // TODO: argument verification
     type [<Sealed;NoComparison>] internal Descriptor(argType : Type, method : ICommandMethod) = 
         do
-            ignore <| isNotNull "argType" argType
-            ignore <| isNotNull "mi" method
+            ignore <| ``|NotNull|`` "argType" argType
+            ignore <| ``|NotNull|`` "mi" method
         member __.Invoke (arg : obj) (view : IView) : unit = method.Invoke view arg
         member __.ArgumentType with get() = argType
         interface ICommandDescriptor with

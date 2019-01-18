@@ -1,13 +1,12 @@
 ﻿namespace Forest
-
+open System
+open System.Collections.Generic
+open Axle.Option
+open Axle.Verification
 open Forest
 open Forest.Collections
 open Forest.Events
-open Forest.NullHandling
 open Forest.Reflection
-
-open System
-open System.Collections.Generic
 
 
 type [<Struct;NoComparison>] ViewRegistryError = 
@@ -15,7 +14,7 @@ type [<Struct;NoComparison>] ViewRegistryError =
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
 type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) = 
-    do ignore <| isNotNull "factory" factory
+    do ignore <| ``|NotNull|`` "factory" factory
     let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
 
     abstract member CreateViewDescriptor: anonymousView:bool -> t:Type -> Result<IViewDescriptor, ViewRegistryError>
@@ -67,7 +66,7 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) =
     member __.GetViewDescriptor (NotNull "name" name:vname) = 
         match (storage.TryGetValue name) with
         | (true, d) -> d
-        | (false, _) -> nil<IViewDescriptor>
+        | (false, _) -> Unchecked.defaultof<IViewDescriptor>
     abstract member GetViewDescriptor: Type -> IViewDescriptor
     interface IViewRegistry with
         member this.Register t = this.Register t
@@ -163,4 +162,4 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
         | ValueNone -> 
             match (this.CreateViewDescriptor true viewType) with
             | Ok d -> d
-            | Error _ -> nil<IViewDescriptor>
+            | Error _ -> Unchecked.defaultof<IViewDescriptor>

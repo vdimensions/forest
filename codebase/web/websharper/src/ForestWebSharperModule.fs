@@ -2,7 +2,6 @@
 
 open System
 open Microsoft.AspNetCore.Http
-open Axle.Forest
 open Axle.Logging
 open Axle.Modularity
 open Axle.Web.AspNetCore.Session

@@ -1,7 +1,5 @@
 ﻿namespace Forest
-
-open Forest.NullHandling
-
+open Axle.Option
 
 module internal MessageDispatcher =
     [<Literal>]

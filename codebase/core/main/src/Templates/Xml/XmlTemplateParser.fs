@@ -1,12 +1,11 @@
 ﻿namespace Forest.Templates.Xml
 
-open Forest.NullHandling
-open Forest.Templates
-open Forest.Templates.Raw
-
 open System
 open System.Collections.Generic
 open System.Xml.Linq
+open Axle.Option
+open Forest.Templates
+open Forest.Templates.Raw
 
 
 type [<Sealed>] XmlTemplateParser() =

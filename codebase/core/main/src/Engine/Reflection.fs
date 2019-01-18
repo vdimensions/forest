@@ -1,16 +1,14 @@
 ﻿namespace Forest.Reflection
-
-open Forest
-open Forest.NullHandling
-
 open System
 open System.Reflection
+open Axle.Verification
+open Forest
 
 
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT when 'TT :> IView>(method : MethodInfo, md : Action<'TT>) =
     do 
-        ignore <| isNotNull "method" method
-        ignore <| isNotNull "md" md
+        ignore <| ``|NotNull|`` "method" method
+        ignore <| ``|NotNull|`` "md" md
     new (method : MethodInfo) = AbstractMethod(method, (downcast method.CreateDelegate(typeof<Action<'TT>>) : Action<'TT>))
 
     interface IMethod with
@@ -21,8 +19,8 @@ type [<AbstractClass;NoComparison>] private AbstractMethod<'TT when 'TT :> IView
 
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> IView>(method : MethodInfo, md : Action<'TT, 'T>) =
     do 
-        ignore <| isNotNull "method" method
-        ignore <| isNotNull "md" md
+        ignore <| ``|NotNull|`` "method" method
+        ignore <| ``|NotNull|`` "md" md
     new (method : MethodInfo) = AbstractMethod<'TT, 'T>(method, (downcast method.CreateDelegate(typeof<Action<'TT, 'T>>) : Action<'TT, 'T>))
 
     interface IMethod with
@@ -33,24 +31,24 @@ type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> I
 
 type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT when 'TT :> IView>(method : MethodInfo, commandName : cname) =
     inherit AbstractMethod<'TT>(method)
-    do ignore <| isNotNull "commandName" commandName
+    do ignore <| ``|NotNull|`` "commandName" commandName
     interface ICommandMethod with 
         member __.CommandName with get() = commandName
 
 type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT, 'T when 'TT :> IView>(method : MethodInfo, commandName : cname) =
     inherit AbstractMethod<'TT, 'T>(method)
-    do ignore <| isNotNull "commandName" commandName
+    do ignore <| ``|NotNull|`` "commandName" commandName
     interface ICommandMethod with 
         member __.CommandName with get() = commandName
 
 type [<Sealed;NoComparison>] private DefaultEventMethod<'TT, 'T when 'TT :> IView>(method : MethodInfo, topic : string) =
     inherit AbstractMethod<'TT, 'T>(method)
-    do ignore <| isNotNull "topic" topic
+    do ignore <| ``|NotNull|`` "topic" topic
     interface IEventMethod with 
         member __.Topic with get() = topic
 
 type [<Sealed;NoComparison>] private DefaultProperty(property : PropertyInfo) =
-    do ignore <| isNotNull "property" property
+    do ignore <| ``|NotNull|`` "property" property
     interface IProperty with
         member __.GetValue target = property.GetValue(target)
         member __.SetValue target value = property.SetValue(target, value)
@@ -92,7 +90,7 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             match (viewType.GetTypeInfo() |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
             #endif
             | Some p -> p
-            | None -> nil<ViewAttribute>            
+            | None -> Unchecked.defaultof<ViewAttribute>            
         member __.GetCommandMethods viewType =
             viewType
             |> __.getMethods flags 

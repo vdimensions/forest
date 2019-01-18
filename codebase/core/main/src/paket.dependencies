@@ -1,6 +1,8 @@
-﻿framework: auto-detect
+framework: auto-detect
 storage: none
 
-source https://nuget.org/api/v2
-  nuget FSharp.Core >= 4.5
+source https://api.nuget.org/v3/index.json
 
+source ../../../../../axle
+  nuget Axle.Application
+  nuget Axle.FSharp

@@ -1,10 +1,10 @@
 ﻿namespace Forest
 
-open Forest
-open Forest.NullHandling
-
 open System
 open System.Diagnostics
+open Axle.Option
+open Axle.Verification
+open Forest
 
 
 type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm : 'T) =
@@ -89,7 +89,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
                     vm <- (downcast viewModelFromState : 'T)
                     ()
                 | None -> () 
-                this.runtime <- nil<IForestRuntime>
+                this.runtime <- Unchecked.defaultof<IForestRuntime>
             | ValueNone -> ()
 
         member this.InstanceID with get() = this.hierarchyKey

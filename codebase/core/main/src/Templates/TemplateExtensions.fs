@@ -1,10 +1,8 @@
 ﻿namespace Forest.Templates
-
-open Forest
-open Forest.NullHandling
-open Forest.Templates.Raw
-
 open System.Runtime.CompilerServices
+open Axle.Verification
+open Forest
+open Forest.Templates.Raw
 
 [<Extension>]
 type TemplateExtensions =

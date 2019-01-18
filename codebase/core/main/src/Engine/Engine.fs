@@ -1,15 +1,13 @@
 ﻿namespace Forest
-
 open System
-
-open Forest.NullHandling
+open Axle.Verification
 open Forest.UI
 
 
 type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : ChangeList, ctx : IForestContext) = 
     do
-        ignore <| isNotNull "state" state
-        ignore <| isNotNull "changeList" changeList
+        ignore <| ``|NotNull|`` "state" state
+        ignore <| ``|NotNull|`` "changeList" changeList
 
     member __.Render ([<ParamArray>] renderers : IDomProcessor array) =
         state |> State.traverse (ForestDomRenderer(renderers |> Seq.ofArray, ctx))

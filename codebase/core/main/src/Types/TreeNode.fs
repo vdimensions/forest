@@ -1,6 +1,6 @@
 ﻿namespace Forest
 
-open Forest.NullHandling
+open Axle.Option
 open System
 open System.Text
 open System.Diagnostics
@@ -10,7 +10,7 @@ open System.Runtime.CompilerServices
 [<DebuggerDisplay("{this.ToString()}")>]
 type [<CustomComparison;CustomEquality>] TreeNode = 
     | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] Shell_
-    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:TreeNode * region:rname * view:vname * hash:thash
+    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent : TreeNode * region : rname * view : vname * hash : thash
 
     [<CompiledName("Shell")>]
     static member shell = TreeNode.Shell_

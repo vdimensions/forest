@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" />
-    <Compile Include="Infrastructure\NullHandling.fs" />
     <Compile Include="Infrastructure\Result.fs" />
     <Compile Include="Types\Types.fs" />
     <Compile Include="Types\Fuid.fs" />
@@ -74,6 +73,15 @@
     <Compile Include="UI\PhysicalView.fs" />
     <Compile Include="UI\Renderer.fs" />
     <Compile Include="Facade.fs" />
+    <Compile Include="AxleModule\Resources\TemplateResourceInfo.fs" />
+    <Compile Include="AxleModule\Resources\TemplateMarshalling.fs" />
+    <Compile Include="AxleModule\Resources\XmlTemplateMarshaller.fs" />
+    <Compile Include="AxleModule\Resources\ResourceTemplateProvider.fs" />
+    <Compile Include="AxleModule\Resources\ForestResourceModule.fs" />
+    <Compile Include="AxleModule\AxleViewFactory.fs" />
+    <Compile Include="AxleModule\ForestFacadeProvider.fs" />
+    <Compile Include="AxleModule\NoOp.fs" />
+    <Compile Include="AxleModule\ForestModule.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

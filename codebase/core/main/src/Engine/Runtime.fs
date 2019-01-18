@@ -1,12 +1,10 @@
 ﻿namespace Forest
-
+open System
+open System.Collections.Generic
+open Axle.Option
 open Forest
 open Forest.Collections
 open Forest.Events
-open Forest.NullHandling
-
-open System
-open System.Collections.Generic
 
 [<RequireQualifiedAccess>]
 module Runtime =
@@ -186,13 +184,13 @@ type [<Sealed;NoComparison>] internal ForestRuntime private (t : Tree, models : 
         Runtime.Operation.InstantiateView(node) |> this.Update |> ignore
         match views.TryGetValue node.Hash with
         | (true, viewState) -> (upcast viewState:IView)
-        | (false, _) -> nil<_>
+        | (false, _) -> Unchecked.defaultof<_>
 
     member internal this.ActivateView(model : 'm, node) =
         Runtime.Operation.InstantiateViewWithModel(node, model) |> this.Update |> ignore
         match views.TryGetValue node.Hash with
         | (true, viewState) -> (downcast viewState : IView<'m>)
-        | (false, _) -> nil<_>
+        | (false, _) -> Unchecked.defaultof<_>
 
     member internal this.ActivateAnonymousView<'v when 'v :> IView>(region, parent) =
         let d = ctx.ViewRegistry.GetDescriptor typeof<'v>
