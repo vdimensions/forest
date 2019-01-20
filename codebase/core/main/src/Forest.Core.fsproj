@@ -40,6 +40,7 @@
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\TemplateApi.fs" />
     <Compile Include="Api\ForestApi.fs" />
+    <Compile Include="Api\Region.fs" />
     <Compile Include="Api\EventBusApi.fs" />
     <Compile Include="Api\SecurityApi.fs" />
     <Compile Include="Api\ContextApi.fs" />

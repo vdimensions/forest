@@ -95,14 +95,18 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             viewType
             |> __.getMethods flags 
             |> Seq.map (fun x -> (x |> __.getCommandAttribs) |> Seq.map (fun a -> a.Name), x)
-            |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
+            // TODO abstract method check here is a temporary fix. 
+            // If we have virtual non-override method, it will falsely not be included
+            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a && not <| m.DeclaringType.GetTypeInfo().IsAbstract)
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createCmd m x))
             |> Seq.toArray
         member __.GetSubscriptionMethods viewType = 
             viewType
             |> __.getMethods flags 
             |> Seq.map (fun x -> (x |> __.getEventAttribs) |> Seq.map (fun a -> a.Topic), x)
-            |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
+            // TODO abstract method check here is a temporary fix. 
+            // If we have virtual non-override method, it will falsely not be included
+            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a && not <| m.DeclaringType.GetTypeInfo().IsAbstract)
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createEvt m x))
             |> Seq.toArray
         member __.GetLocalizeableProperties vmType = 

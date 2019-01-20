@@ -36,7 +36,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
     default __.Dispose(_) = ()
 
     member this.FindRegion (NotNull "name" name) = 
-        upcast Region(name, this) : IRegion
+        upcast RegionImpl(name, this) : IRegion
 
     member this.Close() =
         match null2vopt this.runtime with
@@ -111,7 +111,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
             this.Dispose(true)
             this |> GC.SuppressFinalize
 
- and private Region(regionName : rname, owner : IRuntimeView) =
+ and private RegionImpl(regionName : rname, owner : IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
         owner.Runtime.ActivateView(viewName, regionName, owner.InstanceID)
 
