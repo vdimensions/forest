@@ -15,7 +15,9 @@ type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, 
 and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
     inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
     member private this.Facade with get() : IForestFacade = upcast this.Current
-    interface INodeStateProvider with member this.Nodes with get() = (this.Current.Renderer :?> INodeStateProvider).Nodes
+    interface INodeStateProvider with 
+        member this.AllNodes with get() = (this.Current.Renderer :?> INodeStateProvider).AllNodes
+        member this.UpdatedNodes with get() = (this.Current.Renderer :?> INodeStateProvider).UpdatedNodes
     interface IForestFacade with member this.LoadTree tree = this.Facade.LoadTree tree
     interface ICommandDispatcher with member this.ExecuteCommand c h a = this.Facade.ExecuteCommand c h a
     interface IMessageDispatcher with member this.SendMessage m = this.Facade.SendMessage m
@@ -59,5 +61,7 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
         |> parent.Embed domNode.Region
 
     interface INodeStateProvider with
-        member __.Nodes 
+        member __.AllNodes 
+            with get() = allNodes.Values |> Array.ofSeq
+        member __.UpdatedNodes 
             with get() = allNodes.Values |> Array.ofSeq

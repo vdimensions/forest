@@ -2,14 +2,14 @@ STORAGE: NONE
 RESTRICTION: == netstandard2.0
 NUGET
   remote: ../../../../../axle/dist
-    Axle.Application (1.5.2190.40278)
-      Axle.Resources (>= 1.5.1.27)
+    Axle.Application (1.5.2214.22166)
+      Axle.Resources (>= 1.5.2213.18200)
     Axle.Core (1.5.2178.22316)
     Axle.FSharp (1.5.2168.31463)
       Axle.Core (>= 1.5.2168.30770)
       FSharp.Core (>= 4.5.4)
-    Axle.Resources (1.5.1.27)
-      Axle.Core (>= 1.5.1)
+    Axle.Resources (1.5.2213.18200)
+      Axle.Core (>= 1.5.2178.22316)
     Axle.Web.AspNetCore (1.5.1.19)
       Axle.Application (>= 1.5.1)
       Microsoft.AspNetCore (>= 2.1.4)
@@ -28,12 +28,12 @@ NUGET
       WebSharper.AspNetCore (>= 4.5.2.100)
       WebSharper.UI (>= 4.5.6.156)
   remote: ../../../../dist
-    Forest.Core (2.0.2208.21711)
+    Forest.Core (2.0.2210.30518)
       Axle.Application (>= 1.5.2190.40278)
       Axle.FSharp (>= 1.5.2168.31463)
   remote: https://api.nuget.org/v3/index.json
-    FSharp.Core (4.5.4)
-    HtmlAgilityPack (1.8.13)
+    FSharp.Core (4.6)
+    HtmlAgilityPack (1.8.14)
       System.Net.Http (>= 4.3.2)
       System.Xml.XmlDocument (>= 4.3)
       System.Xml.XPath (>= 4.3)

@@ -24,7 +24,7 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
         async {
             let nodes =
                 match Remoting._nodeProvider with
-                | ValueSome p -> p.Nodes
+                | ValueSome p -> p.AllNodes
                 | ValueNone -> Array.empty
             return nodes
         }
@@ -35,7 +35,7 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
                 match (Remoting._facade, Remoting._nodeProvider) with
                 | (ValueSome facade, ValueSome nodeProvider) -> 
                     facade.ExecuteCommand cmd hash arg |> ignore 
-                    nodeProvider.Nodes
+                    nodeProvider.UpdatedNodes
                 | _ -> invalidOp "A forest facade has not been initialized yet"
             return result
         }

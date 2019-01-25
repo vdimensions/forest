@@ -14,7 +14,7 @@ type [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface
 and [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>] UtilizesForestWebSharperAttribute() = 
     inherit UtilizesAttribute(typeof<ForestWebSharperModule>)
 
-and [<Sealed;Module;RequiresForest;RequiresWebSharper;RequiresAspNetSession>]
+and [<Sealed;NoComparison;Module;RequiresForest;RequiresWebSharper;RequiresAspNetSession>]
     internal ForestWebSharperModule private (forestContext : IForestContext, perSessionForestFacadeProvider : PerSessionWebSharperForestFacade, logger : ILogger) = 
     do Remoting.Init(perSessionForestFacadeProvider)
     public new (forestContext : IForestContext, accessor : IHttpContextAccessor, logger : ILogger) = ForestWebSharperModule(forestContext, new PerSessionWebSharperForestFacade(accessor), logger)
