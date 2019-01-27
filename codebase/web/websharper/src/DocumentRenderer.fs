@@ -8,6 +8,11 @@ open WebSharper.UI
 open Microsoft.AspNetCore.Http
 
 
+type [<Interface>] IDocumentStateProvider = 
+    interface 
+    // TODO
+    end
+
 type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
     inherit DefaultForestFacade<RemotingPhysicalView>(forestContext, renderer)
     member __.Renderer with get() = renderer
@@ -15,6 +20,8 @@ type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, 
 and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
     inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
     member private this.Facade with get() : IForestFacade = upcast this.Current
+    interface IDocumentStateProvider
+        // TODO
     interface INodeStateProvider with 
         member this.AllNodes with get() = (this.Current.Renderer :?> INodeStateProvider).AllNodes
         member this.UpdatedNodes with get() = (this.Current.Renderer :?> INodeStateProvider).UpdatedNodes
@@ -65,3 +72,5 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
             with get() = allNodes.Values |> Array.ofSeq
         member __.UpdatedNodes 
             with get() = allNodes.Values |> Array.ofSeq
+
+    interface IDocumentStateProvider

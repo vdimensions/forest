@@ -1,5 +1,6 @@
 namespace Forest.Web.WebSharper.UI
 
+open System
 open Forest
 open Forest.Web.WebSharper
 open WebSharper
@@ -10,6 +11,10 @@ open WebSharper.UI
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView() =
     [<JavaScriptExport>]
     abstract member Doc: array<rname*Doc> -> Node -> Doc
+    [<JavaScript(false)>]
+    member this.GetClientSideInitExpression() =
+        String.Format("new {0}.New()", this.GetType().FullName.Replace("+", "."))
+        
 
 [<JavaScript>]
 module Client =
@@ -90,6 +95,10 @@ module Client =
             setNodes nodes
         }
         |> Async.Start
+
+    [<JavaScriptExport>]
+    type ViewRegistry internal(name : vname) =
+        member __.Register(view : WebSharperPhysicalView) = registerView name view
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =

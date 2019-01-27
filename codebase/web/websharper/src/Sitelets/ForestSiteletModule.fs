@@ -25,7 +25,7 @@ and [<Interface;RequiresForestSitelet>] IDocumentOutlineProvider =
     abstract member GetDocumentOutline: header: Doc -> body: Doc -> Doc
 
 and [<Interface;RequiresForestSitelet>] IWebSharperTemplateConfigurer =
-    abstract member Configure: registry : IWebSharperTemplateRegistry -> unit
+    abstract member Configure: registry : IWebSharperPhysicalViewRegistry -> unit
 
 and [<Interface;RequiresForestSitelet>] IForestSiteletService =
     abstract member Render : ForestEndPoint<_> -> Async<Content<_>>
@@ -35,7 +35,7 @@ and [<Sealed>] internal ForestSiteletService (f : IForestFacade, pvs : IDictiona
         member __.Render e = ForestSitelet.Render f (pvs |> Seq.map ``|KeyValue|`` |> Array.ofSeq) dop h b e
 
 and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
-    internal ForestSiteletModule private (registeredPhysicalViewFacories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestFacade, logger : ILogger) = 
+    internal ForestSiteletModule private (registeredPhysicalViewFactories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestFacade, logger : ILogger) = 
     public new (forest : IForestFacade, logger : ILogger) = ForestSiteletModule(ConcurrentDictionary<_, _>(StringComparer.Ordinal), forest, logger)
     [<DefaultValue>]
     val mutable private _documentOutlineProvider : IDocumentOutlineProvider voption
@@ -57,14 +57,14 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
     member internal this.Init(exp : ModuleExporter) =
         let dop a b =
             match this._documentOutlineProvider with
-            | ValueSome d -> d.GetDocumentOutline a b
+            | ValueSome d -> d.GetDocumentOutline a (Doc.Concat(b::afterRenderCallbacks))
             | ValueNone -> Doc.Empty
-        ForestSiteletService(forest, registeredPhysicalViewFacories, dop, Doc.Empty, [])
+        ForestSiteletService(forest, registeredPhysicalViewFactories, dop, Doc.Empty, [])
         |> exp.Export
         |> ignore
     [<ModuleTerminate>]
     member internal __.Terminated() =
-        registeredPhysicalViewFacories.Clear()
+        registeredPhysicalViewFactories.Clear()
 
     interface IDocumentOutlineBuilder with
         member this.AddHeader (NotNull "header" header) = 
@@ -74,24 +74,14 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
             afterRenderCallbacks <- (div [ callback |> on.afterRender ] [])::afterRenderCallbacks
             upcast this
 
-    interface IWebSharperTemplateRegistry with
-        member this.Register (NotNullOrEmpty "name" name, NotNull "physicalView" physicalView : WebSharperPhysicalView) =
-            ignore <| registeredPhysicalViewFacories.AddOrUpdate(
-                name,
-                physicalView,
-                Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
-            //ClientCode.registerView name physicalViewExpr.m
-            upcast this
+    interface IWebSharperPhysicalViewRegistry with
         member this.Register<'PV when 'PV :> WebSharperPhysicalView and 'PV : (new : unit -> 'PV)> (NotNullOrEmpty "name" name) =
-            let n = name
-            ignore <| registeredPhysicalViewFacories.AddOrUpdate(
+            let (n, v) = name, new 'PV()
+            let newExpr = v.GetClientSideInitExpression()
+            ignore <| registeredPhysicalViewFactories.AddOrUpdate(
                 n,
-                new 'PV(),
+                v,
                 Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
-            afterRenderCallbacks <- (script [ on.afterRender <@ (fun _ -> Client.registerView n (WebSharper.JavaScript.JS.New<'PV>()))@> ] [])::afterRenderCallbacks
+            afterRenderCallbacks <- (script [ on.afterRender <@ (fun _ -> Client.registerView n (downcast WebSharper.JavaScript.JS.Eval newExpr : WebSharperPhysicalView))@> ] [])::afterRenderCallbacks
             upcast this
-        //member this.Register (NotNullOrEmpty "name" name, NotNull "physicalViewExpr" physicalViewExpr : Quotations.Expr<#WebSharperPhysicalView>) =
-        //    let n = name
-        //    
-        //    afterRenderCallbacks <- (script [ on.afterRender <@ (fun _ -> Client.registerView n <@ physicalViewExpr @>)@> ] [])::afterRenderCallbacks
-        //    upcast this
+

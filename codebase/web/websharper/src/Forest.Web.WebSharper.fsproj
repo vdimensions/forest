@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Sitelets\TemplateRegistry.fs" />
+    <Compile Include="Sitelets\PhysicalViewRegistry.fs" />
     <Compile Include="Sitelets\IDocumentOutlineBuilder.fs" />
     <Compile Include="Sitelets\ForestEndPoint.fs" />
     <Compile Include="Sitelets\ForestSitelet.fs" />
