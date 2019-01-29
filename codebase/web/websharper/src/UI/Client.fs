@@ -1,6 +1,5 @@
 namespace Forest.Web.WebSharper.UI
 
-open System
 open Forest
 open Forest.Web.WebSharper
 open WebSharper
@@ -12,8 +11,8 @@ type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView() =
     [<JavaScriptExport>]
     abstract member Doc: array<rname*Doc> -> Node -> Doc
     [<JavaScript(false)>]
-    member this.GetClientSideInitExpression() =
-        String.Format("new {0}.New()", this.GetType().FullName.Replace("+", "."))
+    member this.GetClientTypeName() =
+        this.GetType().FullName.Replace("+", ".")
         
 
 [<JavaScript>]

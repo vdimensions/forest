@@ -77,7 +77,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
     interface IWebSharperPhysicalViewRegistry with
         member this.Register<'PV when 'PV :> WebSharperPhysicalView and 'PV : (new : unit -> 'PV)> (NotNullOrEmpty "name" name) =
             let (n, v) = name, new 'PV()
-            let newExpr = v.GetClientSideInitExpression()
+            let newExpr = String.Format("new {0}.New()", v.GetClientTypeName())
             ignore <| registeredPhysicalViewFactories.AddOrUpdate(
                 n,
                 v,
