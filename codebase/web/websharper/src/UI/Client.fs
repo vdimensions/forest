@@ -20,12 +20,15 @@ module Client =
     open WebSharper.UI.Client
 
     type ExecuteCommandCall = (cname -> obj -> unit)
+    type ExecuteRpcCommandCall = ((thash -> Async<Node array>) -> unit)
     type RenderRegionCall = (rname -> Doc)
 
     [<NoEquality;NoComparison>]
     type Engine =
         {
+            hash: thash;
             executeCommand : ExecuteCommandCall;
+            executeRpcCommand : ExecuteRpcCommandCall;
             renderRegion : RenderRegionCall;
         }
 
@@ -88,12 +91,13 @@ module Client =
     let render () =
         tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat)
 
-    let internal executeCommand cmd hash (arg : obj) =
+    let internal executeRpcCommand (rpc : (thash -> Async<Node array>)) hash =
         async {
-            let! nodes = Remoting.ExecuteCommand cmd hash arg            
+            let! nodes = rpc hash            
             setNodes nodes
         }
         |> Async.Start
+    let internal executeCommand cmd hash (arg : obj) = executeRpcCommand (fun h -> Remoting.ExecuteCommand cmd h arg) hash
 
     [<JavaScriptExport>]
     type ViewRegistry internal(name : vname) =
@@ -111,17 +115,15 @@ type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'M>() =
     
     [<JavaScriptExport>]
     override this.Doc rdata node =
+        let rdataArr, hash = rdata |> Map.ofArray, node.Hash
+
+        let rr = rdataArr.TryFind >> Option.defaultWith Client.emptyDoc
+        let ec cmd (arg : obj) = Client.executeCommand cmd hash arg
+        let erc rpc = Client.executeRpcCommand rpc hash 
+
+        let client : Client.Engine = { hash = hash; renderRegion = rr; executeCommand = ec; executeRpcCommand = erc}
         let model = (node.Model :?> 'M)
 
-        let rdataArr = rdata |> Map.ofArray
-        let rr r = 
-            rdataArr.TryFind r |> Option.defaultWith Client.emptyDoc
-
-        let hash = node.Hash
-        let ec cmd (arg : obj) = 
-            Client.executeCommand cmd hash arg
-
-        let client : Client.Engine = { renderRegion = rr; executeCommand = ec}
         this.Render model client |> Doc.Concat
     
 [<JavaScriptExport>]
