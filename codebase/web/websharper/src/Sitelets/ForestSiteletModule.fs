@@ -34,9 +34,9 @@ and [<Sealed>] internal ForestSiteletService (f : IForestFacade, pvs : IDictiona
     interface IForestSiteletService with 
         member __.Render e = ForestSitelet.Render f (pvs |> Seq.map ``|KeyValue|`` |> Array.ofSeq) dop h b e
 
-and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
-    internal ForestSiteletModule private (registeredPhysicalViewFactories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestFacade, logger : ILogger) = 
-    public new (forest : IForestFacade, logger : ILogger) = ForestSiteletModule(ConcurrentDictionary<_, _>(StringComparer.Ordinal), forest, logger)
+and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;RequiresForest>]
+    internal ForestSiteletModule private (registeredPhysicalViewFactories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestFacade, viewRegistry : IViewRegistry, logger : ILogger) = 
+    public new (forest : IForestFacade, viewRegistry : IViewRegistry, logger : ILogger) = ForestSiteletModule(ConcurrentDictionary<_, _>(StringComparer.Ordinal), forest, viewRegistry, logger)
     [<DefaultValue>]
     val mutable private _documentOutlineProvider : IDocumentOutlineProvider voption
     let mutable headerDocs : Doc list = List.empty
@@ -77,11 +77,14 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets>]
     interface IWebSharperPhysicalViewRegistry with
         member this.Register<'PV when 'PV :> WebSharperPhysicalView and 'PV : (new : unit -> 'PV)> (NotNullOrEmpty "name" name) =
             let (n, v) = name, new 'PV()
+            viewRegistry
+            |> ViewRegistry.registerViewType (v.GetLogicalViewType())
+            |> ignore
+            //ignore <| registeredPhysicalViewFactories.AddOrUpdate(
+            //    n,
+            //    v,
+            //    Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
             let newExpr = String.Format("new {0}.New()", v.GetClientTypeName())
-            ignore <| registeredPhysicalViewFactories.AddOrUpdate(
-                n,
-                v,
-                Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
             afterRenderCallbacks <- (script [ on.afterRender <@ (fun _ -> Client.registerView n (downcast WebSharper.JavaScript.JS.Eval newExpr : WebSharperPhysicalView))@> ] [])::afterRenderCallbacks
             upcast this
 

@@ -23,7 +23,7 @@ and [<Interface>] IEventDescriptor =
 
 and [<Interface>] IViewRegistry =
     abstract member Register : t : Type -> IViewRegistry
-    abstract member Register<'T when 'T:>IView> : unit -> IViewRegistry
+    abstract member Register<'T when 'T :> IView> : unit -> IViewRegistry
     abstract member Resolve : name : vname -> IView
     abstract member Resolve : name : vname * model : obj -> IView
     abstract member Resolve : viewType : Type -> IView
@@ -56,3 +56,9 @@ and [<Interface>] IRegion =
     abstract member Remove : System.Predicate<IView> -> IRegion
     abstract Name : rname with get
     abstract Views : IView seq with get
+
+module ViewRegistry =
+    let register<'T when 'T :> IView> (reg : IViewRegistry) =
+        reg.Register<'T>()
+    let registerViewType (viewType : Type) (reg : IViewRegistry) =
+        reg.Register(viewType)

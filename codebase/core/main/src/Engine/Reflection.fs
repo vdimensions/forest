@@ -3,6 +3,7 @@ open System
 open System.Reflection
 open Axle.Verification
 open Forest
+open Axle
 
 
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT when 'TT :> IView>(method : MethodInfo, md : Action<'TT>) =
@@ -55,6 +56,36 @@ type [<Sealed;NoComparison>] private DefaultProperty(property : PropertyInfo) =
         member __.Name with get() = property.Name
 
 type [<Sealed;NoComparison>] DefaultReflectionProvider() =
+    
+    let rec isOverriden (mi : MethodInfo) (overrideMethods : seq<MethodInfo>) =
+        if overrideMethods |> Seq.isEmpty then false else
+            let baseMethods =
+                overrideMethods 
+                |> Seq.map (fun m -> m.GetBaseDefinition(), m)
+                |> Seq.filter (fun (b, m) -> not <| b.DeclaringType.Equals(m.DeclaringType))
+                |> Seq.map fst
+                |> Seq.distinct
+                |> Seq.cache
+            if (baseMethods |> Seq.contains mi) 
+            then true
+            else baseMethods |> isOverriden mi
+
+    let rec getOverridingMethods (m : MethodInfo list) =
+        match m with
+        | [] -> []
+        | x::xs ->
+            if isOverriden x xs 
+            then getOverridingMethods xs 
+            else x::getOverridingMethods xs
+
+    let consolidateMatchingMethods (data : ((string seq)*MethodInfo) seq) =
+        let eligible = 
+            data
+            |> Seq.map (fun (a, mi) -> a |> Seq.distinct, mi)
+            |> Seq.filter (fun (_, mi) -> not mi.IsAbstract)
+            |> Seq.cache
+        let overridingMethods = eligible |> Seq.map snd |> List.ofSeq |> getOverridingMethods
+        eligible |> Seq.filter (fun (_, c) -> isOverriden c overridingMethods |> not)
 
     let createCmd (method : MethodInfo) (name : string) : ICommandMethod =
         let mt = 
@@ -97,7 +128,8 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             |> Seq.map (fun x -> (x |> __.getCommandAttribs) |> Seq.map (fun a -> a.Name), x)
             // TODO abstract method check here is a temporary fix. 
             // If we have virtual non-override method, it will falsely not be included
-            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a && not <| m.DeclaringType.GetTypeInfo().IsAbstract)
+            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a)
+            |> consolidateMatchingMethods
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createCmd m x))
             |> Seq.toArray
         member __.GetSubscriptionMethods viewType = 
@@ -106,7 +138,8 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             |> Seq.map (fun x -> (x |> __.getEventAttribs) |> Seq.map (fun a -> a.Topic), x)
             // TODO abstract method check here is a temporary fix. 
             // If we have virtual non-override method, it will falsely not be included
-            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a && not <| m.DeclaringType.GetTypeInfo().IsAbstract)
+            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a)
+            |> consolidateMatchingMethods
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createEvt m x))
             |> Seq.toArray
         member __.GetLocalizeableProperties vmType = 

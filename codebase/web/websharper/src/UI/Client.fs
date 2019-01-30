@@ -1,5 +1,5 @@
 namespace Forest.Web.WebSharper.UI
-
+open System
 open Forest
 open Forest.Web.WebSharper
 open WebSharper
@@ -8,28 +8,27 @@ open WebSharper.UI
 
 [<JavaScriptExport>]
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView() =
+
     [<JavaScriptExport>]
     abstract member Doc: array<rname*Doc> -> Node -> Doc
+
     [<JavaScript(false)>]
     member this.GetClientTypeName() =
         this.GetType().FullName.Replace("+", ".")
-        
+
+    [<JavaScript(false)>]
+    abstract member GetLogicalViewType: unit -> Type
 
 [<JavaScript>]
 module Client =
     open WebSharper.UI.Client
 
-    type ExecuteCommandCall = (cname -> obj -> unit)
-    type ExecuteRpcCommandCall = ((thash -> Async<Node array>) -> unit)
-    type RenderRegionCall = (rname -> Doc)
-
     [<NoEquality;NoComparison>]
     type Engine =
         {
-            hash: thash;
-            executeCommand : ExecuteCommandCall;
-            executeRpcCommand : ExecuteRpcCommandCall;
-            renderRegion : RenderRegionCall;
+            executeRawCommand : (cname -> obj -> unit);
+            executeRpcCommand : ((thash -> Async<Node array>) -> unit);
+            renderRegion : (rname -> Doc);
         }
 
     let private _nodes = List.empty |> ListModel.Create<obj,Node> (fun n -> n.Model)
@@ -97,19 +96,23 @@ module Client =
             setNodes nodes
         }
         |> Async.Start
-    let internal executeCommand cmd hash (arg : obj) = executeRpcCommand (fun h -> Remoting.ExecuteCommand cmd h arg) hash
+    let internal executeRawCommand cmd hash (arg : obj) = executeRpcCommand (fun h -> Remoting.ExecuteCommand cmd h arg) hash
 
     [<JavaScriptExport>]
     type ViewRegistry internal(name : vname) =
         member __.Register(view : WebSharperPhysicalView) = registerView name view
 
 [<JavaScriptExport>]
-type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'M>() =
+type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView<'V, 'M when 'V :> IView<'M>>() =
     inherit WebSharperPhysicalView()
 
+    [<JavaScript(false)>]
+    override __.GetLogicalViewType() = typeof<'V>
+
 [<JavaScriptExport>]
-type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'M>() =
-    inherit WebSharperPhysicalView<'M>()
+type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'V, 'M when 'V :> IView<'M>>() =
+    inherit WebSharperPhysicalView<'V, 'M>()
+
     [<JavaScriptExport>]
     abstract member Render: model : 'M  -> client : Client.Engine -> Doc list
     
@@ -118,17 +121,17 @@ type [<AbstractClass;NoEquality;NoComparison>] WebSharperDocumentView<'M>() =
         let rdataArr, hash = rdata |> Map.ofArray, node.Hash
 
         let rr = rdataArr.TryFind >> Option.defaultWith Client.emptyDoc
-        let ec cmd (arg : obj) = Client.executeCommand cmd hash arg
-        let erc rpc = Client.executeRpcCommand rpc hash 
+        let execrawcmd cmd (arg : obj) = Client.executeRawCommand cmd hash arg
+        let execrpccmd rpc = Client.executeRpcCommand rpc hash 
 
-        let client : Client.Engine = { hash = hash; renderRegion = rr; executeCommand = ec; executeRpcCommand = erc}
+        let client : Client.Engine = { renderRegion = rr; executeRawCommand = execrawcmd; executeRpcCommand = execrpccmd}
         let model = (node.Model :?> 'M)
 
         this.Render model client |> Doc.Concat
     
 [<JavaScriptExport>]
-type [<AbstractClass>] WebSharperTemplateView<'M, 'T>() =
-    inherit WebSharperDocumentView<'M>()
+type [<AbstractClass>] WebSharperTemplateView<'V, 'M, 'T when 'V :> IView<'M>>() =
+    inherit WebSharperDocumentView<'V, 'M>()
     abstract member InstantiateTemplate: unit -> 'T
     abstract member RenderTemplate: model : 'M -> template : 'T -> client : Client.Engine -> Doc
     override this.Render model client =
