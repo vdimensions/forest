@@ -12,8 +12,6 @@ namespace Forest.Forms.Controls
     {
         public static class Option
         {
-            internal const string Name = "Select.Option";
-
             public static class Regions
             {
                 internal const string Item = "Item";
@@ -39,7 +37,6 @@ namespace Forest.Forms.Controls
                 public bool Selected { get; }
             }
 
-            [View(Name)]
             public class View<TView, TModel> : LogicalView<Model<TModel>> where TView : IView<TModel>
             {
                 public View(Model<TModel> model) : base(model) { }

@@ -17,7 +17,7 @@ namespace Forest.Forms.Controls
         /// </summary>
         /// <typeparam name="TItemView">The type of the repeater's items view.</typeparam>
         /// <typeparam name="TItemModel">The type of the repeater's items view model.</typeparam>
-        public abstract class View<TItemView, TItemModel> : LogicalView where TItemView: IView<TItemModel>
+        public class View<TItemView, TItemModel> : LogicalView where TItemView: IView<TItemModel>
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private readonly string _itemsRegionName;
@@ -26,7 +26,7 @@ namespace Forest.Forms.Controls
             {
                 _itemsRegionName = itemsRegionName.VerifyArgument(nameof(itemsRegionName)).IsNotNullOrEmpty();
             }
-            protected View() : this(Regions.Items) { }
+            public View() : this(Regions.Items) { }
 
             protected virtual IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
             {

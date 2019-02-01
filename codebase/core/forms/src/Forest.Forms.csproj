@@ -10,8 +10,6 @@
   </PropertyGroup>
   <Import Project="../../../Forest.Common.props" />
   <ItemGroup>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="paket.dependencies" />
     <None Include="paket.references" />
   </ItemGroup>

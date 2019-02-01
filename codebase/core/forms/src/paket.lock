@@ -1,6 +1,6 @@
 NUGET
   remote: ../../../../../axle/dist
-    Axle.Application (1.5.2214.22166) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
+    Axle.Application (1.5.2222.12452) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
       Axle.Resources (>= 1.5.2213.18200) - restriction: || (&& (>= net35) (< net40) (< netstandard1.5)) (&& (< net35) (>= netstandard1.5) (< netstandard1.6)) (&& (< net35) (>= netstandard1.6) (< netstandard2.0)) (&& (< net35) (>= netstandard2.0)) (&& (>= net40) (< net45) (< netstandard1.5)) (&& (>= net45) (< netstandard1.5)) (>= net46)
     Axle.Core (1.5.2178.22316) - restriction: || (&& (>= net35) (< net40) (< netstandard1.3) (>= netstandard1.6)) (&& (>= net35) (< net40) (< netstandard1.3) (>= netstandard2.0)) (&& (< net35) (>= net40) (< netstandard1.3) (>= netstandard1.6)) (&& (< net35) (>= net40) (< netstandard1.5) (>= netstandard1.6)) (&& (< net35) (>= net45) (>= netstandard1.5) (< netstandard1.6)) (&& (< net35) (>= netstandard1.6) (< netstandard2.0)) (&& (< net35) (>= netstandard2.0)) (&& (>= net40) (< net45) (< netstandard1.3) (>= netstandard1.6)) (&& (>= net40) (< net45) (< netstandard1.3) (>= netstandard2.0)) (&& (>= net45) (< netstandard1.3)) (&& (>= net45) (< netstandard1.5)) (>= net46)
       NETStandard.Library (>= 1.6.1) - restriction: || (&& (< net20) (>= netstandard1.0) (< netstandard1.3)) (&& (< net20) (>= netstandard1.3) (< netstandard1.5)) (&& (< net20) (>= netstandard1.5) (< netstandard1.6)) (&& (< net20) (>= netstandard1.6) (< netstandard2.0))
@@ -13,8 +13,8 @@ NUGET
     Axle.Resources (1.5.2213.18200) - restriction: || (&& (>= net35) (< net40) (< netstandard1.5) (>= netstandard1.6)) (&& (>= net35) (< net40) (< netstandard1.5) (>= netstandard2.0)) (&& (< net35) (>= net45) (>= netstandard1.5) (< netstandard1.6)) (&& (< net35) (>= netstandard1.6) (< netstandard2.0)) (&& (< net35) (>= netstandard2.0)) (&& (>= net40) (< net45) (< netstandard1.5) (>= netstandard1.6)) (&& (>= net40) (< net45) (< netstandard1.5) (>= netstandard2.0)) (&& (>= net45) (< netstandard1.5)) (>= net46)
       Axle.Core (>= 1.5.2178.22316) - restriction: || (&& (>= net35) (< net40) (< netstandard1.3)) (&& (< net35) (>= netstandard1.3) (< netstandard1.6)) (&& (< net35) (>= netstandard1.6) (< netstandard2.0)) (&& (< net35) (>= netstandard2.0)) (&& (>= net40) (< netstandard1.3)) (>= net45)
   remote: ../../../../dist
-    Forest.Core (2.0.2210.30518)
-      Axle.Application (>= 1.5.2190.40278) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
+    Forest.Core (2.0.2222.14190)
+      Axle.Application (>= 1.5.2214.22166) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
       Axle.FSharp (>= 1.5.2168.31463) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
   remote: https://api.nuget.org/v3/index.json
     FSharp.Core (4.6) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
