@@ -2,7 +2,7 @@ STORAGE: NONE
 RESTRICTION: || (== net45) (== net46) (== netstandard1.6) (== netstandard2.0)
 NUGET
   remote: ../../../../../axle
-    Axle.Application (1.5.2214.22166)
+    Axle.Application (1.5.2222.12452)
       Axle.Resources (>= 1.5.2213.18200)
     Axle.Core (1.5.2178.22316)
       NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net45) (< net20)) (&& (== net46) (< net20)) (== netstandard1.6) (&& (== netstandard2.0) (< netstandard1.3)) (&& (== netstandard2.0) (< netstandard1.5)) (&& (== netstandard2.0) (< netstandard1.6))
@@ -15,7 +15,7 @@ NUGET
     Axle.Resources (1.5.2213.18200)
       Axle.Core (>= 1.5.2178.22316)
   remote: https://api.nuget.org/v3/index.json
-    FSharp.Core (4.6)
+    FSharp.Core (4.6.1)
       System.Collections (>= 4.0.11) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
       System.Console (>= 4.0) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
       System.Diagnostics.Debug (>= 4.0.11) - restriction: || (&& (== net46) (< net45) (>= netstandard1.6)) (== netstandard1.6)
