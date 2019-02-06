@@ -21,7 +21,7 @@ type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : 
 
 type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime : ForestRuntime) =
 
-    member __.ExcuteCommand command target message = Runtime.Operation.InvokeCommand(command, target, message) |> runtime.Update
+    member __.ExcuteCommand command target message = Runtime.Operation.InvokeCommand(command, target, message) |> runtime.Do
 
     member internal __.Runtime with get() = runtime
 
@@ -81,7 +81,7 @@ type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state :
 
     member internal this.SwapState (initialState : State option) (operation : Runtime.Operation) : ForestResult =
         (fun (rt:ForestRuntime) ->
-            operation |> rt.Update
+            operation |> rt.Do
             None
         ) |> this.WrapAction initialState
 

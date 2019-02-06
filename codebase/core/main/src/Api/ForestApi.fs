@@ -25,10 +25,8 @@ and [<Interface>] IEventDescriptor =
 and [<Interface>] IViewRegistry =
     abstract member Register : t : Type -> IViewRegistry
     abstract member Register<'T when 'T :> IView> : unit -> IViewRegistry
-    abstract member Resolve : name : vname -> IView
-    abstract member Resolve : name : vname * model : obj -> IView
-    abstract member Resolve : viewType : Type -> IView
-    abstract member Resolve : viewType : Type * model : obj -> IView
+    abstract member Resolve : descriptor : IViewDescriptor -> IView
+    abstract member Resolve : descriptor : IViewDescriptor * model : obj -> IView
     abstract member GetDescriptor : name : vname -> IViewDescriptor
     abstract member GetDescriptor : viewType : Type -> IViewDescriptor
 
@@ -74,20 +72,10 @@ module ViewRegistry =
         | ByName n -> getDescriptorByName n
         | ByType t -> getDescriptorByType t
 
-    let resolveByName (name : vname) (model : obj option) (reg : IViewRegistry) =
+    let resolve (vd : IViewDescriptor) (model : obj option) (reg : IViewRegistry) =
         match model with
-        | Some m -> reg.Resolve(name, m)
-        | None -> reg.Resolve name
-
-    let resolveByType (viewType : Type) (model : obj option) (reg : IViewRegistry) =
-        match model with
-        | Some m -> reg.Resolve(viewType, m)
-        | None -> reg.Resolve viewType
-
-    let resolve (vh : ViewHandle) =
-        match vh with
-        | ByName n -> resolveByName n
-        | ByType t -> resolveByType t
+        | None -> reg.Resolve vd
+        | Some m -> reg.Resolve (vd, m)
 
 /// An interface representing a system view, that is a special type of view which
 /// aids the internal workings of Forest, rather than serving any presentational purpose.

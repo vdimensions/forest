@@ -13,7 +13,6 @@ module ViewHandle =
     let fromNode (node : TreeNode) =
         ViewHandle.ByName node.View
 
-    let toViewName =
-        function
+    let toViewName = function
         | ByName n -> n
         | ByType t -> String.Format("`{0}`", t.AssemblyQualifiedName)

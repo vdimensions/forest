@@ -190,8 +190,8 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
         | [op] -> [ processChanges ctx op ]
         | head::tail -> processChanges ctx head :: iterateStates ctx tail 
 
-    member private this.createRuntimeView (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (vd : IViewDescriptor) =
-        let view = (ctx.ViewRegistry |> ViewRegistry.resolve viewHandle model) :?> IRuntimeView
+    member private this.createRuntimeView (node : TreeNode) (model : obj option) (vd : IViewDescriptor) =
+        let view = (ctx.ViewRegistry |> ViewRegistry.resolve vd model) :?> IRuntimeView
         view.AcquireRuntime node vd this 
         view
 
@@ -207,7 +207,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
 
     member private this.instantiateView (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (d : IViewDescriptor) =
         try
-            this.createRuntimeView viewHandle node model d
+            this.createRuntimeView node model d
             |> this.prepareView (Tree.insert node tree) node model
             |> Runtime.OpResult.ViewCreated
             |> Ok
@@ -223,7 +223,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             this |> view.AcquireRuntime n d 
         for node in (upcast tree.Hierarchy : IDictionary<_,_>).Keys do
             if not <| views.ContainsKey node.Hash then 
-                match node |> ViewHandle.fromNode |> getDescriptor |> Result.map (this.createRuntimeView (ViewHandle.fromNode node) node None) with
+                match node |> ViewHandle.fromNode |> getDescriptor |> Result.map (this.createRuntimeView node None) with
                 | Ok view ->
                     views.Add(node.Hash, view)
                     view.Resume(models.[node.Hash])
@@ -232,14 +232,14 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
 
     member internal this.ActivateView (node : TreeNode) =
         Runtime.Operation.InstantiateViewByNode(node, None) 
-        |> this.Update 
+        |> this.Do 
         |> Runtime.resolve (function
             | Runtime.OpResult.ViewCreated view -> view
             | _ -> Unchecked.defaultof<_>
         )
     member internal this.ActivateView (node : TreeNode, model :obj) =
         Runtime.Operation.InstantiateViewByNode(node, Some model) 
-        |> this.Update 
+        |> this.Do 
         |> Runtime.resolve (function
             | Runtime.OpResult.ViewCreated view -> view
             | _ -> Unchecked.defaultof<_>
@@ -252,7 +252,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             | (false, _) -> this.ActivateView node
         downcast result:'TView
 
-    member __.Update (operation : Runtime.Operation) =
+    member __.Do (operation : Runtime.Operation) =
         processChanges ctx operation
 
     member this.Apply (entry : StateChange) =
@@ -268,7 +268,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
                     node
                     |> ViewHandle.fromNode
                     |> getDescriptor 
-                    |> Result.map (this.createRuntimeView (ViewHandle.fromNode node) node (Some model))
+                    |> Result.map (this.createRuntimeView node (Some model))
                     |> Result.map (
                         fun view ->
                             tree <- hs
@@ -287,7 +287,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
                     node
                     |> ViewHandle.fromNode
                     |> getDescriptor 
-                    |> Result.map (this.createRuntimeView (ViewHandle.fromNode node) node (Some model))
+                    |> Result.map (this.createRuntimeView node (Some model))
                     |> Result.map (
                         fun view ->
                             tree <- hs
@@ -328,7 +328,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
 
         member this.ActivateView(handle, region, parent) =
             Runtime.Operation.InstantiateView(handle, region, parent, None) 
-            |> this.Update 
+            |> this.Do 
             |> Runtime.resolve (function
                 | Runtime.OpResult.ViewCreated view -> view
                 | _ -> Unchecked.defaultof<_>
@@ -336,7 +336,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
 
         member this.ActivateView(handle, region, parent, model : 'm) =
             Runtime.Operation.InstantiateView(handle, region, parent, model |> box |> Some) 
-            |> this.Update 
+            |> this.Do 
             |> Runtime.resolve (function
                 | Runtime.OpResult.ViewCreated view -> view :?> IView<'m>
                 | _ -> Unchecked.defaultof<_>
@@ -353,10 +353,10 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             removeViewsFromRegion node region predicate |> Runtime.resolve ignore
 
         member this.PublishEvent sender message topics = 
-            Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update |> Runtime.resolve ignore
+            Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Do |> Runtime.resolve ignore
 
         member this.ExecuteCommand command issuer arg =
-            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) |> this.Update |> Runtime.resolve ignore
+            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) |> this.Do |> Runtime.resolve ignore
 
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do

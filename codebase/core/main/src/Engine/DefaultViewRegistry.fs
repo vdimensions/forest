@@ -65,22 +65,10 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory)
     member this.Register<'T when 'T :> IView> () = 
         this.Register typeof<'T>
 
-    member this.Resolve (NotNull "viewType" viewType : Type) =
-        match null2vopt <| this.GetViewDescriptor viewType with
-        | ValueSome viewDescriptor -> viewDescriptor |> this.InstantiateView None
-        | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "viewType" viewType : Type, model : obj) =
-        match null2vopt <| this.GetViewDescriptor viewType with
-        | ValueSome viewDescriptor -> viewDescriptor |> this.InstantiateView (Some model)
-        | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "name" name : vname) = 
-        match viewsByName.TryGetValue name with 
-        | (true, viewDescriptor) -> this.InstantiateView None viewDescriptor
-        | (false, _) -> invalidArg "name" "No such view was registered"
-    member this.Resolve (NotNull "name" name : vname, NotNull "model" model : obj) = 
-        match viewsByName.TryGetValue name with 
-        | (true, viewDescriptor) -> this.InstantiateView (Some model) viewDescriptor
-        | (false, _) -> invalidArg "name" "No such view was registered"
+    member this.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) = 
+        this.InstantiateView None descriptor
+    member this.Resolve (NotNull "descriptor" descriptor : IViewDescriptor, NotNull "model" model : obj) = 
+        this.InstantiateView (Some model) descriptor
     member __.GetViewDescriptor (NotNull "name" name : vname) = 
         match (viewsByName.TryGetValue name) with
         | (true, d) -> d
@@ -92,10 +80,8 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory)
     interface IViewRegistry with
         member this.Register t = this.Register t
         member this.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member this.Resolve(name : vname) = this.Resolve name
-        member this.Resolve(name : vname, model : obj) = this.Resolve(name, model)
-        member this.Resolve(viewType : Type) = this.Resolve viewType
-        member this.Resolve(viewType : Type, model : obj) = this.Resolve(viewType, model)
+        member this.Resolve(descriptor : IViewDescriptor) = this.Resolve descriptor
+        member this.Resolve(descriptor : IViewDescriptor, model : obj) = this.Resolve(descriptor, model)
         member this.GetDescriptor(name : vname) = this.GetViewDescriptor name
         member this.GetDescriptor(viewType : Type) = this.GetViewDescriptor viewType
 
