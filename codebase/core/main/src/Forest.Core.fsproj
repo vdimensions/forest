@@ -18,6 +18,10 @@
   <Import Project="../../../Forest.Common.props" />
 
   <ItemGroup>
+    <EmbeddedResource Remove="Infrastructure\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="build.sh" />
     <None Include="restore.sh" />
     <None Include="paket.dependencies" />
@@ -26,11 +30,11 @@
 
   <ItemGroup>
     <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" />
-    <Compile Include="Infrastructure\Result.fs" />
     <Compile Include="Types\Types.fs" />
     <Compile Include="Types\Fuid.fs" />
     <Compile Include="Types\TreeNode.fsi" />
     <Compile Include="Types\TreeNode.fs" />
+    <Compile Include="Types\ViewHandle.fs" />
     <Compile Include="Types\StateChange.fs" />
     <Compile Include="Types\TemplateTypes.fs" />
     <Compile Include="Types\CommandModel.fs" />

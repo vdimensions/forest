@@ -113,16 +113,16 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
 
  and private RegionImpl(regionName : rname, owner : IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
-        owner.Runtime.ActivateView(viewName, regionName, owner.InstanceID)
+        owner.Runtime.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
 
     member __.ActivateView (NotNull "viewName" viewName : vname, NotNull "model" model : 'm) =
-        owner.Runtime.ActivateView(model, viewName, regionName, owner.InstanceID)
+        owner.Runtime.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
 
     member __.ActivateView<'v when 'v :> IView> () : 'v =
-        owner.Runtime.ActivateAnonymousView(regionName, owner.InstanceID)
+        owner.Runtime.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
 
     member __.ActivateView<'v, 'm when 'v :> IView<'m>> (model : 'm) : 'v =
-        owner.Runtime.ActivateAnonymousView(model, regionName, owner.InstanceID)
+        owner.Runtime.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
 
     member this.Clear() =
         owner.Runtime.ClearRegion owner.InstanceID regionName

@@ -7,7 +7,7 @@ open Forest.Templates.Raw
 [<RequireQualifiedAccess>]
 module TemplateCompiler =
     let rec private expandView (node : TreeNode) (vcl : ViewContents list) =
-        let mutable result = [(Runtime.Operation.InstantiateView node)]
+        let mutable result = [(Runtime.Operation.InstantiateViewByNode(node, None))]
         for vc in vcl do
             match vc with
             | Region (name, contents) -> result <- expandRegion node name contents @ result

@@ -2,7 +2,9 @@
 
 open System
 open System.Reflection
+open Axle
 open Axle.Verification
+open Axle.Reflection.Extensions.Type
 open Forest
 open Forest.Collections
 
@@ -17,17 +19,20 @@ module View =
         member __.ViewModelType with get() = viewModelType
         member __.Commands with get() = commands
         member __.Events with get() = upcast events : IEventDescriptor seq
+        member this.IsSystemView with get() = this.ViewType.ExtendsOrImplements<ISystemView>()
         interface IViewDescriptor with
             member this.Name = this.Name
             member this.ViewType = this.ViewType
             member this.ModelType = this.ViewModelType
             member this.Commands = this.Commands
             member this.Events = this.Events
+            member this.IsSystemView = this.IsSystemView
 
     type [<Struct;NoComparison>] Error =
         | ViewAttributeMissing of nonAnnotatedViewType : Type
         | ViewTypeIsAbstract of abstractViewType : Type
         | NonGenericView of nonGenericViewType : Type
+        | InstantiationError of viewHandle : ViewHandle * cause : exn
 
     #if NETSTANDARD
     let inline private _selectViewModelTypes (tt : TypeInfo) =

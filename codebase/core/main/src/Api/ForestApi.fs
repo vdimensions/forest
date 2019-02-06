@@ -10,6 +10,7 @@ type [<Interface>] IViewDescriptor =
     abstract ModelType : Type with get
     abstract Commands : Index<ICommandDescriptor, cname> with get
     abstract Events : IEventDescriptor seq with get
+    abstract IsSystemView : bool
 
 and [<Interface>] ICommandDescriptor = 
     abstract member Invoke : arg : obj -> v : IView -> unit
@@ -62,3 +63,33 @@ module ViewRegistry =
         reg.Register<'T>()
     let registerViewType (viewType : Type) (reg : IViewRegistry) =
         reg.Register(viewType)
+
+    let getDescriptorByName (name : vname) (reg : IViewRegistry) = 
+        reg.GetDescriptor name
+    let getDescriptorByType (viewType : Type) (reg : IViewRegistry) = 
+        reg.GetDescriptor viewType
+
+    let getDescriptor (vh : ViewHandle) =
+        match vh with
+        | ByName n -> getDescriptorByName n
+        | ByType t -> getDescriptorByType t
+
+    let resolveByName (name : vname) (model : obj option) (reg : IViewRegistry) =
+        match model with
+        | Some m -> reg.Resolve(name, m)
+        | None -> reg.Resolve name
+
+    let resolveByType (viewType : Type) (model : obj option) (reg : IViewRegistry) =
+        match model with
+        | Some m -> reg.Resolve(viewType, m)
+        | None -> reg.Resolve viewType
+
+    let resolve (vh : ViewHandle) =
+        match vh with
+        | ByName n -> resolveByName n
+        | ByType t -> resolveByType t
+
+/// An interface representing a system view, that is a special type of view which
+/// aids the internal workings of Forest, rather than serving any presentational purpose.
+/// System views are never being rendered.
+type ISystemView = interface inherit IView end

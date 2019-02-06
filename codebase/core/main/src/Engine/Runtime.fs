@@ -1,7 +1,7 @@
 ﻿namespace Forest
 open System
 open System.Collections.Generic
-open Axle.Option
+open Axle
 open Forest
 open Forest.Collections
 open Forest.Events
@@ -14,10 +14,8 @@ module Runtime =
     [<CompiledName("Operation")>]
     [<NoComparison>]
     type Operation =
-        | InstantiateView of node : TreeNode
-        | InstantiateViewWithModel of node : TreeNode * model : obj
-        | InstantiateAnonymousView of viewType : Type
-        | InstantiateAnonymousViewWithModel of viewType : Type * model : obj
+        | InstantiateView of viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj option
+        | InstantiateViewByNode of node : TreeNode * model : obj option
         | UpdateModel of node : thash * model : obj
         | DestroyView of subtree : TreeNode
         | InvokeCommand of command : cname * node : thash * commandArg : obj
@@ -26,34 +24,54 @@ module Runtime =
         | Multiple of operations : Operation list
 
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    [<System.Serializable>]
+    #endif
+    [<NoComparison>]
+    type OpResult =
+        | ViewCreated of view : IView
+        | ModelUpdated of model : obj
+        | ViewDestoyed
+        | CommandInvoked
+        | EventPublished
+        | EventDeadLetter
+        | RegionCleared
+        | Multiple of OpResult list
+
+    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [<Serializable>]
     #endif
-    [<CompiledName("Error")>]
     [<NoComparison>] 
-    type Error =
+    type OpError =
         /// Error when the view that is a target of a command or message is not found
         | ViewstateAbsent of hash : thash
         /// Unable to find a descriptor for the given view type
-        | NoDescriptor of viewName : vname
+        | NoDescriptor of viewHandle : ViewHandle
         /// A tree node was found to be already present in the hierarchy at a place where it was going to be created
         | SubTreeNotExpected of node : TreeNode
         /// A tree node was expected to be present in the hierarchy but was not found
         | SubTreeAbsent of node : TreeNode
         | CommandError of cause : Command.Error
         | ViewError of cause : View.Error
-        | Multiple of errors : Error list
+        | Multiple of errors : OpError list
 
-    let private resolveError (error : Error) =
+    let private resolveError (error : OpError) =
         match error with
         | ViewError ve -> ve |> View.resolveError 
         | CommandError ce -> ce |> Command.resolveError 
+        | NoDescriptor vh -> 
+            match vh with
+            | ByName vn -> invalidOp <| String.Format("Unable to obtain descriptor for view '{0}'", vn)
+            | ByType vt -> invalidOp <| String.Format("Unable to obtain descriptor for view `{0}`", vt.AssemblyQualifiedName)
         // TODO
         | _ -> ()
 
-    let resolve<'t> (result : Result<'t, Error>) =
+    let resolve (resultMap : ('x -> 'a)) (result : Result<'x, OpError>) =
         match result with
-        | Ok x -> x |> ignore
-        | Error e -> e |> resolveError
+        | Ok x -> 
+            x |> resultMap
+        | Error e -> 
+            e |> resolveError
+            invalidOp "An unknown error occurred"
 
 [<Sealed>]
 [<NoComparison>]
@@ -64,14 +82,16 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
     let views : System.Collections.Generic.Dictionary<thash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
     let changeLog : System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
 
-    let viewDescriptorNotFoundError (viewType : Type) =
-        invalidOp <| String.Format("Unable to obtain descriptor for view {0}", viewType.AssemblyQualifiedName)
+    let getDescriptor (handle : ViewHandle) =
+        match ctx.ViewRegistry |> ViewRegistry.getDescriptor handle |> null2vopt with
+        | ValueSome d -> Ok d
+        | ValueNone -> Runtime.OpError.NoDescriptor handle |> Error
 
-    let updateModel (id : thash) (m : obj) : Result<unit, Runtime.Error> =
+    let updateModel (id : thash) (m : obj) : Result<Runtime.OpResult, Runtime.OpError> =
         models.[id] <- m
-        Ok ()
+        Runtime.OpResult.ModelUpdated m |> Ok
 
-    let destroyView (node : TreeNode) : Result<unit, Runtime.Error> =
+    let destroyView (node : TreeNode) : Result<Runtime.OpResult, Runtime.OpError> =
         let (t, nodes) = tree |> Tree.remove node
         for removedNode in nodes do
             let removedHash = removedNode.Hash
@@ -79,62 +99,79 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             view.Dispose()
             models.Remove removedHash |> ignore
             views.Remove removedHash |> ignore
-            changeLog.Add(StateChange.ViewDestroyed(removedNode))
+            removedNode |> StateChange.ViewDestroyed |> changeLog.Add
         tree <- t
-        Ok ()
+        Runtime.OpResult.ViewDestoyed |> Ok
 
     let getRegionContents (owner : TreeNode) (region : rname) =
         let isInRegion (node:TreeNode) = StringComparer.Ordinal.Equals(region, node.Region)
         tree |> Tree.filter owner isInRegion
 
     let clearRegion (owner : TreeNode) (region : rname) =
-        let mutable errors = List.empty<Runtime.Error>
+        let mutable errors = List.empty<Runtime.OpError>
         for child in getRegionContents owner region do
-            errors <- 
-                match destroyView child with
-                | Ok _ -> errors
-                | Error e -> e::errors
-        match errors with
-        | [] -> Ok()
-        | list -> Error <| Runtime.Error.Multiple list
+            match destroyView child with
+            | Error e -> errors <-  e::errors
+            | _ -> ()
+        match errors with 
+        | [] -> Runtime.OpResult.RegionCleared |> Ok
+        | errLsit -> errLsit |> Runtime.OpError.Multiple |> Error
 
     let removeViewsFromRegion (owner : TreeNode) (region : rname) (predicate : System.Predicate<IView>)=
-        let mutable errors = List.empty<Runtime.Error>
+        let mutable errors = List.empty<Runtime.OpError>
+        let mutable successes = List.empty<Runtime.OpResult>
         for child in getRegionContents owner region do
             if (predicate.Invoke(views.[child.Hash])) then
-                errors <- 
-                    match destroyView child with
-                    | Ok _ -> errors
-                    | Error e -> e::errors
+                match destroyView child with
+                | Error e -> errors <-  e :: errors
+                | Ok x -> successes <- x :: successes
         match errors with
-        | [] -> Ok()
-        | list -> Error <| Runtime.Error.Multiple list
+        | [] -> successes |> Runtime.OpResult.Multiple |> Ok
+        | list -> list |> Runtime.OpError.Multiple |> Error
 
-    let executeCommand (name : cname) (stateKey : thash) (arg : obj) : Result<unit, Runtime.Error> =
+    let executeCommand (name : cname) (stateKey : thash) (arg : obj) =
         match views.TryGetValue stateKey with
         | (true, view) ->
             match view.Descriptor.Commands.TryFind name with
             | Some cmd -> 
                 view |> cmd.Invoke arg
-                Ok ()
-            | None ->  Error (Runtime.Error.CommandError <| Command.Error.CommandNotFound(view.Descriptor.ViewType, name))
-        | (false, _) -> (Error (Runtime.Error.ViewstateAbsent stateKey))
+                Runtime.OpResult.CommandInvoked |> Ok
+            | None ->  Command.Error.CommandNotFound(view.Descriptor.ViewType, name) |> Runtime.OpError.CommandError |> Error
+        | (false, _) -> Runtime.OpError.ViewstateAbsent stateKey |> Error
 
-    let publishEvent (id : thash) (message : 'm) (topics : string array) : Result<unit, Runtime.Error> =
+    let publishEvent (id : thash) (message : 'm) (topics : string array) =
         match views.TryGetValue id with
         | (true, sender) -> 
             eventBus.Publish(sender, message, topics)
-            Ok ()
-        | _ -> Ok ()
+            Runtime.OpResult.EventPublished |> Ok
+        | _ -> Runtime.OpResult.EventDeadLetter |> Ok
 
     let rec processChanges (ctx : IForestContext) (operation : Runtime.Operation) =
         match operation with
         | Runtime.Operation.Multiple operations -> 
-            iterateStates ctx operations
-        | Runtime.Operation.InstantiateView (node) -> 
-            self.instantiateView node None
-        | Runtime.Operation.InstantiateViewWithModel (node, model) -> 
-            self.instantiateView node (Some model)
+            let mappedResults =
+                iterateStates ctx operations
+                |> List.map (fun x -> x |> Result.ok, x |> Result.error )
+            let errors = mappedResults |> List.map snd |> List.choose id
+            if errors |> List.isEmpty 
+            then mappedResults |> List.map fst |> List.choose id |> Runtime.OpResult.Multiple |> Ok
+            else errors |> Runtime.OpError.Multiple |> Error
+        | Runtime.Operation.InstantiateView (viewHandle, region, parent, model) ->
+            viewHandle
+            |> getDescriptor
+            |> Result.bind (
+                fun descriptor -> 
+                    let node = TreeNode.newKey region (descriptor.Name) parent 
+                    self.instantiateView viewHandle node model descriptor
+                )
+        | Runtime.Operation.InstantiateViewByNode (node, model) ->
+            node
+            |> ViewHandle.fromNode
+            |> getDescriptor
+            |> Result.bind (
+                fun descriptor -> 
+                    self.instantiateView (ViewHandle.fromNode node) node model descriptor
+                )
         | Runtime.Operation.UpdateModel (viewID, model) -> 
             updateModel viewID model
         | Runtime.Operation.DestroyView viewID -> 
@@ -149,39 +186,33 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
 
     and iterateStates ctx ops =
         match ops with
-        | [] -> Ok ()
-        | [op] -> processChanges ctx op
-        | head::tail ->
-            processChanges ctx head
-            |> Result.map (fun _ -> tail)
-            |> Result.bind (iterateStates ctx)
+        | [] -> []
+        | [op] -> [ processChanges ctx op ]
+        | head::tail -> processChanges ctx head :: iterateStates ctx tail 
 
-    member private this.createView(node : TreeNode) (model : obj option) =
-        match ctx.ViewRegistry.GetDescriptor(node.View) |> null2vopt with
-        | ValueSome vd ->
-            let view =
-                match model with
-                | Some model -> (ctx.ViewRegistry.Resolve(node.View, model)) :?> IRuntimeView
-                | None -> (ctx.ViewRegistry.Resolve node.View) :?> IRuntimeView
-            view.AcquireRuntime node vd this 
-            Ok view // will also set the view model
-        | ValueNone -> 
-            // this is a different error
-            Error (Runtime.Error.NoDescriptor (node.View))
+    member private this.createRuntimeView (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (vd : IViewDescriptor) =
+        let view = (ctx.ViewRegistry |> ViewRegistry.resolve viewHandle model) :?> IRuntimeView
+        view.AcquireRuntime node vd this 
+        view
 
-    member private this.instantiateView (node : TreeNode) (model : obj option) : Result<unit, Runtime.Error> =
-        let t = (Tree.insert node tree)
-        match this.createView node model with
-        | Ok view ->
-            tree <- t
-            views.Add(node.Hash, view)
-            match model with
-            | Some m -> StateChange.ViewAddedWithModel(node, m)
-            | None -> StateChange.ViewAdded(node, view.Model)
-            |> changeLog.Add
-            view.Load()
-            Ok ()
-        | Error e -> Error e
+    member private __.prepareView (t : Tree) (node : TreeNode) (model : obj option) (view : IRuntimeView) =
+        tree <- t
+        views.Add(node.Hash, view)
+        match model with
+        | Some m -> StateChange.ViewAddedWithModel(node, m)
+        | None -> StateChange.ViewAdded(node, view.Model)
+        |> changeLog.Add
+        view.Load()
+        (upcast view : IView)
+
+    member private this.instantiateView (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (d : IViewDescriptor) =
+        try
+            this.createRuntimeView viewHandle node model d
+            |> this.prepareView (Tree.insert node tree) node model
+            |> Runtime.OpResult.ViewCreated
+            |> Ok
+        with 
+        | e -> View.Error.InstantiationError(viewHandle,  e) |> Runtime.OpError.ViewError |> Error
 
     static member Create (tree : Tree, models : Map<thash, obj>, views : Map<thash, IRuntimeView>, ctx : IForestContext) = 
         (new ForestRuntime(tree, models, views, ctx)).Init()
@@ -190,95 +221,82 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
         for kvp in views do 
             let (view, n, d) = (kvp.Value, kvp.Value.InstanceID, kvp.Value.Descriptor)
             this |> view.AcquireRuntime n d 
-        for node in (upcast tree.Hierarchy:IDictionary<_,_>).Keys do
+        for node in (upcast tree.Hierarchy : IDictionary<_,_>).Keys do
             if not <| views.ContainsKey node.Hash then 
-                match this.createView node None with
+                match node |> ViewHandle.fromNode |> getDescriptor |> Result.map (this.createRuntimeView (ViewHandle.fromNode node) node None) with
                 | Ok view ->
                     views.Add(node.Hash, view)
                     view.Resume(models.[node.Hash])
                 | _ -> ignore()
         this
 
-    member internal this.ActivateView (node) =
-        Runtime.Operation.InstantiateView(node) |> this.Update |> ignore
-        match views.TryGetValue node.Hash with
-        | (true, view) -> (upcast view : IView)
-        | (false, _) -> Unchecked.defaultof<_>
-
-    member internal this.ActivateView (model : 'm, node) =
-        Runtime.Operation.InstantiateViewWithModel(node, model) |> this.Update |> ignore
-        match views.TryGetValue node.Hash with
-        | (true, view) -> (downcast view : IView<'m>)
-        | (false, _) -> Unchecked.defaultof<_>
-
-    member internal this.ActivateAnonymousView<'v when 'v :> IView>(region, parent) =
-        let d = ctx.ViewRegistry.GetDescriptor typeof<'v>
-        match null2opt d with
-        | Some d ->
-            let view =
-                if (d.Name |> String.IsNullOrEmpty |> not) then
-                    let node = TreeNode.newKey region d.Name parent
-                    this.ActivateView node
-                else ctx.ViewRegistry.Resolve typeof<'v>
-            downcast view:'v
-        | None -> viewDescriptorNotFoundError typeof<'v>
-
-    member internal this.ActivateAnonymousView<'v, 'm when 'v :> IView<'m>>(model : 'm, region, parent) =
-        let d = ctx.ViewRegistry.GetDescriptor typeof<'v>
-        match null2opt d with
-        | Some d ->
-            let view =
-                if (d.Name |> String.IsNullOrEmpty |> not) then
-                    let node = TreeNode.newKey region d.Name parent
-                    downcast this.ActivateView(model, node) : 'v
-                else downcast ctx.ViewRegistry.Resolve typeof<'v> : 'v
-            view
-        | None -> viewDescriptorNotFoundError typeof<'v>
+    member internal this.ActivateView (node : TreeNode) =
+        Runtime.Operation.InstantiateViewByNode(node, None) 
+        |> this.Update 
+        |> Runtime.resolve (function
+            | Runtime.OpResult.ViewCreated view -> view
+            | _ -> Unchecked.defaultof<_>
+        )
+    member internal this.ActivateView (node : TreeNode, model :obj) =
+        Runtime.Operation.InstantiateViewByNode(node, Some model) 
+        |> this.Update 
+        |> Runtime.resolve (function
+            | Runtime.OpResult.ViewCreated view -> view
+            | _ -> Unchecked.defaultof<_>
+        )
 
     member internal this.GetOrActivateView (node : TreeNode) : 'TView when 'TView :> IView =
         let result =
             match node.Hash |> views.TryGetValue with
-            | (true, viewState) -> (upcast viewState:IView)
+            | (true, viewState) -> (upcast viewState : IView)
             | (false, _) -> this.ActivateView node
         downcast result:'TView
 
     member __.Update (operation : Runtime.Operation) =
-        processChanges ctx operation |> Runtime.resolve
+        processChanges ctx operation
 
     member this.Apply (entry : StateChange) =
         match entry with
         | StateChange.ViewAddedWithModel (node, model) ->
             match TreeNode.isShell node with
-            | true -> Some (Runtime.Error.SubTreeAbsent node)
+            | true -> Some (Runtime.OpError.SubTreeAbsent node)
             | false ->
                 let hs = tree |> Tree.insert node
                 match models.TryGetValue node.Hash with
-                | (true, _) -> Some (Runtime.Error.SubTreeNotExpected node)
+                | (true, _) -> Some (Runtime.OpError.SubTreeNotExpected node)
                 | (false, _) ->
-                    match this.createView node (Some model) with
-                    | Ok view ->
-                        tree <- hs
-                        views.Add (node.Hash, view)
-                        view.Resume(model)
-                        None
-                    | Error e -> Some e
+                    node
+                    |> ViewHandle.fromNode
+                    |> getDescriptor 
+                    |> Result.map (this.createRuntimeView (ViewHandle.fromNode node) node (Some model))
+                    |> Result.map (
+                        fun view ->
+                            tree <- hs
+                            views.Add (node.Hash, view)
+                            view.Resume(model)
+                        )
+                    |> Result.error
         | StateChange.ViewAdded (node, model) ->
             match TreeNode.isShell node with
-            | true -> Some (Runtime.Error.SubTreeAbsent node)
+            | true -> Some (Runtime.OpError.SubTreeAbsent node)
             | false ->
                 let hs = tree |> Tree.insert node
                 match models.TryGetValue node.Hash with
-                | (true, _) -> Some (Runtime.Error.SubTreeNotExpected node)
+                | (true, _) -> Some (Runtime.OpError.SubTreeNotExpected node)
                 | (false, _) ->
-                    match this.createView node None with
-                    | Ok view ->
-                        tree <- hs
-                        views.Add (node.Hash, view)
-                        view.Resume(model)
-                        None
-                    | Error e -> Some e
-        | StateChange.ViewDestroyed (node) ->
-            match destroyView node with Ok _ -> None | Error e -> Some e
+                    node
+                    |> ViewHandle.fromNode
+                    |> getDescriptor 
+                    |> Result.map (this.createRuntimeView (ViewHandle.fromNode node) node (Some model))
+                    |> Result.map (
+                        fun view ->
+                            tree <- hs
+                            views.Add (node.Hash, view)
+                            view.Resume(model)
+                        )
+                    |> Result.error
+        | StateChange.ViewDestroyed (node) -> 
+            destroyView node |> Result.error
         | StateChange.ModelUpdated (node, model) -> 
             views.[node.Hash].Resume model
             None
@@ -308,35 +326,37 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             if not silent then changeLog.Add(StateChange.ModelUpdated(node, model))
             model
 
-        member this.ActivateView(name, region, parent) =
-            let node = parent |> TreeNode.newKey region name 
-            this.ActivateView node
+        member this.ActivateView(handle, region, parent) =
+            Runtime.Operation.InstantiateView(handle, region, parent, None) 
+            |> this.Update 
+            |> Runtime.resolve (function
+                | Runtime.OpResult.ViewCreated view -> view
+                | _ -> Unchecked.defaultof<_>
+            )
 
-        member this.ActivateView(model : 'm, name, region, parent) =
-            let node = parent |> TreeNode.newKey region name 
-            this.ActivateView(model, node)
-
-        member this.ActivateAnonymousView<'v when 'v :> IView>(region, parent) =
-            this.ActivateAnonymousView<'v>(region, parent)
-
-        member this.ActivateAnonymousView<'v, 'm when 'v :> IView<'m>>(model, region, parent) =
-            this.ActivateAnonymousView<'v, 'm>(model, region, parent)
+        member this.ActivateView(handle, region, parent, model : 'm) =
+            Runtime.Operation.InstantiateView(handle, region, parent, model |> box |> Some) 
+            |> this.Update 
+            |> Runtime.resolve (function
+                | Runtime.OpResult.ViewCreated view -> view :?> IView<'m>
+                | _ -> Unchecked.defaultof<_>
+            )
 
         member __.ClearRegion node region =
-            clearRegion node region |> Runtime.resolve
+            clearRegion node region |> Runtime.resolve ignore
 
         member __.GetRegionContents node region =
             getRegionContents node region 
             |> Seq.map (fun node -> (upcast views.[node.Hash] : IView))
 
         member __.RemoveViewFromRegion node region predicate =
-            removeViewsFromRegion node region predicate |> Runtime.resolve
+            removeViewsFromRegion node region predicate |> Runtime.resolve ignore
 
         member this.PublishEvent sender message topics = 
-            Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update
+            Runtime.Operation.PublishEvent(sender.InstanceID.Hash,message,topics) |> this.Update |> Runtime.resolve ignore
 
         member this.ExecuteCommand command issuer arg =
-            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) |> this.Update
+            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) |> this.Update |> Runtime.resolve ignore
 
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do

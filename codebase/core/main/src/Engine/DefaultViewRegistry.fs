@@ -1,7 +1,7 @@
 ﻿namespace Forest
 open System
 open System.Collections.Generic
-open Axle.Option
+open Axle
 open Axle.Verification
 open Forest
 open Forest.Collections
@@ -40,6 +40,10 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory)
             upcast ViewTypeIsAbstractException(t)
         | View.Error.NonGenericView t -> 
             upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
+        | View.Error.InstantiationError (h, e) -> 
+            match h with
+            | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName, typedefof<IView<_>>.FullName), e)
+            | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e)
 
     abstract member ResolveBindingError: ce:Command.Error -> ee:Event.Error -> Exception
     default __.ResolveBindingError ce ee =
@@ -164,7 +168,8 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                     eventDescriptorResults
                     |> Seq.choose Result.ok
                     |> Array.ofSeq
-                Ok (upcast View.Descriptor(viewName, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
+                let vn = if String.IsNullOrEmpty viewName then String.Format("`{0}`", viewType.AssemblyQualifiedName) else viewName
+                Ok (upcast View.Descriptor(vn, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
             | (ce, ee) ->
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
                 Error <| BindingError (ce', ee')

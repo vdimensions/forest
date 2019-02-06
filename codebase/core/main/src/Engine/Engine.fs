@@ -30,14 +30,14 @@ type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime : ForestRuntim
             let result = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.ActivateView
             downcast result:'a
         member __.ActivateView<'a, 'm when 'a :> IView<'m>> (name, model : 'm) : 'a = 
-            let result = runtime.ActivateView(model, TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name)
+            let result = runtime.ActivateView(TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name, model)
             downcast result:'a
         member __.GetOrActivateView name = 
             TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.GetOrActivateView
 
     interface ICommandDispatcher with
         member this.ExecuteCommand command target message = 
-            this.ExcuteCommand command target message
+            this.ExcuteCommand command target message |> Runtime.resolve ignore
 
     interface IMessageDispatcher with
         member __.SendMessage message = 
