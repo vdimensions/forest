@@ -56,8 +56,8 @@ module Runtime =
 
     let private resolveError (error : OpError) =
         match error with
-        | ViewError ve -> ve |> View.resolveError 
-        | CommandError ce -> ce |> Command.resolveError 
+        | ViewError ve -> ve |> View.throwError 
+        | CommandError ce -> ce |> Command.throwError 
         | NoDescriptor vh -> 
             match vh with
             | ByName vn -> invalidOp <| String.Format("Unable to obtain descriptor for view '{0}'", vn)

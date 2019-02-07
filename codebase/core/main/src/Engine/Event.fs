@@ -1,5 +1,5 @@
 ﻿//
-// Copyright 2014-2018 vdimensions.net.
+// Copyright 2014-2019 vdimensions.net.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ open Forest.Reflection
 
 module Event = 
     type [<Sealed;NoComparison>] internal Descriptor(mt : Type, mi : IEventMethod, topic : string) =
-        member __.Trigger (NotNull "view" view:IView) (NotNull "message" message:obj) = ignore <| mi.Invoke view message
+        member __.Trigger (NotNull "view" view : IView) (NotNull "message" message : obj) = 
+            mi.Invoke view message |> ignore
         member __.MessageType with get () = mt
         member __.Topic with get () = topic
         interface IEventDescriptor with
@@ -46,8 +47,13 @@ module Event =
         | BadEventSignature of badEventSignatureMethod : IEventMethod
         | MultipleErrors of errors : Error list
 
-    let resolveError(e : Error) =
-        ()
+    let resolveError = function
+        | InvocationError cause -> upcast InvalidOperationException() : exn
+        | NonVoidReturnType em -> upcast InvalidOperationException() : exn
+        | BadEventSignature em -> upcast InvalidOperationException() : exn
+        | MultipleErrors errors -> upcast InvalidOperationException() : exn
+        
+    let throwError(e : Error) = e |> resolveError |> raise
 
     let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
@@ -102,7 +108,7 @@ module Event =
             subscriptionList.Add subscriptionHandler
             this
 
-        member this.Unsubscribe (NotNull "receiver" receiver:IView) : T =
+        member this.Unsubscribe (NotNull "receiver" receiver : IView) : T =
             for topicSubscriptionHandlers in subscriptions.Values |> Seq.collect (fun x -> x.Values) do
                 for subscriptionHandler in topicSubscriptionHandlers |> Seq.filter (_subscribersFilter receiver) |> Seq.toArray do
                     topicSubscriptionHandlers.Remove subscriptionHandler |> ignore
@@ -116,5 +122,5 @@ module Event =
         interface IDisposable with 
             member this.Dispose() = this.Dispose()
 
-    [<CompiledName("Create")>]
+    [<CompiledName("CreateEventBus")>]
     let internal createEventBus() : IEventBus = upcast new T()

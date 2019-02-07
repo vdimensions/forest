@@ -62,20 +62,21 @@ module ViewRegistry =
     let registerViewType (viewType : Type) (reg : IViewRegistry) =
         reg.Register(viewType)
 
-    let getDescriptorByName (name : vname) (reg : IViewRegistry) = 
+    let internal getDescriptorByName (name : vname) (reg : IViewRegistry) = 
         reg.GetDescriptor name
-    let getDescriptorByType (viewType : Type) (reg : IViewRegistry) = 
+
+    let internal getDescriptorByType (viewType : Type) (reg : IViewRegistry) = 
         reg.GetDescriptor viewType
 
-    let getDescriptor (vh : ViewHandle) =
-        match vh with
+    let internal getDescriptor (viewHandle : ViewHandle) =
+        match viewHandle with
         | ByName n -> getDescriptorByName n
         | ByType t -> getDescriptorByType t
 
-    let resolve (vd : IViewDescriptor) (model : obj option) (reg : IViewRegistry) =
+    let internal resolve (descriptor : IViewDescriptor) (model : obj option) (reg : IViewRegistry) =
         match model with
-        | None -> reg.Resolve vd
-        | Some m -> reg.Resolve (vd, m)
+        | None -> reg.Resolve descriptor
+        | Some m -> reg.Resolve (descriptor, m)
 
 /// An interface representing a system view, that is a special type of view which
 /// aids the internal workings of Forest, rather than serving any presentational purpose.

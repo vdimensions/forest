@@ -58,6 +58,7 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     val mutable private _context : IForestContext
     [<DefaultValue>]
     val mutable private _facadeProvider : IForestFacadeProvider 
+    
 
     [<ModuleInit>]
     member this.Init(e : ModuleExporter) =
@@ -77,7 +78,6 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
         let context : IForestContext = upcast DefaultForestContext(viewFactory, reflectionProvider, securityManager, templateProvider)
         this._context <- context
         this._facadeProvider <- NoOp.FacadeProvider context
-
         context |> e.Export<IForestContext> |> ignore
         this |> e.Export<IForestFacade> |> ignore
 
@@ -94,26 +94,25 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     member private this.MakeDebuggerFacade() =
         this._facadeProvider <- (LoggingForestFacadeProvider(logger, this._facadeProvider) :> IForestFacadeProvider)
 
+    member private this.ForestFacade with get() = this._facadeProvider.ForestFacade            
+
     interface IForestFacade with
         member this.LoadTree t = 
             let opWatch = Stopwatch.StartNew()
-            this._facadeProvider.ForestFacade.LoadTree t
+            this.ForestFacade.LoadTree t
             opWatch.Stop()
-            logger.Debug("Forest LoadTemplate operation took {0}ms", opWatch.ElapsedMilliseconds)
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
             let opWatch = Stopwatch.StartNew()
-            this._facadeProvider.ForestFacade.SendMessage msg
+            this.ForestFacade.SendMessage msg
             opWatch.Stop()
-            logger.Debug("Forest SendMessage operation took {0}ms", opWatch.ElapsedMilliseconds)
 
     interface ICommandDispatcher with
         member this.ExecuteCommand cmd target arg = 
             let opWatch = Stopwatch.StartNew()
-            this._facadeProvider.ForestFacade.ExecuteCommand cmd target arg
+            this.ForestFacade.ExecuteCommand cmd target arg
             opWatch.Stop()
-            logger.Debug("Forest ExecuteCommand operation took {0}ms", opWatch.ElapsedMilliseconds)
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type): IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

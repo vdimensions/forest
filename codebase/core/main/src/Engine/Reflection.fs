@@ -3,13 +3,12 @@ open System
 open System.Reflection
 open Axle.Verification
 open Forest
-open Axle
 
 
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT when 'TT :> IView>(method : MethodInfo, md : Action<'TT>) =
     do 
-        ignore <| ``|NotNull|`` "method" method
-        ignore <| ``|NotNull|`` "md" md
+        ignore <| (|NotNull|) "method" method
+        ignore <| (|NotNull|) "md" md
     new (method : MethodInfo) = AbstractMethod(method, (downcast method.CreateDelegate(typeof<Action<'TT>>) : Action<'TT>))
 
     interface IMethod with
@@ -20,8 +19,8 @@ type [<AbstractClass;NoComparison>] private AbstractMethod<'TT when 'TT :> IView
 
 type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> IView>(method : MethodInfo, md : Action<'TT, 'T>) =
     do 
-        ignore <| ``|NotNull|`` "method" method
-        ignore <| ``|NotNull|`` "md" md
+        ignore <| (|NotNull|) "method" method
+        ignore <| (|NotNull|) "md" md
     new (method : MethodInfo) = AbstractMethod<'TT, 'T>(method, (downcast method.CreateDelegate(typeof<Action<'TT, 'T>>) : Action<'TT, 'T>))
 
     interface IMethod with
@@ -32,24 +31,24 @@ type [<AbstractClass;NoComparison>] private AbstractMethod<'TT, 'T when 'TT :> I
 
 type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT when 'TT :> IView>(method : MethodInfo, commandName : cname) =
     inherit AbstractMethod<'TT>(method)
-    do ignore <| ``|NotNull|`` "commandName" commandName
+    do ignore <| (|NotNull|) "commandName" commandName
     interface ICommandMethod with 
         member __.CommandName with get() = commandName
 
 type [<Sealed;NoComparison>] private DefaultCommandMethod<'TT, 'T when 'TT :> IView>(method : MethodInfo, commandName : cname) =
     inherit AbstractMethod<'TT, 'T>(method)
-    do ignore <| ``|NotNull|`` "commandName" commandName
+    do ignore <| (|NotNull|) "commandName" commandName
     interface ICommandMethod with 
         member __.CommandName with get() = commandName
 
 type [<Sealed;NoComparison>] private DefaultEventMethod<'TT, 'T when 'TT :> IView>(method : MethodInfo, topic : string) =
     inherit AbstractMethod<'TT, 'T>(method)
-    do ignore <| ``|NotNull|`` "topic" topic
+    do ignore <| (|NotNull|) "topic" topic
     interface IEventMethod with 
         member __.Topic with get() = topic
 
 type [<Sealed;NoComparison>] private DefaultProperty(property : PropertyInfo) =
-    do ignore <| ``|NotNull|`` "property" property
+    do ignore <| (|NotNull|) "property" property
     interface IProperty with
         member __.GetValue target = property.GetValue(target)
         member __.SetValue target value = property.SetValue(target, value)
@@ -126,9 +125,7 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             viewType
             |> __.getMethods flags 
             |> Seq.map (fun x -> (x |> __.getCommandAttribs) |> Seq.map (fun a -> a.Name), x)
-            // TODO abstract method check here is a temporary fix. 
-            // If we have virtual non-override method, it will falsely not be included
-            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a)
+            |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
             |> consolidateMatchingMethods
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createCmd m x))
             |> Seq.toArray
@@ -136,9 +133,7 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             viewType
             |> __.getMethods flags 
             |> Seq.map (fun x -> (x |> __.getEventAttribs) |> Seq.map (fun a -> a.Topic), x)
-            // TODO abstract method check here is a temporary fix. 
-            // If we have virtual non-override method, it will falsely not be included
-            |> Seq.filter (fun (a, m) -> not <| Seq.isEmpty a)
+            |> Seq.filter (fun (a, _) -> not <| Seq.isEmpty a)
             |> consolidateMatchingMethods
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createEvt m x))
             |> Seq.toArray

@@ -14,7 +14,7 @@ type [<Struct;NoComparison>] ViewRegistryError =
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
 type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory) = 
-    do ignore <| ``|NotNull|`` "factory" factory
+    do ignore <| (|NotNull|) "factory" factory
     let viewsByName : IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
     let viewsByType : IDictionary<Type, IViewDescriptor> = upcast new Dictionary<Type, IViewDescriptor>()
 
@@ -32,26 +32,12 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory)
         | BindingError (ce, ee) -> (this.ResolveBindingError ce ee)
 
     abstract member ResolveViewError: ve : View.Error -> Exception
-    default __.ResolveViewError ve =
-        match ve with
-        | View.Error.ViewAttributeMissing t -> 
-            upcast ViewAttributeMissingException(t)
-        | View.Error.ViewTypeIsAbstract t -> 
-            upcast ViewTypeIsAbstractException(t)
-        | View.Error.NonGenericView t -> 
-            upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
-        | View.Error.InstantiationError (h, e) -> 
-            match h with
-            | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName, typedefof<IView<_>>.FullName), e)
-            | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e)
+    default __.ResolveViewError ve = ve |> View.resolveError        
 
     abstract member ResolveBindingError: ce:Command.Error -> ee:Event.Error -> Exception
     default __.ResolveBindingError ce ee =
         // TODO
-        match ce with
-        | Command.Error.MoreThanOneArgument mi -> upcast InvalidOperationException()
-        | Command.Error.NonVoidReturnType mi -> upcast InvalidOperationException()
-        | Command.Error.MultipleErrors e -> upcast InvalidOperationException()
+        ce |> Command.resolveError
 
     member this.Register (NotNull "t" t : Type) = 
         match this.CreateViewDescriptor true t with
@@ -154,7 +140,7 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                     eventDescriptorResults
                     |> Seq.choose Result.ok
                     |> Array.ofSeq
-                let vn = if String.IsNullOrEmpty viewName then String.Format("`{0}`", viewType.AssemblyQualifiedName) else viewName
+                let vn = if String.IsNullOrEmpty viewName then viewType |> ViewHandle.getAnonymousViewName else viewName
                 Ok (upcast View.Descriptor(vn, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
             | (ce, ee) ->
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)

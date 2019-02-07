@@ -54,10 +54,15 @@ module View =
 
     let getModelType (NotNull "viewType" viewType : Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
-    let inline resolveError (e : Error) =
-        match e with
-        | NonGenericView vt -> raise <| ViewTypeIsNotGenericException vt
-        | _ -> ()
+    let resolveError = function
+        | ViewAttributeMissing t -> upcast ViewAttributeMissingException(t) : exn
+        | ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t) : exn
+        | NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName)) : exn
+        | InstantiationError (h, e) -> 
+            match h with
+            | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName, typedefof<IView<_>>.FullName), e) : exn
+            | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e) : exn
+    let throwError(e : Error) = e |> resolveError |> raise
 
     type [<Sealed;NoComparison>] Factory() = 
         member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 

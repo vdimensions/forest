@@ -6,14 +6,13 @@ open Forest.UI
 
 type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : ChangeList, ctx : IForestContext) = 
     do
-        ignore <| ``|NotNull|`` "state" state
-        ignore <| ``|NotNull|`` "changeList" changeList
+        ignore <| (|NotNull|) "state" state
+        ignore <| (|NotNull|) "changeList" changeList
 
     member __.Render ([<ParamArray>] renderers : IDomProcessor array) =
         state |> State.traverse (ForestDomRenderer(renderers |> Seq.ofArray, ctx))
 
-    override __.ToString() = 
-        state.Tree.ToString()
+    override __.ToString() = state.Tree.ToString()
 
     member internal __.State with get() = state
     member __.ChangeList with get() = changeList
@@ -80,8 +79,8 @@ type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state :
         result
 
     member internal this.SwapState (initialState : State option) (operation : Runtime.Operation) : ForestResult =
-        (fun (rt:ForestRuntime) ->
-            operation |> rt.Do
+        (fun (rt : ForestRuntime) ->
+            operation |> rt.Do |> Runtime.resolve ignore
             None
         ) |> this.WrapAction initialState
 
