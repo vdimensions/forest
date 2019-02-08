@@ -48,7 +48,9 @@ and [<Interface>] IView<'T> =
 
 and [<Interface>] IRegion = 
     abstract member ActivateView : name : vname -> IView
-    abstract member ActivateView<'m> : name : vname * model : 'm -> IView<'m>
+    abstract member ActivateView : name : vname * model : obj -> IView
+    abstract member ActivateView : viewType : Type -> IView
+    abstract member ActivateView : viewType : Type * model : obj -> IView
     abstract member ActivateView<'v when 'v :> IView> : unit -> 'v
     abstract member ActivateView<'v, 'm when 'v :> IView<'m>> : model : 'm -> 'v
     abstract member Clear : unit -> IRegion

@@ -238,7 +238,7 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             | Runtime.Status.ViewCreated view -> view
             | _ -> Unchecked.defaultof<_>
         )
-    member internal this.ActivateView (node : TreeNode, model :obj) =
+    member internal this.ActivateView (node : TreeNode, model : obj) =
         Runtime.Operation.InstantiateViewByNode(node, Some model) 
         |> this.Do 
         |> Runtime.resolve (function
@@ -335,29 +335,35 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
                 | _ -> Unchecked.defaultof<_>
             )
 
-        member this.ActivateView(handle, region, parent, model : 'm) =
-            Runtime.Operation.InstantiateView(handle, region, parent, model |> box |> Some) 
+        member this.ActivateView(handle, region, parent, model) =
+            Runtime.Operation.InstantiateView(handle, region, parent, model |> Some) 
             |> this.Do 
             |> Runtime.resolve (function
-                | Runtime.Status.ViewCreated view -> view :?> IView<'m>
+                | Runtime.Status.ViewCreated view -> view
                 | _ -> Unchecked.defaultof<_>
             )
 
         member __.ClearRegion node region =
-            clearRegion node region |> Runtime.resolve ignore
+            clearRegion node region 
+            |> Runtime.resolve ignore
 
         member __.GetRegionContents node region =
             getRegionContents node region 
             |> Seq.map (fun node -> (upcast views.[node.Hash] : IView))
 
         member __.RemoveViewFromRegion node region predicate =
-            removeViewsFromRegion node region predicate |> Runtime.resolve ignore
+            removeViewsFromRegion node region predicate 
+            |> Runtime.resolve ignore
 
         member this.PublishEvent sender message topics = 
-            Runtime.Operation.SendMessage(sender.InstanceID.Hash,message,topics) |> this.Do |> Runtime.resolve ignore
+            Runtime.Operation.SendMessage(sender.InstanceID.Hash,message,topics) 
+            |> this.Do 
+            |> Runtime.resolve ignore
 
         member this.ExecuteCommand command issuer arg =
-            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) |> this.Do |> Runtime.resolve ignore
+            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) 
+            |> this.Do 
+            |> Runtime.resolve ignore
 
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do

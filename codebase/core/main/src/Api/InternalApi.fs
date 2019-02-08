@@ -27,6 +27,6 @@ type [<Interface>] internal IRuntimeView =
     abstract member RemoveViewFromRegion : node : TreeNode -> region : rname -> predicate : System.Predicate<IView> -> unit
 
     abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode -> IView
-    abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode * model : 'm -> IView<'m>
+    abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj -> IView
     abstract member ExecuteCommand : command : cname -> issuer : IRuntimeView -> arg : obj -> unit
     abstract member PublishEvent : sender : IRuntimeView -> message : 'M -> topics : string array -> unit

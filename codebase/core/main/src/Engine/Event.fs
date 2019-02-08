@@ -25,10 +25,10 @@ open Forest.Reflection
 
 
 module Event = 
-    type [<Sealed;NoComparison>] internal Descriptor(mt : Type, mi : IEventMethod, topic : string) =
+    type [<Sealed;NoComparison>] internal Descriptor(messageType : Type, eventMethod : IEventMethod, topic : string) =
         member __.Trigger (NotNull "view" view : IView) (NotNull "message" message : obj) = 
-            mi.Invoke view message |> ignore
-        member __.MessageType with get () = mt
+            eventMethod.Invoke view message |> ignore
+        member __.MessageType with get () = messageType
         member __.Topic with get () = topic
         interface IEventDescriptor with
             member this.Trigger v m = this.Trigger v m
@@ -53,7 +53,7 @@ module Event =
         | BadEventSignature em -> upcast InvalidOperationException() : exn
         | MultipleErrors errors -> upcast InvalidOperationException() : exn
         
-    let throwError(e : Error) = e |> resolveError |> raise
+    let handleError(e : Error) = e |> resolveError |> raise
 
     let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
