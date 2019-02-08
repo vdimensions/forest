@@ -10,7 +10,8 @@ type [<Interface>] IPhysicalView =
     abstract member InvokeCommand : name : cname -> arg : obj -> unit
     abstract member Hash : thash
 
-type [<AbstractClass;NoComparison>] AbstractPhysicalView(commandDispatcher : ICommandDispatcher, hash : thash) =
+[<AbstractClass;NoComparison>] 
+type AbstractPhysicalView(commandDispatcher : ICommandDispatcher, hash : thash) =
     do 
         ignore <| ``|NotNull|`` "commandDispatcher" commandDispatcher
         ignore <| ``|NotNull|`` "hash" hash

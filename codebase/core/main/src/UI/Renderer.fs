@@ -3,16 +3,18 @@
 open System
 open Forest
 
-
-type [<Interface>] IPhysicalViewRenderer<'PV when 'PV :> IPhysicalView> =
+[<Interface>] 
+type IPhysicalViewRenderer<'PV when 'PV :> IPhysicalView> =
     abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
     abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
 
-type [<NoComparison;StructuralEquality>] internal NodeState =
+[<NoComparison;StructuralEquality>] 
+type internal NodeState =
     | NewNode of node : DomNode
     | UpdatedNode of node : DomNode
 
-type [<Sealed;NoComparison;NoEquality>] internal PhysicalViewDomProcessor<'PV when 'PV :> IPhysicalView> =
+[<Sealed;NoComparison;NoEquality>] 
+type internal PhysicalViewDomProcessor<'PV when 'PV :> IPhysicalView> =
     val mutable private renderers : Map<thash, 'PV>
     /// Contains a list of nodes to be retained as they represent present views.
     val mutable private nodesToPreserve : thash Set
@@ -32,12 +34,10 @@ type [<Sealed;NoComparison;NoEquality>] internal PhysicalViewDomProcessor<'PV wh
     interface IDomProcessor with
         member this.ProcessNode n =
             this.nodesToPreserve <- this.nodesToPreserve |> Set.add n.Hash
-            // Message dispatcher is an internal component and must not be rendered
-            if not(StringComparer.Ordinal.Equals(n.Name, MessageDispatcher.Name)) then
-                this.nodeStates <- 
-                    match this.renderers.TryFind n.Hash with
-                    | Some _ -> (UpdatedNode n)::this.nodeStates
-                    | None -> (NewNode n)::this.nodeStates
+            this.nodeStates <- 
+                match this.renderers.TryFind n.Hash with
+                | Some _ -> (UpdatedNode n)::this.nodeStates
+                | None -> (NewNode n)::this.nodeStates
             n
 
         member this.Complete(_ : DomNode list) = 
@@ -86,7 +86,7 @@ type [<Sealed;NoComparison;NoEquality>] internal PhysicalViewDomProcessor<'PV wh
                     | (false, Some renderer) ->
                         updateCalls <- (renderer,n)::updateCalls
 
-            this.renderers <- renderers |> Seq.map ``|KeyValue|`` |> Map.ofSeq
+            this.renderers <- renderers |> Seq.map (|KeyValue|) |> Map.ofSeq
             this.nodesToPreserve <- Set.empty
             this.nodeStates <- List.empty
 
@@ -98,7 +98,8 @@ type [<Sealed;NoComparison;NoEquality>] internal PhysicalViewDomProcessor<'PV wh
             for (renderer,n) in updateCalls do 
                 renderer.Update n
 
-type [<AbstractClass;NoComparison>] AbstractPhysicalViewRenderer<'PV when 'PV :> IPhysicalView>() =
+[<AbstractClass;NoComparison>] 
+type AbstractPhysicalViewRenderer<'PV when 'PV :> IPhysicalView>() =
     abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
     abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
 

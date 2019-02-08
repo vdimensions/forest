@@ -38,6 +38,13 @@ type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacade(logger : ILo
             sw.Stop()
             logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
             result
+
+        member __.RegisterSystemView<'sv when 'sv :> ISystemView>() =
+            let sw = Stopwatch.StartNew()
+            let result = facade.RegisterSystemView<'sv>()
+            sw.Stop()
+            logger.Trace("Forest 'RegisterSystemView' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+            result
 type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacadeProvider(logger : ILogger, provider : IForestFacadeProvider) =
     interface IForestFacadeProvider with member __.ForestFacade with get() = upcast LoggingForestFacade(logger, provider.ForestFacade)
 
@@ -97,22 +104,27 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     member private this.ForestFacade with get() = this._facadeProvider.ForestFacade            
 
     interface IForestFacade with
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
+            //let opWatch = Stopwatch.StartNew()
+            this.ForestFacade.RegisterSystemView<'sv>()
+            //opWatch.Stop()
+
         member this.LoadTree t = 
-            let opWatch = Stopwatch.StartNew()
+            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.LoadTree t
-            opWatch.Stop()
+            //opWatch.Stop()
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
-            let opWatch = Stopwatch.StartNew()
+            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.SendMessage msg
-            opWatch.Stop()
+            //opWatch.Stop()
 
     interface ICommandDispatcher with
         member this.ExecuteCommand cmd target arg = 
-            let opWatch = Stopwatch.StartNew()
+            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.ExecuteCommand cmd target arg
-            opWatch.Stop()
+            //opWatch.Stop()
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type): IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

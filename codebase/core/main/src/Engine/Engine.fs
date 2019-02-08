@@ -2,6 +2,7 @@
 open System
 open Axle.Verification
 open Forest.UI
+open Axle
 
 
 type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : ChangeList, ctx : IForestContext) = 
@@ -25,8 +26,19 @@ type [<Sealed;NoComparison;NoEquality>] internal ForestEngineAdapter(runtime : F
         |> runtime.Do 
         |> Runtime.resolve ignore
 
-    member __.SendMessage message = 
-        let messageDispatcher = runtime |> MessageDispatcher.Show
+    member __.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
+        let descriptor = 
+            match typeof<'sv> |> runtime.Context.ViewRegistry.GetDescriptor |> null2vopt with
+            | ValueNone -> 
+                runtime.Context.ViewRegistry
+                |> ViewRegistry.registerViewType typeof<'sv> 
+                |> ViewRegistry.getDescriptorByType typeof<'sv> 
+            | ValueSome d -> d
+        let key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region descriptor.Name
+        runtime.GetOrActivateView<'sv> key
+
+    member this.SendMessage message = 
+        let messageDispatcher = this.RegisterSystemView<MessageDispatcher.View>()
         messageDispatcher.Publish(message)
 
     member internal __.Runtime with get() = runtime

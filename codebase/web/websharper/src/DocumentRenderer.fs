@@ -25,7 +25,9 @@ and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContex
     interface INodeStateProvider with 
         member this.AllNodes with get() = (this.Current.Renderer :?> INodeStateProvider).AllNodes
         member this.UpdatedNodes with get() = (this.Current.Renderer :?> INodeStateProvider).UpdatedNodes
-    interface IForestFacade with member this.LoadTree tree = this.Facade.LoadTree tree
+    interface IForestFacade with 
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.Facade.RegisterSystemView()
+        member this.LoadTree tree = this.Facade.LoadTree tree
     interface ICommandDispatcher with member this.ExecuteCommand c h a = this.Facade.ExecuteCommand c h a
     interface IMessageDispatcher with member this.SendMessage m = this.Facade.SendMessage m
 
