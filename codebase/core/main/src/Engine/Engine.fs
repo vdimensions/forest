@@ -18,36 +18,24 @@ type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : 
     member __.ChangeList with get() = changeList
 
 
-type [<Sealed;NoComparison>] internal ForestEngineAdapter(runtime : ForestRuntime) =
+type [<Sealed;NoComparison;NoEquality>] internal ForestEngineAdapter(runtime : ForestRuntime) =
 
-    member __.ExcuteCommand command target message = Runtime.Operation.InvokeCommand(command, target, message) |> runtime.Do
+    member __.ExecuteCommand command target message = 
+        Runtime.Operation.InvokeCommand(command, target, message) 
+        |> runtime.Do 
+        |> Runtime.resolve ignore
+
+    member __.SendMessage message = 
+        let messageDispatcher = runtime |> MessageDispatcher.Show
+        messageDispatcher.Publish(message)
 
     member internal __.Runtime with get() = runtime
 
-    interface IForestEngine with
-        member __.ActivateView (name) : 'a when 'a :> IView = 
-            let result = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.ActivateView
-            downcast result:'a
-        member __.ActivateView<'a, 'm when 'a :> IView<'m>> (name, model : 'm) : 'a = 
-            let result = runtime.ActivateView(TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name, model)
-            downcast result:'a
-        member __.GetOrActivateView name = 
-            TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region name |> runtime.GetOrActivateView
-
-    interface ICommandDispatcher with
-        member this.ExecuteCommand command target message = 
-            this.ExcuteCommand command target message |> Runtime.resolve ignore
-
-    interface IMessageDispatcher with
-        member __.SendMessage message = 
-            let messageDispatcher = runtime |> MessageDispatcher.Show
-            messageDispatcher.Publish(message)
-
-type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state : State) =
+type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, state : State) =
     [<DefaultValue>]
     val mutable private _rt : ForestRuntime voption
     let mutable st : State = state
-    new (ctx : IForestContext) = ForestEngine(ctx, State.initial)
+    new (ctx : IForestContext) = ForestStateManager(ctx, State.initial)
 
     static member inline private toResult (rt : ForestRuntime) (fuid : Fuid option) (state : State) =
         match rt.Deconstruct() with 
@@ -65,16 +53,16 @@ type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state :
                 | ValueNone -> 
                     use rt = ForestRuntime.Create(actionInitialState.Tree, actionInitialState.Models, actionInitialState.ViewStates, ctx)
                     this._rt <- ValueSome rt
-                    let result = actionInitialState |> ForestEngine.toResult rt (action rt)
+                    let result = actionInitialState |> ForestStateManager.toResult rt (action rt)
                     this._rt <- ValueNone
                     result
-                | ValueSome rt -> actionInitialState |> ForestEngine.toResult rt (action rt)
+                | ValueSome rt -> actionInitialState |> ForestStateManager.toResult rt (action rt)
             with :? ForestException as e -> 
                 let resetState = State.initial
                 use rt = ForestRuntime.Create(resetState.Tree, resetState.Models, resetState.ViewStates, ctx)
                 let errorView = Error.Show rt
                 // TODO: set error data
-                resetState |> ForestEngine.toResult rt (Some st.Fuid)
+                resetState |> ForestStateManager.toResult rt (Some st.Fuid)
         st <- result.State
         result
 
@@ -84,7 +72,7 @@ type [<Sealed;NoComparison>] ForestEngine private (ctx : IForestContext, state :
             None
         ) |> this.WrapAction initialState
 
-    member internal this.Update (operation : System.Action<IForestEngine>) : ForestResult = 
+    member internal this.Update (operation : System.Action<ForestEngineAdapter>) : ForestResult = 
         (fun rt ->
             ForestEngineAdapter(rt) |> operation.Invoke
             None

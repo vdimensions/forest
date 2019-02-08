@@ -45,4 +45,4 @@ module Command =
         | CommandNotFound (o, c) -> upcast InvalidOperationException() : exn
         | InvocationError (o, c, e) -> upcast InvalidOperationException() : exn
         | MultipleErrors e -> upcast InvalidOperationException() : exn
-    let throwError (e : Error) = e |> resolveError |> raise
+    let handleError (e : Error) = e |> resolveError |> raise

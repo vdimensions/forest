@@ -62,7 +62,7 @@ module View =
             match h with
             | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName, typedefof<IView<_>>.FullName), e) : exn
             | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e) : exn
-    let throwError(e : Error) = e |> resolveError |> raise
+    let handleError(e : Error) = e |> resolveError |> raise
 
     type [<Sealed;NoComparison>] Factory() = 
         member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 
