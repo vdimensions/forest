@@ -1,87 +1,79 @@
 ﻿namespace Forest
-
+open System
+open System.Collections.Generic
+open Axle
+open Axle.Verification
 open Forest
 open Forest.Collections
 open Forest.Events
-open Forest.NullHandling
 open Forest.Reflection
-
-open System
-open System.Collections.Generic
 
 
 type [<Struct;NoComparison>] ViewRegistryError = 
     | ViewError of viewError: View.Error
     | BindingError of commandError: Command.Error * eventError: Event.Error
 
-type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory:IViewFactory) = 
-    do ignore <| isNotNull "factory" factory
-    let storage: IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
+type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory) = 
+    do ignore <| (|NotNull|) "factory" factory
+    let viewsByName : IDictionary<string, IViewDescriptor> = upcast new Dictionary<string, IViewDescriptor>(StringComparer.Ordinal)
+    let viewsByType : IDictionary<Type, IViewDescriptor> = upcast new Dictionary<Type, IViewDescriptor>()
 
-    abstract member CreateViewDescriptor: anonymousView:bool -> t:Type -> Result<IViewDescriptor, ViewRegistryError>
-    member private __.InstantiateView model viewMetadata = 
+    abstract member CreateViewDescriptor: anonymousView : bool -> t : Type -> Result<IViewDescriptor, ViewRegistryError>
+
+    member private __.InstantiateView model decriptor = 
         try match model with
-            | Some m -> factory.Resolve(viewMetadata, m)
-            | None -> factory.Resolve viewMetadata
-        with e -> raise <| ViewInstantiationException(viewMetadata.ViewType, e)
-    member this.ResolveError (e:ViewRegistryError) : Exception = 
+            | Some m -> factory.Resolve(decriptor, m)
+            | None -> factory.Resolve decriptor
+        with e -> raise <| ViewInstantiationException(decriptor.ViewType, e)
+
+    member this.ResolveError (e : ViewRegistryError) : Exception = 
         match e with
         | ViewError ve -> (this.ResolveViewError ve)
         | BindingError (ce, ee) -> (this.ResolveBindingError ce ee)
-    abstract member ResolveViewError: ve:View.Error -> Exception
-    default __.ResolveViewError ve =
-        match ve with
-        | View.Error.ViewAttributeMissing t -> upcast ViewAttributeMissingException(t)
-        | View.Error.ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t)
-        | View.Error.NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName))
+
+    abstract member ResolveViewError: ve : View.Error -> Exception
+    default __.ResolveViewError ve = ve |> View.resolveError        
+
     abstract member ResolveBindingError: ce:Command.Error -> ee:Event.Error -> Exception
     default __.ResolveBindingError ce ee =
         // TODO
-        match ce with
-        | Command.Error.MoreThanOneArgument mi -> upcast InvalidOperationException()
-        | Command.Error.NonVoidReturnType mi -> upcast InvalidOperationException()
-        | Command.Error.MultipleErrors e -> upcast InvalidOperationException()
+        ce |> Command.resolveError
+
     member this.Register (NotNull "t" t : Type) = 
-        match this.CreateViewDescriptor false t with
-        | Ok metadata -> storage.[metadata.Name] <- metadata
-        | Error e -> raise (e |> this.ResolveError)
+        match this.CreateViewDescriptor true t with
+        | Ok descriptor -> 
+            if descriptor.Name |> String.IsNullOrEmpty |> not then
+                viewsByName.[descriptor.Name] <- descriptor
+            viewsByType.[descriptor.ViewType] <- descriptor
+        | Error e -> 
+            raise (e |> this.ResolveError)
         upcast this: IViewRegistry
     member this.Register<'T when 'T :> IView> () = 
         this.Register typeof<'T>
-    member this.Resolve (NotNull "viewType" viewType : Type) =
-        match null2vopt <| this.GetViewDescriptor viewType with
-        | ValueSome vd -> vd |> this.InstantiateView None
-        | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "viewType" viewType : Type, model : obj) =
-        match null2vopt <| this.GetViewDescriptor viewType with
-        | ValueSome vd -> vd |> this.InstantiateView (Some model)
-        | ValueNone ->  invalidArg "viewType" "Invalid view type"
-    member this.Resolve (NotNull "name" name : vname) = 
-        match storage.TryGetValue name with 
-        | (true, viewMetadata) -> this.InstantiateView None viewMetadata
-        | (false, _) -> invalidArg "name" "No such view was registered"
-    member this.Resolve (NotNull "name" name : vname, NotNull "model" model : obj) = 
-        match storage.TryGetValue name with 
-        | (true, viewMetadata) -> this.InstantiateView (Some model) viewMetadata
-        | (false, _) -> invalidArg "name" "No such view was registered"
-    member __.GetViewDescriptor (NotNull "name" name:vname) = 
-        match (storage.TryGetValue name) with
+
+    member this.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) = 
+        this.InstantiateView None descriptor
+    member this.Resolve (NotNull "descriptor" descriptor : IViewDescriptor, NotNull "model" model : obj) = 
+        this.InstantiateView (Some model) descriptor
+    member __.GetViewDescriptor (NotNull "name" name : vname) = 
+        match (viewsByName.TryGetValue name) with
         | (true, d) -> d
-        | (false, _) -> nil<IViewDescriptor>
-    abstract member GetViewDescriptor: Type -> IViewDescriptor
+        | (false, _) -> Unchecked.defaultof<IViewDescriptor>
+    member __.GetViewDescriptor (NotNull "viewType" viewType : Type) = 
+        match (viewsByType.TryGetValue viewType) with
+        | (true, d) -> d
+        | (false, _) -> Unchecked.defaultof<IViewDescriptor>
     interface IViewRegistry with
         member this.Register t = this.Register t
         member this.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member this.Resolve(name : vname) = this.Resolve name
-        member this.Resolve(name : vname, model : obj) = this.Resolve(name, model)
-        member this.Resolve(viewType : Type) = this.Resolve viewType
-        member this.Resolve(viewType : Type, model : obj) = this.Resolve(viewType, model)
+        member this.Resolve(descriptor : IViewDescriptor) = this.Resolve descriptor
+        member this.Resolve(descriptor : IViewDescriptor, model : obj) = this.Resolve(descriptor, model)
         member this.GetDescriptor(name : vname) = this.GetViewDescriptor name
         member this.GetDescriptor(viewType : Type) = this.GetViewDescriptor viewType
 
 type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactory, reflectionProvider : IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)
-    override __.CreateViewDescriptor (anonymousView:bool) (NotNull "viewType" viewType) =
+    override __.CreateViewDescriptor (anonymousView : bool) (NotNull "viewType" viewType) =
         let inline getViewModelType (viewType : Type) = 
             match View.getModelType viewType with
             | Ok vmt -> Ok (viewType, vmt)
@@ -148,7 +140,8 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                     eventDescriptorResults
                     |> Seq.choose Result.ok
                     |> Array.ofSeq
-                Ok (upcast View.Descriptor(viewName, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
+                let vn = if String.IsNullOrEmpty viewName then viewType |> ViewHandle.getAnonymousViewName else viewName
+                Ok (upcast View.Descriptor(vn, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
             | (ce, ee) ->
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
                 Error <| BindingError (ce', ee')
@@ -157,10 +150,3 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
         |> Result.bind (getViewAttribute anonymousView reflectionProvider)
         |> Result.mapError ViewError
         |> Result.bind getViewDescriptor 
-    override this.GetViewDescriptor (NotNull "viewType" viewType : Type) = 
-        match null2vopt <| reflectionProvider.GetViewAttribute viewType with
-        | ValueSome va -> this.GetViewDescriptor va.Name
-        | ValueNone -> 
-            match (this.CreateViewDescriptor true viewType) with
-            | Ok d -> d
-            | Error _ -> nil<IViewDescriptor>

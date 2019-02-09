@@ -1,7 +1,5 @@
 ﻿namespace Forest
-
-open Forest.NullHandling
-
+open Axle.Verification
 open System.Collections
 open System.Collections.Generic
 
@@ -11,8 +9,8 @@ open System.Collections.Generic
 #endif
 type [<Sealed;NoComparison>] ChangeList internal (previousStateHash : thash, changes : StateChange list, currentStateFuid : Fuid) =
     do
-        ignore <| isNotNull "previousStateHash" previousStateHash
-        ignore <| isNotNull "changes" changes
+        ignore <| (|NotNull|) "previousStateHash" previousStateHash
+        ignore <| (|NotNull|) "changes" changes
     member __.InHash with get() = previousStateHash
     member __.OutHash with get() = currentStateFuid.Hash
     member internal __.Fuid with get() = currentStateFuid

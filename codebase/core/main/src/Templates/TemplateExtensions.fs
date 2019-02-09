@@ -1,15 +1,13 @@
 ﻿namespace Forest.Templates
-
-open Forest
-open Forest.NullHandling
-open Forest.Templates.Raw
-
 open System.Runtime.CompilerServices
+open Axle.Verification
+open Forest
+open Forest.Templates.Raw
 
 [<Extension>]
 type TemplateExtensions =
     [<Extension>]
-    static member internal LoadTree(engine : ForestEngine, NotNull "name" name : string) =
+    static member internal LoadTree(engine : ForestStateManager, NotNull "name" name : string) =
         name 
         |> Raw.loadTemplate engine.Context.TemplateProvider
         |> TemplateCompiler.compile

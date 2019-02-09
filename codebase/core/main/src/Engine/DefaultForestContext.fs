@@ -1,6 +1,6 @@
 namespace Forest
 
-open Forest.NullHandling
+open Axle.Verification
 open Forest.Reflection
 open Forest.Security
 open Forest.Templates.Raw
@@ -8,9 +8,9 @@ open Forest.Templates.Raw
 
 type [<AbstractClass;NoComparison>] AbstractForestContext (viewRegistry : IViewRegistry, securityManager : ISecurityManager, templateProvider : ITemplateProvider) =
     do
-        ignore <| isNotNull "viewRegistry" viewRegistry
-        ignore <| isNotNull "securityManager" securityManager
-        ignore <| isNotNull "templateProvider" templateProvider
+        ignore <| ``|NotNull|`` "viewRegistry" viewRegistry
+        ignore <| ``|NotNull|`` "securityManager" securityManager
+        ignore <| ``|NotNull|`` "templateProvider" templateProvider
     member __.ViewRegistry with get() : IViewRegistry = viewRegistry
     member __.SecurityManager with get() : ISecurityManager = securityManager
     member __.TemplateProvider with get() : ITemplateProvider = templateProvider

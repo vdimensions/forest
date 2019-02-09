@@ -9,10 +9,11 @@ type [<Interface>] IForestFacade =
     inherit ICommandDispatcher
     inherit IMessageDispatcher
     abstract member LoadTree: tree : string -> unit
+    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> unit
 
 type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalView>(ctx : IForestContext, renderer : IPhysicalViewRenderer<'PV>) =
     
-    let engine = ForestEngine(ctx)
+    let stateManager = ForestStateManager(ctx)
 
     [<DefaultValue>]
     val mutable private _pvd : PhysicalViewDomProcessor<'PV> voption
@@ -37,13 +38,16 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
         res.Render domProcessor
 
     abstract member ExecuteCommand: cname -> thash -> obj -> ForestResult
-    default __.ExecuteCommand name target arg = engine.Update(fun e -> e.ExecuteCommand name target arg)
+    default __.ExecuteCommand name target arg = stateManager.Update(fun e -> e.ExecuteCommand name target arg)
 
     abstract member SendMessage: 'M -> ForestResult
-    default __.SendMessage message = engine.Update(fun e -> e.SendMessage message)
+    default __.SendMessage message = stateManager.Update(fun e -> e.SendMessage message)
 
     abstract member LoadTree: string -> ForestResult
-    default __.LoadTree tree = engine.LoadTree tree
+    default __.LoadTree tree = stateManager.LoadTree tree
+
+    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> ForestResult
+    default __.RegisterSystemView () = stateManager.Update (fun e -> e.RegisterSystemView<'sv>() |> ignore)
 
     interface ICommandDispatcher with
         member this.ExecuteCommand name target arg = 
@@ -63,5 +67,11 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
         member this.LoadTree tree = 
             let before = Interlocked.Increment(nestingCount)
             let result = tree |> this.LoadTree
+            let after = Interlocked.Decrement(nestingCount)
+            if (before - after) = 1 then this.Render result
+
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
+            let before = Interlocked.Increment(nestingCount)
+            let result = this.RegisterSystemView<'sv>()
             let after = Interlocked.Decrement(nestingCount)
             if (before - after) = 1 then this.Render result

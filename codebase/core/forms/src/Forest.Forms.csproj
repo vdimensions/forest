@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard1.6;net46;net45</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ProjectGuid>{C8F6B80C-0E82-4E1D-B646-8FC84C6033E2}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+  </PropertyGroup>
+  <Import Project="../../../Forest.Common.props" />
+  <ItemGroup>
+    <None Include="paket.dependencies" />
+    <None Include="paket.references" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="restore.sh" />
+    <None Include="paket.lock" />
+  </ItemGroup>
+  <Import Project=".paket\Paket.Restore.targets" />
+</Project>

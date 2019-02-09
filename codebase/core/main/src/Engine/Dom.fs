@@ -25,10 +25,11 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                 let commands = descriptor.Commands |> Seq.filter ctx.SecurityManager.HasAccess |> Seq.map createCommandModel |> Map.ofSeq
                 let canSkipRenderCall = 
                     match modelMap.TryFind hash with
-                    | None -> 
+                    | _ when descriptor.IsSystemView -> true
+                    | Some m -> obj.Equals(m, model)
+                    | None ->
                         modelMap <- modelMap |> Map.add hash model
                         false
-                    | Some m -> obj.Equals(m, model)
                 let node = 
                     { 
                         Hash = hash; 
@@ -65,9 +66,6 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                 let mutable node = nodeMap.[h]
                 if (not skip) then 
                     node <- visit node
-                    //nodeMap <- nodeMap
-                    //|> Map.remove h
-                    //|> Map.add h node
                 nodes <- node :: nodes
             complete(nodes)
             // clean the accumulated state up.

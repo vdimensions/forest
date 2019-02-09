@@ -1,16 +1,19 @@
 ﻿namespace Forest
 
-open Forest.NullHandling
+open Axle.Option
 open System
 open System.Text
 open System.Diagnostics
 open System.Runtime.CompilerServices
 
 
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+[<Serializable>]
+#endif
 [<DebuggerDisplay("{this.ToString()}")>]
 type [<CustomComparison;CustomEquality>] TreeNode = 
     | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] Shell_
-    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent:TreeNode * region:rname * view:vname * hash:thash
+    | [<DebuggerBrowsable(DebuggerBrowsableState.Never)>] ViewID_ of parent : TreeNode * region : rname * view : vname * hash : thash
 
     [<CompiledName("Shell")>]
     static member shell = TreeNode.Shell_
@@ -25,11 +28,11 @@ type [<CustomComparison;CustomEquality>] TreeNode =
     member this.Hash with get() = match this with Shell_ -> Fuid.empty.Hash | ViewID_ (_, _, _, h) -> h
 
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>]
-    member private this.cmp (other : TreeNode) = 
+    member inline private this.cmp (other : TreeNode) = 
         StringComparer.Ordinal.Compare(this.Hash, other.Hash)
 
     [<MethodImpl(MethodImplOptions.AggressiveInlining)>] 
-    member private this.eq (other : TreeNode) = 
+    member inline private this.eq (other : TreeNode) = 
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
 
     override this.Equals o = 

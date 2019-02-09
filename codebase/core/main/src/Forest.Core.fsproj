@@ -18,6 +18,10 @@
   <Import Project="../../../Forest.Common.props" />
 
   <ItemGroup>
+    <EmbeddedResource Remove="Infrastructure\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="build.sh" />
     <None Include="restore.sh" />
     <None Include="paket.dependencies" />
@@ -26,12 +30,11 @@
 
   <ItemGroup>
     <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" />
-    <Compile Include="Infrastructure\NullHandling.fs" />
-    <Compile Include="Infrastructure\Result.fs" />
     <Compile Include="Types\Types.fs" />
     <Compile Include="Types\Fuid.fs" />
     <Compile Include="Types\TreeNode.fsi" />
     <Compile Include="Types\TreeNode.fs" />
+    <Compile Include="Types\ViewHandle.fs" />
     <Compile Include="Types\StateChange.fs" />
     <Compile Include="Types\TemplateTypes.fs" />
     <Compile Include="Types\CommandModel.fs" />
@@ -41,6 +44,7 @@
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\TemplateApi.fs" />
     <Compile Include="Api\ForestApi.fs" />
+    <Compile Include="Api\Region.fs" />
     <Compile Include="Api\EventBusApi.fs" />
     <Compile Include="Api\SecurityApi.fs" />
     <Compile Include="Api\ContextApi.fs" />
@@ -74,6 +78,15 @@
     <Compile Include="UI\PhysicalView.fs" />
     <Compile Include="UI\Renderer.fs" />
     <Compile Include="Facade.fs" />
+    <Compile Include="AxleModule\Resources\TemplateResourceInfo.fs" />
+    <Compile Include="AxleModule\Resources\TemplateMarshalling.fs" />
+    <Compile Include="AxleModule\Resources\XmlTemplateMarshaller.fs" />
+    <Compile Include="AxleModule\Resources\ResourceTemplateProvider.fs" />
+    <Compile Include="AxleModule\Resources\ForestResourceModule.fs" />
+    <Compile Include="AxleModule\AxleViewFactory.fs" />
+    <Compile Include="AxleModule\ForestFacadeProvider.fs" />
+    <Compile Include="AxleModule\NoOp.fs" />
+    <Compile Include="AxleModule\ForestModule.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

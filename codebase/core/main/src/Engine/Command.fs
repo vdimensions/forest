@@ -1,25 +1,24 @@
 ﻿namespace Forest
-
-open Forest.NullHandling
-open Forest.Reflection
-
 open System
+open Axle.Verification
+open Forest.Reflection
 
 [<RequireQualifiedAccess>]
 [<CompiledName("Command")>]
 module Command = 
-    type [<Struct;NoComparison>] Error =
+    [<NoComparison>] 
+    type Error =
         | CommandNotFound of owner : Type * command : cname
-        | InvocationError of cause : exn
-        | NonVoidReturnType of methodWithReturnValue : ICommandMethod
-        | MoreThanOneArgument of multiArgumentMethod : ICommandMethod
+        | InvocationError of owner : Type * command : cname * cause : exn
+        | NonVoidReturnType of commandMethod : ICommandMethod
+        | MoreThanOneArgument of commandMethod : ICommandMethod
         | MultipleErrors of errors : Error list
 
-    // TODO: argument verification
-    type [<Sealed;NoComparison>] internal Descriptor(argType : Type, method : ICommandMethod) = 
+    [<Sealed;NoComparison>] 
+    type internal Descriptor(argType : Type, method : ICommandMethod) = 
         do
-            ignore <| isNotNull "argType" argType
-            ignore <| isNotNull "mi" method
+            ignore <| (|NotNull|) "argType" argType
+            ignore <| (|NotNull|) "mi" method
         member __.Invoke (arg : obj) (view : IView) : unit = method.Invoke view arg
         member __.ArgumentType with get() = argType
         interface ICommandDescriptor with
@@ -40,6 +39,10 @@ module Command =
             member this.Tooltip = this.Tooltip
             member this.Description = this.Description
 
-    let resolveError (e : Error) =
-        // TODO
-        ()
+    let resolveError = function
+        | MoreThanOneArgument mi -> upcast InvalidOperationException() : exn
+        | NonVoidReturnType mi -> upcast InvalidOperationException() : exn
+        | CommandNotFound (o, c) -> upcast InvalidOperationException() : exn
+        | InvocationError (o, c, e) -> upcast InvalidOperationException() : exn
+        | MultipleErrors e -> upcast InvalidOperationException() : exn
+    let handleError (e : Error) = e |> resolveError |> raise

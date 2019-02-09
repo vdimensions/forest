@@ -1,10 +1,10 @@
 ﻿namespace Forest
 
-open Forest
-open Forest.NullHandling
-
 open System
 open System.Diagnostics
+open Axle.Option
+open Axle.Verification
+open Forest
 
 
 type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm : 'T) =
@@ -36,7 +36,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
     default __.Dispose(_) = ()
 
     member this.FindRegion (NotNull "name" name) = 
-        upcast Region(name, this) : IRegion
+        upcast RegionImpl(name, this) : IRegion
 
     member this.Close() =
         match null2vopt this.runtime with
@@ -89,7 +89,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
                     vm <- (downcast viewModelFromState : 'T)
                     ()
                 | None -> () 
-                this.runtime <- nil<IForestRuntime>
+                this.runtime <- Unchecked.defaultof<IForestRuntime>
             | ValueNone -> ()
 
         member this.InstanceID with get() = this.hierarchyKey
@@ -111,18 +111,24 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
             this.Dispose(true)
             this |> GC.SuppressFinalize
 
- and private Region(regionName : rname, owner : IRuntimeView) =
+ and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
-        owner.Runtime.ActivateView(viewName, regionName, owner.InstanceID)
+        owner.Runtime.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
 
-    member __.ActivateView (NotNull "viewName" viewName : vname, NotNull "model" model : 'm) =
-        owner.Runtime.ActivateView(model, viewName, regionName, owner.InstanceID)
+    member __.ActivateView (NotNull "viewName" viewName : vname, NotNull "model" model : obj) =
+        owner.Runtime.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
+
+    member __.ActivateView (NotNull "viewType" viewType : Type) : IView =
+        owner.Runtime.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID)
+
+    member __.ActivateView (NotNull "viewType" viewType : Type, NotNull "model" model : obj) : IView =
+        owner.Runtime.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID, model)
 
     member __.ActivateView<'v when 'v :> IView> () : 'v =
-        owner.Runtime.ActivateAnonymousView(regionName, owner.InstanceID)
+        owner.Runtime.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
 
-    member __.ActivateView<'v, 'm when 'v :> IView<'m>> (model : 'm) : 'v =
-        owner.Runtime.ActivateAnonymousView(model, regionName, owner.InstanceID)
+    member __.ActivateView<'v, 'm when 'v :> IView<'m>> (NotNull "model" model : 'm) : 'v =
+        owner.Runtime.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
 
     member this.Clear() =
         owner.Runtime.ClearRegion owner.InstanceID regionName
@@ -140,12 +146,14 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
 
     interface IRegion with
         member this.ActivateView (viewName : vname) = this.ActivateView viewName
+        member this.ActivateView (viewName : vname, model : obj) = this.ActivateView(viewName, model)
+        member this.ActivateView (viewType : Type) = this.ActivateView(viewType)
+        member this.ActivateView (viewType : Type, model : obj) = this.ActivateView(viewType, model)
         member this.ActivateView<'v when 'v :> IView>() = this.ActivateView<'v>()
-        member this.ActivateView<'m> (viewName : vname, model : 'm) = this.ActivateView<'m>(viewName, model)
         member this.ActivateView<'v, 'm when 'v :> IView<'m>> (model : 'm) = this.ActivateView<'v, 'm>(model)
         member this.Clear() = upcast this.Clear()
         member this.Remove predicate = upcast this.Remove(predicate)
         member this.Name = this.Name
         member this.Views = this.GetContents()
 
-type [<AbstractClass>] LogicalView() = inherit LogicalView<Unit>(())
+type [<AbstractClass;NoComparison>] LogicalView() = inherit LogicalView<Unit>(())

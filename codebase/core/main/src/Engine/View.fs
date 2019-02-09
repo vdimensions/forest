@@ -1,11 +1,12 @@
 ﻿namespace Forest
 
-open Forest
-open Forest.Collections
-open Forest.NullHandling
-
 open System
 open System.Reflection
+open Axle
+open Axle.Verification
+open Axle.Reflection.Extensions.Type
+open Forest
+open Forest.Collections
 
 
 [<RequireQualifiedAccessAttribute>]
@@ -18,17 +19,20 @@ module View =
         member __.ViewModelType with get() = viewModelType
         member __.Commands with get() = commands
         member __.Events with get() = upcast events : IEventDescriptor seq
+        member this.IsSystemView with get() = this.ViewType.ExtendsOrImplements<ISystemView>()
         interface IViewDescriptor with
             member this.Name = this.Name
             member this.ViewType = this.ViewType
             member this.ModelType = this.ViewModelType
             member this.Commands = this.Commands
             member this.Events = this.Events
+            member this.IsSystemView = this.IsSystemView
 
     type [<Struct;NoComparison>] Error =
         | ViewAttributeMissing of nonAnnotatedViewType : Type
         | ViewTypeIsAbstract of abstractViewType : Type
         | NonGenericView of nonGenericViewType : Type
+        | InstantiationError of viewHandle : ViewHandle * cause : exn
 
     #if NETSTANDARD
     let inline private _selectViewModelTypes (tt : TypeInfo) =
@@ -50,10 +54,15 @@ module View =
 
     let getModelType (NotNull "viewType" viewType : Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
-    let inline resolveError (e : Error) =
-        match e with
-        | NonGenericView vt -> raise <| ViewTypeIsNotGenericException vt
-        | _ -> ()
+    let resolveError = function
+        | ViewAttributeMissing t -> upcast ViewAttributeMissingException(t) : exn
+        | ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t) : exn
+        | NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName)) : exn
+        | InstantiationError (h, e) -> 
+            match h with
+            | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName, typedefof<IView<_>>.FullName), e) : exn
+            | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e) : exn
+    let handleError(e : Error) = e |> resolveError |> raise
 
     type [<Sealed;NoComparison>] Factory() = 
         member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 
