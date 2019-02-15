@@ -13,24 +13,28 @@ namespace Forest.Forms.Controls.Dialogs
             public const string Content = "Content";
         }
 
-        public abstract class View<TView, T> : LogicalView<T>
-            where TView : IView<T>, IDialogView
+        public abstract class View<TView, T> : LogicalView, IDialogFrame
+            where TView : IView<T>
         {
             protected TView view;
 
-            protected View(T model) : base(model) { }
+            protected View() : base() { }
 
             public sealed override void Load()
             {
                 base.Load();
-                view = FindRegion(Regions.Content).ActivateView<TView, T>(Model);
+            }
+
+            void IDialogFrame.InitInternalView(object model)
+            {
+                view = FindRegion(Regions.Content).ActivateView<TView, T>((T) model);
             }
 
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Close)]
             internal void CloseCommand()
             {
-                view?.OnClose();
+                (view as IDialogView)?.OnClose();
                 Close();
             }
         }

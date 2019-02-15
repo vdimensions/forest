@@ -45,7 +45,6 @@ namespace Forest.Forms.Controls.Dialogs
             [Serializable]
             #endif
             public abstract class DialogMessage<TView, TModel> : DialogMessage
-                where TView : IView<TModel>
             {
                 protected DialogMessage(TModel model) : base(model, typeof(TView)) { }
             }
@@ -55,7 +54,7 @@ namespace Forest.Forms.Controls.Dialogs
             #endif
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             public sealed class Dialog<TView, TModel> : DialogMessage<TView, TModel>
-                where TView : IView<TModel>, IDialogView
+                where TView : IView<TModel>
             {
                 public Dialog(TModel model) : base(model) { }
             }
@@ -87,8 +86,8 @@ namespace Forest.Forms.Controls.Dialogs
             [Subscription(MessageChannel)]
             internal void OnDialogMessage(Messages.IDialogMessage dialogMessage)
             {
-                FindRegion(Regions.DialogArea)
-                    .ActivateView(dialogMessage.ViewType, dialogMessage.Model);
+                var view = (IDialogFrame) FindRegion(Regions.DialogArea).ActivateView(dialogMessage.ViewType, dialogMessage.Model);
+                view.InitInternalView(dialogMessage.Model);
             }
         }
 
