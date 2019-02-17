@@ -98,8 +98,8 @@ namespace Forest.Forms.Controls.Dialogs
             forest.SendMessage(message);
         }
 
-        public static void ShowDialog<TView, TModel>(this IForestFacade forest, TModel model) 
-            where TView: IView<TModel>, IDialogView
+        public static void ShowModal<TView, TModel>(this IForestFacade forest, TModel model) 
+            where TView: IView<TModel>
         {
             ShowDialog(forest, new Messages.Dialog<TView, TModel>(model));
         }
