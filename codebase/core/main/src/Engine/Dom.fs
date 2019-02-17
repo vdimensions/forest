@@ -25,6 +25,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                 let commands = descriptor.Commands |> Seq.filter ctx.SecurityManager.HasAccess |> Seq.map createCommandModel |> Map.ofSeq
                 let canSkipRenderCall = 
                     match modelMap.TryFind hash with
+                    // TODO: some system views require to be rendered
                     | _ when descriptor.IsSystemView -> true
                     | Some m -> obj.Equals(m, model)
                     | None ->

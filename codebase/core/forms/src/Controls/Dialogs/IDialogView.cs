@@ -1,6 +1,6 @@
 namespace Forest.Forms.Controls.Dialogs
 {
-    public interface IDialogView
+    public interface IDialogView : IView
     {
         void OnClose();
     }

@@ -1,10 +1,14 @@
 ﻿using Axle.Modularity;
 
+using Forest.Forms.Controls.Dialogs;
+
+
 namespace Forest.Forms
 {
     [Module]
     [RequiresForest]
-    public class ForestFormsModule
+    [Requires(typeof(ForestDialogsModule))]
+    internal class ForestFormsModule
     {
     }
 }

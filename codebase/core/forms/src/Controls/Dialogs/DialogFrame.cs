@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Forest.Forms.Controls.Dialogs
@@ -13,10 +14,9 @@ namespace Forest.Forms.Controls.Dialogs
             public const string Content = "Content";
         }
 
-        public abstract class View<TView, T> : LogicalView, IDialogFrame
-            where TView : IView<T>
+        public abstract class View : LogicalView, IDialogFrame
         {
-            protected TView view;
+            protected IView view;
 
             protected View() : base() { }
 
@@ -25,9 +25,9 @@ namespace Forest.Forms.Controls.Dialogs
                 base.Load();
             }
 
-            void IDialogFrame.InitInternalView(object model)
+            void IDialogFrame.InitInternalView(Type viewType, object model) 
             {
-                view = FindRegion(Regions.Content).ActivateView<TView, T>((T) model);
+                view = FindRegion(Regions.Content).ActivateView(viewType ,model);
             }
 
             [SuppressMessage("ReSharper", "UnusedMember.Global")]

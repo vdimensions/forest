@@ -9,8 +9,7 @@ namespace Forest.Forms.Controls.Dialogs
         {
             public const string Confirm = "Confirm";
         }
-        public sealed class View<TView, T> : DialogFrame.View<TView, T>
-            where TView : IConfirmationDialogView, IView<T>
+        public sealed class View : DialogFrame.View
         {
             public View() : base() { }
 
@@ -18,7 +17,7 @@ namespace Forest.Forms.Controls.Dialogs
             [Command(Commands.Confirm)]
             internal void Confirm()
             {
-                view?.OnConfirm();
+                (view as IConfirmationDialogView)?.OnConfirm();
             }
         }
     }

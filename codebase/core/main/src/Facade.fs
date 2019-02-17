@@ -47,7 +47,7 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
     default __.LoadTree tree = stateManager.LoadTree tree
 
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> ForestResult
-    default __.RegisterSystemView () = stateManager.Update (fun e -> e.RegisterSystemView<'sv>() |> ignore)
+    default __.RegisterSystemView<'sv when 'sv :> ISystemView> () = stateManager.Update (fun e -> e.RegisterSystemView<'sv>() |> ignore)
 
     interface ICommandDispatcher with
         member this.ExecuteCommand name target arg = 
