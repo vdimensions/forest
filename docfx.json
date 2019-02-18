@@ -3,13 +3,13 @@
     {
       "src": [
         {
-          "files": [ "codebase/**.fsproj", "codebase/**.csproj" ],
-          "exclude": [ "codebase/**/bin/**", "codebase/**/obj/**" ],
+          "files": [ "codebase/**/*.csproj", "codebase/**/*.fsproj" ],
+          "exclude": [ "codebase/**/bin/**", "codebase/**/obj/**", "codebase/**/.paket/**", "codebase/**/paket-files/**" ],
           "src": "codebase"
         }
       ],
       "properties": {
-          "TargetFramework": "netstandard2.0"
+        "TargetFramework": "netstandard2.0"
       },
       "dest": "obj/api"
     }
@@ -22,7 +22,7 @@
         "dest": "api"
       },
       {
-        "files": [ "docs/articles/**/*.md", "*.md" ]
+        "files": [ "docs/toc.yml", "docs/articles/**/*.md", "*.md" ]
       }
     ],
     "resource": [
