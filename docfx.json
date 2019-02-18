@@ -3,26 +3,32 @@
     {
       "src": [
         {
-          "files": [ "codebase/**/*.csproj", "codebase/**/*.fsproj" ],
-          "exclude": [ "codebase/**/bin/**", "codebase/**/obj/**", "codebase/**/.paket/**", "codebase/**/paket-files/**" ],
-          "src": "codebase"
+          "src": "codebase/core/forms",
+          "files": [ "src/*.csproj" ],
+          "exclude": [ "src/bin/**", "src/obj/**", "src/.paket/**", "src/paket-files/**" ]
         }
       ],
       "properties": {
         "TargetFramework": "netstandard2.0"
       },
-      "dest": "obj/api"
+      "dest": "obj/docfx/api/core/forms"
     }
   ],
   "build": {
     "content": [
       {
         "files": [ "**/*.yml" ],
-        "src": "obj/api",
+        "src": "obj/docfx/api",
         "dest": "api"
       },
       {
-        "files": [ "docs/toc.yml", "docs/articles/**/*.md", "*.md" ]
+        "files": [ "docs/toc.yml" ]
+      },
+      {
+        "files": [ "docs/articles/**/*.md" ]
+      },
+      {
+        "files": [ "*.md" ]
       }
     ],
     "resource": [

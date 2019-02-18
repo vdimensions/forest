@@ -1,7 +1,7 @@
 ﻿- name: Home
   href: readme.md
-- name: Articles
-  href: docs/articles/
-  homepage: docs/articles/getting_started.md
+- name: Documentation
+  href: docs
+  homepage: docs/readme.md
 - name: API Documentation
-  href: obj/api/
+  href: api/
