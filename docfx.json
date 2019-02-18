@@ -1,0 +1,42 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "files": [ "codebase/**.fsproj" ],
+          "exclude": [ "codebase/**/bin/**", "codebase/**/obj/**" ],
+          "src": "codebase"
+        }
+      ],
+      "dest": "obj/api"
+    }
+  ],
+  "properties": {
+      "TargetFramework": "netstandard2.0"
+  },
+  "build": {
+    "content": [
+      {
+        "files": [ "**/*.yml" ],
+        "src": "obj/api",
+        "dest": "api"
+      },
+      {
+        "files": [ "docs/articles/**/*.md", "*.md" ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [ "docs/articles/images/**"]
+      }
+    ],
+    "overwrite": "specs/*.md",
+    "globalMetadata": {
+      "_appTitle": "forest framework website",
+      "_enableSearch": true
+    },
+    "markdownEngineName": "markdig",
+    "dest": "_site",
+    "xrefService": [ "https://xref.docs.microsoft.com/query?uid={uid}" ]
+  }
+}
