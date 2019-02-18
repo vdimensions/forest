@@ -3,17 +3,17 @@
     {
       "src": [
         {
-          "files": [ "codebase/**.fsproj" ],
+          "files": [ "codebase/**.fsproj", "codebase/**.csproj" ],
           "exclude": [ "codebase/**/bin/**", "codebase/**/obj/**" ],
           "src": "codebase"
         }
       ],
+      "properties": {
+          "TargetFramework": "netstandard2.0"
+      },
       "dest": "obj/api"
     }
   ],
-  "properties": {
-      "TargetFramework": "netstandard2.0"
-  },
   "build": {
     "content": [
       {
@@ -30,9 +30,9 @@
         "files": [ "docs/articles/images/**"]
       }
     ],
-    "overwrite": "specs/*.md",
+    "overwrite": "docs/specs/*.md",
     "globalMetadata": {
-      "_appTitle": "forest framework website",
+      "_appTitle": "Forest framework website",
       "_enableSearch": true
     },
     "markdownEngineName": "markdig",
