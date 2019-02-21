@@ -75,15 +75,15 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;Requires
             upcast this
 
     interface IWebSharperPhysicalViewRegistry with
-        member this.Register<'PV when 'PV :> WebSharperPhysicalView and 'PV : (new : unit -> 'PV)> (NotNullOrEmpty "name" name) =
-            let (n, v) = name, new 'PV()
-            viewRegistry
-            |> ViewRegistry.registerViewType (v.GetLogicalViewType())
-            |> ignore
-            //ignore <| registeredPhysicalViewFactories.AddOrUpdate(
-            //    n,
-            //    v,
-            //    Func<string, WebSharperPhysicalView, WebSharperPhysicalView>(fun n _ -> invalidOp(String.Format("A physical view with the provided name '{0}' is already registered", n))))
+        member this.Register<'PV when 'PV :> WebSharperPhysicalView and 'PV : (new : unit -> 'PV)> () =
+            let v = new 'PV()
+            let logicalViewType = v.GetLogicalViewType()
+            let descriptor = 
+                viewRegistry
+                |> ViewRegistry.registerViewType logicalViewType
+                |> ViewRegistry.getDescriptor (ViewHandle.ByType logicalViewType)
+            let n = descriptor.Name
+            
             let newExpr = String.Format("new {0}.New()", v.GetClientTypeName())
             afterRenderCallbacks <- (script [ on.afterRender <@ (fun _ -> Client.registerView n (downcast WebSharper.JavaScript.JS.Eval newExpr : WebSharperPhysicalView))@> ] [])::afterRenderCallbacks
             upcast this
