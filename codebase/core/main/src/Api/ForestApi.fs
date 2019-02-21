@@ -70,7 +70,7 @@ module ViewRegistry =
     let internal getDescriptorByType (viewType : Type) (reg : IViewRegistry) = 
         reg.GetDescriptor viewType
 
-    let internal getDescriptor (viewHandle : ViewHandle) =
+    let getDescriptor (viewHandle : ViewHandle) =
         match viewHandle with
         | ByName n -> getDescriptorByName n
         | ByType t -> getDescriptorByType t

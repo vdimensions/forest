@@ -1,5 +1,6 @@
 ﻿namespace Forest
 open System
+open System.Reflection
 
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
@@ -14,7 +15,7 @@ module ViewHandle =
         ViewHandle.ByName node.View
 
     let internal getAnonymousViewName (viewType : Type) =
-        String.Format("`{0}`", viewType.AssemblyQualifiedName)
+        String.Format("`{0}::{1}`", viewType.GetTypeInfo().Assembly.GetName(), viewType.FullName)
 
     let toViewName = function
         | ByName n -> n
