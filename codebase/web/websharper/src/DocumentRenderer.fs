@@ -13,12 +13,29 @@ type [<Interface>] IDocumentStateProvider =
     // TODO
     end
 
-type [<Sealed>] internal WebSharperForestFacade(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
-    inherit DefaultForestFacade<RemotingPhysicalView>(forestContext, renderer)
+type [<AbstractClass;NoComparison>] internal WebSharperForestFacadeProxy private (facade : IForestFacade, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
+    new(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) = WebSharperForestFacadeProxy(DefaultForestFacade<RemotingPhysicalView>(forestContext, renderer), renderer)
+    abstract member LoadTree: facade: IForestFacade -> name : string -> unit
+    default __.LoadTree facade name = facade.LoadTree name
+    abstract member SendMessage<'msg> :  facade: IForestFacade -> 'msg -> unit
+    default __.SendMessage<'msg> facade msg = facade.SendMessage<'msg> msg
+    abstract member ExecuteCommand:  facade: IForestFacade -> cname -> thash -> obj -> unit
+    default __.ExecuteCommand facade name hash arg = facade.ExecuteCommand name hash arg
     member __.Renderer with get() = renderer
-
+    interface IForestFacade with
+        member this.LoadTree name =
+            this.LoadTree facade name
+        member __.RegisterSystemView<'sv when 'sv :> ISystemView>() =
+            facade.RegisterSystemView<'sv>()
+    interface IMessageDispatcher with
+        member this.SendMessage<'msg> (msg:'msg) =
+            this.SendMessage<'msg> facade msg
+    interface ICommandDispatcher with
+        member this.ExecuteCommand name hash arg =
+            this.ExecuteCommand facade name hash arg
+            
 and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
-    inherit SessionScoped<WebSharperForestFacade>(httpContextAccessor)
+    inherit SessionScoped<WebSharperForestFacadeProxy>(httpContextAccessor)
     member private this.Facade with get() : IForestFacade = upcast this.Current
     interface IDocumentStateProvider
         // TODO
@@ -47,6 +64,9 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (commandDispatcher
 
     override __.Dispose _ = 
         hash |> allNodes.Remove |> ignore
+
+type [<Sealed;System.Obsolete("Sitelets must use their own facade")>] internal WebSharperForestFacade(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
+    inherit WebSharperForestFacadeProxy(forestContext, renderer)
 
 type [<Sealed;NoEquality;NoComparison>] internal RemotingRootPhysicalView(commandDispatcher, hash, topLevelViews: List<RemotingRootPhysicalView>, allNodes) =
     inherit RemotingPhysicalView(commandDispatcher, hash, allNodes)

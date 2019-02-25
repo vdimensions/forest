@@ -88,3 +88,8 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;Requires
             afterRenderCallbacks <- (script [ on.afterRender <@ (fun _ -> Client.registerView n (downcast WebSharper.JavaScript.JS.Eval newExpr : WebSharperPhysicalView))@> ] [])::afterRenderCallbacks
             upcast this
 
+    // TODO: implement sitelet-redirect-capable facade and return it here
+    //interface IWebSharperForestFacadeProvider with
+    //    member this.CreateFacade forestContext renderer =
+    //        ?
+
