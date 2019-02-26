@@ -20,8 +20,8 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
     /// A counter determining the number of nested facade calls.
     /// It will be used to determine whether a render call will occur after a facade call.
     /// For example, if a facade call is called from within the code triggered by another facade call
-    /// such as `LoadTemplate` being called from withing `ExecuteCommand` or `SendMessage`, a render call
-    /// will not be issued for the `LoadTemplate` operation, but only for the respective encompassing operation.
+    /// such as `LoadTree` being called from within `ExecuteCommand` or `SendMessage`, a render call
+    /// will not be issued for the `LoadTree` operation, but only for the respective encompassing operation.
     [<VolatileField>]
     let mutable nestingCount = ref 0
 

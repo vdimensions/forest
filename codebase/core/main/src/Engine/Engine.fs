@@ -59,6 +59,7 @@ type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, s
         ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), rt.Context)
 
     member inline private this.WrapAction (s : State option) action =
+        // TODO: synchronization needed
         let actionInitialState = match s with Some x -> x | None -> st
         let result =
             try match this._rt with
