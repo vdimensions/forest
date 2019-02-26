@@ -12,8 +12,8 @@ namespace Forest.Forms.Controls.Dialogs
         }
         public sealed class View : DialogFrame.View
         {
-            public View() : base() { }
-
+            internal View() : base() { }
+            
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Ok)]
             internal void Ok()

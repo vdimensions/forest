@@ -28,10 +28,21 @@ namespace Forest.Forms.Controls
             }
             public View() : this(Regions.Items) { }
 
-            protected virtual IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
+            protected IRegion GetItemsRegion() => FindRegion(_itemsRegionName);
+
+            protected IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
             {
-                var itemsRegion = FindRegion(_itemsRegionName).Clear();
-                return items.Select(item => itemsRegion.ActivateView<TItemView, TItemModel>(item)).ToList();
+                var itemsRegion = GetItemsRegion().Clear();
+                return items.Select(item => ActivateItemView(itemsRegion, item)).ToArray();
+            }
+
+            protected virtual void AfterItemViewActivated(TItemView view) { }
+
+            private TItemView ActivateItemView(IRegion itemsRegion, TItemModel item)
+            {
+                var activatedItemView = itemsRegion.ActivateView<TItemView, TItemModel>(item);
+                AfterItemViewActivated(activatedItemView);
+                return activatedItemView;
             }
         }
     }
