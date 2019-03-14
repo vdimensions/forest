@@ -38,6 +38,12 @@ type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacade(logger : ILo
             sw.Stop()
             logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
             result
+        member __.LoadTree (tree, msg) =
+            let sw = Stopwatch.StartNew()
+            let result = facade.LoadTree (tree, msg)
+            sw.Stop()
+            logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+            result
 
         member __.RegisterSystemView<'sv when 'sv :> ISystemView>() =
             let sw = Stopwatch.StartNew()
@@ -112,6 +118,11 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
         member this.LoadTree t = 
             //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.LoadTree t
+            //opWatch.Stop()
+
+        member this.LoadTree (t, m) = 
+            //let opWatch = Stopwatch.StartNew()
+            this.ForestFacade.LoadTree (t, m)
             //opWatch.Stop()
 
     interface IMessageDispatcher with

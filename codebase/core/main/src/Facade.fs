@@ -9,6 +9,7 @@ type [<Interface>] IForestFacade =
     inherit ICommandDispatcher
     inherit IMessageDispatcher
     abstract member LoadTree: tree : string -> unit
+    abstract member LoadTree: tree : string * message : 'msg -> unit
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> unit
 
 type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalView>(ctx : IForestContext, renderer : IPhysicalViewRenderer<'PV>) =
@@ -67,6 +68,13 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
         member this.LoadTree tree = 
             let before = Interlocked.Increment(nestingCount)
             let result = tree |> this.LoadTree
+            let after = Interlocked.Decrement(nestingCount)
+            if (before - after) = 1 then this.Render result
+
+        member this.LoadTree(tree, msg) = 
+            let before = Interlocked.Increment(nestingCount)
+            let mutable result = tree |> this.LoadTree
+            result <- this.SendMessage msg
             let after = Interlocked.Decrement(nestingCount)
             if (before - after) = 1 then this.Render result
 
