@@ -12,8 +12,7 @@ module internal ForestSitelet =
     let Render (f : IForestFacade) (pvs: array<vname*WebSharperPhysicalView>) (dop : (Doc -> Doc -> Doc)) (h : Doc) (b : Doc list) (endpoint : ForestEndPoint<'msg>) =
         match endpoint with
         | ForestEndPoint.ForestTreeWithMessage (tree, msg) -> 
-            f.LoadTree tree
-            f.SendMessage msg
+            f.LoadTree(tree, msg)
         | ForestEndPoint.ForestTree tree -> 
             f.LoadTree tree
         | ForestEndPoint.ForestCommand (name, hash, arg) -> 

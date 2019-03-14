@@ -15,8 +15,10 @@ type [<Interface>] IDocumentStateProvider =
 
 type [<AbstractClass;NoComparison>] internal WebSharperForestFacadeProxy private (facade : IForestFacade, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
     new(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) = WebSharperForestFacadeProxy(DefaultForestFacade<RemotingPhysicalView>(forestContext, renderer), renderer)
-    abstract member LoadTree: facade: IForestFacade -> name : string -> unit
-    default __.LoadTree facade name = facade.LoadTree name
+    abstract member LoadTree: facade: IForestFacade * name : string -> unit
+    default __.LoadTree (facade, name) = facade.LoadTree name
+    abstract member LoadTree: facade: IForestFacade * name : string * msg : 't -> unit
+    default __.LoadTree (facade, name, msg) = facade.LoadTree (name, msg)
     abstract member SendMessage<'msg> :  facade: IForestFacade -> 'msg -> unit
     default __.SendMessage<'msg> facade msg = facade.SendMessage<'msg> msg
     abstract member ExecuteCommand:  facade: IForestFacade -> cname -> thash -> obj -> unit
@@ -24,7 +26,9 @@ type [<AbstractClass;NoComparison>] internal WebSharperForestFacadeProxy private
     member __.Renderer with get() = renderer
     interface IForestFacade with
         member this.LoadTree name =
-            this.LoadTree facade name
+            this.LoadTree (facade, name)
+        member this.LoadTree (name, msg) =
+            this.LoadTree (facade, name, msg)
         member __.RegisterSystemView<'sv when 'sv :> ISystemView>() =
             facade.RegisterSystemView<'sv>()
     interface IMessageDispatcher with
@@ -45,6 +49,7 @@ and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContex
     interface IForestFacade with 
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.Facade.RegisterSystemView<'sv>()
         member this.LoadTree tree = this.Facade.LoadTree tree
+        member this.LoadTree (tree, msg) = this.Facade.LoadTree (tree, msg)
     interface ICommandDispatcher with member this.ExecuteCommand c h a = this.Facade.ExecuteCommand c h a
     interface IMessageDispatcher with member this.SendMessage m = this.Facade.SendMessage m
 
