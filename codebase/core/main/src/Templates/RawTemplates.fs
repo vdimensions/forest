@@ -26,7 +26,7 @@ module Raw =
         | head::tail -> 
             let (placeholderMap, res) = 
                 match head with
-                | Root d -> (Map.empty, { result with contents = d.contents })
+                | Root d -> (Map.empty, { result with contents = d.contents; name = d.name })
                 | Mastered (_, contentDefinitions) ->
                     let placeholderMap = 
                         contentDefinitions 
