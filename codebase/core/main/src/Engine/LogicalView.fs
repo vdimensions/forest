@@ -83,8 +83,8 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
         member this.AbandonRuntime (_) =
             match null2vopt this.runtime with
             | ValueSome currentModifier ->
-                currentModifier.UnsubscribeEvents this
-                match currentModifier.GetViewModel this.HierarchyKey with
+                currentModifier.UnsubscribeEvents this                
+                match currentModifier.GetViewModel this.HierarchyKey with // FIXME: when exception occurs, runtime is not abandoned
                 | Some viewModelFromState -> 
                     vm <- (downcast viewModelFromState : 'T)
                     ()
