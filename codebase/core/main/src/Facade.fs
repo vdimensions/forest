@@ -52,34 +52,34 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
 
     interface ICommandDispatcher with
         member this.ExecuteCommand name target arg = 
-            let before = Interlocked.Increment(nestingCount)
+            Interlocked.Increment(nestingCount) |> ignore
             let result = arg |> this.ExecuteCommand name target
-            let after = Interlocked.Decrement(nestingCount)
-            if (before - after) = 1 then this.Render result
+            let nestingLevel = Interlocked.Decrement(nestingCount)
+            if nestingLevel = 0 then this.Render result
 
     interface IMessageDispatcher with
         member this.SendMessage(message : 'M): unit = 
-            let before = Interlocked.Increment(nestingCount)
+            Interlocked.Increment(nestingCount) |> ignore
             let result = message |> this.SendMessage 
-            let after = Interlocked.Decrement(nestingCount)
-            if (before - after) = 1 then this.Render result
+            let nestingLevel = Interlocked.Decrement(nestingCount)
+            if nestingLevel = 0 then this.Render result
 
     interface IForestFacade with
         member this.LoadTree tree = 
-            let before = Interlocked.Increment(nestingCount)
+            Interlocked.Increment(nestingCount) |> ignore
             let result = tree |> this.LoadTree
-            let after = Interlocked.Decrement(nestingCount)
-            if (before - after) = 1 then this.Render result
+            let nestingLevel = Interlocked.Decrement(nestingCount)
+            if nestingLevel = 0 then this.Render result
 
         member this.LoadTree(tree, msg) = 
-            let before = Interlocked.Increment(nestingCount)
+            Interlocked.Increment(nestingCount) |> ignore
             let mutable result = tree |> this.LoadTree
             result <- this.SendMessage msg
-            let after = Interlocked.Decrement(nestingCount)
-            if (before - after) = 1 then this.Render result
+            let nestingLevel = Interlocked.Decrement(nestingCount)
+            if nestingLevel = 0 then this.Render result
 
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
-            let before = Interlocked.Increment(nestingCount)
+            Interlocked.Increment(nestingCount) |> ignore
             let result = this.RegisterSystemView<'sv>()
-            let after = Interlocked.Decrement(nestingCount)
-            if (before - after) = 1 then this.Render result
+            let nestingLevel = Interlocked.Decrement(nestingCount)
+            if nestingLevel = 0 then this.Render result

@@ -1,14 +1,9 @@
+msbuild="../../../../submodules/btw/msbuild.sh"
 project='Forest.Core'
 
-./restore.sh
+ ./restore.sh
 
-dotnet msbuild $project.fsproj
-if [ $? -ne 0 ]; then
-  read -rsp "Press [Enter] to quit"
-  echo ""
-  exit
-fi
-dotnet msbuild $project.dist.csproj
+dotnet clean $project.fsproj && $msbuild $project.fsproj && dotnet pack $project.fsproj --no-build
 if [ $? -ne 0 ]; then
   read -rsp "Press [Enter] to quit"
   echo ""
