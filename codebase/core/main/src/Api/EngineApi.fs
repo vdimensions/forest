@@ -19,23 +19,23 @@ type [<Interface>] IForestEngine =
     [<System.Obsolete>]
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> 'sv
 
-type [<AbstractClass;NoComparison>] ForestEngineDecorator (engine : IForestEngine) =
+type [<AbstractClass;NoComparison>] ForestEngineDecorator<'TE when 'TE :> IForestEngine> (engine : 'TE) =
 
-    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : IForestEngine -> 'sv
+    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : 'TE -> 'sv
     default __.RegisterSystemView<'sv when 'sv :> ISystemView> engine = engine.RegisterSystemView<'sv>()
 
-    abstract member LoadTree: IForestEngine * string -> unit
+    abstract member LoadTree: 'TE * string -> unit
     default __.LoadTree (engine, name) = engine.LoadTree name
-    abstract member LoadTree: IForestEngine * string * 'msg -> unit
+    abstract member LoadTree: 'TE * string * 'msg -> unit
     default __.LoadTree (engine, name, msg) = engine.LoadTree (name, msg)
 
     //abstract member Render<'pv when 'pv :> IPhysicalView> : IForestEngine -> IPhysicalViewRenderer<'pv> -> ForestResult-> unit
     //default __.Render<'pv when 'pv :> IPhysicalView> facade renderer result = facade.Render<'pv> renderer result
 
-    abstract member SendMessage<'msg> :  IForestEngine -> 'msg -> unit
+    abstract member SendMessage<'msg> :  'TE -> 'msg -> unit
     default __.SendMessage<'msg> engine msg = engine.SendMessage<'msg> msg
 
-    abstract member ExecuteCommand: IForestEngine -> cname -> thash -> obj -> unit
+    abstract member ExecuteCommand: 'TE -> cname -> thash -> obj -> unit
     default __.ExecuteCommand engine name hash arg = engine.ExecuteCommand name hash arg
 
     interface IForestEngine with
@@ -48,3 +48,6 @@ type [<AbstractClass;NoComparison>] ForestEngineDecorator (engine : IForestEngin
         member this.SendMessage<'msg> (msg:'msg) = this.SendMessage<'msg> engine msg
     interface ICommandDispatcher with
         member this.ExecuteCommand name hash arg = this.ExecuteCommand engine name hash arg
+
+type [<AbstractClass>] ForestEngineDecorator (engine) =
+    inherit ForestEngineDecorator<IForestEngine> (engine)
