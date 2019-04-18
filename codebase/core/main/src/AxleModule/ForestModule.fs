@@ -150,5 +150,6 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
 
 [<Extension>]
 type Extensions =
+    [<Extension>]
     static member LoadForest(builder : Axle.IApplicationBuilder) =
         builder.Load(typeof<ForestModule>)

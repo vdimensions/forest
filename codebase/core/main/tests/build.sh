@@ -1,22 +1,10 @@
-msbuild="../../submodules/btw/msbuild.sh"
-paket='.paket/paket.sh'
+msbuild="../../../../submodules/btw/msbuild.sh"
 project='Forest.Core.Tests'
+project_format='csproj'
 
-$paket update
-if [ $? -ne 0 ]; then
-  read -rsp "Press [Enter] to quit"
-  echo ""
-  exit
-fi
+ ./restore.sh
 
-rm -rf obj/
-dotnet restore $project.csproj
-if [ $? -ne 0 ]; then
-  read -rsp "Press [Enter] to quit"
-  echo ""
-  exit
-fi
-$msbuild $project.csproj
+dotnet clean $project.$project_format && dotnet build $project.$project_format
 if [ $? -ne 0 ]; then
   read -rsp "Press [Enter] to quit"
   echo ""

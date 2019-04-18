@@ -1,24 +1,27 @@
-﻿using System;
-using System.IO;
+﻿using System.Globalization;
 
-using Forest.Reflection;
-using Forest.Security;
-using Forest.Templates;
+using Axle;
+using Axle.DependencyInjection;
+using Axle.Resources;
+
 using Forest.Templates.Raw;
-using Forest.Templates.Xml;
 
 using NUnit.Framework;
 
 
-namespace Forest.Tests
+namespace Forest.Core.Tests
 {
     public static class Navigation
     {
         internal class ViewModel { }
 
         [View("Navigation")]
-        internal class View : AbstractView<ViewModel>
+        internal class View : LogicalView<ViewModel>
         {
+            public View(ViewModel vm) : base(vm)
+            {
+            }
+
             public override void Load()
             {
             }
@@ -29,8 +32,12 @@ namespace Forest.Tests
         internal class ViewModel { }
 
         [View("SimpleFooter")]
-        internal class View : AbstractView<ViewModel>
+        internal class View : LogicalView<ViewModel>
         {
+            public View(ViewModel vm) : base(vm)
+            {
+            }
+
             public override void Load()
             {
             }
@@ -41,8 +48,12 @@ namespace Forest.Tests
         internal class ViewModel { }
 
         [View("Concrete")]
-        internal class View : AbstractView<ViewModel>
+        internal class View : LogicalView<ViewModel>
         {
+            public View(ViewModel vm) : base(vm)
+            {
+            }
+
             public override void Load()
             {
             }
@@ -54,8 +65,12 @@ namespace Forest.Tests
         internal class ViewModel { }
 
         [View("SomeView")]
-        internal class View : AbstractView<ViewModel>
+        internal class View : LogicalView<ViewModel>
         {
+            public View(ViewModel vm) : base(vm)
+            {
+            }
+
             public override void Load()
             {
             }
@@ -65,84 +80,70 @@ namespace Forest.Tests
     [TestFixture]
     public class TemplateParsing
     {
-        internal sealed class TestTemplateProvider : ITemplateProvider
-        {
-            internal static Stream OpenTemplate(string name)
-            {
-                var fullName = $"Templates/{name}.xml";
-                var searchPath = AppDomain.CurrentDomain.RelativeSearchPath ?? AppDomain.CurrentDomain.BaseDirectory;
-                var path = Path.Combine(searchPath, fullName);
-                return File.OpenRead(path);
-            }
-
-            private AbstractTemplateParser _parser;
-
-
-            public TestTemplateProvider(AbstractTemplateParser parser)
-            {
-                _parser = parser;
-            }
-
-            public Template Load(string name)
-            {
-                using (var stream = OpenTemplate(name))
-                {
-                    return _parser.Parse(name, stream);
-                }
-            }
-        }
-        
-        private IForestContext _ctx;
-        private ITemplateProvider _templateProvider;
+        private IForestFacade _forest;
+        private IViewRegistry _vr;
+        private ResourceManager _resourceManager;
+        private CultureInfo _invariantCulture;
 
         [SetUp]
         public void SetUp()
         {
-            _templateProvider = new TestTemplateProvider(new XmlTemplateParser());
-            _ctx = new DefaultForestContext(new View.Factory(), new DefaultReflectionProvider(), new NoopSecurityManager(), _templateProvider);
-            _ctx.ViewRegistry.Register<Navigation.View>();
-            _ctx.ViewRegistry.Register<Concrete.View>();
-            _ctx.ViewRegistry.Register<SomeView.View>();
-            _ctx.ViewRegistry.Register<SimpleFooter.View>();
-        }
+            var app = Application.Build()
+                .LoadForest()
+                .Run();
+            _forest = app.Container.Resolve<IForestFacade>();
+            _vr = app.Container.Resolve<IViewRegistry>();
+            _resourceManager = app.Container.Resolve<ResourceManager>();
+            _invariantCulture = CultureInfo.InvariantCulture;
 
-        [Test]
-        public void CanReadTemplateFile()
-        {
-            using (var stream = TestTemplateProvider.OpenTemplate("Master"))
-            {
-                Assert.IsNotNull(stream, "Unable to load template Master");
-            }
+            _vr.Register<Navigation.View>();
+            _vr.Register<Concrete.View>();
+            _vr.Register<SomeView.View>();
+            _vr.Register<SimpleFooter.View>();
         }
 
         [Test]
         public void ParseMasterTemplate()
         {
-            var template = Raw.loadTemplate(_templateProvider, "Master");
+            var templateRes = _resourceManager.Load("ForestTemplates", "Master", _invariantCulture);
+            Assert.IsTrue(templateRes.HasValue);
+
+            var template = templateRes.Value.Resolve<Template>();
             Assert.IsNotNull(template);
-            Assert.AreEqual("Master", template.name);
-            Assert.IsNotEmpty(template.contents);
+
+            var templateDefinition = GetDefinition(template);
+            Assert.IsNotNull(templateDefinition);
+
+            Assert.IsFalse(template.IsMastered);
+
+            Assert.AreEqual("Master", templateDefinition.name);
+            Assert.IsNotEmpty(templateDefinition.contents);
+        }
+
+        private TemplateDefinition GetDefinition(Template template)
+        {
+            return template.item;
         }
 
         [Test]
         public void ParseConcreteTemplate()
         {
-            var template = Raw.loadTemplate(_templateProvider, "Concrete");
+            //var template = Raw.loadTemplate(_templateProvider, "Concrete");
+            var templateRes = _resourceManager.Load("ForestTemplates", "Concrete", _invariantCulture);
+            Assert.IsTrue(templateRes.HasValue);
+
+            var template = templateRes.Value.Resolve<Template>();
             Assert.IsNotNull(template);
-            Assert.AreEqual("Concrete", template.name);
-            Assert.IsNotEmpty(template.contents);
-            Assert.AreEqual(template.contents.Length, 3);
 
-            var compiled = TemplateCompiler.Compile(template);
-            Assert.IsNotNull(compiled);
-        }
-
-        [Test]
-        public void LoadConcreteTemplate()
-        {
-            var engine = new ForestEngine(_ctx);
-            var r = engine.LoadTemplate("Concrete");
-            Assert.IsNotNull(r);
+            //var templateDefinition = GetDefinition(template);
+            //Assert.IsNotNull(templateDefinition);
+            //
+            //Assert.AreEqual("Concrete", templateDefinition.name);
+            //Assert.IsNotEmpty(templateDefinition.contents);
+            //Assert.AreEqual(templateDefinition.contents.Length, 3);
+            //
+            //var compiled = TemplateCompiler.Compile(templateDefinition);
+            //Assert.IsNotNull(compiled);
         }
     }
 }

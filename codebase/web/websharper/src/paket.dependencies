@@ -3,6 +3,7 @@ storage: none
 
 source https://api.nuget.org/v3/index.json
   nuget WebSharper.FSharp
+  nuget WebSharper.UI < 4.5.9
 
 source ../../../../../axle/dist/
   nuget Axle.Web.WebSharper

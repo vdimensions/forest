@@ -1,5 +1,10 @@
-framework: net45, net40
+framework: net45
 
 source https://nuget.org/api/v2
-  nuget FSharp.Core
   nuget NUnit
+  nuget NUnit3TestAdapter
+
+source ../../../../../axle/dist
+
+source ../../../../dist
+  nuget Forest.Core
