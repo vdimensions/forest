@@ -20,6 +20,7 @@ module Runtime =
         | DestroyView of subtree : TreeNode
         | InvokeCommand of command : cname * node : thash * commandArg : obj
         | SendMessage of node : thash * message : obj * topics : string array
+        | DispatchMessage of message : obj * topics : string array
         | ClearRegion of owner : TreeNode * region : rname
         | Multiple of operations : Operation list
 
@@ -139,13 +140,18 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
             | None ->  Command.Error.CommandNotFound(view.Descriptor.ViewType, name) |> Runtime.Error.CommandError |> Error
         | (false, _) -> Runtime.Error.ViewstateAbsent stateKey |> Error
 
-    let publishEvent (id : thash) (message : 'm) (topics : string array) =
-        match views.TryGetValue id with
-        | (true, sender) -> 
-            eventBus.Publish(sender, message, topics)
+    let publishEvent (senderID : thash option) (message : 'm) (topics : string array) =
+        match senderID with
+        | Some id ->
+            match views.TryGetValue id with
+            | (true, sender) -> 
+                eventBus.Publish(sender, message, topics)
+                Runtime.Status.MesssagePublished |> Ok
+            // TODO: should be error
+            | _ -> Runtime.Status.MessageSourceNotFound |> Ok
+        | None ->
+            eventBus.Publish(Unchecked.defaultof<IView>, message, topics)
             Runtime.Status.MesssagePublished |> Ok
-        // TODO: should be errror
-        | _ -> Runtime.Status.MessageSourceNotFound |> Ok
 
     let rec processChanges (ctx : IForestContext) (operation : Runtime.Operation) =
         match operation with
@@ -166,12 +172,12 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
                     self.instantiateView viewHandle node model descriptor
                 )
         | Runtime.Operation.InstantiateViewByNode (node, model) ->
-            node
-            |> ViewHandle.fromNode
+            let vhFromNode = node |> ViewHandle.fromNode
+            vhFromNode
             |> getDescriptor
             |> Result.bind (
                 fun descriptor -> 
-                    self.instantiateView (ViewHandle.fromNode node) node model descriptor
+                    self.instantiateView vhFromNode node model descriptor
                 )
         | Runtime.Operation.UpdateModel (viewID, model) -> 
             updateModel viewID model
@@ -180,7 +186,9 @@ type internal ForestRuntime private (t : Tree, models : Map<thash, obj>, views :
         | Runtime.Operation.InvokeCommand (commandName, viewID, arg) -> 
             executeCommand commandName viewID arg
         | Runtime.Operation.SendMessage (senderID, message, topics) -> 
-            publishEvent senderID message topics
+            publishEvent (Some senderID) message topics
+        | Runtime.Operation.DispatchMessage (message, topics) -> 
+            publishEvent None message topics
         | Runtime.Operation.ClearRegion (owner, region) ->
             clearRegion owner region
         //| _ -> Error (UnknownOperation operation)

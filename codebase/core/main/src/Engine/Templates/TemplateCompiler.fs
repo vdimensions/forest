@@ -27,9 +27,12 @@ module TemplateCompiler =
             | _ -> 
                 invalidOp ("Unexpected region content item " + rc.ToString())
         result
-    [<CompiledName("Compile")>]
-    let compile (template : TemplateDefinition) =
+
+    let internal compileOps (template : TemplateDefinition) =
         let (templateParentNode, templateRegion) = (TreeNode.shell, TreeNode.shell.Region)
         let templateNode = templateParentNode |> TreeNode.newKey templateRegion template.name
         let ops = Runtime.Operation.ClearRegion(templateParentNode, templateRegion)::(expandView templateNode template.contents |> List.rev)
-        Runtime.Operation.Multiple ops
+        ops
+
+    [<CompiledName("Compile")>]
+    let compile = compileOps >> Runtime.Operation.Multiple

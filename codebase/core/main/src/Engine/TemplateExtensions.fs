@@ -4,9 +4,9 @@ open Axle.Verification
 open Forest
 open Forest.Templates.Raw
 
-[<Extension>]
+[<Extension;System.Obsolete>]
 type TemplateExtensions =
-    [<Extension>]
+    [<Extension;System.Obsolete>]
     static member internal LoadTree(engine : ForestStateManager, NotNull "name" name : string) =
         name 
         |> Raw.loadTemplate engine.Context.TemplateProvider

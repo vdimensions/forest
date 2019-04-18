@@ -55,14 +55,14 @@ module Event =
         
     let handleError(e : Error) = e |> resolveError |> raise
 
-    let inline private _subscribersFilter (sender:IView) (subscription:ISubscriptionHandler) : bool =
+    let inline private _subscribersFilter (sender : IView) (subscription : ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
 
     type [<Sealed;NoComparison>] private T() = 
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
 
-        member private __.InvokeMatchingSubscriptions<'M> (sender:IView, message:'M, topicSubscriptionHandlers:IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
+        member private __.InvokeMatchingSubscriptions<'M> (sender : IView, message : 'M, topicSubscriptionHandlers : IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
             // Collect the event subscriptions before invocation. 
             // This is necessary, as some commands may cause view disposal and event unsubscription in result, 
             // which is undesired while iterating over the subscription collections
@@ -79,7 +79,7 @@ module Event =
             for value in subscriptions.Values do value.Clear()
             subscriptions.Clear()
 
-        member this.Publish<'M> (NotNull "sender" sender:IView, NotNull "message" message:'M, NotNull "topics" topics:string[]) : unit =
+        member this.Publish<'M> (sender : IView, NotNull "message" message : 'M, NotNull "topics" topics : string[]) : unit =
             match topics with
             | [||] ->
                 for topicSubscriptionHandlers in subscriptions.Values do

@@ -67,7 +67,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
             vm <- this.runtime.SetViewModel true this.hierarchyKey (downcast model : 'T)
             this.Resume()
 
-        member this.AcquireRuntime (node:TreeNode) (vd:IViewDescriptor) (NotNull "runtime" runtime:IForestRuntime) =
+        member this.AcquireRuntime (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" runtime : IForestRuntime) =
             match null2vopt this.runtime with
             | ValueNone ->
                 this.descriptor <- vd
@@ -82,9 +82,9 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
 
         member this.AbandonRuntime (_) =
             match null2vopt this.runtime with
-            | ValueSome currentModifier ->
-                currentModifier.UnsubscribeEvents this                
-                match currentModifier.GetViewModel this.HierarchyKey with // FIXME: when exception occurs, runtime is not abandoned
+            | ValueSome currentRuntime ->
+                currentRuntime.UnsubscribeEvents this                
+                match currentRuntime.GetViewModel this.HierarchyKey with // FIXME: when exception occurs, runtime is not abandoned
                 | Some viewModelFromState -> 
                     vm <- (downcast viewModelFromState : 'T)
                     ()
@@ -108,7 +108,9 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
 
     interface IDisposable with
         member this.Dispose() =
-            this.Dispose(true)
+            try this.Dispose(true)
+            // When disposing, always abandon the runtime
+            finally (this :> IRuntimeView).AbandonRuntime(this.runtime)
             this |> GC.SuppressFinalize
 
  and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =

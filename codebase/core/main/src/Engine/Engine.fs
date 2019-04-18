@@ -1,8 +1,10 @@
 ﻿namespace Forest
+
 open System
+open Axle
 open Axle.Verification
 open Forest.UI
-open Axle
+open Forest.Templates.Raw
 
 
 type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : ChangeList, ctx : IForestContext) = 
@@ -18,15 +20,15 @@ type [<Sealed;NoComparison>] ForestResult internal (state : State, changeList : 
     member internal __.State with get() = state
     member __.ChangeList with get() = changeList
 
-
-type [<Sealed;NoComparison;NoEquality>] internal ForestEngineAdapter(runtime : ForestRuntime) =
+type [<Sealed;NoComparison;NoEquality>] internal ForestRuntimeEngine(runtime : ForestRuntime) =
 
     member __.ExecuteCommand command target message = 
         Runtime.Operation.InvokeCommand(command, target, message) 
         |> runtime.Do 
         |> Runtime.resolve ignore
 
-    member __.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
+    [<Obsolete>]
+    member __.RegisterSystemView<'sv when 'sv :> ISystemView> () = 
         let descriptor = 
             match typeof<'sv> |> runtime.Context.ViewRegistry.GetDescriptor |> null2vopt with
             | ValueNone -> 
@@ -37,11 +39,46 @@ type [<Sealed;NoComparison;NoEquality>] internal ForestEngineAdapter(runtime : F
         let key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region descriptor.Name
         runtime.GetOrActivateView<'sv> key
 
-    member this.SendMessage message = 
-        let messageDispatcher = this.RegisterSystemView<MessageDispatcher.View>()
-        messageDispatcher.Publish(message)
+    member __.SendMessage<'msg> (message : 'msg) = 
+        Runtime.Operation.DispatchMessage(message, [||])
+        |> runtime.Do
+        |> Runtime.resolve ignore
+
+    member __.LoadTree (name) =
+        name 
+        |> Raw.loadTemplate runtime.Context.TemplateProvider
+        |> Templates.TemplateCompiler.compileOps
+        |> Runtime.Operation.Multiple
+        |> runtime.Do
+        |> Runtime.resolve ignore
+
+    member __.LoadTree (name, message) =
+        name 
+        |> Raw.loadTemplate runtime.Context.TemplateProvider
+        |> Templates.TemplateCompiler.compileOps
+        |> List.append [Runtime.Operation.DispatchMessage(message, [||])]
+        |> Runtime.Operation.Multiple
+        |> runtime.Do   
+        |> Runtime.resolve ignore
 
     member internal __.Runtime with get() = runtime
+
+    interface IForestEngine with
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv>()
+    interface IMessageDispatcher with
+        member this.SendMessage<'msg> msg = this.SendMessage<'msg> msg
+    interface ICommandDispatcher with
+        member this.ExecuteCommand c t m = this.ExecuteCommand c t m
+    interface ITreeNavigator with
+        member this.LoadTree name = this.LoadTree name
+        member this.LoadTree (name, msg) = this.LoadTree (name, msg)
+
+module ForestEngineStateDecorator =
+    type private T (engine) =
+        inherit ForestEngineDecorator(engine)
+
+    let Decorate engine = upcast T (engine) : IForestEngine
+        
 
 type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, state : State, syncRoot : obj) =
     [<DefaultValue>]
@@ -87,9 +124,9 @@ type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, s
             None
         ) |> this.WrapAction initialState
 
-    member internal this.Update (operation : System.Action<ForestEngineAdapter>) : ForestResult = 
+    member internal this.Update (operation : System.Action<IForestEngine>) : ForestResult = 
         (fun rt ->
-            ForestEngineAdapter(rt) |> operation.Invoke
+            ForestRuntimeEngine(rt) |> operation.Invoke
             None
         ) |> this.WrapAction None
 
