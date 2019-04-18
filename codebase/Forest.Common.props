@@ -13,7 +13,7 @@
   <PropertyGroup>
     <Deterministic>false</Deterministic>
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>0</VersionMinor>
+    <VersionMinor>1</VersionMinor>
   </PropertyGroup>
 
   <!-- Common props -->
