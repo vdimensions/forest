@@ -1,11 +1,11 @@
 namespace Forest.Web.WebSharper
 
 open System.Collections.Generic
+open Microsoft.AspNetCore.Http
 open Axle.Web.AspNetCore.Session
 open Forest
 open Forest.UI
 open WebSharper.UI
-open Microsoft.AspNetCore.Http
 
 
 type [<Interface>] IDocumentStateProvider = 
@@ -14,44 +14,54 @@ type [<Interface>] IDocumentStateProvider =
     end
 
 type [<AbstractClass;NoComparison>] internal WebSharperForestFacadeProxy private (facade : IForestFacade, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) =
+    inherit ForestFacadeProxy(facade)
     new(forestContext : IForestContext, renderer : IPhysicalViewRenderer<RemotingPhysicalView>) = WebSharperForestFacadeProxy(DefaultForestFacade<RemotingPhysicalView>(forestContext, renderer), renderer)
-    abstract member LoadTree: facade: IForestFacade * name : string -> unit
-    default __.LoadTree (facade, name) = facade.LoadTree name
-    abstract member LoadTree: facade: IForestFacade * name : string * msg : 't -> unit
-    default __.LoadTree (facade, name, msg) = facade.LoadTree (name, msg)
-    abstract member SendMessage<'msg> :  facade: IForestFacade -> 'msg -> unit
-    default __.SendMessage<'msg> facade msg = facade.SendMessage<'msg> msg
-    abstract member ExecuteCommand:  facade: IForestFacade -> cname -> thash -> obj -> unit
-    default __.ExecuteCommand facade name hash arg = facade.ExecuteCommand name hash arg
     member __.Renderer with get() = renderer
-    interface IForestFacade with
-        member this.LoadTree name =
-            this.LoadTree (facade, name)
-        member this.LoadTree (name, msg) =
-            this.LoadTree (facade, name, msg)
-        member __.RegisterSystemView<'sv when 'sv :> ISystemView>() =
-            facade.RegisterSystemView<'sv>()
-    interface IMessageDispatcher with
-        member this.SendMessage<'msg> (msg:'msg) =
-            this.SendMessage<'msg> facade msg
-    interface ICommandDispatcher with
-        member this.ExecuteCommand name hash arg =
-            this.ExecuteCommand facade name hash arg
             
 and [<Sealed;NoComparison>] internal PerSessionWebSharperForestFacade(httpContextAccessor : IHttpContextAccessor) =
     inherit SessionScoped<WebSharperForestFacadeProxy>(httpContextAccessor)
     member private this.Facade with get() : IForestFacade = upcast this.Current
+    member private this.NodeStateProvider with get() : INodeStateProvider = this.Current.Renderer :?> INodeStateProvider
     interface IDocumentStateProvider
         // TODO
     interface INodeStateProvider with 
-        member this.AllNodes with get() = (this.Current.Renderer :?> INodeStateProvider).AllNodes
-        member this.UpdatedNodes with get() = (this.Current.Renderer :?> INodeStateProvider).UpdatedNodes
+        member this.ResetStates() = this.NodeStateProvider.ResetStates()
+        member this.AllNodes with get() = this.NodeStateProvider.AllNodes
+        member this.UpdatedNodes with get() = this.NodeStateProvider.UpdatedNodes
     interface IForestFacade with 
-        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.Facade.RegisterSystemView<'sv>()
-        member this.LoadTree tree = this.Facade.LoadTree tree
-        member this.LoadTree (tree, msg) = this.Facade.LoadTree (tree, msg)
-    interface ICommandDispatcher with member this.ExecuteCommand c h a = this.Facade.ExecuteCommand c h a
-    interface IMessageDispatcher with member this.SendMessage m = this.Facade.SendMessage m
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
+            try 
+                this.Facade.RegisterSystemView<'sv>()
+            with 
+            | _ -> this.NodeStateProvider.ResetStates()
+        member this.LoadTree tree = 
+            try 
+                this.Facade.LoadTree tree
+            with 
+            | _ -> this.NodeStateProvider.ResetStates()
+        member this.LoadTree (tree, msg) = 
+            try 
+                this.Facade.LoadTree (tree, msg)
+            with 
+            | _ -> this.NodeStateProvider.ResetStates()
+        member this.Render renderer result = 
+            try 
+                this.Facade.Render renderer result
+            with 
+            | _ -> this.NodeStateProvider.ResetStates()
+    interface ICommandDispatcher with 
+        member this.ExecuteCommand c h a = 
+            try 
+                this.Facade.ExecuteCommand c h a
+            with 
+            | _ -> this.NodeStateProvider.ResetStates()
+    interface IMessageDispatcher with 
+        member this.SendMessage m = 
+            try 
+                this.Facade.SendMessage m
+            with 
+            | _ -> this.NodeStateProvider.ResetStates()
+            
 
 and [<NoComparison;NoEquality>] internal RemotingPhysicalView (commandDispatcher, hash, allNodes : IDictionary<thash, Node>) =
     inherit AbstractPhysicalView(commandDispatcher, hash)
@@ -95,9 +105,8 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
         |> parent.Embed domNode.Region
 
     interface INodeStateProvider with
-        member __.AllNodes 
-            with get() = allNodes.Values |> Array.ofSeq
-        member __.UpdatedNodes 
-            with get() = allNodes.Values |> Array.ofSeq
+        member __.ResetStates() = allNodes.Clear()
+        member __.AllNodes with get() = allNodes.Values |> Array.ofSeq
+        member __.UpdatedNodes with get() = allNodes.Values |> Array.ofSeq
 
     interface IDocumentStateProvider

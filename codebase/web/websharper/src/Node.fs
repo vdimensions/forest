@@ -13,5 +13,6 @@ type Node =
     }
 
 type [<Interface>] INodeStateProvider =
+    abstract member ResetStates: unit -> unit
     abstract member AllNodes: Node array with get
     abstract member UpdatedNodes: Node array with get

@@ -15,42 +15,48 @@ open Forest.Templates.Raw
 open Forest.UI
 
 type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacade(logger : ILogger, facade : IForestFacade) =
-    interface IMessageDispatcher with
-        member __.SendMessage message =
-            let sw = Stopwatch.StartNew()
-            let result = facade.SendMessage message
-            sw.Stop()
-            logger.Trace("Forest 'SendMessage' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
-            result
+    inherit ForestFacadeProxy(facade)
+    override __.SendMessage facade message =
+        let sw = Stopwatch.StartNew()
+        let result = facade.SendMessage message
+        sw.Stop()
+        logger.Trace("Forest 'SendMessage' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+        result
 
-    interface ICommandDispatcher with
-        member __.ExecuteCommand command target arg =
-            let sw = Stopwatch.StartNew()
-            let result = facade.ExecuteCommand command target arg
-            sw.Stop()
-            logger.Trace("Forest 'ExecuteCommand' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
-            result
+    override __.ExecuteCommand facade command target arg =
+        let sw = Stopwatch.StartNew()
+        let result = facade.ExecuteCommand command target arg
+        sw.Stop()
+        logger.Trace("Forest 'ExecuteCommand' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+        result
 
-    interface IForestFacade with
-        member __.LoadTree tree =
-            let sw = Stopwatch.StartNew()
-            let result = facade.LoadTree tree
-            sw.Stop()
-            logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
-            result
-        member __.LoadTree (tree, msg) =
-            let sw = Stopwatch.StartNew()
-            let result = facade.LoadTree (tree, msg)
-            sw.Stop()
-            logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
-            result
+    override __.LoadTree (facade, tree) =
+        let sw = Stopwatch.StartNew()
+        let result = facade.LoadTree tree
+        sw.Stop()
+        logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+        result
+    override __.LoadTree (facade, tree, msg) =
+        let sw = Stopwatch.StartNew()
+        let result = facade.LoadTree (tree, msg)
+        sw.Stop()
+        logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+        result
 
-        member __.RegisterSystemView<'sv when 'sv :> ISystemView>() =
-            let sw = Stopwatch.StartNew()
-            let result = facade.RegisterSystemView<'sv>()
-            sw.Stop()
-            logger.Trace("Forest 'RegisterSystemView' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
-            result
+    override __.RegisterSystemView<'sv when 'sv :> ISystemView> facade =
+        let sw = Stopwatch.StartNew()
+        let result = facade.RegisterSystemView<'sv>()
+        sw.Stop()
+        logger.Trace("Forest 'RegisterSystemView' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+        result
+
+    override __.Render facade renderer result =
+        let sw = Stopwatch.StartNew()
+        let result1 = facade.Render renderer result
+        sw.Stop()
+        logger.Trace("Forest 'Render' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+        result1
+
 type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacadeProvider(logger : ILogger, provider : IForestFacadeProvider) =
     interface IForestFacadeProvider with member __.ForestFacade with get() = upcast LoggingForestFacade(logger, provider.ForestFacade)
 
@@ -111,31 +117,24 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
 
     interface IForestFacade with
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
-            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.RegisterSystemView<'sv>()
-            //opWatch.Stop()
 
         member this.LoadTree t = 
-            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.LoadTree t
-            //opWatch.Stop()
 
         member this.LoadTree (t, m) = 
-            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.LoadTree (t, m)
-            //opWatch.Stop()
+
+        member this.Render renderer result = 
+            this.ForestFacade.Render renderer result
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
-            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.SendMessage msg
-            //opWatch.Stop()
 
     interface ICommandDispatcher with
         member this.ExecuteCommand cmd target arg = 
-            //let opWatch = Stopwatch.StartNew()
             this.ForestFacade.ExecuteCommand cmd target arg
-            //opWatch.Stop()
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type): IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

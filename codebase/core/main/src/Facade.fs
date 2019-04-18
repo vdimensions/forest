@@ -1,5 +1,6 @@
 ﻿namespace Forest
 
+open Axle.Verification
 open Forest.Templates
 open Forest.UI
 open System.Threading
@@ -11,8 +12,32 @@ type [<Interface>] IForestFacade =
     abstract member LoadTree: tree : string -> unit
     abstract member LoadTree: tree : string * message : 'msg -> unit
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> unit
+    abstract member Render<'PV when 'PV :> IPhysicalView> : IPhysicalViewRenderer<'PV> -> ForestResult -> unit
 
-type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalView>(ctx : IForestContext, renderer : IPhysicalViewRenderer<'PV>) =
+type [<AbstractClass;NoComparison>] ForestFacadeProxy (facade : IForestFacade) =
+    abstract member LoadTree: facade: IForestFacade * name : string -> unit
+    default __.LoadTree (facade, name) = facade.LoadTree name
+    abstract member LoadTree: facade: IForestFacade * name : string * msg : 't -> unit
+    default __.LoadTree (facade, name, msg) = facade.LoadTree (name, msg)
+    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : IForestFacade -> unit
+    default __.RegisterSystemView<'sv when 'sv :> ISystemView> facade = facade.RegisterSystemView<'sv>()
+    abstract member Render<'pv when 'pv :> IPhysicalView> : IForestFacade -> IPhysicalViewRenderer<'pv> -> ForestResult-> unit
+    default __.Render<'pv when 'pv :> IPhysicalView> facade renderer result = facade.Render<'pv> renderer result
+    abstract member SendMessage<'msg> :  facade: IForestFacade -> 'msg -> unit
+    default __.SendMessage<'msg> facade msg = facade.SendMessage<'msg> msg
+    abstract member ExecuteCommand:  facade: IForestFacade -> cname -> thash -> obj -> unit
+    default __.ExecuteCommand facade name hash arg = facade.ExecuteCommand name hash arg
+    interface IForestFacade with
+        member this.LoadTree name = this.LoadTree (facade, name)
+        member this.LoadTree (name, msg) = this.LoadTree (facade, name, msg)
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv> facade
+        member this.Render renderer result = this.Render facade renderer result
+    interface IMessageDispatcher with
+        member this.SendMessage<'msg> (msg:'msg) = this.SendMessage<'msg> facade msg
+    interface ICommandDispatcher with
+        member this.ExecuteCommand name hash arg = this.ExecuteCommand facade name hash arg
+
+type [<Sealed;NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalView>(ctx : IForestContext, renderer : IPhysicalViewRenderer<'PV>) =
     
     let stateManager = ForestStateManager(ctx)
 
@@ -26,8 +51,21 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
     [<VolatileField>]
     let mutable nestingCount = ref 0
 
-    abstract member Render: res : ForestResult -> unit
-    default this.Render res =
+    member private __.PerformSafeFacadeCall 
+            (fn : (unit -> ForestResult)) 
+            (renderer : IPhysicalViewRenderer<'PV>)
+            (facade : IForestFacade) : unit =
+        Interlocked.Increment(nestingCount) |> ignore
+        let mutable result : ForestResult option = None
+        try
+            result <- fn() |> Some
+        finally
+            if Interlocked.Decrement(nestingCount) = 0 then
+                match result with
+                | Some r -> facade.Render renderer r
+                | None -> ()
+
+    member private this.Render(renderer : IPhysicalViewRenderer<'PV>) (result : ForestResult) = 
         let domProcessor : IDomProcessor =
             match this._pvd with
             | ValueNone -> 
@@ -36,50 +74,38 @@ type [<NoComparison;NoEquality>] DefaultForestFacade<'PV when 'PV :> IPhysicalVi
                 viewDomProcessor
             | ValueSome viewDomProcessor -> viewDomProcessor
             :> IDomProcessor
-        res.Render domProcessor
+        result.Render domProcessor
 
-    abstract member ExecuteCommand: cname -> thash -> obj -> ForestResult
-    default __.ExecuteCommand name target arg = stateManager.Update(fun e -> e.ExecuteCommand name target arg)
+    member private __.ExecuteCommand name target arg = stateManager.Update(fun e -> e.ExecuteCommand name target arg)
 
-    abstract member SendMessage: 'M -> ForestResult
-    default __.SendMessage message = stateManager.Update(fun e -> e.SendMessage message)
+    member private __.SendMessage message = stateManager.Update(fun e -> e.SendMessage message)
 
-    abstract member LoadTree: string -> ForestResult
-    default __.LoadTree tree = stateManager.LoadTree tree
+    member private __.LoadTree tree = stateManager.LoadTree tree
 
-    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> ForestResult
-    default __.RegisterSystemView<'sv when 'sv :> ISystemView> () = stateManager.Update (fun e -> e.RegisterSystemView<'sv>() |> ignore)
+    member private __.RegisterSystemView<'sv when 'sv :> ISystemView> () = stateManager.Update (fun e -> e.RegisterSystemView<'sv>() |> ignore)
 
     interface ICommandDispatcher with
         member this.ExecuteCommand name target arg = 
-            Interlocked.Increment(nestingCount) |> ignore
-            let result = arg |> this.ExecuteCommand name target
-            let nestingLevel = Interlocked.Decrement(nestingCount)
-            if nestingLevel = 0 then this.Render result
+            this.PerformSafeFacadeCall (fun () -> arg |> this.ExecuteCommand name target) renderer this
 
     interface IMessageDispatcher with
         member this.SendMessage(message : 'M): unit = 
-            Interlocked.Increment(nestingCount) |> ignore
-            let result = message |> this.SendMessage 
-            let nestingLevel = Interlocked.Decrement(nestingCount)
-            if nestingLevel = 0 then this.Render result
+            this.PerformSafeFacadeCall (fun () -> message |> this.SendMessage) renderer this
 
     interface IForestFacade with
         member this.LoadTree tree = 
-            Interlocked.Increment(nestingCount) |> ignore
-            let result = tree |> this.LoadTree
-            let nestingLevel = Interlocked.Decrement(nestingCount)
-            if nestingLevel = 0 then this.Render result
+            this.PerformSafeFacadeCall (fun () -> tree |> this.LoadTree) renderer this
 
         member this.LoadTree(tree, msg) = 
-            Interlocked.Increment(nestingCount) |> ignore
-            let mutable result = tree |> this.LoadTree
-            result <- this.SendMessage msg
-            let nestingLevel = Interlocked.Decrement(nestingCount)
-            if nestingLevel = 0 then this.Render result
+            this.PerformSafeFacadeCall (
+                fun () -> 
+                    let mutable result = tree |> this.LoadTree
+                    result <- this.SendMessage msg
+                    result
+                ) renderer this
 
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
-            Interlocked.Increment(nestingCount) |> ignore
-            let result = this.RegisterSystemView<'sv>()
-            let nestingLevel = Interlocked.Decrement(nestingCount)
-            if nestingLevel = 0 then this.Render result
+            this.PerformSafeFacadeCall (fun () -> this.RegisterSystemView<'sv>()) renderer this
+
+        member this.Render<'pv when 'pv :> IPhysicalView> (NotNull "renderer" renderer : IPhysicalViewRenderer<'pv>) (NotNull "result" result) = 
+            result |> this.Render (renderer :?> IPhysicalViewRenderer<'PV>)

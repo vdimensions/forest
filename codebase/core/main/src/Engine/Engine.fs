@@ -43,11 +43,11 @@ type [<Sealed;NoComparison;NoEquality>] internal ForestEngineAdapter(runtime : F
 
     member internal __.Runtime with get() = runtime
 
-type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, state : State) =
+type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, state : State, syncRoot : obj) =
     [<DefaultValue>]
     val mutable private _rt : ForestRuntime voption
     let mutable st : State = state
-    new (ctx : IForestContext) = ForestStateManager(ctx, State.initial)
+    new (ctx : IForestContext) = ForestStateManager(ctx, State.initial, obj())
 
     static member inline private toResult (rt : ForestRuntime) (fuid : Fuid option) (state : State) =
         match rt.Deconstruct() with 
@@ -58,22 +58,24 @@ type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, s
             | None -> State.create(a, b, c)
         ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), rt.Context)
 
-    member inline private this.WrapAction (s : State option) action =
-        // TODO: synchronization needed
+    member inline private this.WrapAction (s : State option) (action : ForestRuntime -> Fuid option) =
+        let syncAction rt =
+            lock syncRoot (fun () -> action rt)
+
         let actionInitialState = match s with Some x -> x | None -> st
         let result =
             try match this._rt with
                 | ValueNone -> 
                     use rt = ForestRuntime.Create(actionInitialState.Tree, actionInitialState.Models, actionInitialState.ViewStates, ctx)
                     this._rt <- ValueSome rt
-                    let result = actionInitialState |> ForestStateManager.toResult rt (action rt)
+                    let result = actionInitialState |> ForestStateManager.toResult rt (syncAction rt)
                     this._rt <- ValueNone
                     result
-                | ValueSome rt -> actionInitialState |> ForestStateManager.toResult rt (action rt)
+                | ValueSome rt -> actionInitialState |> ForestStateManager.toResult rt (syncAction rt)
             with :? ForestException as e -> 
                 let resetState = State.initial
                 use rt = ForestRuntime.Create(resetState.Tree, resetState.Models, resetState.ViewStates, ctx)
-                let errorView = Error.Show rt
+                //let errorView = Error.Show rt
                 // TODO: set error data
                 resetState |> ForestStateManager.toResult rt (Some st.Fuid)
         st <- result.State
