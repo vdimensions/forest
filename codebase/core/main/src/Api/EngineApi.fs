@@ -19,35 +19,39 @@ type [<Interface>] IForestEngine =
     [<System.Obsolete>]
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> 'sv
 
-type [<AbstractClass;NoComparison>] ForestEngineDecorator<'TE when 'TE :> IForestEngine> (engine : 'TE) =
+[<AbstractClass;NoComparison>]
+type ForestEngineDecorator<'engine when 'engine :> IForestEngine> (engine : 'engine) =
 
-    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : 'TE -> 'sv
+    [<System.Obsolete>]
+    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : 'engine -> 'sv
+    [<System.Obsolete>]
     default __.RegisterSystemView<'sv when 'sv :> ISystemView> engine = engine.RegisterSystemView<'sv>()
 
-    abstract member LoadTree: 'TE * string -> unit
+    abstract member LoadTree : 'engine * string -> unit
     default __.LoadTree (engine, name) = engine.LoadTree name
-    abstract member LoadTree: 'TE * string * 'msg -> unit
+    abstract member LoadTree : 'engine * string * 'msg -> unit
     default __.LoadTree (engine, name, msg) = engine.LoadTree (name, msg)
 
     //abstract member Render<'pv when 'pv :> IPhysicalView> : IForestEngine -> IPhysicalViewRenderer<'pv> -> ForestResult-> unit
     //default __.Render<'pv when 'pv :> IPhysicalView> facade renderer result = facade.Render<'pv> renderer result
 
-    abstract member SendMessage<'msg> :  'TE -> 'msg -> unit
+    abstract member SendMessage<'msg> : 'engine -> 'msg -> unit
     default __.SendMessage<'msg> engine msg = engine.SendMessage<'msg> msg
 
-    abstract member ExecuteCommand: 'TE -> cname -> thash -> obj -> unit
+    abstract member ExecuteCommand : 'engine -> cname -> thash -> obj -> unit
     default __.ExecuteCommand engine name hash arg = engine.ExecuteCommand name hash arg
 
     interface IForestEngine with
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv> engine
+        //member this.Render renderer result = this.Render facade renderer result
     interface ITreeNavigator with
         member this.LoadTree name = this.LoadTree (engine, name)
         member this.LoadTree (name, msg) = this.LoadTree (engine, name, msg)
-        //member this.Render renderer result = this.Render facade renderer result
     interface IMessageDispatcher with
         member this.SendMessage<'msg> (msg:'msg) = this.SendMessage<'msg> engine msg
     interface ICommandDispatcher with
         member this.ExecuteCommand name hash arg = this.ExecuteCommand engine name hash arg
 
-type [<AbstractClass>] ForestEngineDecorator (engine) =
+[<AbstractClass;NoComparison>] 
+type ForestEngineDecorator (engine) =
     inherit ForestEngineDecorator<IForestEngine> (engine)

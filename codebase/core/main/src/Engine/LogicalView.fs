@@ -7,24 +7,24 @@ open Axle.Verification
 open Forest
 
 
-type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm : 'T) =
+type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(model : 'T) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private hierarchyKey : TreeNode
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
-    val mutable private runtime : IForestRuntime
+    val mutable private executionContext : IForestExecutionContext
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private descriptor : IViewDescriptor
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable vm : 'T = vm
+    let mutable model : 'T = model
 
     override this.Finalize() =
         this.Dispose(false)
 
     member this.Publish<'M> (message : 'M, [<ParamArray>] topics : string[]) = 
-        this.runtime.PublishEvent this message topics
+        this.executionContext.PublishEvent this message topics
 
     abstract member Load : unit -> unit
     default __.Load() = ()
@@ -39,7 +39,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
         upcast RegionImpl(name, this) : IRegion
 
     member this.Close() =
-        match null2vopt this.runtime with
+        match null2vopt this.executionContext with
         | ValueNone ->
             invalidOp("No runtime available!")
         | ValueSome rt -> 
@@ -47,54 +47,55 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
             rt.RemoveViewFromRegion parent region (System.Predicate(fun v -> obj.ReferenceEquals(v, this)))
 
     member this.UpdateModel (NotNull "updateFn" updateFn : Func<'T, 'T>) : unit =
-        let newModel = updateFn.Invoke(vm)
-        vm <-
-            match null2vopt this.runtime with
+        let newModel = updateFn.Invoke(model)
+        model <-
+            match null2vopt this.executionContext with
             // The default behaviour
             | ValueSome rt -> (rt.SetViewModel false this.hierarchyKey newModel)
             // This case is entered if the view model is set at construction time, for example, by a DI container.
             | ValueNone -> newModel
 
 
-    member __.Model with get ():'T = vm
+    member __.Model with get ():'T = model
 
     member internal this.HierarchyKey with get() = this.hierarchyKey
 
-    interface IRuntimeView with
+    interface IExecView with
         member this.Load () = this.Load()
 
-        member this.Resume model =
-            vm <- this.runtime.SetViewModel true this.hierarchyKey (downcast model : 'T)
+        member this.Resume m =
+            model <- this.executionContext.SetViewModel true this.hierarchyKey (downcast m : 'T)
             this.Resume()
 
-        member this.AcquireRuntime (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" runtime : IForestRuntime) =
-            match null2vopt this.runtime with
+        member this.AcquireRuntime (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" runtime : IForestExecutionContext) =
+            match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
                 this.hierarchyKey <- node
                 match runtime.GetViewModel this.HierarchyKey with
-                | Some viewModelFromState -> vm <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| runtime.SetViewModel true this.HierarchyKey vm
+                | Some viewModelFromState -> model <- (downcast viewModelFromState : 'T)
+                | None -> ignore <| runtime.SetViewModel true this.HierarchyKey model
                 runtime.SubscribeEvents this
-                this.runtime <- runtime
+                this.executionContext <- runtime
                 ()
             | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a runtime", this.hierarchyKey.View))
 
         member this.AbandonRuntime (_) =
-            match null2vopt this.runtime with
+            match null2vopt this.executionContext with
             | ValueSome currentRuntime ->
                 currentRuntime.UnsubscribeEvents this                
-                match currentRuntime.GetViewModel this.HierarchyKey with // FIXME: when exception occurs, runtime is not abandoned
-                | Some viewModelFromState -> 
-                    vm <- (downcast viewModelFromState : 'T)
+                // FIXME: when exception occurs, runtime is not abandoned
+                match currentRuntime.GetViewModel this.HierarchyKey with 
+                | Some modelFromState -> 
+                    model <- (downcast modelFromState : 'T)
                     ()
                 | None -> () 
-                this.runtime <- Unchecked.defaultof<IForestRuntime>
+                this.executionContext <- Unchecked.defaultof<IForestExecutionContext>
             | ValueNone -> ()
 
         member this.InstanceID with get() = this.hierarchyKey
         member this.Descriptor with get() = this.descriptor
-        member this.Runtime with get() = this.runtime
+        member this.Context with get() = this.executionContext
 
     interface IView<'T> with
         member this.UpdateModel fn = this.UpdateModel fn
@@ -110,38 +111,38 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(vm 
         member this.Dispose() =
             try this.Dispose(true)
             // When disposing, always abandon the runtime
-            finally (this :> IRuntimeView).AbandonRuntime(this.runtime)
+            finally (this :> IExecView).AbandonRuntime(this.executionContext)
             this |> GC.SuppressFinalize
 
- and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =
+ and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IExecView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
-        owner.Runtime.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
+        owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
 
     member __.ActivateView (NotNull "viewName" viewName : vname, NotNull "model" model : obj) =
-        owner.Runtime.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
+        owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
 
     member __.ActivateView (NotNull "viewType" viewType : Type) : IView =
-        owner.Runtime.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID)
+        owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID)
 
     member __.ActivateView (NotNull "viewType" viewType : Type, NotNull "model" model : obj) : IView =
-        owner.Runtime.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID, model)
+        owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID, model)
 
     member __.ActivateView<'v when 'v :> IView> () : 'v =
-        owner.Runtime.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
+        owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
 
     member __.ActivateView<'v, 'm when 'v :> IView<'m>> (NotNull "model" model : 'm) : 'v =
-        owner.Runtime.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
+        owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
 
     member this.Clear() =
-        owner.Runtime.ClearRegion owner.InstanceID regionName
+        owner.Context.ClearRegion owner.InstanceID regionName
         this
 
     member this.Remove(NotNull "predicate" predicate : System.Predicate<IView>) =
-        owner.Runtime.RemoveViewFromRegion owner.InstanceID regionName predicate
+        owner.Context.RemoveViewFromRegion owner.InstanceID regionName predicate
         this
 
     member __.GetContents() =
-        owner.Runtime.GetRegionContents owner.InstanceID regionName
+        owner.Context.GetRegionContents owner.InstanceID regionName
 
     member __.Name 
         with get() = regionName

@@ -14,5 +14,5 @@ module internal Error =
         match null2opt <| ctx.ViewRegistry.GetDescriptor Name with
         | Some _ -> ()
         | None -> ctx.ViewRegistry.Register typeof<View> |> ignore
-    let Show (runtime : ForestRuntime) : View = 
+    let Show (runtime : ForestExecutionContext) : View = 
         Key |> runtime.GetOrActivateView

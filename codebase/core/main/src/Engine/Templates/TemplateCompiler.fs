@@ -7,7 +7,7 @@ open Forest.Templates.Raw
 [<RequireQualifiedAccess>]
 module TemplateCompiler =
     let rec private expandView (node : TreeNode) (vcl : ViewContents list) =
-        let mutable result = [(Runtime.Operation.InstantiateViewByNode(node, None))]
+        let mutable result = [(ExecutionContext.Operation.InstantiateViewByNode(node, None))]
         for vc in vcl do
             match vc with
             | Region (name, contents) -> result <- expandRegion node name contents @ result
@@ -30,9 +30,9 @@ module TemplateCompiler =
 
     let internal compileOps (template : TemplateDefinition) =
         let (templateParentNode, templateRegion) = (TreeNode.shell, TreeNode.shell.Region)
-        let templateNode = templateParentNode |> TreeNode.newKey templateRegion template.name
-        let ops = Runtime.Operation.ClearRegion(templateParentNode, templateRegion)::(expandView templateNode template.contents |> List.rev)
+        let templateNode = templateParentNode |> TreeNode.newKey templateRegion template.Name
+        let ops = ExecutionContext.Operation.ClearRegion(templateParentNode, templateRegion)::(expandView templateNode template.Contents |> List.rev)
         ops
 
     [<CompiledName("Compile")>]
-    let compile = compileOps >> Runtime.Operation.Multiple
+    let compile = compileOps >> ExecutionContext.Operation.Multiple

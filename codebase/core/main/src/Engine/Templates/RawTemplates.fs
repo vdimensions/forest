@@ -18,7 +18,7 @@ module Raw =
             |> provider.Load 
             |> expand provider 
             |> List.rev 
-        { name = name; contents = List.empty } |> flattenTemplate provider hierarchy
+        { Name = name; Contents = List.empty } |> flattenTemplate provider hierarchy
 
     and private flattenTemplate (provider : ITemplateProvider) (templates : Template list) (result : TemplateDefinition) : TemplateDefinition =
         match templates with
@@ -26,19 +26,19 @@ module Raw =
         | head::tail -> 
             let (placeholderMap, res) = 
                 match head with
-                | Root d -> (Map.empty, { result with contents = d.contents; name = d.name })
+                | Root d -> (Map.empty, { result with Contents = d.Contents; Name = d.Name })
                 | Mastered (_, contentDefinitions) ->
                     let placeholderMap = 
                         contentDefinitions 
-                        |> Seq.map (fun a -> (a.placeholder, a.contents)) 
+                        |> Seq.map (fun a -> (a.Placeholder, a.Contents)) 
                         |> Map.ofSeq
                     (placeholderMap, result)
             let newContents = 
-                res.contents 
+                res.Contents 
                 |> inlineTemplates provider
                 |> processPlaceholders placeholderMap
                 |> expandTemplates provider
-            { res with contents = newContents } |> flattenTemplate provider tail
+            { res with Contents = newContents } |> flattenTemplate provider tail
     /// Locates and expands any `InlinedTemplate` item
     and private inlineTemplates (provider : ITemplateProvider) (current : ViewContents list) : ViewContents list =
         let mutable result = List.empty
@@ -46,7 +46,7 @@ module Raw =
             match vc with 
             | InlinedTemplate t -> 
                 let inlinedTemplate = t |> loadTemplate provider
-                for c in (inlineTemplates provider inlinedTemplate.contents) do 
+                for c in (inlineTemplates provider inlinedTemplate.Contents) do 
                     result <- c::result
             | Region (name, regionContents) ->
                 let mutable newRegionContents = List.empty
@@ -60,6 +60,7 @@ module Raw =
                     | any -> newRegionContents <- any::newRegionContents
                 result <- Region (name, List.rev newRegionContents)::result
         result
+
     /// Inlines the contents of any accumulated `Placeholders` into the respective `Content` items
     and private processPlaceholders (placeholderData : Map<string, RegionContents list>) (current : ViewContents list) : ViewContents list =
         if placeholderData |> Map.isEmpty |> not then
@@ -87,6 +88,7 @@ module Raw =
                     result <- Region (name, List.rev newRegionContents)::result
             result
         else current
+
     /// expands any `Template` items to a fully flattened template 
     and private expandTemplates (provider : ITemplateProvider) (current : ViewContents list) : ViewContents list =
         let mutable result = List.empty
@@ -101,7 +103,7 @@ module Raw =
                     | View (name, nestedViewContents) ->
                         let newNestedViewContents = nestedViewContents |> expandTemplates provider 
                         newRegionContents <- View (name, newNestedViewContents)::newRegionContents
-                    | Template t -> newRegionContents <- View(t, (loadTemplate provider t).contents)::newRegionContents
+                    | Template t -> newRegionContents <- View(t, (loadTemplate provider t).Contents)::newRegionContents
                 result <- Region (name, List.rev newRegionContents)::result
             | any -> result <- any::result
         result

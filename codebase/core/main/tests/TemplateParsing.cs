@@ -5,7 +5,7 @@ using Axle.DependencyInjection;
 using Axle.Resources;
 
 using Forest.Templates.Raw;
-
+using Forest.UI;
 using NUnit.Framework;
 
 
@@ -80,7 +80,7 @@ namespace Forest.Core.Tests
     [TestFixture]
     public class TemplateParsing
     {
-        private IForestFacade _forest;
+        private IForestEngine _forest;
         private IViewRegistry _vr;
         private ResourceManager _resourceManager;
         private CultureInfo _invariantCulture;
@@ -91,7 +91,7 @@ namespace Forest.Core.Tests
             var app = Application.Build()
                 .LoadForest()
                 .Run();
-            _forest = app.Container.Resolve<IForestFacade>();
+            _forest = app.Container.Resolve<IForestEngine>();
             _vr = app.Container.Resolve<IViewRegistry>();
             _resourceManager = app.Container.Resolve<ResourceManager>();
             _invariantCulture = CultureInfo.InvariantCulture;
@@ -116,8 +116,8 @@ namespace Forest.Core.Tests
 
             Assert.IsFalse(template.IsMastered);
 
-            Assert.AreEqual("Master", templateDefinition.name);
-            Assert.IsNotEmpty(templateDefinition.contents);
+            Assert.AreEqual("Master", templateDefinition.Name);
+            Assert.IsNotEmpty(templateDefinition.Contents);
         }
 
         private TemplateDefinition GetDefinition(Template template)
@@ -138,9 +138,9 @@ namespace Forest.Core.Tests
             //var templateDefinition = GetDefinition(template);
             //Assert.IsNotNull(templateDefinition);
             //
-            //Assert.AreEqual("Concrete", templateDefinition.name);
-            //Assert.IsNotEmpty(templateDefinition.contents);
-            //Assert.AreEqual(templateDefinition.contents.Length, 3);
+            //Assert.AreEqual("Concrete", templateDefinition.Name);
+            //Assert.IsNotEmpty(templateDefinition.Contents);
+            //Assert.AreEqual(templateDefinition.Contents.Length, 3);
             //
             //var compiled = TemplateCompiler.Compile(templateDefinition);
             //Assert.IsNotNull(compiled);

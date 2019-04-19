@@ -7,8 +7,8 @@ open System
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed;NoComparison>] internal State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, fuid: Fuid) =
-    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>) = State(tree, viewModels, viewStates, Fuid.newID())
+type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IExecView>, fuid: Fuid) =
+    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IExecView>) = State(tree, viewModels, viewStates, Fuid.newID())
     [<CompiledName("Empty")>]
     static member initial = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
     member internal __.Tree with get() = tree
@@ -60,5 +60,3 @@ module internal State =
         | Some ch -> _traverseState v root ch ch.Length st
         | None -> ()
         v.Complete()
-
-

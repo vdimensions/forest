@@ -55,6 +55,7 @@
     <Compile Include="Api\EngineApi.fs" />
     <Compile Include="Api\InternalApi.fs" />
     <Compile Include="Api\ReflectionApi.fs" />
+    <Compile Include="Api\PhysicalViewApi.fs" />
     <Compile Include="Engine\Reflection.fs" />
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Command.fs" />
@@ -65,7 +66,7 @@
     <Compile Include="Engine\NoopSecurityManager.fs" />
     <Compile Include="Engine\DefaultForestContext.fs" />
     <Compile Include="Engine\State.fs" />
-    <Compile Include="Engine\Runtime.fs" />
+    <Compile Include="Engine\ExecutionContext.fs" />
     <Compile Include="Engine\Dom.fs" />
     <Compile Include="Engine\MessageDispatcher.fs" />
     <Compile Include="Engine\Error.fs" />
@@ -73,19 +74,16 @@
     <Compile Include="Engine\Templates\TemplateParsing.fs" />
     <Compile Include="Engine\Templates\TemplateCompiler.fs" />
     <Compile Include="Engine\Templates\Xml\XmlTemplateParser.fs" />
+    <Compile Include="Engine\UI\PhysicalView.fs" />
+    <Compile Include="Engine\UI\Renderer.fs" />
+    <Compile Include="Engine\ForestState.fs" />
     <Compile Include="Engine\Engine.fs" />
-    <Compile Include="Engine\TemplateExtensions.fs" />
-    <Compile Include="UI\PhysicalView.fs" />
-    <Compile Include="UI\Renderer.fs" />
-    <Compile Include="Facade.fs" />
     <Compile Include="AxleModule\Resources\TemplateResourceInfo.fs" />
     <Compile Include="AxleModule\Resources\TemplateMarshalling.fs" />
     <Compile Include="AxleModule\Resources\XmlTemplateMarshaller.fs" />
     <Compile Include="AxleModule\Resources\ResourceTemplateProvider.fs" />
     <Compile Include="AxleModule\Resources\ForestResourceModule.fs" />
     <Compile Include="AxleModule\AxleViewFactory.fs" />
-    <Compile Include="AxleModule\ForestFacadeProvider.fs" />
-    <Compile Include="AxleModule\NoOp.fs" />
     <Compile Include="AxleModule\ForestModule.fs" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />

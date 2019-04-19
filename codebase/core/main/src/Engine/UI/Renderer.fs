@@ -3,10 +3,6 @@
 open System
 open Forest
 
-[<Interface>] 
-type IPhysicalViewRenderer<'PV when 'PV :> IPhysicalView> =
-    abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
-    abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
 
 [<NoComparison;StructuralEquality>] 
 type internal NodeState =
@@ -14,15 +10,15 @@ type internal NodeState =
     | UpdatedNode of node : DomNode
 
 [<Sealed;NoComparison;NoEquality>] 
-type internal PhysicalViewDomProcessor<'PV when 'PV :> IPhysicalView> =
-    val mutable private renderers : Map<thash, 'PV>
+type internal PhysicalViewDomProcessor =
+    val mutable private renderers : Map<thash, IPhysicalView>
     /// Contains a list of nodes to be retained as they represent present views.
     val mutable private nodesToPreserve : thash Set
     val mutable private nodeStates : NodeState list
     val private _commandDispatcher : ICommandDispatcher
-    val private _renderer : IPhysicalViewRenderer<'PV>
+    val private _renderer : IPhysicalViewRenderer
 
-    new (commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer<'PV>) = 
+    new (commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = 
         { 
             _commandDispatcher = commandDispatcher; 
             _renderer = renderer; 
@@ -103,6 +99,12 @@ type AbstractPhysicalViewRenderer<'PV when 'PV :> IPhysicalView>() =
     abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
     abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
 
+    interface IPhysicalViewRenderer with
+        member this.CreatePhysicalView commandDispatcher n = 
+            upcast this.CreatePhysicalView commandDispatcher n : IPhysicalView
+        member this.CreateNestedPhysicalView commandDispatcher parent n = 
+            upcast this.CreateNestedPhysicalView commandDispatcher (parent :?> 'PV) n : IPhysicalView
+
     interface IPhysicalViewRenderer<'PV> with
-        member this.CreatePhysicalView commandDispatcher n = this.CreatePhysicalView commandDispatcher n
-        member this.CreateNestedPhysicalView commandDispatcher parent n = this.CreateNestedPhysicalView commandDispatcher parent n
+        member this.CreatePhysicalViewG commandDispatcher n = this.CreatePhysicalView commandDispatcher n
+        member this.CreateNestedPhysicalViewG commandDispatcher parent n = this.CreateNestedPhysicalView commandDispatcher parent n

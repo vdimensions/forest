@@ -14,51 +14,51 @@ open Forest.Security
 open Forest.Templates.Raw
 open Forest.UI
 
-type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacade(logger : ILogger, facade : IForestFacade) =
-    inherit ForestFacadeProxy(facade)
-    override __.SendMessage facade message =
+type [<Sealed;NoEquality;NoComparison>] private LoggingForestEngine(logger : ILogger, engine : IForestEngine) =
+    inherit ForestEngineDecorator(engine)
+    override __.SendMessage engine message =
         let sw = Stopwatch.StartNew()
-        let result = facade.SendMessage message
+        let result = engine.SendMessage message
         sw.Stop()
         logger.Trace("Forest 'SendMessage' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
         result
 
-    override __.ExecuteCommand facade command target arg =
+    override __.ExecuteCommand engine command target arg =
         let sw = Stopwatch.StartNew()
-        let result = facade.ExecuteCommand command target arg
+        let result = engine.ExecuteCommand command target arg
         sw.Stop()
         logger.Trace("Forest 'ExecuteCommand' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
         result
 
-    override __.LoadTree (facade, tree) =
+    override __.LoadTree (engine, tree) =
         let sw = Stopwatch.StartNew()
-        let result = facade.LoadTree tree
+        let result = engine.LoadTree tree
         sw.Stop()
         logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
         result
-    override __.LoadTree (facade, tree, msg) =
+    override __.LoadTree (engine, tree, msg) =
         let sw = Stopwatch.StartNew()
-        let result = facade.LoadTree (tree, msg)
+        let result = engine.LoadTree (tree, msg)
         sw.Stop()
         logger.Trace("Forest 'LoadTree' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
         result
 
-    override __.RegisterSystemView<'sv when 'sv :> ISystemView> facade =
+    override __.RegisterSystemView<'sv when 'sv :> ISystemView> engine =
         let sw = Stopwatch.StartNew()
-        let result = facade.RegisterSystemView<'sv>()
+        let result = engine.RegisterSystemView<'sv>()
         sw.Stop()
         logger.Trace("Forest 'RegisterSystemView' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
         result
 
-    override __.Render facade renderer result =
-        let sw = Stopwatch.StartNew()
-        let result1 = facade.Render renderer result
-        sw.Stop()
-        logger.Trace("Forest 'Render' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
-        result1
+    //override __.Render facade renderer result =
+    //    let sw = Stopwatch.StartNew()
+    //    let result1 = facade.Render renderer result
+    //    sw.Stop()
+    //    logger.Trace("Forest 'Render' operation took {0}ms to complete. ", sw.ElapsedMilliseconds)
+    //    result1
 
-type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacadeProvider(logger : ILogger, provider : IForestFacadeProvider) =
-    interface IForestFacadeProvider with member __.ForestFacade with get() = upcast LoggingForestFacade(logger, provider.ForestFacade)
+//type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacadeProvider(logger : ILogger, provider : IForestFacadeProvider) =
+//    interface IForestFacadeProvider with member __.ForestFacade with get() = upcast LoggingForestFacade(logger, provider.ForestFacade)
 
 [<AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>]
 type [<Sealed>] RequiresForestAttribute() = inherit RequiresAttribute(typeof<ForestModule>)
@@ -75,10 +75,13 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
         logger : ILogger) =
     [<DefaultValue>]
     val mutable private _context : IForestContext
+    //[<DefaultValue>]
+    //val mutable private _facadeProvider : IForestFacadeProvider 
     [<DefaultValue>]
-    val mutable private _facadeProvider : IForestFacadeProvider 
+    val mutable private _forestStateManager : ForestStateManager
+    [<DefaultValue>]
+    val mutable private _forestEngine : IForestEngine
     
-
     [<ModuleInit>]
     member this.Init(e : ModuleExporter) =
         let reflectionProvider =
@@ -96,45 +99,48 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
             |> AxleViewFactory
         let context : IForestContext = upcast DefaultForestContext(viewFactory, reflectionProvider, securityManager, templateProvider)
         this._context <- context
-        this._facadeProvider <- NoOp.FacadeProvider context
+        this._forestEngine <- ForestExecutionEngine.T() |> ForestEngineStateDecorator.Decorate this._context this._forestStateManager 
         context |> e.Export<IForestContext> |> ignore
-        this |> e.Export<IForestFacade> |> ignore
+        this |> e.Export<IForestEngine> |> ignore
 
     [<ModuleDependencyInitialized>]
     member this.DependencyInitialized (viewProvider : IForestViewProvider) =
         (this :> IViewRegistry) |> viewProvider.RegisterViews
 
     [<ModuleDependencyInitialized>]
-    member this.DependencyInitialized (facadeProvider : IForestFacadeProvider) =
-        this._facadeProvider <- facadeProvider
+    member this.DependencyInitialized (stateManager : ForestStateManager) =
+        this._forestStateManager <- stateManager
+        this._forestEngine <- ForestExecutionEngine.T() |> ForestEngineStateDecorator.Decorate this._context this._forestStateManager
         this.MakeDebuggerFacade()
 
     [<Conditional("DEBUG")>]
     member private this.MakeDebuggerFacade() =
-        this._facadeProvider <- (LoggingForestFacadeProvider(logger, this._facadeProvider) :> IForestFacadeProvider)
+        this._forestEngine <- LoggingForestEngine(logger, this._forestEngine)
 
-    member private this.ForestFacade with get() = this._facadeProvider.ForestFacade            
+    member private this.ForestEngine with get() = this._forestEngine            
 
-    interface IForestFacade with
+    interface IForestEngine with
+        [<Obsolete>]
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
-            this.ForestFacade.RegisterSystemView<'sv>()
+            this.ForestEngine.RegisterSystemView<'sv>()
 
+    interface ITreeNavigator with
         member this.LoadTree t = 
-            this.ForestFacade.LoadTree t
+            this.ForestEngine.LoadTree t
 
         member this.LoadTree (t, m) = 
-            this.ForestFacade.LoadTree (t, m)
+            this.ForestEngine.LoadTree (t, m)
 
-        member this.Render renderer result = 
-            this.ForestFacade.Render renderer result
+        //member this.Render renderer result = 
+        //    this.ForestEngine.Render renderer result
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
-            this.ForestFacade.SendMessage msg
+            this.ForestEngine.SendMessage msg
 
     interface ICommandDispatcher with
         member this.ExecuteCommand cmd target arg = 
-            this.ForestFacade.ExecuteCommand cmd target arg
+            this.ForestEngine.ExecuteCommand cmd target arg
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type): IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

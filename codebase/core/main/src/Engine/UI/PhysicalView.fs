@@ -4,12 +4,6 @@ open Axle.Verification
 open Forest
 
 
-type [<Interface>] IPhysicalView =
-    inherit IDisposable
-    abstract member Update : node : DomNode -> unit
-    abstract member InvokeCommand : name : cname -> arg : obj -> unit
-    abstract member Hash : thash
-
 [<AbstractClass;NoComparison>] 
 type AbstractPhysicalView(commandDispatcher : ICommandDispatcher, hash : thash) =
     do 
