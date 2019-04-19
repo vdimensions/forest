@@ -75,10 +75,8 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
         logger : ILogger) =
     [<DefaultValue>]
     val mutable private _context : IForestContext
-    //[<DefaultValue>]
-    //val mutable private _facadeProvider : IForestFacadeProvider 
     [<DefaultValue>]
-    val mutable private _forestStateManager : ForestStateManager
+    val mutable private _forestStateProvider : IForestStateProvider
     [<DefaultValue>]
     val mutable private _forestEngine : IForestEngine
     
@@ -99,7 +97,8 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
             |> AxleViewFactory
         let context : IForestContext = upcast DefaultForestContext(viewFactory, reflectionProvider, securityManager, templateProvider)
         this._context <- context
-        this._forestEngine <- ForestExecutionEngine.T() |> ForestEngineStateDecorator.Decorate this._context this._forestStateManager 
+        this._forestStateProvider <- DefaultForestStateProvider()
+        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._forestStateProvider 
         context |> e.Export<IForestContext> |> ignore
         this |> e.Export<IForestEngine> |> ignore
 
@@ -108,9 +107,9 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
         (this :> IViewRegistry) |> viewProvider.RegisterViews
 
     [<ModuleDependencyInitialized>]
-    member this.DependencyInitialized (stateManager : ForestStateManager) =
-        this._forestStateManager <- stateManager
-        this._forestEngine <- ForestExecutionEngine.T() |> ForestEngineStateDecorator.Decorate this._context this._forestStateManager
+    member this.DependencyInitialized (stateProvider : IForestStateProvider) =
+        this._forestStateProvider <- stateProvider
+        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._forestStateProvider
         this.MakeDebuggerFacade()
 
     [<Conditional("DEBUG")>]
@@ -143,12 +142,12 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
             this.ForestEngine.ExecuteCommand cmd target arg
 
     interface IViewRegistry with
-        member this.GetDescriptor(viewType : Type): IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType
-        member this.GetDescriptor(name : vname): IViewDescriptor = this._context.ViewRegistry.GetDescriptor name
-        member this.Register<'t when 't:>IView>():IViewRegistry = 
+        member this.GetDescriptor(viewType : Type) : IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType
+        member this.GetDescriptor(name : vname) : IViewDescriptor = this._context.ViewRegistry.GetDescriptor name
+        member this.Register<'t when 't:>IView>() :IViewRegistry = 
             typeof<'t>.GetTypeInfo().Assembly |> rtp.RegisterAssemblySource 
             this._context.ViewRegistry.Register<'t>()
-        member this.Register(t : Type): IViewRegistry = 
+        member this.Register(t : Type) : IViewRegistry = 
             t.GetTypeInfo().Assembly |> rtp.RegisterAssemblySource 
             this._context.ViewRegistry.Register t
         member this.Resolve(descriptor : IViewDescriptor): IView = this._context.ViewRegistry.Resolve descriptor

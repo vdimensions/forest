@@ -19,6 +19,9 @@ type ForestResult internal (state : State, changeList : ChangeList, ctx : IFores
     member internal __.State with get() = state
     member __.ChangeList with get() = changeList
 
+type [<Interface>] IForestStateProvider =
+    abstract member LoadState : unit -> State
+    abstract member CommitState : State -> unit
 
 [<Sealed;NoEquality;NoComparison>] 
 type ForestStateScope internal (engine : IForestEngine, ec : ForestExecutionContext, state : State) =
@@ -27,16 +30,16 @@ type ForestStateScope internal (engine : IForestEngine, ec : ForestExecutionCont
     member __.State with get() = state
     member __.Engine with get() = engine
     
-and [<AbstractClass;NoComparison>] ForestStateManager(renderer : IPhysicalViewRenderer) =
+and [<Sealed;NoComparison>] internal ForestStateManager(renderer : IPhysicalViewRenderer, sp : IForestStateProvider) =
     let toResult (ec : ForestExecutionContext) (state : State) =
         let a, b, c, cl = ec.Deconstruct()
-        let newState = State.create(a, b, c)
+        let newState = State.create(a, b, c, state.PhysicalViews)
             //match fuid with
             //| Some f -> State.createWithFuid(a, b, c, f)
             //| None -> State.create(a, b, c)
         ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), ec.Context)
 
-    abstract member LoadState : unit -> State
+    //abstract member LoadState : unit -> State
     //default __.LoadState() = 
     //    let initialState = 
     //        // TODO: use local state var if available
@@ -46,29 +49,30 @@ and [<AbstractClass;NoComparison>] ForestStateManager(renderer : IPhysicalViewRe
     //        //| None -> st
     //    initialState
 
-    abstract member CommitState : State -> unit
+    //abstract member CommitState : State -> unit
 
-    member internal this.BeginStateScope (ctx : IForestContext, engine : IForestEngine) =
-        let initialState = this.LoadState()
+    member internal __.BeginStateScope (ctx : IForestContext, engine : IForestEngine) =
+        let initialState = sp.LoadState()
         let ec = ForestExecutionContext.Create(initialState.Tree, initialState.Models, initialState.ViewStates, ctx)
         let s = new ForestStateScope(engine, ec, initialState)
         s
 
-    member internal this.EndStateScope (scope : ForestStateScope) =
-        let result = toResult scope.ExecutionContext scope.State
+    member internal __.EndStateScope (scope : ForestStateScope) =
+        let mutable result = toResult scope.ExecutionContext scope.State
         scope.ExecutionContext.Dispose()
         // TODO: reuse dom processor
-        let domProcessor = PhysicalViewDomProcessor(scope.Engine, renderer)
+        let domProcessor = PhysicalViewDomProcessor(scope.State.PhysicalViews, scope.Engine, renderer)
         result.Render domProcessor
-        this.CommitState result.State
+        let state = State(result.State.Tree, result.State.Models, result.State.ViewStates, domProcessor.PhysicalViews)
+        result <- ForestResult(state, result.ChangeList, scope.ExecutionContext.Context)
+        sp.CommitState result.State
 
 
-type [<Sealed>] DefaultForestStateManager(renderer) =
-    inherit ForestStateManager(renderer)
+type [<Sealed>] DefaultForestStateProvider() =
     [<DefaultValue>]
     val mutable private _st : State voption
 
-    override this.LoadState () =
+    member this.LoadState () =
         match this._st with
         | ValueNone -> 
             let res = State.initial
@@ -76,4 +80,8 @@ type [<Sealed>] DefaultForestStateManager(renderer) =
             res
         | ValueSome s -> s
 
-    override this.CommitState state = this._st <- ValueSome state
+    member this.CommitState state = this._st <- ValueSome state
+
+    interface IForestStateProvider with
+        member this.LoadState() = this.LoadState()
+        member this.CommitState(state) = this.CommitState(state)

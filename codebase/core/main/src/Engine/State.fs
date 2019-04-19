@@ -1,19 +1,21 @@
 ﻿namespace Forest
 
 open Forest.Collections
+open Forest.UI
 
 open System
 
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IExecView>, fuid: Fuid) =
-    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IExecView>) = State(tree, viewModels, viewStates, Fuid.newID())
+type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IExecView>, physicalViews : Map<thash, IPhysicalView>, fuid: Fuid) =
+    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IExecView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID())
     [<CompiledName("Empty")>]
-    static member initial = State(Tree.root, Map.empty, Map.empty, Fuid.empty)
+    static member initial = State(Tree.root, Map.empty, Map.empty, Map.empty, Fuid.empty)
     member internal __.Tree with get() = tree
     member internal __.Models with get() = models
     member internal __.ViewStates with get() = viewStates
+    member internal __.PhysicalViews with get() = physicalViews
     member internal __.Fuid with get() = fuid
     member __.Hash with get() = fuid.Hash
     //member __.MachineToken with get() = fuid.MachineToken
@@ -30,9 +32,9 @@ type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj
 
 [<RequireQualifiedAccess>]
 module internal State =
-    let create (hs, m, vs) = State(hs, m, vs)
-    let createWithFuid (hs, m, vs, fuid) = State(hs, m, vs, fuid)
-    let discardViewStates (st : State) = State(st.Tree, st.Models, Map.empty)
+    let create (hs, m, vs, pv) = State(hs, m, vs, pv)
+    let createWithFuid (hs, m, vs, pv, fuid) = State(hs, m, vs, pv, fuid)
+    let discardViewStates (st : State) = State(st.Tree, st.Models, Map.empty, Map.empty)
 
     let rec private _traverseState (v : IForestStateVisitor) parent (ids : TreeNode list) (siblingsCount : int) (st : State) =
         match ids with

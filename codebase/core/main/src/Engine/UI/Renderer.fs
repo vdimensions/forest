@@ -11,34 +11,36 @@ type internal NodeState =
 
 [<Sealed;NoComparison;NoEquality>] 
 type internal PhysicalViewDomProcessor =
-    val mutable private renderers : Map<thash, IPhysicalView>
+    val mutable private physicalViews : Map<thash, IPhysicalView>
     /// Contains a list of nodes to be retained as they represent present views.
     val mutable private nodesToPreserve : thash Set
     val mutable private nodeStates : NodeState list
     val private _commandDispatcher : ICommandDispatcher
     val private _renderer : IPhysicalViewRenderer
 
-    new (commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = 
+    new (physicalViews, commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = 
         { 
             _commandDispatcher = commandDispatcher; 
             _renderer = renderer; 
-            renderers = Map.empty; 
+            physicalViews = physicalViews; 
             nodesToPreserve = Set.empty; 
             nodeStates = List.empty 
         }
+
+    member this.PhysicalViews with get() = this.physicalViews
 
     interface IDomProcessor with
         member this.ProcessNode n =
             this.nodesToPreserve <- this.nodesToPreserve |> Set.add n.Hash
             this.nodeStates <- 
-                match this.renderers.TryFind n.Hash with
+                match this.physicalViews.TryFind n.Hash with
                 | Some _ -> (UpdatedNode n)::this.nodeStates
                 | None -> (NewNode n)::this.nodeStates
             n
 
         member this.Complete(_ : DomNode list) = 
             let renderers = System.Collections.Generic.Dictionary<thash, 'PV>(StringComparer.Ordinal)
-            for kvp in this.renderers do
+            for kvp in this.physicalViews do
                 if not <| this.nodesToPreserve.Contains(kvp.Key) then
                     kvp.Value.Dispose()
                 else
@@ -82,7 +84,7 @@ type internal PhysicalViewDomProcessor =
                     | (false, Some renderer) ->
                         updateCalls <- (renderer,n)::updateCalls
 
-            this.renderers <- renderers |> Seq.map (|KeyValue|) |> Map.ofSeq
+            this.physicalViews <- renderers |> Seq.map (|KeyValue|) |> Map.ofSeq
             this.nodesToPreserve <- Set.empty
             this.nodeStates <- List.empty
 

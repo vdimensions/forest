@@ -73,9 +73,10 @@ module ForestExecutionEngine =
             member this.LoadTree name = this.LoadTree name
             member this.LoadTree (name, msg) = this.LoadTree (name, msg)
 
-module ForestEngineStateDecorator =
-    type private T (engine : ForestExecutionEngine.T, ctx : IForestContext, sp : ForestStateManager) =
+module ForestStateEngine =
+    type private T private (engine : ForestExecutionEngine.T, ctx : IForestContext, sp : ForestStateManager) =
         inherit ForestEngineDecorator<ForestExecutionEngine.T>(engine)
+        new (engine, ctx, renderer : IPhysicalViewRenderer, sp : IForestStateProvider) = T (engine, ctx, ForestStateManager(renderer, sp))
 
         member inline private this.WrapAction (s : State option) (action : ForestExecutionEngine.T -> 'a) (engine : ForestExecutionEngine.T) : 'a =
             match engine.ExecutionContextMaybe with
@@ -110,7 +111,7 @@ module ForestEngineStateDecorator =
         override this.RegisterSystemView<'sv when 'sv :> ISystemView> engine =
             this.WrapAction None (fun e -> e.RegisterSystemView<'sv> ()) engine
 
-    let internal Decorate ctx sp engine = upcast T(engine, ctx, sp) : IForestEngine   
+    let internal Create ctx renderer sp engine = upcast T(engine, ctx, renderer, sp) : IForestEngine   
 
 //type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, state : State, syncRoot : obj) =
 //    [<DefaultValue>]
