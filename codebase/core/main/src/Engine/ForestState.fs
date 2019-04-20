@@ -1,6 +1,5 @@
 ﻿namespace Forest
 
-open System
 open Axle.Verification
 open Forest.UI
 
@@ -10,9 +9,6 @@ type ForestResult internal (state : State, changeList : ChangeList, ctx : IFores
     do
         ignore <| (|NotNull|) "state" state
         ignore <| (|NotNull|) "changeList" changeList
-
-    member __.Render ([<ParamArray>] renderers : IDomProcessor array) =
-        state |> State.traverse (ForestDomRenderer(renderers |> Seq.ofArray, ctx))
 
     override __.ToString() = state.Tree.ToString()
 
@@ -24,48 +20,30 @@ type [<Interface>] IForestStateProvider =
     abstract member CommitState : State -> unit
 
 [<Sealed;NoEquality;NoComparison>] 
-type ForestStateScope internal (engine : IForestEngine, ec : ForestExecutionContext, state : State) =
+type ForestStateScope internal (ec : IForestExecutionContext, state : State) =
 
     member internal __.ExecutionContext with get() = ec
     member __.State with get() = state
-    member __.Engine with get() = engine
+    member __.Engine with get() = ec :> IForestEngine
     
-and [<Sealed;NoComparison>] internal ForestStateManager(renderer : IPhysicalViewRenderer, sp : IForestStateProvider) =
-    let toResult (ec : ForestExecutionContext) (state : State) =
-        let a, b, c, cl = ec.Deconstruct()
-        let newState = State.create(a, b, c, state.PhysicalViews)
-            //match fuid with
-            //| Some f -> State.createWithFuid(a, b, c, f)
-            //| None -> State.create(a, b, c)
-        ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), ec.Context)
-
-    //abstract member LoadState : unit -> State
-    //default __.LoadState() = 
-    //    let initialState = 
-    //        // TODO: use local state var if available
-    //        State.initial
-    //        //match s with 
-    //        //| Some x -> x 
-    //        //| None -> st
-    //    initialState
-
-    //abstract member CommitState : State -> unit
-
-    member internal __.BeginStateScope (ctx : IForestContext, engine : IForestEngine) =
-        let initialState = sp.LoadState()
-        let ec = ForestExecutionContext.Create(initialState.Tree, initialState.Models, initialState.ViewStates, ctx)
-        let s = new ForestStateScope(engine, ec, initialState)
+and [<Sealed;NoComparison;NoEquality>] internal ForestStateManager(renderer : IPhysicalViewRenderer, sp : IForestStateProvider) =
+    member internal __.BeginStateScope (ctx : IForestContext, ec : IForestExecutionContext) =
+        let state = sp.LoadState()
+        let ec = ForestExecutionContext.Create(state.Tree, state.Models, state.ViewStates, ctx)
+        let s = new ForestStateScope(ec, state)
         s
 
     member internal __.EndStateScope (scope : ForestStateScope) =
-        let mutable result = toResult scope.ExecutionContext scope.State
-        scope.ExecutionContext.Dispose()
-        // TODO: reuse dom processor
-        let domProcessor = PhysicalViewDomProcessor(scope.State.PhysicalViews, scope.Engine, renderer)
-        result.Render domProcessor
-        let state = State(result.State.Tree, result.State.Models, result.State.ViewStates, domProcessor.PhysicalViews)
-        result <- ForestResult(state, result.ChangeList, scope.ExecutionContext.Context)
-        sp.CommitState result.State
+        let state, ec, engine = scope.State, scope.ExecutionContext, scope.Engine
+        let a, b, c, cl = ec.Deconstruct()
+        let pv = state |> State.render ec.Context engine renderer
+        ec.Dispose()
+        let newState = State.create(a, b, c, pv)
+            //match fuid with
+            //| Some f -> State.createWithFuid(a, b, c, f)
+            //| None -> State.create(a, b, c)
+        sp.CommitState newState
+        ForestResult(newState, ChangeList(state.Hash, cl, newState.Fuid), ec.Context)
 
 
 type [<Sealed>] DefaultForestStateProvider() =

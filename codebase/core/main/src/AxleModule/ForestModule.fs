@@ -76,6 +76,8 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     [<DefaultValue>]
     val mutable private _context : IForestContext
     [<DefaultValue>]
+    val mutable private _physicalViewRenderer : IPhysicalViewRenderer
+    [<DefaultValue>]
     val mutable private _forestStateProvider : IForestStateProvider
     [<DefaultValue>]
     val mutable private _forestEngine : IForestEngine
@@ -98,7 +100,7 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
         let context : IForestContext = upcast DefaultForestContext(viewFactory, reflectionProvider, securityManager, templateProvider)
         this._context <- context
         this._forestStateProvider <- DefaultForestStateProvider()
-        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._forestStateProvider 
+        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._physicalViewRenderer this._forestStateProvider 
         context |> e.Export<IForestContext> |> ignore
         this |> e.Export<IForestEngine> |> ignore
 
@@ -109,7 +111,7 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     [<ModuleDependencyInitialized>]
     member this.DependencyInitialized (stateProvider : IForestStateProvider) =
         this._forestStateProvider <- stateProvider
-        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._forestStateProvider
+        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._physicalViewRenderer this._forestStateProvider
         this.MakeDebuggerFacade()
 
     [<Conditional("DEBUG")>]

@@ -1,8 +1,10 @@
 namespace Forest
 
+open System
+open Forest.Collections
 
 // internal functionality needed by the forest runtime
-type [<Interface>] internal IExecView =
+type [<Interface>] internal IRuntimeView =
     inherit IView
 
     abstract member AcquireRuntime : node : TreeNode -> vd : IViewDescriptor -> runtime : IForestExecutionContext -> unit
@@ -16,8 +18,11 @@ type [<Interface>] internal IExecView =
     abstract Context : IForestExecutionContext with get
 
  and [<Interface>] internal IForestExecutionContext =
-    abstract member SubscribeEvents : receiver : IExecView -> unit
-    abstract member UnsubscribeEvents : receiver : IExecView -> unit
+    inherit IForestEngine
+    inherit IDisposable
+
+    abstract member SubscribeEvents : receiver : IRuntimeView -> unit
+    abstract member UnsubscribeEvents : receiver : IRuntimeView -> unit
 
     abstract member GetViewModel : id : TreeNode -> obj option
     abstract member SetViewModel : silent : bool -> id : TreeNode -> model : 'T -> 'T
@@ -28,5 +33,9 @@ type [<Interface>] internal IExecView =
 
     abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode -> IView
     abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj -> IView
-    abstract member ExecuteCommand : command : cname -> issuer : IExecView -> arg : obj -> unit
-    abstract member PublishEvent : sender : IExecView -> message : 'M -> topics : string array -> unit
+    abstract member ExecuteCommand : command : cname -> issuer : IRuntimeView -> arg : obj -> unit
+    abstract member PublishEvent : sender : IRuntimeView -> message : 'M -> topics : string array -> unit
+
+    abstract member Deconstruct : unit -> Tree * Map<thash, obj> * Map<thash, IRuntimeView> * StateChange list
+
+    abstract member Context : IForestContext with get

@@ -1,6 +1,5 @@
-﻿namespace Forest.UI
+﻿namespace Forest
 
-open Forest
 
 type [<Interface>] ICommandDispatcher =
     abstract member ExecuteCommand : command : cname -> hash : thash -> arg : obj -> unit

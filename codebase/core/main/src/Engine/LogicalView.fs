@@ -60,7 +60,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
 
     member internal this.HierarchyKey with get() = this.hierarchyKey
 
-    interface IExecView with
+    interface IRuntimeView with
         member this.Load () = this.Load()
 
         member this.Resume m =
@@ -111,10 +111,10 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
         member this.Dispose() =
             try this.Dispose(true)
             // When disposing, always abandon the runtime
-            finally (this :> IExecView).AbandonRuntime(this.executionContext)
+            finally (this :> IRuntimeView).AbandonRuntime(this.executionContext)
             this |> GC.SuppressFinalize
 
- and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IExecView) =
+ and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
         owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
 

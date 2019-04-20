@@ -8,8 +8,8 @@ open System
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IExecView>, physicalViews : Map<thash, IPhysicalView>, fuid: Fuid) =
-    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IExecView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID())
+type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>, fuid: Fuid) =
+    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID())
     [<CompiledName("Empty")>]
     static member initial = State(Tree.root, Map.empty, Map.empty, Map.empty, Fuid.empty)
     member internal __.Tree with get() = tree
@@ -62,3 +62,8 @@ module internal State =
         | Some ch -> _traverseState v root ch ch.Length st
         | None -> ()
         v.Complete()
+
+    let internal render (ctx : IForestContext) (engine : IForestEngine) (renderer : IPhysicalViewRenderer) (state : State) =
+        let domProcessor = PhysicalViewDomProcessor(state.PhysicalViews, engine, renderer)
+        state |> traverse (ForestDomRenderer(seq { yield domProcessor :> IDomProcessor }, ctx))
+        domProcessor.PhysicalViews

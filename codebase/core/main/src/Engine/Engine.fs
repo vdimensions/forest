@@ -7,81 +7,80 @@ open Forest.UI
 open Forest.Templates.Raw
 
 
-module ForestExecutionEngine =
-    /// The lowest forest engine tier. It performs all the forest operations directly against the forest execution context.
-    type [<Sealed;NoComparison;NoEquality>] internal T() =
-        [<DefaultValue>]
-        val mutable private _executionContext : ForestExecutionContext voption
-
-        member private this.ExecutionContext 
-            with get() = 
-                match this._executionContext with
-                | ValueSome ec -> ec
-                | ValueNone -> invalidOp "No execution context is available."
-            and set value = this._executionContext <- value |> ValueSome
-
-        member this.ExecutionContextMaybe 
-            with get() = this._executionContext
-            and set value = this._executionContext <- value
-
-        member this.ExecuteCommand (NotNull "command" command) target message = 
-            ExecutionContext.Operation.InvokeCommand(command, target, message) 
-            |> this.ExecutionContext.Do 
-            |> ExecutionContext.resolve ignore
-
-        [<Obsolete>]
-        member this.RegisterSystemView<'sv when 'sv :> ISystemView> () = 
-            let descriptor = 
-                match typeof<'sv> |> this.ExecutionContext.Context.ViewRegistry.GetDescriptor |> null2vopt with
-                | ValueNone -> 
-                    this.ExecutionContext.Context.ViewRegistry
-                    |> ViewRegistry.registerViewType typeof<'sv> 
-                    |> ViewRegistry.getDescriptorByType typeof<'sv> 
-                | ValueSome d -> d
-            let key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region descriptor.Name
-            this.ExecutionContext.GetOrActivateView<'sv> key
-
-        member this.SendMessage<'msg> (message : 'msg) = 
-            ExecutionContext.Operation.DispatchMessage(message, [||])
-            |> this.ExecutionContext.Do
-            |> ExecutionContext.resolve ignore
-
-        member this.LoadTree (NotNullOrEmpty "name" name) =
-            name 
-            |> Raw.loadTemplate this.ExecutionContext.Context.TemplateProvider
-            |> Templates.TemplateCompiler.compileOps
-            |> ExecutionContext.Operation.Multiple
-            |> this.ExecutionContext.Do
-            |> ExecutionContext.resolve ignore
-
-        member this.LoadTree (NotNullOrEmpty "name" name, message) =
-            name 
-            |> Raw.loadTemplate this.ExecutionContext.Context.TemplateProvider
-            |> Templates.TemplateCompiler.compileOps
-            |> List.append [ExecutionContext.Operation.DispatchMessage(message, [||])]
-            |> ExecutionContext.Operation.Multiple
-            |> this.ExecutionContext.Do   
-            |> ExecutionContext.resolve ignore
-
-        interface IForestEngine with
-            member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv>()
-        interface IMessageDispatcher with
-            member this.SendMessage<'msg> msg = this.SendMessage<'msg> msg
-        interface ICommandDispatcher with
-            member this.ExecuteCommand c t m = this.ExecuteCommand c t m
-        interface ITreeNavigator with
-            member this.LoadTree name = this.LoadTree name
-            member this.LoadTree (name, msg) = this.LoadTree (name, msg)
+//module ForestExecutionEngine =
+//    /// The lowest forest engine tier. It performs all the forest operations directly against the forest execution context.
+//    type [<Sealed;NoComparison;NoEquality>] internal T() =
+//        [<DefaultValue>]
+//        val mutable private _executionContext : ForestExecutionContext voption
+//
+//        member private this.ExecutionContext 
+//            with get() = 
+//                match this._executionContext with
+//                | ValueSome ec -> ec
+//                | ValueNone -> invalidOp "No execution context is available."
+//            and set value = this._executionContext <- value |> ValueSome
+//
+//        member this.ExecutionContextMaybe 
+//            with get() = this._executionContext
+//            and set value = this._executionContext <- value
+//
+//        member this.ExecuteCommand (NotNull "command" command) target message = 
+//            Runtime.Operation.InvokeCommand(command, target, message) 
+//            |> this.ExecutionContext.Do 
+//            |> Runtime.resolve ignore
+//
+//        [<Obsolete>]
+//        member this.RegisterSystemView<'sv when 'sv :> ISystemView> () = 
+//            let descriptor = 
+//                match typeof<'sv> |> this.ExecutionContext.Context.ViewRegistry.GetDescriptor |> null2vopt with
+//                | ValueNone -> 
+//                    this.ExecutionContext.Context.ViewRegistry
+//                    |> ViewRegistry.registerViewType typeof<'sv> 
+//                    |> ViewRegistry.getDescriptorByType typeof<'sv> 
+//                | ValueSome d -> d
+//            let key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region descriptor.Name
+//            this.ExecutionContext.GetOrActivateView<'sv> key
+//
+//        member this.SendMessage<'msg> (message : 'msg) = 
+//            Runtime.Operation.DispatchMessage(message, [||])
+//            |> this.ExecutionContext.Do
+//            |> Runtime.resolve ignore
+//
+//        member this.LoadTree (NotNullOrEmpty "name" name) =
+//            name 
+//            |> Raw.loadTemplate this.ExecutionContext.Context.TemplateProvider
+//            |> Templates.TemplateCompiler.compileOps
+//            |> Runtime.Operation.Multiple
+//            |> this.ExecutionContext.Do
+//            |> Runtime.resolve ignore
+//
+//        member this.LoadTree (NotNullOrEmpty "name" name, message) =
+//            name 
+//            |> Raw.loadTemplate this.ExecutionContext.Context.TemplateProvider
+//            |> Templates.TemplateCompiler.compileOps
+//            |> List.append [Runtime.Operation.DispatchMessage(message, [||])]
+//            |> Runtime.Operation.Multiple
+//            |> this.ExecutionContext.Do   
+//            |> Runtime.resolve ignore
+//
+//        interface IForestEngine with
+//            member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv>()
+//        interface IMessageDispatcher with
+//            member this.SendMessage<'msg> msg = this.SendMessage<'msg> msg
+//        interface ICommandDispatcher with
+//            member this.ExecuteCommand c t m = this.ExecuteCommand c t m
+//        interface ITreeNavigator with
+//            member this.LoadTree name = this.LoadTree name
+//            member this.LoadTree (name, msg) = this.LoadTree (name, msg)
 
 module ForestStateEngine =
-    type private T private (engine : ForestExecutionEngine.T, ctx : IForestContext, sp : ForestStateManager) =
-        inherit ForestEngineDecorator<ForestExecutionEngine.T>(engine)
-        new (engine, ctx, renderer : IPhysicalViewRenderer, sp : IForestStateProvider) = T (engine, ctx, ForestStateManager(renderer, sp))
+    type private T private (executionContext : IForestExecutionContext, sp : ForestStateManager) =
+        new (executionContext, renderer : IPhysicalViewRenderer, sp : IForestStateProvider) = T (executionContext, ForestStateManager(renderer, sp))
 
-        member inline private this.WrapAction (s : State option) (action : ForestExecutionEngine.T -> 'a) (engine : ForestExecutionEngine.T) : 'a =
+        member inline private this.WrapAction (s : State option) (action : IForestExecutionContext -> 'a) (engine : IForestExecutionContext) : 'a =
             match engine.ExecutionContextMaybe with
             | ValueNone ->
-                let scope = sp.BeginStateScope(ctx, this)
+                let scope = sp.BeginStateScope(executionContext.Context, executionContext)
                 try 
                     engine.ExecutionContextMaybe <- ValueSome scope.ExecutionContext
                     let actionResult = action engine
@@ -89,29 +88,27 @@ module ForestStateEngine =
 
                     actionResult
                 finally
-                    sp.EndStateScope(scope)
+                    sp.EndStateScope(scope) |> ignore
             | ValueSome _ -> 
-                //let actionResult = action engine
-                //let result = initialState |> toResult ec
                 action engine
 
-        override this.ExecuteCommand engine command target arg =
+        member this.ExecuteCommand engine command target arg =
             this.WrapAction None (fun e -> e.ExecuteCommand command target arg) engine
 
-        override this.SendMessage engine msg =
+        member this.SendMessage engine msg =
             this.WrapAction None (fun e -> e.SendMessage msg) engine
 
-        override this.LoadTree (engine, name) =
+        member this.LoadTree (engine, name) =
             this.WrapAction None (fun e -> e.LoadTree name) engine
 
-        override this.LoadTree (engine, name, msg) =
+        member this.LoadTree (engine, name, msg) =
             this.WrapAction None (fun e -> e.LoadTree (name, msg)) engine
 
         [<Obsolete>]
-        override this.RegisterSystemView<'sv when 'sv :> ISystemView> engine =
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView> engine =
             this.WrapAction None (fun e -> e.RegisterSystemView<'sv> ()) engine
 
-    let internal Create ctx renderer sp engine = upcast T(engine, ctx, renderer, sp) : IForestEngine   
+    let internal Create renderer sp engine = upcast T(engine, renderer, sp) : IForestEngine   
 
 //type [<Sealed;NoComparison>] ForestStateManager private (ctx : IForestContext, state : State, syncRoot : obj) =
 //    [<DefaultValue>]

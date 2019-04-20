@@ -1,102 +1,33 @@
 ﻿namespace Forest
+
 open System
 open System.Collections.Generic
 open Axle
+open Axle.Verification
 open Forest
 open Forest.Collections
 open Forest.Events
+open Forest.Templates
+open Forest.Templates.Raw
 
-[<RequireQualifiedAccess>]
-module ExecutionContext =
-    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-    [<System.Serializable>]
-    #endif
-    [<CompiledName("Operation")>]
-    [<NoComparison>]
-    type Operation =
-        | InstantiateView of viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj option
-        | InstantiateViewByNode of node : TreeNode * model : obj option
-        | UpdateModel of node : thash * model : obj
-        | DestroyView of subtree : TreeNode
-        | InvokeCommand of command : cname * node : thash * commandArg : obj
-        | SendMessage of node : thash * message : obj * topics : string array
-        | DispatchMessage of message : obj * topics : string array
-        | ClearRegion of owner : TreeNode * region : rname
-        | Multiple of operations : Operation list
 
-    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-    [<System.Serializable>]
-    #endif
-    [<NoComparison>]
-    type Status =
-        | ViewCreated of view : IView
-        | ModelUpdated of model : obj
-        | ViewDestoyed
-        | CommandInvoked
-        | MesssagePublished
-        | MessageSourceNotFound
-        | RegionCleared
-        | Multiple of Status list
-
-    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-    [<Serializable>]
-    #endif
-    [<NoComparison>] 
-    type Error =
-        /// Error when the view that is a target of a command or message is not found.
-        | ViewstateAbsent of hash : thash
-        /// Unable to find a descriptor for the given view.
-        | NoDescriptor of viewHandle : ViewHandle
-        /// A tree node was found to be already present in the hierarchy at a place where it was about to be created.
-        | SubTreeNotExpected of node : TreeNode
-        /// A tree node was expected to be present in the hierarchy but was not found.
-        | SubTreeAbsent of node : TreeNode
-        /// An command-specific error occurred while invoking a command. See `cause` for details on the error.
-        | CommandError of cause : Command.Error
-        /// An view-specific error occurred while invoking a command. See `cause` for details on the error.
-        | ViewError of cause : View.Error
-        /// Multiple errors have been captured during execution.
-        | Multiple of errors : Error list
-
-    let private handleError (error : Error) =
-        match error with
-        | ViewError ve -> ve |> View.handleError 
-        | CommandError ce -> ce |> Command.handleError 
-        | NoDescriptor vh -> 
-            match vh with
-            | ByName vn -> invalidOp <| String.Format("Unable to obtain descriptor for view '{0}'", vn)
-            | ByType vt -> invalidOp <| String.Format("Unable to obtain descriptor for view `{0}`", vt.AssemblyQualifiedName)
-        // TODO
-        | _ -> ()
-
-    let resolve (resultMap : ('x -> 'a)) (result : Result<'x, Error>) =
-        match result with
-        | Error e -> 
-            handleError e
-            // NB: It is possible for `handleError` to not recognize the error type
-            // hence it will return without throwing an exception.
-            // Therefore, we must ensure execution is terminated in that case by 
-            // thowing an `invalidOp`.
-            invalidOp "An unknown error occurred"
-        | Ok x -> resultMap x
-
-type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, models : Map<thash, obj>, views : Map<thash, IExecView>, ctx : IForestContext) as self = 
+type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, models : Map<thash, obj>, views : Map<thash, IRuntimeView>, ctx : IForestContext) as self = 
     let mutable tree = t
     let eventBus : IEventBus = Event.createEventBus()
     let models : System.Collections.Generic.Dictionary<thash, obj> = System.Collections.Generic.Dictionary(models, StringComparer.Ordinal)
-    let views : System.Collections.Generic.Dictionary<thash, IExecView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
+    let views : System.Collections.Generic.Dictionary<thash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
     let changeLog : System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
 
     let getDescriptor (handle : ViewHandle) =
         match ctx.ViewRegistry |> ViewRegistry.getDescriptor handle |> null2vopt with
         | ValueSome d -> Ok d
-        | ValueNone -> ExecutionContext.Error.NoDescriptor handle |> Error
+        | ValueNone -> Runtime.Error.NoDescriptor handle |> Error
 
-    let updateModel (id : thash) (m : obj) : Result<ExecutionContext.Status, ExecutionContext.Error> =
+    let updateModel (id : thash) (m : obj) : Result<Runtime.Status, Runtime.Error> =
         models.[id] <- m
-        ExecutionContext.Status.ModelUpdated m |> Ok
+        Runtime.Status.ModelUpdated m |> Ok
 
-    let destroyView (node : TreeNode) : Result<ExecutionContext.Status, ExecutionContext.Error> =
+    let destroyView (node : TreeNode) : Result<Runtime.Status, Runtime.Error> =
         let (t, nodes) = tree |> Tree.remove node
         for removedNode in nodes do
             let removedHash = removedNode.Hash
@@ -106,33 +37,33 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             views.Remove removedHash |> ignore
             removedNode |> StateChange.ViewDestroyed |> changeLog.Add
         tree <- t
-        ExecutionContext.Status.ViewDestoyed |> Ok
+        Runtime.Status.ViewDestoyed |> Ok
 
     let getRegionContents (owner : TreeNode) (region : rname) =
         let isInRegion (node:TreeNode) = StringComparer.Ordinal.Equals(region, node.Region)
         tree |> Tree.filter owner isInRegion
 
     let clearRegion (owner : TreeNode) (region : rname) =
-        let mutable errors = List.empty<ExecutionContext.Error>
+        let mutable errors = List.empty<Runtime.Error>
         for child in getRegionContents owner region do
             match destroyView child with
             | Error e -> errors <-  e::errors
             | _ -> ()
         match errors with 
-        | [] -> ExecutionContext.Status.RegionCleared |> Ok
-        | errLsit -> errLsit |> ExecutionContext.Error.Multiple |> Error
+        | [] -> Runtime.Status.RegionCleared |> Ok
+        | errLsit -> errLsit |> Runtime.Error.Multiple |> Error
 
     let removeViewsFromRegion (owner : TreeNode) (region : rname) (predicate : System.Predicate<IView>)=
-        let mutable errors = List.empty<ExecutionContext.Error>
-        let mutable successes = List.empty<ExecutionContext.Status>
+        let mutable errors = List.empty<Runtime.Error>
+        let mutable successes = List.empty<Runtime.Status>
         for child in getRegionContents owner region do
             if (predicate.Invoke(views.[child.Hash])) then
                 match destroyView child with
                 | Ok x -> successes <- x :: successes
                 | Error e -> errors <-  e :: errors
         match errors with
-        | [] -> successes |> ExecutionContext.Status.Multiple |> Ok
-        | list -> list |> ExecutionContext.Error.Multiple |> Error
+        | [] -> successes |> Runtime.Status.Multiple |> Ok
+        | list -> list |> Runtime.Error.Multiple |> Error
 
     let executeCommand (name : cname) (stateKey : thash) (arg : obj) =
         match views.TryGetValue stateKey with
@@ -141,11 +72,11 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             | Some cmd -> 
                 try
                     view |> cmd.Invoke arg
-                    ExecutionContext.Status.CommandInvoked |> Ok
+                    Runtime.Status.CommandInvoked |> Ok
                 with
-                | cause -> Command.InvocationError(view.Descriptor.ViewType, name, cause) |> ExecutionContext.Error.CommandError |> Error
-            | None ->  Command.Error.CommandNotFound(view.Descriptor.ViewType, name) |> ExecutionContext.Error.CommandError |> Error
-        | (false, _) -> ExecutionContext.Error.ViewstateAbsent stateKey |> Error
+                | cause -> Command.InvocationError(view.Descriptor.ViewType, name, cause) |> Runtime.Error.CommandError |> Error
+            | None ->  Command.Error.CommandNotFound(view.Descriptor.ViewType, name) |> Runtime.Error.CommandError |> Error
+        | (false, _) -> Runtime.Error.ViewstateAbsent stateKey |> Error
 
     let publishEvent (senderID : thash option) (message : 'm) (topics : string array) =
         match senderID with
@@ -153,24 +84,24 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             match views.TryGetValue id with
             | (true, sender) -> 
                 eventBus.Publish(sender, message, topics)
-                ExecutionContext.Status.MesssagePublished |> Ok
+                Runtime.Status.MesssagePublished |> Ok
             // TODO: should be error
-            | _ -> ExecutionContext.Status.MessageSourceNotFound |> Ok
+            | _ -> Runtime.Status.MessageSourceNotFound |> Ok
         | None ->
             eventBus.Publish(Unchecked.defaultof<IView>, message, topics)
-            ExecutionContext.Status.MesssagePublished |> Ok
+            Runtime.Status.MesssagePublished |> Ok
 
-    let rec processChanges (ctx : IForestContext) (operation : ExecutionContext.Operation) =
+    let rec processChanges (ctx : IForestContext) (operation : Runtime.Operation) =
         match operation with
-        | ExecutionContext.Operation.Multiple operations -> 
+        | Runtime.Operation.Multiple operations -> 
             let mappedResults =
                 iterateStates ctx operations
                 |> List.map (fun x -> x |> Result.ok, x |> Result.error )
             let errors = mappedResults |> List.map snd |> List.choose id
             if errors |> List.isEmpty 
-            then mappedResults |> List.map fst |> List.choose id |> ExecutionContext.Status.Multiple |> Ok
-            else errors |> ExecutionContext.Error.Multiple |> Error
-        | ExecutionContext.Operation.InstantiateView (viewHandle, region, parent, model) ->
+            then mappedResults |> List.map fst |> List.choose id |> Runtime.Status.Multiple |> Ok
+            else errors |> Runtime.Error.Multiple |> Error
+        | Runtime.Operation.InstantiateView (viewHandle, region, parent, model) ->
             viewHandle
             |> getDescriptor
             |> Result.bind (
@@ -178,7 +109,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
                     let node = TreeNode.newKey region (descriptor.Name) parent 
                     self.instantiateView viewHandle node model descriptor
                 )
-        | ExecutionContext.Operation.InstantiateViewByNode (node, model) ->
+        | Runtime.Operation.InstantiateViewByNode (node, model) ->
             let vhFromNode = node |> ViewHandle.fromNode
             vhFromNode
             |> getDescriptor
@@ -186,17 +117,17 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
                 fun descriptor -> 
                     self.instantiateView vhFromNode node model descriptor
                 )
-        | ExecutionContext.Operation.UpdateModel (viewID, model) -> 
+        | Runtime.Operation.UpdateModel (viewID, model) -> 
             updateModel viewID model
-        | ExecutionContext.Operation.DestroyView viewID -> 
+        | Runtime.Operation.DestroyView viewID -> 
             destroyView viewID
-        | ExecutionContext.Operation.InvokeCommand (commandName, viewID, arg) -> 
+        | Runtime.Operation.InvokeCommand (commandName, viewID, arg) -> 
             executeCommand commandName viewID arg
-        | ExecutionContext.Operation.SendMessage (senderID, message, topics) -> 
+        | Runtime.Operation.SendMessage (senderID, message, topics) -> 
             publishEvent (Some senderID) message topics
-        | ExecutionContext.Operation.DispatchMessage (message, topics) -> 
+        | Runtime.Operation.DispatchMessage (message, topics) -> 
             publishEvent None message topics
-        | ExecutionContext.Operation.ClearRegion (owner, region) ->
+        | Runtime.Operation.ClearRegion (owner, region) ->
             clearRegion owner region
         //| _ -> Error (UnknownOperation operation)
 
@@ -208,13 +139,13 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
 
     member private this.createRuntimeView (viewHandle : ViewHandle)  (node : TreeNode) (model : obj option) (descriptor : IViewDescriptor) =
         try
-            let view = (ctx.ViewRegistry |> ViewRegistry.resolve descriptor model) :?> IExecView
+            let view = (ctx.ViewRegistry |> ViewRegistry.resolve descriptor model) :?> IRuntimeView
             view.AcquireRuntime node descriptor this 
             view |> Ok
         with 
-        | e -> View.Error.InstantiationError(viewHandle,  e) |> ExecutionContext.Error.ViewError |> Error
+        | e -> View.Error.InstantiationError(viewHandle,  e) |> Runtime.Error.ViewError |> Error
 
-    member private __.prepareView (t : Tree) (node : TreeNode) (model : obj option) (view : IExecView) =
+    member private __.prepareView (t : Tree) (node : TreeNode) (model : obj option) (view : IRuntimeView) =
         tree <- t
         views.Add(node.Hash, view)
         match model with
@@ -227,9 +158,9 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
     member private this.instantiateView (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (d : IViewDescriptor) =
         this.createRuntimeView viewHandle node model d
         |> Result.map (this.prepareView (Tree.insert node tree) node model)
-        |> Result.map ExecutionContext.Status.ViewCreated
+        |> Result.map Runtime.Status.ViewCreated
 
-    static member Create (tree : Tree, models : Map<thash, obj>, views : Map<thash, IExecView>, ctx : IForestContext) = 
+    static member Create (tree : Tree, models : Map<thash, obj>, views : Map<thash, IRuntimeView>, ctx : IForestContext) = 
         (new ForestExecutionContext(tree, models, views, ctx)).Init()
 
     member private this.Init() =
@@ -247,17 +178,17 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
         this
 
     member internal this.ActivateView (node : TreeNode) =
-        ExecutionContext.Operation.InstantiateViewByNode(node, None) 
+        Runtime.Operation.InstantiateViewByNode(node, None) 
         |> this.Do 
-        |> ExecutionContext.resolve (function
-            | ExecutionContext.Status.ViewCreated view -> view
+        |> Runtime.resolve (function
+            | Runtime.Status.ViewCreated view -> view
             | _ -> Unchecked.defaultof<_>
         )
     member internal this.ActivateView (node : TreeNode, model : obj) =
-        ExecutionContext.Operation.InstantiateViewByNode(node, Some model) 
+        Runtime.Operation.InstantiateViewByNode(node, Some model) 
         |> this.Do 
-        |> ExecutionContext.resolve (function
-            | ExecutionContext.Status.ViewCreated view -> view
+        |> Runtime.resolve (function
+            | Runtime.Status.ViewCreated view -> view
             | _ -> Unchecked.defaultof<_>
         )
 
@@ -268,18 +199,18 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             | (false, _) -> this.ActivateView node
         downcast result:'TView
 
-    member __.Do (operation : ExecutionContext.Operation) =
+    member __.Do (operation : Runtime.Operation) =
         processChanges ctx operation
 
     member this.Apply (entry : StateChange) =
         match entry with
         | StateChange.ViewAddedWithModel (node, model) ->
             match TreeNode.isShell node with
-            | true -> Some (ExecutionContext.Error.SubTreeAbsent node)
+            | true -> Some (Runtime.Error.SubTreeAbsent node)
             | false ->
                 let hs = tree |> Tree.insert node
                 match models.TryGetValue node.Hash with
-                | (true, _) -> Some (ExecutionContext.Error.SubTreeNotExpected node)
+                | (true, _) -> Some (Runtime.Error.SubTreeNotExpected node)
                 | (false, _) ->
                     let handle = node |> ViewHandle.fromNode
                     handle
@@ -294,11 +225,11 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
                     |> Result.error
         | StateChange.ViewAdded (node, model) ->
             match TreeNode.isShell node with
-            | true -> Some (ExecutionContext.Error.SubTreeAbsent node)
+            | true -> Some (Runtime.Error.SubTreeAbsent node)
             | false ->
                 let hs = tree |> Tree.insert node
                 match models.TryGetValue node.Hash with
-                | (true, _) -> Some (ExecutionContext.Error.SubTreeNotExpected node)
+                | (true, _) -> Some (Runtime.Error.SubTreeNotExpected node)
                 | (false, _) ->
                     let handle = node |> ViewHandle.fromNode
                     handle
@@ -329,7 +260,47 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             views |> Seq.map (|KeyValue|) |> Map.ofSeq, 
             changeLog |> List.ofSeq
         )
-    member __.Context with get() = ctx
+
+    member __.Context with get() = ctx   
+
+    member this.ExecuteCommand (NotNull "command" command) target message = 
+        Runtime.Operation.InvokeCommand(command, target, message) 
+        |> this.Do 
+        |> Runtime.resolve ignore
+
+    [<Obsolete>]
+    member this.RegisterSystemView<'sv when 'sv :> ISystemView> () = 
+        let descriptor = 
+            match typeof<'sv> |> ctx.ViewRegistry.GetDescriptor |> null2vopt with
+            | ValueNone -> 
+                ctx.ViewRegistry
+                |> ViewRegistry.registerViewType typeof<'sv> 
+                |> ViewRegistry.getDescriptorByType typeof<'sv> 
+            | ValueSome d -> d
+        let key = TreeNode.shell |> TreeNode.newKey TreeNode.shell.Region descriptor.Name
+        this.GetOrActivateView<'sv> key
+
+    member this.SendMessage<'msg> (message : 'msg) = 
+        Runtime.Operation.DispatchMessage(message, [||])
+        |> this.Do
+        |> Runtime.resolve ignore
+
+    member this.LoadTree (NotNullOrEmpty "name" name) =
+        name 
+        |> Raw.loadTemplate ctx.TemplateProvider
+        |> Templates.TemplateCompiler.compileOps
+        |> Runtime.Operation.Multiple
+        |> this.Do
+        |> Runtime.resolve ignore
+
+    member this.LoadTree (NotNullOrEmpty "name" name, message) =
+        name 
+        |> Raw.loadTemplate ctx.TemplateProvider
+        |> Templates.TemplateCompiler.compileOps
+        |> List.append [Runtime.Operation.DispatchMessage(message, [||])]
+        |> Runtime.Operation.Multiple
+        |> this.Do   
+        |> Runtime.resolve ignore
 
     interface IForestExecutionContext with
         member __.GetViewModel node = 
@@ -343,24 +314,24 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             model
 
         member this.ActivateView(handle, region, parent) =
-            ExecutionContext.Operation.InstantiateView(handle, region, parent, None) 
+            Runtime.Operation.InstantiateView(handle, region, parent, None) 
             |> this.Do 
-            |> ExecutionContext.resolve (function
-                | ExecutionContext.Status.ViewCreated view -> view
+            |> Runtime.resolve (function
+                | Runtime.Status.ViewCreated view -> view
                 | _ -> Unchecked.defaultof<_>
             )
 
         member this.ActivateView(handle, region, parent, model) =
-            ExecutionContext.Operation.InstantiateView(handle, region, parent, model |> Some) 
+            Runtime.Operation.InstantiateView(handle, region, parent, model |> Some) 
             |> this.Do 
-            |> ExecutionContext.resolve (function
-                | ExecutionContext.Status.ViewCreated view -> view
+            |> Runtime.resolve (function
+                | Runtime.Status.ViewCreated view -> view
                 | _ -> Unchecked.defaultof<_>
             )
 
         member __.ClearRegion node region =
             clearRegion node region 
-            |> ExecutionContext.resolve ignore
+            |> Runtime.resolve ignore
 
         member __.GetRegionContents node region =
             getRegionContents node region 
@@ -368,25 +339,38 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
 
         member __.RemoveViewFromRegion node region predicate =
             removeViewsFromRegion node region predicate 
-            |> ExecutionContext.resolve ignore
+            |> Runtime.resolve ignore
 
         member this.PublishEvent sender message topics = 
-            ExecutionContext.Operation.SendMessage(sender.InstanceID.Hash,message,topics) 
+            Runtime.Operation.SendMessage(sender.InstanceID.Hash,message,topics) 
             |> this.Do 
-            |> ExecutionContext.resolve ignore
+            |> Runtime.resolve ignore
 
         member this.ExecuteCommand command issuer arg =
-            ExecutionContext.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) 
+            Runtime.Operation.InvokeCommand(command, issuer.InstanceID.Hash, arg) 
             |> this.Do 
-            |> ExecutionContext.resolve ignore
+            |> Runtime.resolve ignore
 
         member __.SubscribeEvents view =
             for event in view.Descriptor.Events do
                 let handler = Event.Handler(event, view)
                 eventBus.Subscribe handler event.Topic |> ignore
-
         member __.UnsubscribeEvents view =
             eventBus.Unsubscribe view |> ignore
+
+        member this.Deconstruct() = this.Deconstruct()
+
+        member this.Context with get() = this.Context
+
+    interface IForestEngine with
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv>()
+    interface IMessageDispatcher with
+        member this.SendMessage<'msg> msg = this.SendMessage<'msg> msg
+    interface ICommandDispatcher with
+        member this.ExecuteCommand c t m = this.ExecuteCommand c t m
+    interface ITreeNavigator with
+        member this.LoadTree name = this.LoadTree name
+        member this.LoadTree (name, msg) = this.LoadTree (name, msg)
 
     interface IDisposable with 
         member this.Dispose() = this.Dispose()
