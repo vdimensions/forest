@@ -1,14 +1,15 @@
-﻿//namespace Forest
-//open Forest.UI
-//
-//module private NoOp =
-//    [<Literal>]
-//    let private DefaultErrorMessage = "Forest is not initialized"
-//
-//    type [<Sealed;NoComparison;NoEquality>] private Renderer(message : string) =
-//        inherit AbstractPhysicalViewRenderer<IPhysicalView>()
-//        override __.CreateNestedPhysicalView _ _ _ = invalidOp message
-//        override __.CreatePhysicalView _ _ = invalidOp message
+﻿namespace Forest
+open Forest.UI
+
+module private NoOp =
+    [<Literal>]
+    let private DefaultErrorMessage = "Forest is not initialized"
+
+    type [<Sealed;NoComparison;NoEquality>] PhysicalViewRenderer private (message : string) =
+        new () = PhysicalViewRenderer(DefaultErrorMessage)
+        interface IPhysicalViewRenderer with
+            member  __.CreateNestedPhysicalView _ _ _ = invalidOp message
+            member  __.CreatePhysicalView _ _ = invalidOp message
 //
 //    type [<Sealed;NoComparison;NoEquality>] private Facade(ctx : IForestContext) =
 //        interface ICommandDispatcher with

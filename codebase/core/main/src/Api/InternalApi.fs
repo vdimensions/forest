@@ -7,8 +7,8 @@ open Forest.Collections
 type [<Interface>] internal IRuntimeView =
     inherit IView
 
-    abstract member AcquireRuntime : node : TreeNode -> vd : IViewDescriptor -> runtime : IForestExecutionContext -> unit
-    abstract member AbandonRuntime : runtime : IForestExecutionContext -> unit
+    abstract member AcquireContext : node : TreeNode -> vd : IViewDescriptor -> runtime : IForestExecutionContext -> unit
+    abstract member AbandonContext : runtime : IForestExecutionContext -> unit
 
     abstract member Load : unit -> unit
     abstract member Resume : model : obj -> unit
@@ -36,6 +36,6 @@ type [<Interface>] internal IRuntimeView =
     abstract member ExecuteCommand : command : cname -> issuer : IRuntimeView -> arg : obj -> unit
     abstract member PublishEvent : sender : IRuntimeView -> message : 'M -> topics : string array -> unit
 
-    abstract member Deconstruct : unit -> Tree * Map<thash, obj> * Map<thash, IRuntimeView> * StateChange list
+    //abstract member Deconstruct : unit -> Tree * Map<thash, obj> * Map<thash, IRuntimeView> * StateChange list
 
-    abstract member Context : IForestContext with get
+    //abstract member Context : IForestContext with get

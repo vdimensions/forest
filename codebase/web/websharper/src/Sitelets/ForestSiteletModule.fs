@@ -30,13 +30,13 @@ and [<Interface;RequiresForestSitelet>] IWebSharperTemplateConfigurer =
 and [<Interface;RequiresForestSitelet>] IForestSiteletService =
     abstract member Render : ForestEndPoint<_> -> Async<Content<_>>
 
-and [<Sealed>] internal ForestSiteletService (f : IForestFacade, pvs : IDictionary<vname, WebSharperPhysicalView> , dop : (Doc -> Doc -> Doc), h : Doc, b : Doc list) =
+and [<Sealed>] internal ForestSiteletService (f : IForestEngine, pvs : IDictionary<vname, WebSharperPhysicalView> , dop : (Doc -> Doc -> Doc), h : Doc, b : Doc list) =
     interface IForestSiteletService with 
         member __.Render e = ForestSitelet.Render f (pvs |> Seq.map ``|KeyValue|`` |> Array.ofSeq) dop h b e
 
 and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;RequiresForest>]
-    internal ForestSiteletModule private (registeredPhysicalViewFactories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestFacade, viewRegistry : IViewRegistry, logger : ILogger) = 
-    public new (forest : IForestFacade, viewRegistry : IViewRegistry, logger : ILogger) = ForestSiteletModule(ConcurrentDictionary<_, _>(StringComparer.Ordinal), forest, viewRegistry, logger)
+    internal ForestSiteletModule private (registeredPhysicalViewFactories : ConcurrentDictionary<vname, WebSharperPhysicalView>, forest : IForestEngine, viewRegistry : IViewRegistry, logger : ILogger) = 
+    public new (forest : IForestEngine, viewRegistry : IViewRegistry, logger : ILogger) = ForestSiteletModule(ConcurrentDictionary<_, _>(StringComparer.Ordinal), forest, viewRegistry, logger)
     [<DefaultValue>]
     val mutable private _documentOutlineProvider : IDocumentOutlineProvider voption
     let mutable headerDocs : Doc list = List.empty

@@ -60,6 +60,11 @@ type [<Sealed;NoEquality;NoComparison>] private LoggingForestEngine(logger : ILo
 //type [<Sealed;NoEquality;NoComparison>] private LoggingForestFacadeProvider(logger : ILogger, provider : IForestFacadeProvider) =
 //    interface IForestFacadeProvider with member __.ForestFacade with get() = upcast LoggingForestFacade(logger, provider.ForestFacade)
 
+type [<Interface>] IForestIntegrationProvider =
+    abstract member Renderer : IPhysicalViewRenderer with get
+    abstract member StateProvider : IForestStateProvider with get
+
+
 [<AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>]
 type [<Sealed>] RequiresForestAttribute() = inherit RequiresAttribute(typeof<ForestModule>)
 
@@ -76,11 +81,19 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     [<DefaultValue>]
     val mutable private _context : IForestContext
     [<DefaultValue>]
-    val mutable private _physicalViewRenderer : IPhysicalViewRenderer
-    [<DefaultValue>]
-    val mutable private _forestStateProvider : IForestStateProvider
+    val mutable private _integrationProvider : IForestIntegrationProvider voption
     [<DefaultValue>]
     val mutable private _forestEngine : IForestEngine
+
+    member this.InitForest() =
+        let pvr, sp =
+            match this._integrationProvider with
+            | ValueSome ip ->
+                ip.Renderer, ip.StateProvider
+            | ValueNone ->
+                (NoOp.PhysicalViewRenderer() :> IPhysicalViewRenderer, DefaultForestStateProvider() :> IForestStateProvider)
+        this._forestEngine <- ForestEngine.Create this._context sp pvr
+        this.MakeDebuggerFacade()
     
     [<ModuleInit>]
     member this.Init(e : ModuleExporter) =
@@ -99,20 +112,23 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
             |> AxleViewFactory
         let context : IForestContext = upcast DefaultForestContext(viewFactory, reflectionProvider, securityManager, templateProvider)
         this._context <- context
-        this._forestStateProvider <- DefaultForestStateProvider()
-        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._physicalViewRenderer this._forestStateProvider 
+        this.InitForest()
         context |> e.Export<IForestContext> |> ignore
         this |> e.Export<IForestEngine> |> ignore
+
 
     [<ModuleDependencyInitialized>]
     member this.DependencyInitialized (viewProvider : IForestViewProvider) =
         (this :> IViewRegistry) |> viewProvider.RegisterViews
 
     [<ModuleDependencyInitialized>]
-    member this.DependencyInitialized (stateProvider : IForestStateProvider) =
-        this._forestStateProvider <- stateProvider
-        this._forestEngine <- ForestExecutionEngine.T() |> ForestStateEngine.Create this._context this._physicalViewRenderer this._forestStateProvider
-        this.MakeDebuggerFacade()
+    member this.DependencyInitialized (integration : IForestIntegrationProvider) =
+        match this._integrationProvider with
+        | ValueNone ->
+            this._integrationProvider <- ValueSome integration
+        | ValueSome _ ->
+            invalidOp "Forest integration is already configured"
+        this.InitForest()
 
     [<Conditional("DEBUG")>]
     member private this.MakeDebuggerFacade() =
@@ -131,9 +147,6 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
 
         member this.LoadTree (t, m) = 
             this.ForestEngine.LoadTree (t, m)
-
-        //member this.Render renderer result = 
-        //    this.ForestEngine.Render renderer result
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 

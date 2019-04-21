@@ -67,3 +67,7 @@ module internal State =
         let domProcessor = PhysicalViewDomProcessor(state.PhysicalViews, engine, renderer)
         state |> traverse (ForestDomRenderer(seq { yield domProcessor :> IDomProcessor }, ctx))
         domProcessor.PhysicalViews
+
+type [<Interface>] IForestStateProvider =
+    abstract member LoadState : unit -> State
+    abstract member CommitState : State -> unit

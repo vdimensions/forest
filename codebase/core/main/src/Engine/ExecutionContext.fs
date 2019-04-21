@@ -3,20 +3,26 @@
 open System
 open System.Collections.Generic
 open Axle
+open Axle.Option
 open Axle.Verification
 open Forest
 open Forest.Collections
 open Forest.Events
 open Forest.Templates
 open Forest.Templates.Raw
+open Forest.UI
 
 
-type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, models : Map<thash, obj>, views : Map<thash, IRuntimeView>, ctx : IForestContext) as self = 
+type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, models : Map<thash, obj>, views : Map<thash, IRuntimeView>, pv : Map<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, renderer : IPhysicalViewRenderer) as self = 
     let mutable tree = t
     let eventBus : IEventBus = Event.createEventBus()
     let models : System.Collections.Generic.Dictionary<thash, obj> = System.Collections.Generic.Dictionary(models, StringComparer.Ordinal)
     let views : System.Collections.Generic.Dictionary<thash, IRuntimeView> = System.Collections.Generic.Dictionary(views, StringComparer.Ordinal)
     let changeLog : System.Collections.Generic.List<StateChange> = System.Collections.Generic.List()
+
+    [<ThreadStatic>]
+    [<DefaultValue>]
+    static val mutable private _currentEngine : IForestExecutionContext voption
 
     let getDescriptor (handle : ViewHandle) =
         match ctx.ViewRegistry |> ViewRegistry.getDescriptor handle |> null2vopt with
@@ -140,7 +146,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
     member private this.createRuntimeView (viewHandle : ViewHandle)  (node : TreeNode) (model : obj option) (descriptor : IViewDescriptor) =
         try
             let view = (ctx.ViewRegistry |> ViewRegistry.resolve descriptor model) :?> IRuntimeView
-            view.AcquireRuntime node descriptor this 
+            view.AcquireContext node descriptor this 
             view |> Ok
         with 
         | e -> View.Error.InstantiationError(viewHandle,  e) |> Runtime.Error.ViewError |> Error
@@ -159,14 +165,18 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
         this.createRuntimeView viewHandle node model d
         |> Result.map (this.prepareView (Tree.insert node tree) node model)
         |> Result.map Runtime.Status.ViewCreated
+    static member Current with get() = ForestExecutionContext._currentEngine
 
-    static member Create (tree : Tree, models : Map<thash, obj>, views : Map<thash, IRuntimeView>, ctx : IForestContext) = 
-        (new ForestExecutionContext(tree, models, views, ctx)).Init()
+    static member Create (ctx : IForestContext, sp : IForestStateProvider, renderer : IPhysicalViewRenderer) = 
+        let state = sp.LoadState()
+        let ctx = new ForestExecutionContext(state.Tree, state.Models, state.ViewStates, state.PhysicalViews, ctx, sp, renderer)
+        ForestExecutionContext._currentEngine <- ValueSome (ctx :> IForestExecutionContext)
+        ctx.Init()
 
     member private this.Init() =
         for kvp in views do 
             let (view, n, d) = (kvp.Value, kvp.Value.InstanceID, kvp.Value.Descriptor)
-            this |> view.AcquireRuntime n d 
+            this |> view.AcquireContext n d 
         for node in (upcast tree.Hierarchy : IDictionary<_,_>).Keys do
             if not <| views.ContainsKey node.Hash then 
                 let handle = node |> ViewHandle.fromNode
@@ -249,9 +259,18 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             None
 
     member this.Dispose() = 
+        ForestExecutionContext._currentEngine <- ValueNone
         for kvp in views do 
-            kvp.Value.AbandonRuntime this
+            kvp.Value.AbandonContext this
         eventBus.Dispose()
+        let a, b, c, cl = this.Deconstruct()
+        let intermediateState = State.create(a, b, c, pv)
+        let newPv = intermediateState |> State.render ctx this renderer
+        let newState = State.create(a, b, c, newPv)
+            //match fuid with
+            //| Some f -> State.createWithFuid(a, b, c, f)
+            //| None -> State.create(a, b, c)
+        sp.CommitState newState
 
     member internal __.Deconstruct() = 
         (
@@ -261,7 +280,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             changeLog |> List.ofSeq
         )
 
-    member __.Context with get() = ctx   
+    //member __.Context with get() = ctx   
 
     member this.ExecuteCommand (NotNull "command" command) target message = 
         Runtime.Operation.InvokeCommand(command, target, message) 
@@ -294,10 +313,11 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
         |> Runtime.resolve ignore
 
     member this.LoadTree (NotNullOrEmpty "name" name, message) =
-        name 
-        |> Raw.loadTemplate ctx.TemplateProvider
-        |> Templates.TemplateCompiler.compileOps
-        |> List.append [Runtime.Operation.DispatchMessage(message, [||])]
+        [Runtime.Operation.DispatchMessage(message, [||])]
+        |> List.append (
+            name 
+            |> Raw.loadTemplate ctx.TemplateProvider
+            |> Templates.TemplateCompiler.compileOps)
         |> Runtime.Operation.Multiple
         |> this.Do   
         |> Runtime.resolve ignore
@@ -358,9 +378,9 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
         member __.UnsubscribeEvents view =
             eventBus.Unsubscribe view |> ignore
 
-        member this.Deconstruct() = this.Deconstruct()
+        //member this.Deconstruct() = this.Deconstruct()
 
-        member this.Context with get() = this.Context
+        //member this.Context with get() = this.Context
 
     interface IForestEngine with
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = this.RegisterSystemView<'sv>()

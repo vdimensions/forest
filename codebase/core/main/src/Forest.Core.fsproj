@@ -73,8 +73,6 @@
     <Compile Include="Engine\UI\PhysicalView.fs" />
     <Compile Include="Engine\UI\Renderer.fs" />
     <Compile Include="Engine\Dom.fs" />
-    <Compile Include="Engine\MessageDispatcher.fs" />
-    <Compile Include="Engine\Error.fs" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ExecutionContext.fs" />
     <Compile Include="Engine\ForestState.fs" />
@@ -84,6 +82,7 @@
     <Compile Include="AxleModule\Resources\XmlTemplateMarshaller.fs" />
     <Compile Include="AxleModule\Resources\ResourceTemplateProvider.fs" />
     <Compile Include="AxleModule\Resources\ForestResourceModule.fs" />
+    <Compile Include="AxleModule\NoOp.fs" />
     <Compile Include="AxleModule\AxleViewFactory.fs" />
     <Compile Include="AxleModule\ForestModule.fs" />
   </ItemGroup>

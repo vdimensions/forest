@@ -13,8 +13,8 @@ type internal NodeState =
 type internal PhysicalViewDomProcessor =
     val mutable private physicalViews : Map<thash, IPhysicalView>
     /// Contains a list of nodes to be retained as they represent present views.
-    val mutable private nodesToPreserve : thash Set
-    val mutable private nodeStates : NodeState list
+    val mutable private _nodesToPreserve : thash Set
+    val mutable private _nodeStates : NodeState list
     val private _commandDispatcher : ICommandDispatcher
     val private _renderer : IPhysicalViewRenderer
 
@@ -23,25 +23,25 @@ type internal PhysicalViewDomProcessor =
             _commandDispatcher = commandDispatcher; 
             _renderer = renderer; 
             physicalViews = physicalViews; 
-            nodesToPreserve = Set.empty; 
-            nodeStates = List.empty 
+            _nodesToPreserve = Set.empty; 
+            _nodeStates = List.empty 
         }
 
     member this.PhysicalViews with get() = this.physicalViews
 
     interface IDomProcessor with
         member this.ProcessNode n =
-            this.nodesToPreserve <- this.nodesToPreserve |> Set.add n.Hash
-            this.nodeStates <- 
+            this._nodesToPreserve <- this._nodesToPreserve |> Set.add n.Hash
+            this._nodeStates <- 
                 match this.physicalViews.TryFind n.Hash with
-                | Some _ -> (UpdatedNode n)::this.nodeStates
-                | None -> (NewNode n)::this.nodeStates
+                | Some _ -> (UpdatedNode n)::this._nodeStates
+                | None -> (NewNode n)::this._nodeStates
             n
 
         member this.Complete(_ : DomNode list) = 
             let renderers = System.Collections.Generic.Dictionary<thash, 'PV>(StringComparer.Ordinal)
             for kvp in this.physicalViews do
-                if not <| this.nodesToPreserve.Contains(kvp.Key) then
+                if not <| this._nodesToPreserve.Contains(kvp.Key) then
                     kvp.Value.Dispose()
                 else
                     renderers.Add(kvp.Key, kvp.Value)
@@ -54,7 +54,7 @@ type internal PhysicalViewDomProcessor =
             // store tuples of renderer and node to initiate an update call after the views are rendered
             let mutable updateCalls = List.empty
 
-            for nodeState in this.nodeStates do
+            for nodeState in this._nodeStates do
                 let (n, p, isNewView) = match nodeState with | NewNode n -> (n, n.Parent, true) | UpdatedNode n -> (n, n.Parent, false)
                 match (p, isNewView) with
                 | (Some p, isNewView) -> 
@@ -85,8 +85,8 @@ type internal PhysicalViewDomProcessor =
                         updateCalls <- (renderer,n)::updateCalls
 
             this.physicalViews <- renderers |> Seq.map (|KeyValue|) |> Map.ofSeq
-            this.nodesToPreserve <- Set.empty
-            this.nodeStates <- List.empty
+            this._nodesToPreserve <- Set.empty
+            this._nodeStates <- List.empty
 
             // Initiate the update calls for renderers. This must happen after the renderers collections is up to date
             // because an update call might trigger an Forest command and case re-rendering before the rendered views are processed.

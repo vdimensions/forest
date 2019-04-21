@@ -67,7 +67,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
             model <- this.executionContext.SetViewModel true this.hierarchyKey (downcast m : 'T)
             this.Resume()
 
-        member this.AcquireRuntime (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" runtime : IForestExecutionContext) =
+        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" runtime : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
@@ -80,7 +80,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
                 ()
             | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a runtime", this.hierarchyKey.View))
 
-        member this.AbandonRuntime (_) =
+        member this.AbandonContext (_) =
             match null2vopt this.executionContext with
             | ValueSome currentRuntime ->
                 currentRuntime.UnsubscribeEvents this                
@@ -111,7 +111,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
         member this.Dispose() =
             try this.Dispose(true)
             // When disposing, always abandon the runtime
-            finally (this :> IRuntimeView).AbandonRuntime(this.executionContext)
+            finally (this :> IRuntimeView).AbandonContext(this.executionContext)
             this |> GC.SuppressFinalize
 
  and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =

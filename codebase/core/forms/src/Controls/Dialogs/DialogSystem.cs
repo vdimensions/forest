@@ -97,24 +97,24 @@ namespace Forest.Forms.Controls.Dialogs
             }
         }
 
-        private static void ShowDialog<TMessage>(IForestFacade forest, TMessage message)
+        private static void ShowDialog<TMessage>(IForestEngine forest, TMessage message)
             where TMessage: Messages.IDialogMessage
         {
             forest.RegisterSystemView<View>();
             forest.SendMessage(message);
         }
 
-        public static void ShowModal<TView, TModel>(this IForestFacade forest, TModel model) 
+        public static void ShowModal<TView, TModel>(this IForestEngine forest, TModel model)
             where TView: IView<TModel>
         {
             ShowDialog(forest, new Messages.Modal<TView, TModel>(model));
         }
-        public static void ShowConfirmation<TView, TModel>(this IForestFacade forest, TModel model)
+        public static void ShowConfirmation<TView, TModel>(this IForestEngine forest, TModel model)
             where TView : IView<TModel>, IConfirmationDialogView
         {
             ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model));
         }
-        public static void ShowOkCancelDialog<TView, TModel>(this IForestFacade forest, TModel model)
+        public static void ShowOkCancelDialog<TView, TModel>(this IForestEngine forest, TModel model)
             where TView : IView<TModel>, IOkCancelDialogView
         {
             ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model));

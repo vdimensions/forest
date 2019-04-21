@@ -7,16 +7,16 @@ open WebSharper.UI
 
 type [<Sealed;NoEquality;NoComparison>] Remoting =
     [<DefaultValue>]
-    static val mutable private _facade : IForestFacade voption
+    static val mutable private _facade : IForestEngine voption
 
     [<DefaultValue>]
     static val mutable private _nodeProvider : INodeStateProvider voption
 
-    static member internal Init (forest : IForestFacade) =
+    static member internal Init (forest : IForestEngine, nodeProvider : INodeStateProvider) =
         match Remoting._facade with
         | ValueNone -> 
             Remoting._facade <- ValueSome forest
-            Remoting._nodeProvider <- (forest :?> INodeStateProvider) |> ValueSome
+            Remoting._nodeProvider <- ValueSome nodeProvider
         | ValueSome _ -> invalidOp "A forest facade is already initialized"
 
     [<Rpc>]
