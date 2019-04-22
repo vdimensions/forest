@@ -1,9 +1,8 @@
 ﻿namespace Forest
 
+open System
 open Forest.Collections
 open Forest.UI
-
-open System
 
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
@@ -18,7 +17,6 @@ type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj
     member internal __.PhysicalViews with get() = physicalViews
     member internal __.Fuid with get() = fuid
     member __.Hash with get() = fuid.Hash
-    //member __.MachineToken with get() = fuid.MachineToken
     member private this.eq (other : State) : bool =
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
         && LanguagePrimitives.GenericEqualityComparer.Equals(this.Tree, other.Tree)
@@ -63,11 +61,31 @@ module internal State =
         | None -> ()
         v.Complete()
 
-    let internal render (ctx : IForestContext) (engine : IForestEngine) (renderer : IPhysicalViewRenderer) (state : State) =
-        let domProcessor = PhysicalViewDomProcessor(state.PhysicalViews, engine, renderer)
+    let internal render (ctx : IForestContext) (engine : IForestEngine) (domProcessor : PhysicalViewDomProcessor) (state : State) =
+        domProcessor.PhysicalViews <- state.PhysicalViews
         state |> traverse (ForestDomRenderer(seq { yield domProcessor :> IDomProcessor }, ctx))
         domProcessor.PhysicalViews
 
 type [<Interface>] IForestStateProvider =
     abstract member LoadState : unit -> State
     abstract member CommitState : State -> unit
+    abstract member RollbackState : unit -> unit
+
+type [<Sealed;NoComparison;NoEquality>] DefaultForestStateProvider() =
+    [<DefaultValue>]
+    val mutable private _st : State voption
+
+    member this.LoadState () =
+        match this._st with
+        | ValueNone -> 
+            let res = State.initial
+            this._st <- ValueSome res
+            res
+        | ValueSome s -> s
+
+    member this.CommitState state = this._st <- ValueSome state
+
+    interface IForestStateProvider with
+        member this.LoadState() = this.LoadState()
+        member this.CommitState(state) = this.CommitState(state)
+        member __.RollbackState() = ()

@@ -1,7 +1,21 @@
+//
+// Copyright 2014-2019 vdimensions.net.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 namespace Forest
 
 open System
-open Forest.Collections
 
 // internal functionality needed by the forest runtime
 type [<Interface>] internal IRuntimeView =
@@ -35,7 +49,3 @@ type [<Interface>] internal IRuntimeView =
     abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj -> IView
     abstract member ExecuteCommand : command : cname -> issuer : IRuntimeView -> arg : obj -> unit
     abstract member PublishEvent : sender : IRuntimeView -> message : 'M -> topics : string array -> unit
-
-    //abstract member Deconstruct : unit -> Tree * Map<thash, obj> * Map<thash, IRuntimeView> * StateChange list
-
-    //abstract member Context : IForestContext with get

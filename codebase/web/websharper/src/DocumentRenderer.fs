@@ -2,10 +2,10 @@ namespace Forest.Web.WebSharper
 
 open System.Collections.Generic
 open Microsoft.AspNetCore.Http
+open WebSharper.UI
 open Axle.Web.AspNetCore.Session
 open Forest
 open Forest.UI
-open WebSharper.UI
 
 
 type [<Interface>] IDocumentStateProvider = 
@@ -83,7 +83,7 @@ type [<Sealed;NoComparison>] WebSharperSessionStateProvider(httpContextAccessor 
         member this.UpdatedNodes with get() = (this.Current.Renderer :> INodeStateProvider).UpdatedNodes
 
     interface IForestStateProvider with
-        member this.LoadState() = 
+        member this.LoadState () = 
             this.AddOrReplace(
                 httpContextAccessor.HttpContext.Session.Id,
                 WebSharperForestState(State.initial),
@@ -97,4 +97,6 @@ type [<Sealed;NoComparison>] WebSharperSessionStateProvider(httpContextAccessor 
                 this.Current |> WebSharperForestState.ReplaceState state,
                 new System.Func<WebSharperForestState, WebSharperForestState, WebSharperForestState>(fun _ newState -> newState)
             )
+            System.Threading.Monitor.Exit this.Current.SyncRoot
+        member this.RollbackState () =
             System.Threading.Monitor.Exit this.Current.SyncRoot

@@ -3,6 +3,10 @@
 open System
 open System.Collections.Generic
 open System.Collections.Concurrent
+open WebSharper.Sitelets
+open WebSharper.UI
+open WebSharper.UI.Html
+open WebSharper.UI.Server
 open Axle.Logging
 open Axle.Modularity
 open Axle.Verification
@@ -10,10 +14,6 @@ open Axle.Web.WebSharper.Sitelets
 open Forest
 open Forest.Web.WebSharper
 open Forest.Web.WebSharper.UI
-open WebSharper.Sitelets
-open WebSharper.UI
-open WebSharper.UI.Html
-open WebSharper.UI.Server
 
 type [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>] RequiresForestSiteletAttribute() = 
     inherit RequiresAttribute(typeof<ForestSiteletModule>)
@@ -62,6 +62,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;Requires
         ForestSiteletService(forest, registeredPhysicalViewFactories, dop, Doc.Empty, [])
         |> exp.Export
         |> ignore
+
     [<ModuleTerminate>]
     member internal __.Terminated() =
         registeredPhysicalViewFactories.Clear()

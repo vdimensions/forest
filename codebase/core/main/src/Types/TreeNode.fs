@@ -75,7 +75,5 @@ type [<CustomComparison;CustomEquality>] TreeNode =
         member this.Equals other = this.eq other
 
 module internal TreeNode =
-    //let add id region name parent = HierarchyKey.ViewID_(parent, region, name, id)
-    //let addNew region name parent = add (Fuid.newID().Hash) region name parent
     let isShell (id:TreeNode) = match id with TreeNode.Shell_ -> true | _ -> false
     

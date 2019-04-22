@@ -1,7 +1,21 @@
+//
+// Copyright 2014-2019 vdimensions.net.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 namespace Forest
 
 open System
-
 
 /// <summary>
 /// An interface representing a Forest event bus
@@ -37,10 +51,10 @@ type [<Interface>] IEventBus =
     /// <paramref name="sender"/> is <c>null</c>
     /// </exception>
     abstract member Publish<'M> : sender : IView * message : 'M * [<ParamArray>] topics : string[] -> unit
-    abstract member Subscribe: subscriptionHandler : ISubscriptionHandler -> topic : string -> IEventBus
-    abstract member Unsubscribe: sender : IView -> IEventBus
+    abstract member Subscribe : subscriptionHandler : ISubscriptionHandler -> topic : string -> IEventBus
+    abstract member Unsubscribe : sender : IView -> IEventBus
 
  and [<Interface>] ISubscriptionHandler =
-    abstract member Invoke: arg : obj -> unit
-    abstract MessageType: Type with get
-    abstract Receiver: IView
+    abstract member Invoke : arg : obj -> unit
+    abstract MessageType : Type with get
+    abstract Receiver : IView

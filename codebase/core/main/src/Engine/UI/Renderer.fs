@@ -18,7 +18,7 @@ type internal PhysicalViewDomProcessor =
     val private _commandDispatcher : ICommandDispatcher
     val private _renderer : IPhysicalViewRenderer
 
-    new (physicalViews, commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = 
+    private new (physicalViews, commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = 
         { 
             _commandDispatcher = commandDispatcher; 
             _renderer = renderer; 
@@ -26,8 +26,11 @@ type internal PhysicalViewDomProcessor =
             _nodesToPreserve = Set.empty; 
             _nodeStates = List.empty 
         }
+    new (commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = PhysicalViewDomProcessor(Map.empty, commandDispatcher, renderer)
 
-    member this.PhysicalViews with get() = this.physicalViews
+    member this.PhysicalViews 
+        with get() = this.physicalViews
+        and set pv = this.physicalViews <- pv
 
     interface IDomProcessor with
         member this.ProcessNode n =

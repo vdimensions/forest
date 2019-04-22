@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 namespace Forest.Events
+
 open System
 open System.Collections.Generic
 #if NETSTANDARD

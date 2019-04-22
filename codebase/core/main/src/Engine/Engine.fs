@@ -1,35 +1,44 @@
 ﻿namespace Forest
 
 open System
+open System.Diagnostics
+open Axle.Logging
 open Forest.UI
 
-
 module ForestEngine =
-    type private T (ctx : IForestContext, sp : IForestStateProvider, renderer : IPhysicalViewRenderer) =
 
-        let wrap (s : State option) (action : IForestEngine -> 'a) : 'a =
+    type private T (ctx : IForestContext, sp : IForestStateProvider, renderer : IPhysicalViewRenderer, logger : ILogger) =
+
+        let log (op : string) action engine =
+            let sw = Stopwatch.StartNew()
+            let result = action engine
+            sw.Stop()
+            logger.Trace("Forest '{0}' operation took {1}ms to complete. ", op, sw.ElapsedMilliseconds)
+            result
+
+        let wrap op (engine : IForestEngine) (action : IForestEngine -> 'a) : 'a =
             match ForestExecutionContext.Current with
             | ValueSome ec ->
-                action ec
+                log op action ec
             | ValueNone ->
-                use ec = ForestExecutionContext.Create(ctx, sp, renderer)
-                action ec
+                use ec = ForestExecutionContext.Create(ctx, sp, PhysicalViewDomProcessor(engine, renderer))
+                log op action ec
 
-        member __.ExecuteCommand command target arg =
-            wrap None (fun e -> e.ExecuteCommand command target arg)
+        member this.ExecuteCommand command target arg =
+            wrap "ExecuteCommand" this (fun e -> e.ExecuteCommand command target arg)
 
-        member __.SendMessage msg =
-            wrap None (fun e -> e.SendMessage msg)
+        member this.SendMessage msg =
+            wrap "SendMessage" this (fun e -> e.SendMessage msg)
 
-        member __.LoadTree ( name) =
-            wrap None (fun e -> e.LoadTree name)
+        member this.LoadTree ( name) =
+            wrap "LoadTree" this (fun e -> e.LoadTree name)
 
-        member __.LoadTree (name, msg) =
-            wrap None (fun e -> e.LoadTree (name, msg))
+        member this.LoadTree (name, msg) =
+            wrap "LoadTree" this (fun e -> e.LoadTree (name, msg))
 
         [<Obsolete>]
-        member __.RegisterSystemView<'sv when 'sv :> ISystemView> () =
-            wrap None (fun e -> e.RegisterSystemView<'sv> ())
+        member this.RegisterSystemView<'sv when 'sv :> ISystemView> () =
+            wrap "RegisterSystemView" this (fun e -> e.RegisterSystemView<'sv> ())
 
         interface IForestEngine with
             member this.RegisterSystemView<'sv when 'sv :> ISystemView> () = this.RegisterSystemView<'sv>()
@@ -41,4 +50,4 @@ module ForestEngine =
         interface IMessageDispatcher with
             member this.SendMessage msg = this.SendMessage msg
 
-    let internal Create ctx sp renderer = upcast T(ctx, sp, renderer) : IForestEngine
+    let internal Create ctx sp renderer logger = upcast T(ctx, sp, renderer, logger) : IForestEngine

@@ -75,7 +75,6 @@
     <Compile Include="Engine\Dom.fs" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ExecutionContext.fs" />
-    <Compile Include="Engine\ForestState.fs" />
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="AxleModule\Resources\TemplateResourceInfo.fs" />
     <Compile Include="AxleModule\Resources\TemplateMarshalling.fs" />
