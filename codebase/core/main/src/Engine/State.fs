@@ -7,16 +7,15 @@ open Forest.UI
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>, fuid: Fuid) =
-    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID())
+type [<Sealed;NoComparison>] State internal(tree : Tree, models : Map<thash, obj>, views :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>, hash: thash) =
+    internal new (tree : Tree, viewModels : Map<thash, obj>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID().Hash)
     [<CompiledName("Empty")>]
-    static member initial = State(Tree.root, Map.empty, Map.empty, Map.empty, Fuid.empty)
+    static member initial = State(Tree.root, Map.empty, Map.empty, Map.empty, Fuid.empty.Hash)
     member internal __.Tree with get() = tree
     member internal __.Models with get() = models
-    member internal __.ViewStates with get() = viewStates
+    member internal __.Views with get() = views
     member internal __.PhysicalViews with get() = physicalViews
-    member internal __.Fuid with get() = fuid
-    member __.Hash with get() = fuid.Hash
+    member __.Hash with get() = hash
     member private this.eq (other : State) : bool =
         StringComparer.Ordinal.Equals(this.Hash, other.Hash)
         && LanguagePrimitives.GenericEqualityComparer.Equals(this.Tree, other.Tree)
@@ -41,7 +40,7 @@ module internal State =
             let ix = siblingsCount - ids.Length // TODO
             let hash = head.Hash
             let vm = st.Models.[hash]
-            let vs = st.ViewStates.[hash]
+            let vs = st.Views.[hash]
             let descriptor = vs.Descriptor
             v.BFS head ix vm descriptor
             // visit siblings 
@@ -60,11 +59,6 @@ module internal State =
         | Some ch -> _traverseState v root ch ch.Length st
         | None -> ()
         v.Complete()
-
-    let internal render (ctx : IForestContext) (engine : IForestEngine) (domProcessor : PhysicalViewDomProcessor) (state : State) =
-        domProcessor.PhysicalViews <- state.PhysicalViews
-        state |> traverse (ForestDomRenderer(seq { yield domProcessor :> IDomProcessor }, ctx))
-        domProcessor.PhysicalViews
 
 type [<Interface>] IForestStateProvider =
     abstract member LoadState : unit -> State

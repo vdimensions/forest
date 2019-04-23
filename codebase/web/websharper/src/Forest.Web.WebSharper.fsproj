@@ -19,7 +19,7 @@
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
     <Compile Include="Node.fs" />
     <Compile Include="Remoting.fs" />
-    <Compile Include="DocumentRenderer.fs" />
+    <Compile Include="RemotingPhysicalViewRenderer.fs" />
     <Compile Include="ForestWebSharperModule.fs" />
     <Compile Include="UI\Client.fs" />
     <Compile Include="Sitelets\PhysicalViewRegistry.fs" />

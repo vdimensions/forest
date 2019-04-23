@@ -20,6 +20,7 @@ type [<CustomComparison;CustomEquality>] TreeNode =
 
     [<CompiledName("NewKey")>]
     static member newKey region view parent = 
+        // TODO: instead of Fuid.newID().Hash, use an `IIDentityProvider` interface instence
         TreeNode.ViewID_(parent, region, view, Fuid.newID().Hash)
 
     member this.Parent with get() = match this with Shell_ -> Shell_ | ViewID_ (p, _, _, _) -> p

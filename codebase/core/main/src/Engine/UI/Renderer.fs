@@ -15,18 +15,18 @@ type internal PhysicalViewDomProcessor =
     /// Contains a list of nodes to be retained as they represent present views.
     val mutable private _nodesToPreserve : thash Set
     val mutable private _nodeStates : NodeState list
-    val private _commandDispatcher : ICommandDispatcher
+    val private _engine : IForestEngine
     val private _renderer : IPhysicalViewRenderer
 
-    private new (physicalViews, commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = 
+    private new (physicalViews, engine : IForestEngine, renderer : IPhysicalViewRenderer) = 
         { 
-            _commandDispatcher = commandDispatcher; 
+            _engine = engine; 
             _renderer = renderer; 
             physicalViews = physicalViews; 
             _nodesToPreserve = Set.empty; 
             _nodeStates = List.empty 
         }
-    new (commandDispatcher : ICommandDispatcher, renderer : IPhysicalViewRenderer) = PhysicalViewDomProcessor(Map.empty, commandDispatcher, renderer)
+    new (engine : IForestEngine, renderer : IPhysicalViewRenderer) = PhysicalViewDomProcessor(Map.empty, engine, renderer)
 
     member this.PhysicalViews 
         with get() = this.physicalViews
@@ -63,7 +63,7 @@ type internal PhysicalViewDomProcessor =
                 | (Some p, isNewView) -> 
                     match (isNewView, dictTryFind(renderers, p.Hash), dictTryFind(renderers, n.Hash)) with
                     | (true, Some parent, None) ->
-                        let renderer = this._renderer.CreateNestedPhysicalView this._commandDispatcher parent n
+                        let renderer = this._renderer.CreateNestedPhysicalView this._engine parent n
                         updateCalls <- (renderer,n)::updateCalls
                         renderers.Add(n.Hash, renderer)
                     | (true, Some _, Some _) ->
@@ -79,7 +79,7 @@ type internal PhysicalViewDomProcessor =
                     | (true, Some _) ->
                         invalidOp(String.Format("Physical view {0} #{1} already exists", n.Name, n.Hash))
                     | (true, None) ->
-                        let renderer = this._renderer.CreatePhysicalView this._commandDispatcher n
+                        let renderer = this._renderer.CreatePhysicalView this._engine n
                         updateCalls <- (renderer,n)::updateCalls
                         renderers.Add(n.Hash, renderer)
                     | (false, None) -> 
@@ -101,15 +101,15 @@ type internal PhysicalViewDomProcessor =
 
 [<AbstractClass;NoComparison>] 
 type AbstractPhysicalViewRenderer<'PV when 'PV :> IPhysicalView>() =
-    abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
-    abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode  -> 'PV
+    abstract member CreatePhysicalView: engine : IForestEngine -> n : DomNode -> 'PV
+    abstract member CreateNestedPhysicalView: engine : IForestEngine -> parent : 'PV -> n : DomNode  -> 'PV
 
     interface IPhysicalViewRenderer with
-        member this.CreatePhysicalView commandDispatcher n = 
-            upcast this.CreatePhysicalView commandDispatcher n : IPhysicalView
-        member this.CreateNestedPhysicalView commandDispatcher parent n = 
-            upcast this.CreateNestedPhysicalView commandDispatcher (parent :?> 'PV) n : IPhysicalView
+        member this.CreatePhysicalView engine n = 
+            upcast this.CreatePhysicalView engine n : IPhysicalView
+        member this.CreateNestedPhysicalView engine parent n = 
+            upcast this.CreateNestedPhysicalView engine (parent :?> 'PV) n : IPhysicalView
 
     interface IPhysicalViewRenderer<'PV> with
-        member this.CreatePhysicalViewG commandDispatcher n = this.CreatePhysicalView commandDispatcher n
-        member this.CreateNestedPhysicalViewG commandDispatcher parent n = this.CreateNestedPhysicalView commandDispatcher parent n
+        member this.CreatePhysicalViewG engine n = this.CreatePhysicalView engine n
+        member this.CreateNestedPhysicalViewG engine parent n = this.CreateNestedPhysicalView engine parent n

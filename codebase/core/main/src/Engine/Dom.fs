@@ -33,14 +33,16 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                         false
                 let node = 
                     { 
-                        Hash = hash; 
-                        Name = treeNode.View; 
-                        Region = treeNode.Region;
-                        Index = i; 
-                        Model = model; 
-                        Parent = None;
-                        Regions = Map.empty; 
-                        Commands = commands 
+                        Hash = hash 
+                        Name = treeNode.View
+                        Region = treeNode.Region
+                        Index = i
+                        Model = model
+                        Parent = None
+                        Regions = Map.empty
+                        Commands = commands
+                        // TODO:
+                        Links = Map.empty
                     } 
                 nodeMap <- nodeMap |> Map.add hash node
                 changeStateList <- (hash, canSkipRenderCall)::changeStateList

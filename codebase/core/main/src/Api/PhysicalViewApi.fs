@@ -22,15 +22,17 @@ type [<Interface>] IPhysicalView =
     inherit IDisposable
     abstract member Update : node : DomNode -> unit
     abstract member InvokeCommand : name : cname -> arg : obj -> unit
+    abstract member NavigateTo : string -> unit
+    abstract member NavigateTo<'msg> : string * 'msg -> unit
     abstract member Hash : thash
 
 [<Interface>] 
 type IPhysicalViewRenderer =
-    abstract member CreatePhysicalView: commandDispatcher : ICommandDispatcher -> n : DomNode -> IPhysicalView
-    abstract member CreateNestedPhysicalView: commandDispatcher : ICommandDispatcher -> parent : IPhysicalView -> n : DomNode -> IPhysicalView
+    abstract member CreatePhysicalView: engine : IForestEngine -> n : DomNode -> IPhysicalView
+    abstract member CreateNestedPhysicalView: engine : IForestEngine -> parent : IPhysicalView -> n : DomNode -> IPhysicalView
 
 [<Interface>]
 type IPhysicalViewRenderer<'PV when 'PV :> IPhysicalView> =
     inherit IPhysicalViewRenderer
-    abstract member CreatePhysicalViewG: commandDispatcher : ICommandDispatcher -> n : DomNode -> 'PV
-    abstract member CreateNestedPhysicalViewG: commandDispatcher : ICommandDispatcher -> parent : 'PV -> n : DomNode -> 'PV
+    abstract member CreatePhysicalViewG: engine : IForestEngine -> n : DomNode -> 'PV
+    abstract member CreateNestedPhysicalViewG: engine : IForestEngine -> parent : 'PV -> n : DomNode -> 'PV

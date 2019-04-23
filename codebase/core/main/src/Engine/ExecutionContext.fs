@@ -253,7 +253,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
 
     static member Create (ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor) = 
         let state = sp.LoadState()
-        let ctx = new ForestExecutionContext(state.Tree, state.Models, state.ViewStates, state.PhysicalViews, ctx, sp, dp)
+        let ctx = new ForestExecutionContext(state.Tree, state.Models, state.Views, state.PhysicalViews, ctx, sp, dp)
         ForestExecutionContext._currentEngine <- ValueSome (ctx :> IForestExecutionContext)
         ctx.Init()
 

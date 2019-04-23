@@ -13,8 +13,8 @@ type [<Interface>] IDocumentStateProvider =
     // TODO
     end
 
-and [<NoComparison;NoEquality>] internal RemotingPhysicalView (commandDispatcher, hash, allNodes : IDictionary<thash, Node>) =
-    inherit AbstractPhysicalView(commandDispatcher, hash)
+and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, allNodes : IDictionary<thash, Node>) =
+    inherit AbstractPhysicalView(engine, hash)
     let mutable regionMap : Map<rname, RemotingPhysicalView list> = Map.empty
 
     static member domNode2Node (dn : DomNode) =
@@ -30,8 +30,8 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (commandDispatcher
     override __.Dispose _ = 
         hash |> allNodes.Remove |> ignore
 
-type [<Sealed;NoEquality;NoComparison>] internal RemotingRootPhysicalView(commandDispatcher, hash, topLevelViews: List<RemotingRootPhysicalView>, allNodes) =
-    inherit RemotingPhysicalView(commandDispatcher, hash, allNodes)
+type [<Sealed;NoEquality;NoComparison>] internal RemotingRootPhysicalView(engine, hash, topLevelViews: List<RemotingRootPhysicalView>, allNodes) =
+    inherit RemotingPhysicalView(engine, hash, allNodes)
     member private __.base_Dispose disposing = base.Dispose disposing
     override this.Dispose disposing = 
         topLevelViews.Remove this |> ignore
@@ -42,13 +42,13 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
     let topLevelViews = List<RemotingRootPhysicalView>()
     let allNodes = Dictionary<thash,Node>(System.StringComparer.Ordinal)
 
-    override __.CreatePhysicalView commandDispatcher domNode = 
-        let result = new RemotingRootPhysicalView(commandDispatcher, domNode.Hash, topLevelViews, allNodes)
+    override __.CreatePhysicalView engine domNode = 
+        let result = new RemotingRootPhysicalView(engine, domNode.Hash, topLevelViews, allNodes)
         topLevelViews.Add result
         upcast result
 
-    override __.CreateNestedPhysicalView commandDispatcher parent domNode =
-        new RemotingPhysicalView(commandDispatcher, domNode.Hash, allNodes)
+    override __.CreateNestedPhysicalView engine parent domNode =
+        new RemotingPhysicalView(engine, domNode.Hash, allNodes)
         |> parent.Embed domNode.Region
 
     interface INodeStateProvider with
