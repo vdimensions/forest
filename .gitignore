@@ -38,6 +38,8 @@ Generated\ Files/
 BenchmarkDotNet.Artifacts/
 # .NET Core
 artifacts/
+# docfx generated documentation
+_site
 
 # files
 # User-specific files
