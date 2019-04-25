@@ -42,7 +42,7 @@ type internal PhysicalViewDomProcessor =
             n
 
         member this.Complete(_ : DomNode list) = 
-            let renderers = System.Collections.Generic.Dictionary<thash, 'PV>(StringComparer.Ordinal)
+            let renderers = System.Collections.Generic.Dictionary<thash, IPhysicalView>(StringComparer.Ordinal)
             for kvp in this.physicalViews do
                 if not <| this._nodesToPreserve.Contains(kvp.Key) then
                     kvp.Value.Dispose()
