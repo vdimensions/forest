@@ -35,3 +35,13 @@ type [<Sealed;NoComparison>] SubscriptionAttribute(topic : string) =
     do ignore <| (|NotNull|) "topic" topic
     member __.Topic with get() = topic
 
+[<AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)>]
+type [<Sealed;NoComparison>] LinkToAttribute(tree : string) = 
+    inherit Attribute()
+    do ignore <| (|NotNull|) "tree" tree
+    let mutable _parametrized : bool = false
+    member __.Tree with get() = tree
+    member __.Parametrized 
+        with get() = _parametrized
+        and set value = _parametrized <- value
+

@@ -41,6 +41,8 @@ type [<Interface>] internal IRuntimeView =
     abstract member GetViewModel : id : TreeNode -> obj option
     abstract member SetViewModel : silent : bool -> id : TreeNode -> model : 'T -> 'T
 
+    //abstract member GetLinks : id : TreeNode -> List
+
     abstract member ClearRegion : node : TreeNode -> region : rname -> unit
     abstract member GetRegionContents : node : TreeNode -> region : rname -> IView seq
     abstract member RemoveViewFromRegion : node : TreeNode -> region : rname -> predicate : System.Predicate<IView> -> unit

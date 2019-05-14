@@ -101,9 +101,16 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                     match parameterType with
                     | ValueSome parameterType -> Ok <| Command.Descriptor(parameterType, mi)
                     | ValueNone -> Error (Command.Error.MoreThanOneArgument(mi))
+            let inline createLinkDescriptor (a : LinkToAttribute) : Result<ILinkDescriptor, Link.Error> =
+                Link.Descriptor(a.Tree, a.Parametrized) :> ILinkDescriptor
+                |> Result.Ok // TODO: handle any potential error cases
             let inline getCommandDescriptors (rp : IReflectionProvider) t = 
                 rp.GetCommandMethods t
                 |> Seq.map createCommandDescriptor
+                |> Seq.cache
+            let inline getLinkDescriptors (rp : IReflectionProvider) t = 
+                rp.GetLinkToAttributes t
+                |> Seq.map createLinkDescriptor
                 |> Seq.cache
             let inline createEventDescriptor (mi : IEventMethod) =
                 if mi.ReturnType <> typeof<Void> 
@@ -122,12 +129,17 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                 |> Seq.map createEventDescriptor
                 |> Seq.cache
             let commandDescriptorResults = getCommandDescriptors reflectionProvider viewType
+            let linkDescriptorResults = getLinkDescriptors reflectionProvider viewType
             let eventDescriptorResults = getEventDescriptors reflectionProvider viewType
             let commandDescriptorFailures = commandDescriptorResults |> Seq.choose Result.error |> List.ofSeq
+            //let linkDescriptorFailures = linkDescriptorResults |> Seq.choose Result.error |> List.ofSeq
             let eventDescriptorFailures = eventDescriptorResults |> Seq.choose Result.error |> List.ofSeq
             match (commandDescriptorFailures, eventDescriptorFailures) with
             | ([], []) ->
                 let inline folder (m : Dictionary<string, ICommandDescriptor>) (e : ICommandDescriptor) : Dictionary<string, ICommandDescriptor> = 
+                    m.Add(e.Name, e)
+                    m
+                let inline linkFolder (m : Dictionary<string, ILinkDescriptor>) (e : ILinkDescriptor) : Dictionary<string, ILinkDescriptor> = 
                     m.Add(e.Name, e)
                     m
                 // TODO "This could fail if multiple commands share the same name! Add a respective error case"
@@ -136,12 +148,17 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                     |> Seq.choose Result.ok
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
                     |> Index
+                let linksIndex =
+                    linkDescriptorResults
+                    |> Seq.choose Result.ok
+                    |> Seq.fold linkFolder (new Dictionary<string, ILinkDescriptor>(StringComparer.Ordinal))
+                    |> Index
                 let eventSubscriptions = 
                     eventDescriptorResults
                     |> Seq.choose Result.ok
                     |> Array.ofSeq
                 let vn = if String.IsNullOrEmpty viewName then viewType |> ViewHandle.getAnonymousViewName else viewName
-                Ok (upcast View.Descriptor(vn, viewType, viewModelType, commandsIndex, eventSubscriptions) : IViewDescriptor)
+                Ok (upcast View.Descriptor(vn, viewType, viewModelType, commandsIndex, linksIndex, eventSubscriptions) : IViewDescriptor)
             | (ce, ee) ->
                 let (ce', ee') = (ce |> Command.Error.MultipleErrors, ee |> Event.Error.MultipleErrors)
                 Error <| BindingError (ce', ee')

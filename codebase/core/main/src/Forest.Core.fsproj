@@ -44,6 +44,7 @@
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\TemplateApi.fs" />
     <Compile Include="Api\ForestApi.fs" />
+    <Compile Include="Api\ViewRegistry.fs" />
     <Compile Include="Api\Region.fs" />
     <Compile Include="Api\EventBusApi.fs" />
     <Compile Include="Api\SecurityApi.fs" />
@@ -52,13 +53,13 @@
     <Compile Include="Api\Exceptions.fs" />
     <Compile Include="Api\StateApi.fs" />
     <Compile Include="Api\DomApi.fs" />
-    <Compile Include="Api\EngineApi.fs" />
     <Compile Include="Api\InternalApi.fs" />
     <Compile Include="Api\ReflectionApi.fs" />
     <Compile Include="Api\PhysicalViewApi.fs" />
     <Compile Include="Engine\Reflection.fs" />
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Command.fs" />
+    <Compile Include="Engine\Link.fs" />
     <Compile Include="Engine\Event.fs" />
     <Compile Include="Engine\LogicalView.fs" />
     <Compile Include="Engine\View.fs" />

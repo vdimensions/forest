@@ -125,6 +125,8 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
         t.GetMethods (f) |> Seq.filter (fun mi -> not mi.IsSpecialName)
     member inline private __.getCommandAttribs (methodInfo : MethodInfo) : seq<CommandAttribute> = 
         __.getAttributes methodInfo
+    member inline private __.getLinkToAttribs (viewType : TypeInfo) : seq<LinkToAttribute> = 
+        __.getAttributes viewType
     member inline private __.getEventAttribs (methodInfo : MethodInfo) : seq<SubscriptionAttribute> = 
         __.getAttributes methodInfo
 
@@ -136,7 +138,9 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             match (viewType.GetTypeInfo() |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
             #endif
             | Some p -> p
-            | None -> Unchecked.defaultof<ViewAttribute>            
+            | None -> Unchecked.defaultof<ViewAttribute>  
+        member __.GetLinkToAttributes viewType =
+            viewType.GetTypeInfo() |> __.getLinkToAttribs |> Seq.toArray
         member __.GetCommandMethods viewType =
             viewType
             |> __.getMethods flags 

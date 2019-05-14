@@ -20,29 +20,28 @@ open Axle.Verification
 open Forest.Reflection
 
 [<RequireQualifiedAccess>]
-[<CompiledName("Command")>]
-module Command = 
+[<CompiledName("Link")>]
+module Link = 
     [<NoComparison>] 
     type Error =
-        | CommandNotFound of owner : Type * command : cname
-        | InvocationError of owner : Type * command : cname * cause : exn
-        | NonVoidReturnType of commandMethod : ICommandMethod
-        | MoreThanOneArgument of commandMethod : ICommandMethod
+        | LinkNotFound of owner : Type * target : string
+        | RedirectError of owner : Type * target : string * cause : exn
         | MultipleErrors of errors : Error list
 
     [<Sealed;NoComparison>] 
-    type internal Descriptor(argType : Type, method : ICommandMethod) = 
+    type internal Descriptor(target : string, parametrized : bool) = 
         do
-            ignore <| (|NotNull|) "argType" argType
-            ignore <| (|NotNull|) "mi" method
-        member __.Invoke (arg : obj) (view : IView) : unit = method.Invoke view arg
-        member __.ArgumentType with get() = argType
-        interface ICommandDescriptor with
-            member __.Name = method.CommandName
-            member this.Invoke arg view = this.Invoke arg view
-            member this.ArgumentType = this.ArgumentType
+            ignore <| (|NotNullOrEmpty|) "target" target
+        member __.Follow (arg : obj) (engine : IForestEngine) : unit = 
+            if (parametrized) 
+            then engine.LoadTree(target, arg)
+            else engine.LoadTree target
+        member __.Name with get() = target
+        interface ILinkDescriptor with
+            member this.Name = this.Name
+            member this.Follow arg engine = this.Follow arg engine
 
-    [<CompiledName("CommandModel")>]
+    [<CompiledName("LinkModel")>]
     type [<Sealed;NoComparison>] internal Model(name : cname, displayName : string, tooltip : string, description : string) =
         new (name : cname) = Model(name, String.Empty, String.Empty, String.Empty)
         member __.Name with get() = name
@@ -56,9 +55,7 @@ module Command =
             member this.Description = this.Description
 
     let resolveError = function
-        | MoreThanOneArgument mi -> upcast InvalidOperationException() : exn
-        | NonVoidReturnType mi -> upcast InvalidOperationException() : exn
-        | CommandNotFound (o, c) -> upcast InvalidOperationException() : exn
-        | InvocationError (o, c, e) -> upcast InvalidOperationException() : exn
+        | LinkNotFound (o, t) -> upcast InvalidOperationException() : exn
+        | RedirectError (o, t, e) -> upcast InvalidOperationException() : exn
         | MultipleErrors e -> upcast InvalidOperationException() : exn
     let handleError (e : Error) = e |> resolveError |> raise

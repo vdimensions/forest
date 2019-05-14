@@ -55,7 +55,6 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
             // This case is entered if the view model is set at construction time, for example, by a DI container.
             | ValueNone -> newModel
 
-
     member __.Model with get ():'T = model
 
     member internal this.HierarchyKey with get() = this.hierarchyKey
@@ -67,25 +66,25 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
             model <- this.executionContext.SetViewModel true this.hierarchyKey (downcast m : 'T)
             this.Resume()
 
-        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" runtime : IForestExecutionContext) =
+        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" context : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
                 this.hierarchyKey <- node
-                match runtime.GetViewModel this.HierarchyKey with
+                match context.GetViewModel this.HierarchyKey with
                 | Some viewModelFromState -> model <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| runtime.SetViewModel true this.HierarchyKey model
-                runtime.SubscribeEvents this
-                this.executionContext <- runtime
+                | None -> ignore <| context.SetViewModel true this.HierarchyKey model
+                context.SubscribeEvents this
+                this.executionContext <- context
                 ()
             | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a runtime", this.hierarchyKey.View))
 
         member this.AbandonContext (_) =
             match null2vopt this.executionContext with
-            | ValueSome currentRuntime ->
-                currentRuntime.UnsubscribeEvents this                
-                // FIXME: when exception occurs, runtime is not abandoned
-                match currentRuntime.GetViewModel this.HierarchyKey with 
+            | ValueSome context ->
+                context.UnsubscribeEvents this                
+                // FIXME: when exception occurs, context is not abandoned
+                match context.GetViewModel this.HierarchyKey with 
                 | Some modelFromState -> 
                     model <- (downcast modelFromState : 'T)
                     ()

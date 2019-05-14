@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright 2014-2019 vdimensions.net.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,11 +18,31 @@ namespace Forest
 open System
 open Forest.Collections
 
-type [<Interface>] IViewDescriptor = 
+
+type [<Interface>] ICommandDispatcher =
+    abstract member ExecuteCommand : command : cname -> hash : thash -> arg : obj -> unit
+
+type [<Interface>] IMessageDispatcher =
+    abstract member SendMessage<'msg> : message : 'msg -> unit
+
+type [<Interface>] ITreeNavigator =
+    abstract member LoadTree : string -> unit
+    abstract member LoadTree<'msg> : string * 'msg -> unit
+
+
+type [<Interface>] IForestEngine =
+    inherit IMessageDispatcher
+    inherit ICommandDispatcher
+    inherit ITreeNavigator
+    [<System.Obsolete>]
+    abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> 'sv
+
+and [<Interface>] IViewDescriptor = 
     abstract Name : vname with get
     abstract ViewType : Type with get
     abstract ModelType : Type with get
     abstract Commands : Index<ICommandDescriptor, cname> with get
+    abstract Links : Index<ILinkDescriptor, cname> with get
     abstract Events : IEventDescriptor seq with get
     abstract IsSystemView : bool
 
@@ -30,6 +50,11 @@ and [<Interface>] ICommandDescriptor =
     abstract member Invoke : arg : obj -> v : IView -> unit
     abstract Name : cname with get
     abstract ArgumentType : Type with get
+
+and [<Interface>] ILinkDescriptor = 
+    abstract member Follow : arg : obj -> engine : IForestEngine -> unit
+    abstract Name : string with get
+    //abstract ParameterType : Type with get
 
 and [<Interface>] IEventDescriptor =
     abstract member Trigger : view : IView -> message : obj -> unit
@@ -60,6 +85,11 @@ and [<Interface>] IView<'T> =
     abstract member UpdateModel : Func<'T, 'T> -> unit
     abstract Model : 'T with get
 
+/// An interface representing a system view, that is a special type of view which
+/// aids the internal workings of Forest, rather than serving any presentational purpose.
+/// System views are never being rendered.
+and ISystemView = interface inherit IView end
+
 and [<Interface>] IRegion = 
     abstract member ActivateView : name : vname -> IView
     abstract member ActivateView : name : vname * model : obj -> IView
@@ -71,30 +101,3 @@ and [<Interface>] IRegion =
     abstract member Remove : System.Predicate<IView> -> IRegion
     abstract Name : rname with get
     abstract Views : IView seq with get
-
-module ViewRegistry =
-    let register<'T when 'T :> IView> (reg : IViewRegistry) =
-        reg.Register<'T>()
-    let registerViewType (viewType : Type) (reg : IViewRegistry) =
-        reg.Register(viewType)
-
-    let internal getDescriptorByName (name : vname) (reg : IViewRegistry) = 
-        reg.GetDescriptor name
-
-    let internal getDescriptorByType (viewType : Type) (reg : IViewRegistry) = 
-        reg.GetDescriptor viewType
-
-    let getDescriptor (viewHandle : ViewHandle) =
-        match viewHandle with
-        | ByName n -> getDescriptorByName n
-        | ByType t -> getDescriptorByType t
-
-    let internal resolve (descriptor : IViewDescriptor) (model : obj option) (reg : IViewRegistry) =
-        match model with
-        | None -> reg.Resolve descriptor
-        | Some m -> reg.Resolve (descriptor, m)
-
-/// An interface representing a system view, that is a special type of view which
-/// aids the internal workings of Forest, rather than serving any presentational purpose.
-/// System views are never being rendered.
-type ISystemView = interface inherit IView end
