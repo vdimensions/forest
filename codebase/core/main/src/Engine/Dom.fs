@@ -18,7 +18,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
             ctx)
 
     interface IForestStateVisitor with
-        member __.BFS treeNode i model descriptor = 
+        member __.BFS treeNode i viewState descriptor = 
             // go ahead top-to-bottom and collect the basic model data
             let hash = treeNode.Hash
             if descriptor |> ctx.SecurityManager.HasAccess then
@@ -27,9 +27,9 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                     match modelMap.TryFind hash with
                     // TODO: some system views require to be rendered
                     | _ when descriptor.IsSystemView -> true
-                    | Some m -> obj.Equals(m, model)
+                    | Some m -> obj.Equals(m, viewState.Model)
                     | None ->
-                        modelMap <- modelMap |> Map.add hash model
+                        modelMap <- modelMap |> Map.add hash viewState.Model
                         false
                 let node = 
                     { 
@@ -37,7 +37,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                         Name = treeNode.View
                         Region = treeNode.Region
                         Index = i
-                        Model = model
+                        Model = viewState.Model
                         Parent = None
                         Regions = Map.empty
                         Commands = commands

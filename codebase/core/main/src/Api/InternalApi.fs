@@ -25,7 +25,7 @@ type [<Interface>] internal IRuntimeView =
     abstract member AbandonContext : runtime : IForestExecutionContext -> unit
 
     abstract member Load : unit -> unit
-    abstract member Resume : model : obj -> unit
+    abstract member Resume : viewState : ViewState -> unit
 
     abstract InstanceID : TreeNode with get
     abstract Descriptor : IViewDescriptor with get
@@ -38,8 +38,8 @@ type [<Interface>] internal IRuntimeView =
     abstract member SubscribeEvents : receiver : IRuntimeView -> unit
     abstract member UnsubscribeEvents : receiver : IRuntimeView -> unit
 
-    abstract member GetViewModel : id : TreeNode -> obj option
-    abstract member SetViewModel : silent : bool -> id : TreeNode -> model : 'T -> 'T
+    abstract member GetViewState : id : TreeNode -> ViewState option
+    abstract member SetViewState : silent : bool -> id : TreeNode -> model : ViewState -> ViewState
 
     //abstract member GetLinks : id : TreeNode -> List
 

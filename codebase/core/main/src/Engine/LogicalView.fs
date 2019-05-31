@@ -7,7 +7,7 @@ open Axle.Verification
 open Forest
 
 
-type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(model : 'T) =
+type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> private(state : ViewState) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private hierarchyKey : TreeNode
@@ -18,7 +18,9 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
     [<DefaultValue>]
     val mutable private descriptor : IViewDescriptor
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
-    let mutable model : 'T = model
+    let mutable state : ViewState = state
+
+    new (model : 'T) = new LogicalView<'T>(model |> ViewState.withModelUnchecked)
 
     override this.Finalize() =
         this.Dispose(false)
@@ -47,23 +49,27 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
             rt.RemoveViewFromRegion parent region (System.Predicate(fun v -> obj.ReferenceEquals(v, this)))
 
     member this.UpdateModel (NotNull "updateFn" updateFn : Func<'T, 'T>) : unit =
-        let newModel = updateFn.Invoke(model)
-        model <-
+        let newModel = updateFn.Invoke(this.Model)
+        state <-
             match null2vopt this.executionContext with
             // The default behaviour
-            | ValueSome rt -> (rt.SetViewModel false this.hierarchyKey newModel)
+            | ValueSome rt -> 
+                match rt.GetViewState this.hierarchyKey with
+                | Some vs -> { vs with Model = newModel }
+                | None -> newModel |> ViewState.withModel
+                |> rt.SetViewState false this.hierarchyKey
             // This case is entered if the view model is set at construction time, for example, by a DI container.
-            | ValueNone -> newModel
+            | ValueNone -> newModel |> ViewState.withModel
 
-    member __.Model with get ():'T = model
+    member __.Model with get ():'T = state.Model :?> 'T
 
     member internal this.HierarchyKey with get() = this.hierarchyKey
 
     interface IRuntimeView with
         member this.Load () = this.Load()
 
-        member this.Resume m =
-            model <- this.executionContext.SetViewModel true this.hierarchyKey (downcast m : 'T)
+        member this.Resume viewState =
+            state <- this.executionContext.SetViewState true this.hierarchyKey viewState
             this.Resume()
 
         member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" context : IForestExecutionContext) =
@@ -71,9 +77,9 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
             | ValueNone ->
                 this.descriptor <- vd
                 this.hierarchyKey <- node
-                match context.GetViewModel this.HierarchyKey with
-                | Some viewModelFromState -> model <- (downcast viewModelFromState : 'T)
-                | None -> ignore <| context.SetViewModel true this.HierarchyKey model
+                match context.GetViewState this.HierarchyKey with
+                | Some viewState -> state <- viewState
+                | None -> ignore <| context.SetViewState true this.HierarchyKey { state with Model = this.Model }
                 context.SubscribeEvents this
                 this.executionContext <- context
                 ()
@@ -84,10 +90,8 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>]'T>(mod
             | ValueSome context ->
                 context.UnsubscribeEvents this                
                 // FIXME: when exception occurs, context is not abandoned
-                match context.GetViewModel this.HierarchyKey with 
-                | Some modelFromState -> 
-                    model <- (downcast modelFromState : 'T)
-                    ()
+                match context.GetViewState this.HierarchyKey with 
+                | Some viewState -> state <- viewState
                 | None -> () 
                 this.executionContext <- Unchecked.defaultof<IForestExecutionContext>
             | ValueNone -> ()

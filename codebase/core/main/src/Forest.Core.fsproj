@@ -35,9 +35,11 @@
     <Compile Include="Types\TreeNode.fsi" />
     <Compile Include="Types\TreeNode.fs" />
     <Compile Include="Types\ViewHandle.fs" />
-    <Compile Include="Types\StateChange.fs" />
+    <Compile Include="Types\ViewState.fs" />
+    <Compile Include="Types\ViewStateChange.fs" />
     <Compile Include="Types\TemplateTypes.fs" />
     <Compile Include="Types\CommandModel.fs" />
+    <Compile Include="Types\LinkModel.fs" />
     <Compile Include="Types\DomTypes.fs" />
     <Compile Include="Collections\Tree.fs" />
     <Compile Include="Collections\Index.fs" />

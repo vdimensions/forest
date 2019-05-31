@@ -71,7 +71,8 @@ and [<Interface>] IViewRegistry =
 
 /// <summary>
 /// An interface representing the concept of a logical view. 
-/// A logical view encompasses the data to be displayed to the end-user (the model); and the possible user interactions (commands) allowed.
+/// A logical view encompasses the data to be displayed to the end-user (the model); 
+/// and the possible user interactions (commands) allowed.
 /// </summary>
 and [<Interface>] IView =
     inherit IDisposable

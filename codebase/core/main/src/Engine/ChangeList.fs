@@ -23,7 +23,7 @@ open Axle.Verification
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<System.Serializable>]
 #endif
-type [<Sealed;NoComparison>] ChangeList internal (previousStateHash : thash, changes : StateChange list, currentStateFuid : Fuid) =
+type [<Sealed;NoComparison>] ChangeList internal (previousStateHash : thash, changes : ViewStateChange list, currentStateFuid : Fuid) =
     do
         ignore <| (|NotNull|) "previousStateHash" previousStateHash
         ignore <| (|NotNull|) "changes" changes
@@ -31,6 +31,6 @@ type [<Sealed;NoComparison>] ChangeList internal (previousStateHash : thash, cha
     member __.OutHash with get() = currentStateFuid.Hash
     member internal __.Fuid with get() = currentStateFuid
     member internal __.ToList() = changes
-    interface IEnumerable<StateChange> with member __.GetEnumerator() = (upcast changes : IEnumerable<_>).GetEnumerator()
+    interface IEnumerable<ViewStateChange> with member __.GetEnumerator() = (upcast changes : IEnumerable<_>).GetEnumerator()
     interface IEnumerable with member __.GetEnumerator() = (upcast changes : IEnumerable).GetEnumerator()
 

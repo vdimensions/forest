@@ -132,11 +132,7 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
 
     interface IReflectionProvider with
         member __.GetViewAttribute viewType =
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            match (viewType |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
-            #else
             match (viewType.GetTypeInfo() |> __.getAttributes |> Seq.tryPick<ViewAttribute, ViewAttribute> Some) with
-            #endif
             | Some p -> p
             | None -> Unchecked.defaultof<ViewAttribute>  
         member __.GetLinkToAttributes viewType =
