@@ -42,13 +42,13 @@ module Link =
             member this.Follow arg engine = this.Follow arg engine
 
     [<CompiledName("LinkModel")>]
-    type [<Sealed;NoComparison>] internal Model(name : cname, displayName : string, tooltip : string, description : string) =
-        new (name : cname) = Model(name, String.Empty, String.Empty, String.Empty)
+    type [<Sealed;NoComparison>] internal Model(name : string, displayName : string, tooltip : string, description : string) =
+        new (name : string) = Model(name, String.Empty, String.Empty, String.Empty)
         member __.Name with get() = name
         member val DisplayName = displayName with get, set
         member val Tooltip = tooltip with get, set
         member val Description = description with get, set
-        interface ICommandModel with
+        interface ILinkModel with
             member this.Name = this.Name
             member this.DisplayName = this.DisplayName
             member this.Tooltip = this.Tooltip

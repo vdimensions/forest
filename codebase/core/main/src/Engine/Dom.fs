@@ -11,6 +11,9 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
     let createCommandModel (descriptor : ICommandDescriptor) : (cname*ICommandModel) =
         (descriptor.Name, upcast Command.Model(descriptor.Name))
 
+    let createLinkModel (descriptor : ILinkDescriptor) : (string*ILinkModel) =
+        (descriptor.Name, upcast Link.Model(descriptor.Name))
+
     new (renderChain : IDomProcessor seq, ctx : IForestContext) = 
         ForestDomRenderer(
             renderChain |> Seq.fold (fun acc f -> (acc >> f.ProcessNode)) id, 
@@ -22,7 +25,18 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
             // go ahead top-to-bottom and collect the basic model data
             let hash = treeNode.Hash
             if descriptor |> ctx.SecurityManager.HasAccess then
-                let commands = descriptor.Commands |> Seq.filter ctx.SecurityManager.HasAccess |> Seq.map createCommandModel |> Map.ofSeq
+                let commands = 
+                    descriptor.Commands 
+                    |> Seq.filter (fun c -> viewState |> ViewState.isCommandEnabled c.Name)
+                    |> Seq.filter ctx.SecurityManager.HasAccess 
+                    |> Seq.map createCommandModel 
+                    |> Map.ofSeq
+                let links = 
+                    descriptor.Links 
+                    |> Seq.filter (fun c -> viewState |> ViewState.isLinkEnabled c.Name)
+                    |> Seq.filter ctx.SecurityManager.HasAccess 
+                    |> Seq.map createLinkModel 
+                    |> Map.ofSeq
                 let canSkipRenderCall = 
                     match modelMap.TryFind hash with
                     // TODO: some system views require to be rendered
@@ -41,8 +55,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                         Parent = None
                         Regions = Map.empty
                         Commands = commands
-                        // TODO:
-                        Links = Map.empty
+                        Links = links
                     } 
                 nodeMap <- nodeMap |> Map.add hash node
                 changeStateList <- (hash, canSkipRenderCall)::changeStateList

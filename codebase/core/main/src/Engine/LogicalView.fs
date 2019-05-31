@@ -79,7 +79,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
                 this.hierarchyKey <- node
                 match context.GetViewState this.HierarchyKey with
                 | Some viewState -> state <- viewState
-                | None -> ignore <| context.SetViewState true this.HierarchyKey { state with Model = this.Model }
+                | None -> ignore <| context.SetViewState true this.HierarchyKey state
                 context.SubscribeEvents this
                 this.executionContext <- context
                 ()
