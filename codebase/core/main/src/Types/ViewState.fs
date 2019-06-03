@@ -8,7 +8,8 @@ open Axle.Verification
 [<Serializable>]
 [<StructLayout(LayoutKind.Sequential)>]
 #endif
-[<NoComparison>] 
+[<NoComparison>]
+[<Struct>]
 type ViewState = 
     {
         Model : obj

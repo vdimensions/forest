@@ -17,7 +17,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
     new (renderChain : IDomProcessor seq, ctx : IForestContext) = 
         ForestDomRenderer(
             renderChain |> Seq.fold (fun acc f -> (acc >> f.ProcessNode)) id, 
-            renderChain |> Seq.fold (fun acc f -> (fun l -> acc(l); f.Complete(l);)) ignore, 
+            renderChain |> Seq.fold (fun _ f -> (fun l -> f.Complete(l) )) ignore, 
             ctx)
 
     interface IForestStateVisitor with
@@ -26,16 +26,16 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
             let hash = treeNode.Hash
             if descriptor |> ctx.SecurityManager.HasAccess then
                 let commands = 
-                    descriptor.Commands 
-                    |> Seq.filter (fun c -> viewState |> ViewState.isCommandEnabled c.Name)
+                    descriptor.Commands
+                    |> Seq.filter (fun cmd -> viewState |> ViewState.isCommandEnabled cmd.Name)
                     |> Seq.filter ctx.SecurityManager.HasAccess 
-                    |> Seq.map createCommandModel 
+                    |> Seq.map createCommandModel
                     |> Map.ofSeq
                 let links = 
-                    descriptor.Links 
-                    |> Seq.filter (fun c -> viewState |> ViewState.isLinkEnabled c.Name)
-                    |> Seq.filter ctx.SecurityManager.HasAccess 
-                    |> Seq.map createLinkModel 
+                    descriptor.Links
+                    |> Seq.filter (fun lnk -> viewState |> ViewState.isLinkEnabled lnk.Name)
+                    |> Seq.filter ctx.SecurityManager.HasAccess
+                    |> Seq.map createLinkModel
                     |> Map.ofSeq
                 let canSkipRenderCall = 
                     match modelMap.TryFind hash with
@@ -79,12 +79,9 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
         member __.Complete() = 
             let mutable nodes : DomNode list = List.empty
             for (h, skip) in changeStateList do
-                let mutable node = nodeMap.[h]
-                if (not skip) then 
-                    node <- visit node
-                nodes <- node :: nodes
+                nodes <- (if (not skip) then visit nodeMap.[h] else nodeMap.[h]) :: nodes
             complete(nodes)
-            // clean the accumulated state up.
+            // clean-up the accumulated state.
             nodeMap <- Map.empty
             modelMap <- Map.empty
             changeStateList <- List.empty
