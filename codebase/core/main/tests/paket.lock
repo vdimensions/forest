@@ -1,19 +1,18 @@
 RESTRICTION: == net45
 NUGET
-  remote: ../../../../../axle/dist
-    Axle.Application (1.5.2222.12452)
-      Axle.Resources (>= 1.5.2213.18200)
-    Axle.Core (1.5.2279.26640)
-    Axle.FSharp (1.5.2227.18252)
-      Axle.Core (>= 1.5.2178.22316)
-      FSharp.Core (>= 4.6.1)
-    Axle.Resources (1.5.2213.18200)
-      Axle.Core (>= 1.5.2178.22316)
-  remote: ../../../../dist
-    Forest.Core (2.1.2299.26845)
-      Axle.Application (>= 1.5.2222.12452)
-      Axle.FSharp (>= 1.5.2227.18252)
-  remote: https://www.nuget.org/api/v2
+  remote: https://api.nuget.org/v3/index.json
+    Axle.Application (1.5.2344.25595)
+      Axle.Resources (>= 1.5.2344.25595)
+    Axle.Core (1.5.2344.25595)
+    Axle.FSharp (1.5.2344.25595)
+      Axle.Core (>= 1.5.2344.25595)
+      FSharp.Core (>= 4.6.2)
+    Axle.Resources (1.5.2344.25595)
+      Axle.Core (>= 1.5.2344.25595)
     FSharp.Core (4.6.2)
-    NUnit (3.11)
+    NUnit (3.12)
     NUnit3TestAdapter (3.13)
+  remote: ../../../../dist
+    Forest.Core (2.1.2341.37710)
+      Axle.Application (>= 1.5.2340.19478)
+      Axle.FSharp (>= 1.5.2340.19478)

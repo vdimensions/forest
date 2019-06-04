@@ -20,6 +20,17 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     let mutable state : ViewState = state
 
+    let updateViewState fn (v : LogicalView<'T>) =
+        state <-
+            match null2vopt v.executionContext with
+            // The default behaviour
+            | ValueSome context -> 
+                match context.GetViewState v.hierarchyKey with
+                | Some vs -> fn vs
+                | None -> invalidOp "ViewState not found"
+                |> context.SetViewState false v.hierarchyKey
+            | ValueNone -> invalidOp "This operation cannot be applied without execution context"
+
     new (model : 'T) = new LogicalView<'T>(model |> ViewState.withModelUnchecked)
 
     override this.Finalize() =
@@ -34,6 +45,12 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
     abstract member Resume : unit -> unit
     default __.Resume() = ()
 
+    member this.EnableCommand(NotNull "command" command : cname) =
+        this |> updateViewState (fun state -> { state with DisabledCommands = state.DisabledCommands |> Set.remove command })
+
+    member this.EnableLink(NotNull "link" link : string) =
+        this |> updateViewState (fun state -> { state with DisabledLinks = state.DisabledLinks |> Set.remove link })
+        
     abstract member Dispose : bool -> unit
     default __.Dispose(_) = ()
 
