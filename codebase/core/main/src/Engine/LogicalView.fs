@@ -45,8 +45,14 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
     abstract member Resume : unit -> unit
     default __.Resume() = ()
 
+    member this.DisableCommand(NotNull "command" command : cname) =
+        this |> updateViewState (fun state -> { state with DisabledCommands = state.DisabledCommands |> Set.add command })
+
     member this.EnableCommand(NotNull "command" command : cname) =
         this |> updateViewState (fun state -> { state with DisabledCommands = state.DisabledCommands |> Set.remove command })
+
+    member this.DisableLink(NotNull "link" link : cname) =
+        this |> updateViewState (fun state -> { state with DisabledLinks = state.DisabledLinks |> Set.add link })
 
     member this.EnableLink(NotNull "link" link : string) =
         this |> updateViewState (fun state -> { state with DisabledLinks = state.DisabledLinks |> Set.remove link })
