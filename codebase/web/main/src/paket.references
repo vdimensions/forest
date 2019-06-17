@@ -1,0 +1,4 @@
+Forest.Core
+Microsoft.Extensions.Caching.Memory
+Microsoft.AspNetCore.Session
+Microsoft.AspNetCore
