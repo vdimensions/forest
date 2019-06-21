@@ -4,12 +4,30 @@ open Forest
 open WebSharper
 
 [<NoComparison;JavaScriptExport>]
+type CommandNode =
+    {
+        Name : cname
+        DisplayName : string
+        ToolTip : string
+        Description : string
+    }
+[<NoComparison;JavaScriptExport>]
+type LinkNode =
+    {
+        Name : string
+        DisplayName : string
+        ToolTip : string
+        Description : string
+    }
+[<NoComparison;JavaScriptExport>]
 type Node =
     {
-        Hash: thash;
-        Name: vname;
-        Model: obj;
+        Hash: thash
+        Name: vname
+        Model: obj
         Regions: array<rname*thash array>
+        Commands: array<string*CommandNode>
+        Links: array<string*LinkNode>
     }
 
 type [<Interface>] INodeStateProvider =

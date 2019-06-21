@@ -18,7 +18,14 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
     let mutable regionMap : Map<rname, RemotingPhysicalView list> = Map.empty
 
     static member domNode2Node (dn : DomNode) =
-        { Hash = dn.Hash; Name = dn.Name; Model = dn.Model; Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map (fun x -> x.Hash) |> Array.ofList ) |> Map.toArray }
+        { 
+            Hash = dn.Hash; 
+            Name = dn.Name; 
+            Model = dn.Model; 
+            Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map (fun x -> x.Hash) |> Array.ofList ) |> Map.toArray;
+            Commands = dn.Commands |> Map.map<cname, ICommandModel, CommandNode> (fun _ c -> { Name = c.Name; DisplayName = c.DisplayName; ToolTip = c.Tooltip; Description = c.Description }) |> Map.toArray;
+            Links = dn.Links |> Map.map<string, ILinkModel, LinkNode> (fun _ l -> { Name = l.Name; DisplayName = l.DisplayName; ToolTip = l.Tooltip; Description = l.Description }) |> Map.toArray;
+        }
 
     override __.Refresh node = 
         allNodes.[node.Hash] <- node |> RemotingPhysicalView.domNode2Node
