@@ -42,12 +42,12 @@ type internal PhysicalViewDomProcessor =
             n
 
         member this.Complete(_ : DomNode list) = 
-            let renderers = System.Collections.Generic.Dictionary<thash, IPhysicalView>(StringComparer.Ordinal)
+            let physicalViews = System.Collections.Generic.Dictionary<thash, IPhysicalView>(StringComparer.Ordinal)
             for kvp in this.physicalViews do
                 if not <| this._nodesToPreserve.Contains(kvp.Key) then
                     kvp.Value.Dispose()
                 else
-                    renderers.Add(kvp.Key, kvp.Value)
+                    physicalViews.Add(kvp.Key, kvp.Value)
 
             let inline dictTryFind (dict : System.Collections.Generic.Dictionary<thash, 'PV>, key) =
                 match dict.TryGetValue key with
@@ -55,39 +55,42 @@ type internal PhysicalViewDomProcessor =
                 | (true, value) -> Some value
 
             // store tuples of renderer and node to initiate an update call after the views are rendered
-            let mutable updateCalls = List.empty
+            let mutable updateCallArguments = List.empty
 
             for nodeState in this._nodeStates do
-                let (n, p, isNewView) = match nodeState with | NewNode n -> (n, n.Parent, true) | UpdatedNode n -> (n, n.Parent, false)
+                let (n, p, isNewView) = 
+                    match nodeState with 
+                    | NewNode n -> (n, n.Parent, true) 
+                    | UpdatedNode n -> (n, n.Parent, false)
                 match (p, isNewView) with
                 | (Some p, isNewView) -> 
-                    match (isNewView, dictTryFind(renderers, p.Hash), dictTryFind(renderers, n.Hash)) with
+                    match (isNewView, dictTryFind(physicalViews, p.Hash), dictTryFind(physicalViews, n.Hash)) with
                     | (true, Some parent, None) ->
-                        let renderer = this._renderer.CreateNestedPhysicalView this._engine parent n
-                        updateCalls <- (renderer,n)::updateCalls
-                        renderers.Add(n.Hash, renderer)
+                        let physicalView = this._renderer.CreateNestedPhysicalView this._engine parent n
+                        updateCallArguments <- (physicalView,n)::updateCallArguments
+                        physicalViews.Add(n.Hash, physicalView)
                     | (true, Some _, Some _) ->
                         invalidOp(String.Format("Expecting physical view {0} #{1} not to contain child {2} #{3}", p.Name, p.Hash, n.Name, n.Hash))
                     | (false, Some _, Some renderer) ->
-                        updateCalls <- (renderer,n)::updateCalls
+                        updateCallArguments <- (renderer,n)::updateCallArguments
                     | (false, Some _, None) ->
                         invalidOp(String.Format("Could not locate physical view {0} #{1}", n.Name, n.Hash))
                     | (_, None, _) ->
                         invalidOp(String.Format("Could not locate physical view {0} #{1} that should be parent of {2} #{3}", p.Name, p.Hash, n.Name, n.Hash))
                 | (None, isNewView) ->
-                    match (isNewView, dictTryFind(renderers, n.Hash)) with
+                    match (isNewView, dictTryFind(physicalViews, n.Hash)) with
                     | (true, Some _) ->
                         invalidOp(String.Format("Physical view {0} #{1} already exists", n.Name, n.Hash))
                     | (true, None) ->
-                        let renderer = this._renderer.CreatePhysicalView this._engine n
-                        updateCalls <- (renderer,n)::updateCalls
-                        renderers.Add(n.Hash, renderer)
+                        let physicalView = this._renderer.CreatePhysicalView this._engine n
+                        updateCallArguments <- (physicalView,n)::updateCallArguments
+                        physicalViews.Add(n.Hash, physicalView)
                     | (false, None) -> 
                         invalidOp(String.Format("Could not locate physical view {0} #{1}", n.Name, n.Hash))
                     | (false, Some renderer) ->
-                        updateCalls <- (renderer,n)::updateCalls
+                        updateCallArguments <- (renderer,n)::updateCallArguments
 
-            this.physicalViews <- renderers |> Seq.map (|KeyValue|) |> Map.ofSeq
+            this.physicalViews <- physicalViews |> Seq.map (|KeyValue|) |> Map.ofSeq
             this._nodesToPreserve <- Set.empty
             this._nodeStates <- List.empty
 
@@ -96,7 +99,7 @@ type internal PhysicalViewDomProcessor =
             // The consequences of a command execution during the physical UI construction could result in attempt to render the 
             // same physical view twice, thus causing an exception.
             // At this point, invoking those update calls is permitted.
-            for (renderer,n) in updateCalls do 
+            for (renderer,n) in updateCallArguments do 
                 renderer.Update n
 
 [<AbstractClass;NoComparison>] 

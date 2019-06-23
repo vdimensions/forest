@@ -84,6 +84,8 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             // This case is entered if the view model is set at construction time, for example, by a DI container.
             | ValueNone -> newModel |> ViewState.withModel
 
+    member this.Engine with get() = this.executionContext :> IForestEngine
+
     member __.Model with get ():'T = state.Model :?> 'T
 
     member internal this.HierarchyKey with get() = this.hierarchyKey
@@ -95,7 +97,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             state <- this.executionContext.SetViewState true this.hierarchyKey viewState
             this.Resume()
 
-        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "runtime" context : IForestExecutionContext) =
+        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "context" context : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
@@ -106,7 +108,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
                 context.SubscribeEvents this
                 this.executionContext <- context
                 ()
-            | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a runtime", this.hierarchyKey.View))
+            | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a context", this.hierarchyKey.View))
 
         member this.AbandonContext (_) =
             match null2vopt this.executionContext with

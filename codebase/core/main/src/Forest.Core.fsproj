@@ -74,7 +74,7 @@
     <Compile Include="Engine\Templates\TemplateCompiler.fs" />
     <Compile Include="Engine\Templates\Xml\XmlTemplateParser.fs" />
     <Compile Include="Engine\UI\PhysicalView.fs" />
-    <Compile Include="Engine\UI\Renderer.fs" />
+    <Compile Include="Engine\UI\PhysicalViewDomProcessor.fs" />
     <Compile Include="Engine\Dom.fs" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ExecutionContext.fs" />
