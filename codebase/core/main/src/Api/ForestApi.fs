@@ -34,7 +34,6 @@ type [<Interface>] IForestEngine =
     inherit IMessageDispatcher
     inherit ICommandDispatcher
     inherit ITreeNavigator
-    [<System.Obsolete>]
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> 'sv
 
 and [<Interface>] IViewDescriptor = 

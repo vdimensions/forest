@@ -1,6 +1,5 @@
 ﻿namespace Forest
 
-open System
 open System.Diagnostics
 open Axle.Logging
 open Forest.UI
@@ -36,7 +35,6 @@ module ForestEngine =
         member this.LoadTree (name, msg) =
             wrap "LoadTree" this (fun e -> e.LoadTree (name, msg))
 
-        [<Obsolete>]
         member this.RegisterSystemView<'sv when 'sv :> ISystemView> () =
             wrap "RegisterSystemView" this (fun e -> e.RegisterSystemView<'sv> ())
 

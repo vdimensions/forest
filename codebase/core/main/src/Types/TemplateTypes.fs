@@ -17,7 +17,7 @@ type [<Struct;NoComparison>] TemplateDefinition =
     | Root of TemplateDefinition
     | Mastered of master : string * definition : ContentDefinition list
 
- and [<StructuralEquality;NoComparison>] ViewContents =
+ and [<Struct;StructuralEquality;NoComparison>] ViewContents =
     | Region of name : string * contents : RegionContents list
     | InlinedTemplate of template : string
 

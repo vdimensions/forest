@@ -40,7 +40,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                 let canSkipRenderCall = 
                     match modelMap.TryFind hash with
                     // TODO: some system views require to be rendered
-                    | _ when descriptor.IsSystemView -> true
+                    //| _ when descriptor.IsSystemView -> true
                     | Some m -> obj.Equals(m, viewState.Model)
                     | None ->
                         modelMap <- modelMap |> Map.add hash viewState.Model

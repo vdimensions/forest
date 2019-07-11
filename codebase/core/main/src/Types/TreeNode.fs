@@ -52,7 +52,7 @@ type [<CustomComparison;CustomEquality>] TreeNode =
             | ViewID_ (p, r, v, h) -> 
                 let sb : StringBuilder = p.ToStringBuilder(false).Append((if r.Length = 0 then "shell" else r))
                 if (stopAtRegion) then sb
-                else sb.AppendFormat("/{0}({1})", h, v)
+                else sb.AppendFormat("/{0} #{1}", v, h)
             | Shell_ -> StringBuilder("")
         sb.Append('/')
 

@@ -292,7 +292,6 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
         |> this.Do 
         |> Runtime.resolve ignore
 
-    [<Obsolete>]
     member this.RegisterSystemView<'sv when 'sv :> ISystemView> () = 
         let descriptor = 
             match typeof<'sv> |> ctx.ViewRegistry.GetDescriptor |> null2vopt with
