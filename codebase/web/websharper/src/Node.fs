@@ -14,6 +14,7 @@ type CommandNode =
 [<NoComparison;JavaScriptExport>]
 type LinkNode =
     {
+        Href : string
         Name : string
         DisplayName : string
         ToolTip : string

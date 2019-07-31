@@ -9,9 +9,10 @@ namespace Forest.Forms
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class AxleApplicationExtensions
     {
-        public static IApplicationBuilder LoadForestForms(this IApplicationBuilder builder)
+        public static IApplicationBuilder UseForestForms(this IApplicationBuilder builder)
         {
-            return builder.VerifyArgument(nameof(builder)).IsNotNull().Value.Load(typeof(ForestFormsModule));
+            builder.VerifyArgument(nameof(builder)).IsNotNull();
+            return builder.ConfigureModules(m => m.Load<ForestFormsModule>());
         }
     }
 }

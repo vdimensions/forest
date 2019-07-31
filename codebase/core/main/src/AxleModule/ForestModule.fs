@@ -7,6 +7,7 @@ open Axle
 open Axle.DependencyInjection
 open Axle.Logging
 open Axle.Modularity
+open Axle.Verification
 open Forest
 open Forest.Reflection
 open Forest.Resources
@@ -119,5 +120,5 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
 [<Extension>]
 type Extensions =
     [<Extension>]
-    static member LoadForest(builder : Axle.IApplicationBuilder) =
-        builder.Load(typeof<ForestModule>)
+    static member UseForest(NotNull "builder" builder : Axle.IApplicationBuilder) =
+        builder.ConfigureModules(fun m -> m.Load(typeof<ForestModule>) |> ignore)
