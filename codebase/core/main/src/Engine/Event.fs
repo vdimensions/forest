@@ -26,6 +26,8 @@ open Forest.Reflection
 
 
 module Event = 
+    open Axle
+
     type [<Sealed;NoComparison>] internal Descriptor(messageType : Type, eventMethod : IEventMethod, topic : string) =
         member __.Trigger (NotNull "view" view : IView) (NotNull "message" message : obj) = 
             eventMethod.Invoke view message |> ignore
@@ -49,7 +51,7 @@ module Event =
         | MultipleErrors of errors : Error list
 
     let resolveError = function
-        | InvocationError cause -> upcast InvalidOperationException() : exn
+        | InvocationError cause -> upcast InvalidOperationException(cause.Message, cause) : exn
         | NonVoidReturnType em -> upcast InvalidOperationException() : exn
         | BadEventSignature em -> upcast InvalidOperationException() : exn
         | MultipleErrors errors -> upcast InvalidOperationException() : exn
@@ -59,37 +61,72 @@ module Event =
     let inline private _subscribersFilter (sender : IView) (subscription : ISubscriptionHandler) : bool =
         not (obj.ReferenceEquals (sender, subscription.Receiver))
 
+    type [<Struct;StructuralEquality;NoComparison>] Letter =
+        {
+            Sender : IView
+            Message : obj
+            Topics: string array
+        }
+
     type [<Sealed;NoComparison>] private T() = 
         let subscriptions: IDictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>> = 
             upcast Dictionary<string, IDictionary<Type, ICollection<ISubscriptionHandler>>>()
+        let messageHitory: IDictionary<Letter, HashSet<ISubscriptionHandler>> = 
+            upcast Dictionary<Letter, HashSet<ISubscriptionHandler>>()
 
-        member private __.InvokeMatchingSubscriptions<'M> (sender : IView, message : 'M, topicSubscriptionHandlers : IDictionary<Type, ICollection<ISubscriptionHandler>>) : unit =
+        member private __.InvokeMatchingSubscriptions (
+                                                        sender : IView, 
+                                                        message : obj, 
+                                                        topicSubscriptionHandlers : IDictionary<Type, ICollection<ISubscriptionHandler>>, 
+                                                        subscribersToIgnore : HashSet<ISubscriptionHandler>) =
             // Collect the event subscriptions before invocation. 
             // This is necessary, as some commands may cause view disposal and event unsubscription in result, 
             // which is undesired while iterating over the subscription collections
-            let mutable subscriptionsToCall = List.empty
-            for key in topicSubscriptionHandlers.Keys do
-                if key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo())  then
-                    for subscription in topicSubscriptionHandlers.[key] do
-                        if _subscribersFilter sender subscription then 
-                            subscriptionsToCall <- subscription::subscriptionsToCall
+            let subscriptionsToCall = [
+                for key in topicSubscriptionHandlers.Keys do
+                    if key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo())  then
+                        for subscription in topicSubscriptionHandlers.[key] do
+                            // disallow repeating subscribers for that letter
+                            if subscribersToIgnore.Contains subscription |> not then
+                                // further filter subscribers based on the message type
+                                if _subscribersFilter sender subscription then 
+                                    yield subscription
+            ]
             // Now that we've collected all potential subscribers, it is safe to invoke them
-            for s in subscriptionsToCall do s.Invoke message
+            for s in subscriptionsToCall do 
+                s.Invoke message
+            subscriptionsToCall
+
+        member private this.DoPublish (letter, subscribersToIgnore : HashSet<ISubscriptionHandler>) =
+            [
+                match letter.Topics with
+                | [||] ->
+                    for topicSubscriptionHandlers in subscriptions.Values do
+                         yield this.InvokeMatchingSubscriptions(letter.Sender, letter.Message, topicSubscriptionHandlers, subscribersToIgnore)
+                | curratedTopics ->
+                    for topic in curratedTopics do
+                        match subscriptions.TryGetValue(topic) with
+                        | (true, topicSubscriptionHandlers) -> yield this.InvokeMatchingSubscriptions(letter.Sender, letter.Message, topicSubscriptionHandlers, subscribersToIgnore)
+                        | (false, _) -> ()
+            ]
+            |> List.concat
+                
 
         member __.Dispose () =
             for value in subscriptions.Values do value.Clear()
             subscriptions.Clear()
+            messageHitory.Clear()
 
         member this.Publish<'M> (sender : IView, NotNull "message" message : 'M, NotNull "topics" topics : string[]) : unit =
-            match topics with
-            | [||] ->
-                for topicSubscriptionHandlers in subscriptions.Values do
-                     this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
-            | curratedTopics ->
-                for topic in curratedTopics do
-                    match subscriptions.TryGetValue(topic) with
-                    | (true, topicSubscriptionHandlers) -> this.InvokeMatchingSubscriptions(sender, message, topicSubscriptionHandlers)
-                    | (false, _) -> ()
+            let letter = 
+                {
+                    Sender = sender
+                    Message = message
+                    Topics = topics
+                }
+            // collect the handlers of the letter and store them, keyed by the letter itself
+            let uniqueHandlers = HashSet<ISubscriptionHandler>((this.DoPublish(letter, HashSet<ISubscriptionHandler>())), ReferenceEqualityComparer<ISubscriptionHandler>())
+            messageHitory.[letter] <- uniqueHandlers
 
         member this.Subscribe (NotNull "subscriptionHandler" subscriptionHandler:ISubscriptionHandler, NotNull "topic" topic:string) : T =
             let topicSubscriptionHandlers = 
@@ -107,6 +144,15 @@ module Event =
                     topicSubscriptionHandlers.Add(subscriptionHandler.MessageType, tmp);
                     tmp
             subscriptionList.Add subscriptionHandler
+
+            // resend any sent letters to this new subscriber
+            for letter, alreadyHandledBy in (messageHitory |> Seq.map (|KeyValue|)) do
+                let subscribersToAdd = [
+                    for subscriber in this.DoPublish (letter, alreadyHandledBy) do yield subscriber
+                ]
+                for subscriber in subscribersToAdd do 
+                    alreadyHandledBy.Add subscriber |> ignore
+                
             this
 
         member this.Unsubscribe (NotNull "receiver" receiver : IView) : T =

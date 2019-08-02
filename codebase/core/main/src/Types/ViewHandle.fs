@@ -15,7 +15,7 @@ module ViewHandle =
         ViewHandle.ByName node.View
 
     let internal getAnonymousViewName (viewType : Type) =
-        String.Format("`{0}::{1}`", viewType.GetTypeInfo().Assembly.GetName(), viewType.Name)
+        String.Format("`{0}::{1}`", viewType.GetTypeInfo().Assembly.GetName(), viewType.FullName)
 
     let toViewName = function
         | ByName n -> n

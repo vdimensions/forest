@@ -91,7 +91,9 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
     member internal this.HierarchyKey with get() = this.hierarchyKey
 
     interface IRuntimeView with
-        member this.Load () = this.Load()
+        member this.Load () = 
+            this.Load()
+            this.executionContext.SubscribeEvents this
 
         member this.Resume viewState =
             state <- this.executionContext.SetViewState true this.hierarchyKey viewState
@@ -105,7 +107,6 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
                 match context.GetViewState this.HierarchyKey with
                 | Some viewState -> state <- viewState
                 | None -> ignore <| context.SetViewState true this.HierarchyKey state
-                context.SubscribeEvents this
                 this.executionContext <- context
                 ()
             | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a context", this.hierarchyKey.View))
