@@ -99,7 +99,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             state <- this.executionContext.SetViewState true this.hierarchyKey viewState
             this.Resume()
 
-        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "context" context : IForestExecutionContext) =
+        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (isLoaded: bool) (NotNull "context" context : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
@@ -107,6 +107,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
                 match context.GetViewState this.HierarchyKey with
                 | Some viewState -> state <- viewState
                 | None -> ignore <| context.SetViewState true this.HierarchyKey state
+                if (isLoaded) then this |> context.SubscribeEvents
                 this.executionContext <- context
                 ()
             | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a context", this.hierarchyKey.View))

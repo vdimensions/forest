@@ -66,6 +66,7 @@ module Event =
             Sender : IView
             Message : obj
             Topics: string array
+            Timestamp : int64
         }
 
     type [<Sealed;NoComparison>] private T() = 
@@ -83,9 +84,9 @@ module Event =
             // This is necessary, as some commands may cause view disposal and event unsubscription in result, 
             // which is undesired while iterating over the subscription collections
             let subscriptionsToCall = [
-                for key in topicSubscriptionHandlers.Keys do
-                    if key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo())  then
-                        for subscription in topicSubscriptionHandlers.[key] do
+                for (key, subscriptions) in topicSubscriptionHandlers |> Seq.map (|KeyValue|) do
+                    if key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo()) then
+                        for subscription in subscriptions do
                             // disallow repeating subscribers for that letter
                             if subscribersToIgnore.Contains subscription |> not then
                                 // further filter subscribers based on the message type
@@ -101,7 +102,7 @@ module Event =
             [
                 match letter.Topics with
                 | [||] ->
-                    for topicSubscriptionHandlers in subscriptions.Values do
+                    for topicSubscriptionHandlers in subscriptions.Values |> Array.ofSeq do
                          yield this.InvokeMatchingSubscriptions(letter.Sender, letter.Message, topicSubscriptionHandlers, subscribersToIgnore)
                 | curratedTopics ->
                     for topic in curratedTopics do
@@ -123,6 +124,7 @@ module Event =
                     Sender = sender
                     Message = message
                     Topics = topics
+                    Timestamp = DateTime.UtcNow.Ticks
                 }
             // collect the handlers of the letter and store them, keyed by the letter itself
             let uniqueHandlers = HashSet<ISubscriptionHandler>((this.DoPublish(letter, HashSet<ISubscriptionHandler>())), ReferenceEqualityComparer<ISubscriptionHandler>())

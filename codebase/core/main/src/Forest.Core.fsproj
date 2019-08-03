@@ -64,7 +64,7 @@
     <Compile Include="Engine\Link.fs" />
     <Compile Include="Engine\Event.fs" />
     <Compile Include="Engine\LogicalView.fs" />
-    <Compile Include="Engine\View.fs" />
+    <Compile Include="Engine\ViewModule.fs" />
     <Compile Include="Engine\DefaultViewRegistry.fs" />
     <Compile Include="Engine\NoopSecurityManager.fs" />
     <Compile Include="Engine\DefaultForestContext.fs" />

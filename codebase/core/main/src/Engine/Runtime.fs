@@ -73,6 +73,6 @@ module Runtime =
             // NB: It is possible for `handleError` to not recognize the error type
             // hence it will return without throwing an exception.
             // Therefore, we must ensure execution is terminated in that case by 
-            // thowing an `invalidOp`.
-            invalidOp "An unknown error occurred"
+            // explicitly thowing an `invalidOp`.
+            invalidOp "An unexpected error occurred"
         | Ok x -> resultMap x

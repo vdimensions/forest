@@ -21,7 +21,7 @@ open System
 type [<Interface>] internal IRuntimeView =
     inherit IView
 
-    abstract member AcquireContext : node : TreeNode -> vd : IViewDescriptor -> runtime : IForestExecutionContext -> unit
+    abstract member AcquireContext : node : TreeNode -> vd : IViewDescriptor -> isLoaded : bool -> context : IForestExecutionContext -> unit
     abstract member AbandonContext : runtime : IForestExecutionContext -> unit
 
     abstract member Load : unit -> unit
