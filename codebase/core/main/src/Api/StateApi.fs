@@ -15,6 +15,8 @@
 //
 namespace Forest
 
+open Forest.ComponentModel
+
 /// An interface representing a forest state visitor
 type [<Interface>] internal IForestStateVisitor =
     /// Called upon visiting a sibling or child BFS-style

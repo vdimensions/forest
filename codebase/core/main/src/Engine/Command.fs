@@ -17,6 +17,7 @@ namespace Forest
 
 open System
 open Axle.Verification
+open Forest.ComponentModel
 open Forest.Reflection
 
 [<RequireQualifiedAccess>]
@@ -39,7 +40,7 @@ module Command =
         member __.ArgumentType with get() = argType
         interface ICommandDescriptor with
             member __.Name = method.CommandName
-            member this.Invoke arg view = this.Invoke arg view
+            member this.Invoke(view, arg) = this.Invoke arg view
             member this.ArgumentType = this.ArgumentType
 
     [<CompiledName("CommandModel")>]

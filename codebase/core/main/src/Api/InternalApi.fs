@@ -16,6 +16,7 @@
 namespace Forest
 
 open System
+open Forest.ComponentModel
 
 // internal functionality needed by the forest runtime
 type [<Interface>] internal IRuntimeView =

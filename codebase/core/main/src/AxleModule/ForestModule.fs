@@ -1,6 +1,5 @@
 ﻿namespace Forest
 open System
-open System.Diagnostics
 open System.Reflection
 open System.Runtime.CompilerServices
 open Axle
@@ -9,6 +8,7 @@ open Axle.Logging
 open Axle.Modularity
 open Axle.Verification
 open Forest
+open Forest.ComponentModel
 open Forest.Reflection
 open Forest.Resources
 open Forest.Security

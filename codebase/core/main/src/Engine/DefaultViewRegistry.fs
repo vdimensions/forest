@@ -4,7 +4,7 @@ open System.Collections.Generic
 open Axle
 open Axle.Verification
 open Forest
-open Forest.Collections
+open Forest.ComponentModel
 open Forest.Events
 open Forest.Reflection
 
@@ -147,12 +147,14 @@ type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactor
                     commandDescriptorResults
                     |> Seq.choose Result.ok
                     |> Seq.fold folder (new Dictionary<string, ICommandDescriptor>(StringComparer.Ordinal))
-                    |> Index
+                    |> Seq.map (|KeyValue|)
+                    |> readOnlyDict
                 let linksIndex =
                     linkDescriptorResults
                     |> Seq.choose Result.ok
                     |> Seq.fold linkFolder (new Dictionary<string, ILinkDescriptor>(StringComparer.Ordinal))
-                    |> Index
+                    |> Seq.map (|KeyValue|)
+                    |> readOnlyDict
                 let eventSubscriptions = 
                     eventDescriptorResults
                     |> Seq.choose Result.ok

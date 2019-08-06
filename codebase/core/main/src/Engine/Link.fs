@@ -17,6 +17,7 @@ namespace Forest
 
 open System
 open Axle.Verification
+open Forest.ComponentModel
 open Forest.Reflection
 
 [<RequireQualifiedAccess>]
@@ -39,7 +40,7 @@ module Link =
         member __.Name with get() = target
         interface ILinkDescriptor with
             member this.Name = this.Name
-            member this.Follow arg engine = this.Follow arg engine
+            //member this.Follow arg engine = this.Follow arg engine
 
     [<CompiledName("LinkModel")>]
     type [<Sealed;NoComparison>] internal Model(name : string, displayName : string, tooltip : string, description : string) =

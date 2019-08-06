@@ -26,9 +26,10 @@ module Client =
     [<NoEquality;NoComparison>]
     type Engine =
         {
-            executeRawCommand : (cname -> obj -> unit);
-            executeRpcCommand : ((thash -> Async<Node array>) -> unit);
-            renderRegion : (rname -> Doc);
+            executeRawCommand : (cname -> obj -> unit)
+            executeRpcCommand : ((thash -> Async<Node array>) -> unit)
+            renderRegion : (rname -> Doc)
+            // TODO: render link
         }
 
     let private _nodes = List.empty |> ListModel.Create<obj,Node> (fun n -> n.Model)

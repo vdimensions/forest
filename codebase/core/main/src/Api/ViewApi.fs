@@ -15,6 +15,7 @@
 //
 namespace Forest
 
+open Forest.ComponentModel
 
 type [<Interface>] IViewFactory = 
     abstract member Resolve: vd : IViewDescriptor -> IView

@@ -16,6 +16,7 @@
 namespace Forest.Security
 
 open Forest
+open Forest.ComponentModel
 
 type [<Interface>] ISecurityManager =
     abstract member HasAccess: descriptor : IViewDescriptor -> bool

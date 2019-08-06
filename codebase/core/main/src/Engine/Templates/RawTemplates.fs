@@ -41,25 +41,25 @@ module Raw =
             { res with Contents = newContents } |> flattenTemplate provider tail
     /// Locates and expands any `InlinedTemplate` item
     and private inlineTemplates (provider : ITemplateProvider) (current : ViewContents list) : ViewContents list =
-        let mutable result = List.empty
-        for vc in current do
-            match vc with 
-            | InlinedTemplate t -> 
-                let inlinedTemplate = t |> loadTemplate provider
-                for c in (inlineTemplates provider inlinedTemplate.Contents) do 
-                    result <- c::result
-            | Region (name, regionContents) ->
-                let mutable newRegionContents = List.empty
-                for rc in regionContents do
-                    match rc with
-                    | ClearInstruction -> newRegionContents <- List.empty
-                    | Placeholder _ -> newRegionContents <- rc::newRegionContents
-                    | View (name, nestedViewContents) ->
-                        let newNestedViewContents = nestedViewContents |> inlineTemplates provider 
-                        newRegionContents <- View (name, newNestedViewContents)::newRegionContents
-                    | any -> newRegionContents <- any::newRegionContents
-                result <- Region (name, List.rev newRegionContents)::result
-        result
+        [
+            for vc in current do
+                match vc with 
+                | InlinedTemplate t -> 
+                    let inlinedTemplate = t |> loadTemplate provider
+                    for c in (inlineTemplates provider inlinedTemplate.Contents) do 
+                        yield c
+                | Region (name, regionContents) ->
+                    let mutable newRegionContents = List.empty
+                    for rc in regionContents do
+                        match rc with
+                        | ClearInstruction -> newRegionContents <- List.empty
+                        | Placeholder _ -> newRegionContents <- rc::newRegionContents
+                        | View (name, nestedViewContents) ->
+                            let newNestedViewContents = nestedViewContents |> inlineTemplates provider 
+                            newRegionContents <- View (name, newNestedViewContents)::newRegionContents
+                        | any -> newRegionContents <- any::newRegionContents
+                    yield Region (name, List.rev newRegionContents)
+        ]
 
     /// Inlines the contents of any accumulated `Placeholders` into the respective `Content` items
     and private processPlaceholders (placeholderData : Map<string, RegionContents list>) (current : ViewContents list) : ViewContents list =

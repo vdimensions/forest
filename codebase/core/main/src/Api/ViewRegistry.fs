@@ -16,7 +16,7 @@
 namespace Forest
 
 open System
-open Forest.Collections
+open Forest.ComponentModel
 
 
 module ViewRegistry =

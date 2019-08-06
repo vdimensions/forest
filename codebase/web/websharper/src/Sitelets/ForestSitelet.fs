@@ -9,6 +9,7 @@ open WebSharper.UI.Html
 open WebSharper.UI.Server
 
 module internal ForestSitelet =
+    //let Render (ctx : Context<ForestEndPoint<'msg>>) (f : IForestEngine) (pvs: array<vname*WebSharperPhysicalView>) (dop : (Doc -> Doc -> Doc)) (h : Doc) (b : Doc list) (endpoint : ForestEndPoint<'msg>) =
     let Render (f : IForestEngine) (pvs: array<vname*WebSharperPhysicalView>) (dop : (Doc -> Doc -> Doc)) (h : Doc) (b : Doc list) (endpoint : ForestEndPoint<'msg>) =
         match endpoint with
         | ForestEndPoint.ForestTreeWithMessage (tree, msg) -> 
@@ -25,6 +26,7 @@ module internal ForestSitelet =
         |> Content.Page
 
     let Run (f : IForestEngine) (pvs: array<vname*WebSharperPhysicalView>) (dop : (Doc -> Doc -> Doc)) (h : Doc) (b : Doc list) =
-        Application.MultiPage (fun _ endpoint ->
+        Application.MultiPage (fun ctx endpoint ->
+            //Render ctx f pvs dop h b endpoint
             Render f pvs dop h b endpoint
         )

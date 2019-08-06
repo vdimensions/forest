@@ -11,7 +11,7 @@
     <RootNamespace>Forest</RootNamespace>
     <ProjectGuid>{7CBDBFBD-F8FD-4C48-AF8E-0D77923DDF42}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <TargetFSharpCoreVersion>4.6.0.0</TargetFSharpCoreVersion>
     <Description>Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer</Description>
   </PropertyGroup>
 
@@ -42,7 +42,6 @@
     <Compile Include="Types\LinkModel.fs" />
     <Compile Include="Types\DomTypes.fs" />
     <Compile Include="Collections\Tree.fs" />
-    <Compile Include="Collections\Index.fs" />
     <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\TemplateApi.fs" />
     <Compile Include="Api\ForestApi.fs" />

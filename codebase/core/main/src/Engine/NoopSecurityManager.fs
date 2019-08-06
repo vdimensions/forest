@@ -1,6 +1,7 @@
 namespace Forest.Security
 
 open Forest
+open Forest.ComponentModel
 
 
 type [<Sealed;NoComparison>] NoopSecurityManager() =

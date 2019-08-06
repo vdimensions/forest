@@ -5,6 +5,7 @@ open System.Diagnostics
 open Axle.Option
 open Axle.Verification
 open Forest
+open Forest.ComponentModel
 
 
 type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> private(state : ViewState) =

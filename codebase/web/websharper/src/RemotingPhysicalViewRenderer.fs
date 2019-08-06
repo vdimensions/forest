@@ -23,8 +23,8 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
             Name = dn.Name; 
             Model = dn.Model; 
             Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map (fun x -> x.Hash) |> Array.ofList ) |> Map.toArray;
-            Commands = dn.Commands |> Map.map<cname, ICommandModel, CommandNode> (fun _ c -> { Name = c.Name; DisplayName = c.DisplayName; ToolTip = c.Tooltip; Description = c.Description }) |> Map.toArray;
-            Links = dn.Links |> Map.map<string, ILinkModel, LinkNode> (fun _ l -> { Name = l.Name; DisplayName = l.DisplayName; ToolTip = l.Tooltip; Description = l.Description }) |> Map.toArray;
+            Commands = dn.Commands |> Map.map (fun _ c -> { Name = c.Name; DisplayName = c.DisplayName; ToolTip = c.Tooltip; Description = c.Description }) |> Map.toArray;
+            Links = dn.Links |> Map.map (fun _ l -> { Href= ""; Name = l.Name; DisplayName = l.DisplayName; ToolTip = l.Tooltip; Description = l.Description }) |> Map.toArray;
         }
 
     override __.Refresh node = 
@@ -50,11 +50,13 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
     let allNodes = Dictionary<thash,Node>(System.StringComparer.Ordinal)
 
     override __.CreatePhysicalView engine domNode = 
+        // TODO: pass context
         let result = new RemotingRootPhysicalView(engine, domNode.Hash, topLevelViews, allNodes)
         topLevelViews.Add result
         upcast result
 
     override __.CreateNestedPhysicalView engine parent domNode =
+        // TODO: pass context
         new RemotingPhysicalView(engine, domNode.Hash, allNodes)
         |> parent.Embed domNode.Region
 
@@ -66,6 +68,7 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
     interface IDocumentStateProvider
 
 
+// TODO: pass context
 type WebSharperForestState private (state : State, renderer : WebSharperPhysicalViewRenderer, syncRoot : obj) =
     internal new (state) = WebSharperForestState (state, WebSharperPhysicalViewRenderer(), obj())
     internal new () = WebSharperForestState (State.initial)
@@ -91,6 +94,7 @@ type [<Sealed;NoComparison>] WebSharperSessionStateProvider(httpContextAccessor 
 
     interface IForestStateProvider with
         member this.LoadState () = 
+            // TODO: pass context
             this.AddOrReplace(
                 httpContextAccessor.HttpContext.Session.Id,
                 WebSharperForestState(State.initial),
@@ -99,6 +103,7 @@ type [<Sealed;NoComparison>] WebSharperSessionStateProvider(httpContextAccessor 
             System.Threading.Monitor.Enter v.SyncRoot
             v.State
         member this.CommitState state =
+            // TODO: pass context
             this.AddOrReplace(
                 httpContextAccessor.HttpContext.Session.Id,
                 this.Current |> WebSharperForestState.ReplaceState state,

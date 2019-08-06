@@ -22,6 +22,7 @@ open System.Reflection
 #endif
 open Axle.Verification
 open Forest
+open Forest.ComponentModel
 open Forest.Reflection
 
 
@@ -34,14 +35,14 @@ module Event =
         member __.MessageType with get () = messageType
         member __.Topic with get () = topic
         interface IEventDescriptor with
-            member this.Trigger v m = this.Trigger v m
+            member this.Trigger(v, m) = this.Trigger v m
             member this.MessageType = this.MessageType
             member this.Topic = this.Topic
 
     type [<Sealed;NoComparison>] internal Handler(descriptor : IEventDescriptor, receiver : IView) =
         interface ISubscriptionHandler with
             member __.MessageType = descriptor.MessageType
-            member __.Invoke message = descriptor.Trigger receiver message
+            member __.Invoke message = descriptor.Trigger(receiver, message)
             member __.Receiver = receiver
 
     type [<Struct;NoComparison>] Error =

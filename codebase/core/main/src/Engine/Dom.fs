@@ -1,4 +1,5 @@
 ﻿namespace Forest
+open Forest.ComponentModel
 
 type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode -> DomNode), complete : (DomNode list -> unit), ctx : IForestContext) =
     /// Stores the rendered node state
@@ -26,13 +27,13 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
             let hash = treeNode.Hash
             if descriptor |> ctx.SecurityManager.HasAccess then
                 let commands = 
-                    descriptor.Commands
+                    descriptor.Commands.Values
                     |> Seq.filter (fun cmd -> viewState |> ViewState.isCommandEnabled cmd.Name)
                     |> Seq.filter ctx.SecurityManager.HasAccess 
                     |> Seq.map createCommandModel
                     |> Map.ofSeq
                 let links = 
-                    descriptor.Links
+                    descriptor.Links.Values
                     |> Seq.filter (fun lnk -> viewState |> ViewState.isLinkEnabled lnk.Name)
                     |> Seq.filter ctx.SecurityManager.HasAccess
                     |> Seq.map createLinkModel

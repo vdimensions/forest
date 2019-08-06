@@ -76,5 +76,5 @@ type [<CustomComparison;CustomEquality>] TreeNode =
         member this.Equals other = this.eq other
 
 module internal TreeNode =
-    let isShell (id:TreeNode) = match id with TreeNode.Shell_ -> true | _ -> false
+    let isShell (id : TreeNode) = match id with TreeNode.Shell_ -> true | _ -> false
     

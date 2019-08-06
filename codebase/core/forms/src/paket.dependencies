@@ -3,4 +3,6 @@ storage: none
 source https://api.nuget.org/v3/index.json
 source ../../../../../axle/dist
 source ../../../../dist
-  nuget Forest.Core
+
+nuget FSharp.Core = 4.6.2
+nuget Forest.Core

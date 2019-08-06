@@ -6,18 +6,30 @@ open Axle
 open Axle.Verification
 open Forest
 open Forest.Collections
+open Forest.ComponentModel
 open Forest.Events
 open Forest.Templates
 open Forest.Templates.Raw
 open Forest.UI
   
 module internal ForestExecutionContext =
+    type ExecutionState = 
+        {
+            Context : IForestContext
+            TreeState : Tree
+            AppState : Map<thash, ViewState>
+            Views : Map<thash, IRuntimeView>
+            PendingOperations : Runtime.Operation list
+        }
+
     let getDescriptor (ctx : IForestContext) (handle : ViewHandle) =
         match ctx.ViewRegistry |> ViewRegistry.getDescriptor handle |> null2vopt with
         | ValueSome d -> Ok d
         | ValueNone -> Runtime.Error.NoDescriptor handle |> Error
 
-    let createRuntimeView (executionContext : IForestExecutionContext) (ctx : IForestContext) (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (descriptor : IViewDescriptor) =
+    let createRuntimeView 
+            (executionContext : IForestExecutionContext) (ctx : IForestContext) 
+            (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (descriptor : IViewDescriptor) =
         try
             let view = (ctx.ViewRegistry |> ViewRegistry.resolve descriptor model) :?> IRuntimeView
             view.AcquireContext node descriptor false executionContext
@@ -97,14 +109,14 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
     let executeCommand (name : cname) (stateKey : thash) (arg : obj) =
         match views.TryGetValue stateKey with
         | (true, view) ->
-            match view.Descriptor.Commands.TryFind name with
-            | Some cmd -> 
+            match view.Descriptor.Commands.TryGetValue name with
+            | (true, cmd) -> 
                 try
-                    view |> cmd.Invoke arg
+                    cmd.Invoke (view, arg)
                     Runtime.Status.CommandInvoked |> Ok
                 with
                 | cause -> Command.InvocationError(view.Descriptor.ViewType, name, cause) |> Runtime.Error.CommandError |> Error
-            | None ->  Command.Error.CommandNotFound(view.Descriptor.ViewType, name) |> Runtime.Error.CommandError |> Error
+            | (false, _) ->  Command.Error.CommandNotFound(view.Descriptor.ViewType, name) |> Runtime.Error.CommandError |> Error
         | (false, _) -> Runtime.Error.ViewstateAbsent stateKey |> Error
 
     let publishEvent (senderID : thash option) (message : 'm) (topics : string array) =

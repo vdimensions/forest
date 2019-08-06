@@ -1,4 +1,5 @@
 ﻿namespace Forest
+open Forest.ComponentModel
 open Axle
 open Axle.DependencyInjection
 open Axle.Verification
