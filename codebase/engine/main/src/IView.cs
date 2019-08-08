@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Forest
 {
@@ -24,19 +23,5 @@ namespace Forest
         void UpdateModel(Func<T, T> updateFunc); 
 
         new T Model { get; }
-    }
-
-    public interface IRegion
-    {
-        IView ActivateView(string name);
-        IView ActivateView(string name, object model);
-        IView ActivateView(Type viewType);
-        IView ActivateView(Type viewType, object model);
-        TView ActivateView<TView>() where TView: IView;
-        TView ActivateView<TView, T>(T model) where TView: IView<T>;
-        IRegion Clear();
-        IRegion Remove(Predicate<IView> predicate);
-        string Name { get; }
-        IEnumerable<IView> Views { get; }
     }
 }

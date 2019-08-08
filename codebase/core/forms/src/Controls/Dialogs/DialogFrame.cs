@@ -14,11 +14,12 @@ namespace Forest.Forms.Controls.Dialogs
             public const string Content = "Content";
         }
 
-        public abstract class View : LogicalView, IDialogFrame
+        public abstract class View : LogicalView<DialogOptions>, IDialogFrame
         {
             protected IView view;
 
-            protected View() : base() { }
+            protected View(DialogOptions options) : base(options) { }
+            protected View() : base(DialogOptions.Default) { }
 
             public sealed override void Load()
             {

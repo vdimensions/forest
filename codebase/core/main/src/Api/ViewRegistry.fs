@@ -36,7 +36,7 @@ module ViewRegistry =
         | ByName n -> getDescriptorByName n
         | ByType t -> getDescriptorByType t
 
-    let internal resolve (descriptor : IViewDescriptor) (model : obj option) (reg : IViewRegistry) =
+    let internal resolve (descriptor : IViewDescriptor) (model : obj option) (reg : IViewFactory) =
         match model with
         | None -> reg.Resolve descriptor
         | Some m -> reg.Resolve (descriptor, m)

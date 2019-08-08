@@ -42,7 +42,6 @@
     <Compile Include="Types\LinkModel.fs" />
     <Compile Include="Types\DomTypes.fs" />
     <Compile Include="Collections\Tree.fs" />
-    <Compile Include="Api\Attributes.fs" />
     <Compile Include="Api\TemplateApi.fs" />
     <Compile Include="Api\ForestApi.fs" />
     <Compile Include="Api\ViewRegistry.fs" />
@@ -50,7 +49,6 @@
     <Compile Include="Api\EventBusApi.fs" />
     <Compile Include="Api\SecurityApi.fs" />
     <Compile Include="Api\ContextApi.fs" />
-    <Compile Include="Api\ViewApi.fs" />
     <Compile Include="Api\Exceptions.fs" />
     <Compile Include="Api\StateApi.fs" />
     <Compile Include="Api\DomApi.fs" />

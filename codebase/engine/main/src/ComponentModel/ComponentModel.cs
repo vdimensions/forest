@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace Forest.ComponentModel
 {
-
     public interface IViewDescriptor
     {
         string Name { get; }

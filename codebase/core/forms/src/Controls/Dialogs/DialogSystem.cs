@@ -22,6 +22,7 @@ namespace Forest.Forms.Controls.Dialogs
                 object Model { get; }
                 Type ViewType { get; }
                 Type FrameViewType { get; }
+                DialogOptions DialogOptions { get; }
             }
 
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -32,17 +33,20 @@ namespace Forest.Forms.Controls.Dialogs
                 private readonly object _model;
                 private readonly Type _frameViewType;
                 private readonly Type _viewType;
+                private readonly DialogOptions _dialogOptions;
 
-                protected DialogMessage(object model, Type viewType, Type frameViewType)
+                protected DialogMessage(object model, Type viewType, Type frameViewType, DialogOptions dialogOptions)
                 {
                     _model = model;
                     _viewType = viewType;
                     _frameViewType = frameViewType;
+                    _dialogOptions = dialogOptions;
                 }
 
                 object IDialogMessage.Model => _model;
                 Type IDialogMessage.ViewType => _viewType;
                 Type IDialogMessage.FrameViewType => _frameViewType;
+                DialogOptions IDialogMessage.DialogOptions => _dialogOptions;
             }
 
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -52,7 +56,7 @@ namespace Forest.Forms.Controls.Dialogs
                 where TFrameView : IDialogFrame
                 where TView : IView<TModel>
             {
-                protected DialogMessage(TModel model) : base(model, typeof(TView), typeof(TFrameView)) { }
+                protected DialogMessage(TModel model, DialogOptions dialogOptions) : base(model, typeof(TView), typeof(TFrameView), dialogOptions) { }
             }
 
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -62,7 +66,7 @@ namespace Forest.Forms.Controls.Dialogs
             public sealed class Modal<TView, TModel> : DialogMessage<ModalDialogFrame.View, TView, TModel>
                 where TView : IView<TModel>
             {
-                public Modal(TModel model) : base(model) { }
+                public Modal(TModel model, DialogOptions dialogOptions) : base(model, dialogOptions) { }
             }
 
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -72,7 +76,7 @@ namespace Forest.Forms.Controls.Dialogs
             public sealed class ConfirmationDialog<TView, TModel> : DialogMessage<ConfirmationDialogFrame.View, TView, TModel>
                 where TView : IView<TModel>, IConfirmationDialogView
             {
-                public ConfirmationDialog(TModel model) : base(model) { }
+                public ConfirmationDialog(TModel model, DialogOptions dialogOptions) : base(model, dialogOptions) { }
             }
 
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -82,7 +86,7 @@ namespace Forest.Forms.Controls.Dialogs
             public sealed class OkCancelDialog<TView, TModel> : DialogMessage<OkCancelDialogFrame.View, TView, TModel>
                 where TView : IView<TModel>, IOkCancelDialogView
             {
-                public OkCancelDialog(TModel model) : base(model) { }
+                public OkCancelDialog(TModel model, DialogOptions dialogOptions) : base(model, dialogOptions) { }
             }
         }
 
@@ -92,7 +96,7 @@ namespace Forest.Forms.Controls.Dialogs
             [Subscription(MessageChannel)]
             internal void OnDialogMessage(Messages.IDialogMessage dialogMessage)
             {
-                var view = (IDialogFrame) FindRegion(Regions.DialogArea).ActivateView(dialogMessage.FrameViewType, dialogMessage.Model);
+                var view = (IDialogFrame) FindRegion(Regions.DialogArea).ActivateView(dialogMessage.FrameViewType, dialogMessage.DialogOptions);
                 view.InitInternalView(dialogMessage.ViewType, dialogMessage.Model);
             }
         }
@@ -104,20 +108,20 @@ namespace Forest.Forms.Controls.Dialogs
             forest.SendMessage(message);
         }
 
-        public static void ShowModal<TView, TModel>(this IForestEngine forest, TModel model)
+        public static void ShowModal<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView: IView<TModel>
         {
-            ShowDialog(forest, new Messages.Modal<TView, TModel>(model));
+            ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions));
         }
-        public static void ShowConfirmation<TView, TModel>(this IForestEngine forest, TModel model)
+        public static void ShowConfirmation<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView : IView<TModel>, IConfirmationDialogView
         {
-            ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model));
+            ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions));
         }
-        public static void ShowOkCancelDialog<TView, TModel>(this IForestEngine forest, TModel model)
+        public static void ShowOkCancelDialog<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView : IView<TModel>, IOkCancelDialogView
         {
-            ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model));
+            ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions));
         }
     }
 }

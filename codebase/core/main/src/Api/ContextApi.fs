@@ -15,11 +15,13 @@
 //
 namespace Forest
 
+open Forest.ComponentModel
 open Forest.Security
 open Forest.Templates.Raw
 
 
 type [<Interface>] IForestContext =
+    abstract ViewFactory : IViewFactory with get
     abstract ViewRegistry : IViewRegistry with get
     abstract SecurityManager : ISecurityManager with get
     abstract TemplateProvider : ITemplateProvider with get

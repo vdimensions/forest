@@ -12,6 +12,7 @@ open Axle.Modularity
 open Axle.Verification
 open Axle.Web.WebSharper.Sitelets
 open Forest
+open Forest.ComponentModel
 open Forest.Web.WebSharper
 open Forest.Web.WebSharper.UI
 

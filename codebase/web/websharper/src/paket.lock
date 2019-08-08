@@ -27,10 +27,10 @@ NUGET
       WebSharper.AspNetCore (>= 4.5.4.106)
       WebSharper.UI (>= 4.5.8.161)
   remote: ../../../../dist
-    Forest.Core (2.1.2408.27577)
+    Forest.Core (2.5.2410.12843)
       Axle.FSharp (>= 1.5.2396.13956)
-      Forest.Engine (>= 2.1.2408.27528)
-    Forest.Engine (2.1.2408.27528)
+      Forest.Engine (>= 2.5.2410.12824)
+    Forest.Engine (2.5.2410.12824)
       Axle.Application (>= 1.5.2396.27060)
   remote: https://api.nuget.org/v3/index.json
     FSharp.Core (4.7)

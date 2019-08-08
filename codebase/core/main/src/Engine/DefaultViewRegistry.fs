@@ -66,10 +66,11 @@ type [<AbstractClass;NoComparison>] AbstractViewRegistry(factory : IViewFactory)
     interface IViewRegistry with
         member this.Register t = this.Register t
         member this.Register<'T when 'T:> IView> () = this.Register<'T>()
-        member this.Resolve(descriptor : IViewDescriptor) = this.Resolve descriptor
-        member this.Resolve(descriptor : IViewDescriptor, model : obj) = this.Resolve(descriptor, model)
         member this.GetDescriptor(name : vname) = this.GetViewDescriptor name
         member this.GetDescriptor(viewType : Type) = this.GetViewDescriptor viewType
+    interface IViewFactory with
+        member this.Resolve(descriptor : IViewDescriptor) = this.Resolve descriptor
+        member this.Resolve(descriptor : IViewDescriptor, model : obj) = this.Resolve(descriptor, model)
 
 type [<Sealed;NoComparison>] internal DefaultViewRegistry (factory : IViewFactory, reflectionProvider : IReflectionProvider) = 
     inherit AbstractViewRegistry(factory)

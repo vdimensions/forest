@@ -31,7 +31,7 @@ module internal ForestExecutionContext =
             (executionContext : IForestExecutionContext) (ctx : IForestContext) 
             (viewHandle : ViewHandle) (node : TreeNode) (model : obj option) (descriptor : IViewDescriptor) =
         try
-            let view = (ctx.ViewRegistry |> ViewRegistry.resolve descriptor model) :?> IRuntimeView
+            let view = (ctx.ViewFactory |> ViewRegistry.resolve descriptor model) :?> IRuntimeView
             view.AcquireContext node descriptor false executionContext
             view |> Ok
         with 

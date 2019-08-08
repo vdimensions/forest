@@ -1,4 +1,5 @@
 ﻿using Axle.Modularity;
+using Forest.ComponentModel;
 
 
 namespace Forest.Forms.Controls.Dialogs

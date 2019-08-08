@@ -32,15 +32,6 @@ type [<Interface>] IForestEngine =
     inherit ITreeNavigator
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> 'sv
 
-
-and [<Interface>] IViewRegistry =
-    abstract member Register : t : Type -> IViewRegistry
-    abstract member Register<'T when 'T :> IView> : unit -> IViewRegistry
-    abstract member Resolve : descriptor : IViewDescriptor -> IView
-    abstract member Resolve : descriptor : IViewDescriptor * model : obj -> IView
-    abstract member GetDescriptor : name : vname -> IViewDescriptor
-    abstract member GetDescriptor : viewType : Type -> IViewDescriptor
-
 /// An interface representing a system view, that is a special type of view which
 /// aids the internal workings of Forest, rather than serving any presentational purpose.
 and ISystemView = interface inherit IView end
