@@ -46,7 +46,6 @@
     <Compile Include="Api\ForestApi.fs" />
     <Compile Include="Api\ViewRegistry.fs" />
     <Compile Include="Api\Region.fs" />
-    <Compile Include="Api\EventBusApi.fs" />
     <Compile Include="Api\SecurityApi.fs" />
     <Compile Include="Api\ContextApi.fs" />
     <Compile Include="Api\Exceptions.fs" />

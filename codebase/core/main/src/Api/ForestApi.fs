@@ -15,9 +15,6 @@
 //
 namespace Forest
 
-open System
-open Forest.ComponentModel
-
 type [<Interface>] ICommandDispatcher =
     abstract member ExecuteCommand : command : cname -> hash : thash -> arg : obj -> unit
 
@@ -31,7 +28,3 @@ type [<Interface>] IForestEngine =
     inherit ICommandDispatcher
     inherit ITreeNavigator
     abstract member RegisterSystemView<'sv when 'sv :> ISystemView> : unit -> 'sv
-
-/// An interface representing a system view, that is a special type of view which
-/// aids the internal workings of Forest, rather than serving any presentational purpose.
-and ISystemView = interface inherit IView end

@@ -17,5 +17,8 @@
     <None Include="restore.sh" />
     <None Include="paket.lock" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="paket-files\" />
+  </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

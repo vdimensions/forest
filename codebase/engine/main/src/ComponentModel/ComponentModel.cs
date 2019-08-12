@@ -12,5 +12,6 @@ namespace Forest.ComponentModel
         IReadOnlyDictionary<string, ICommandDescriptor> Commands { get; }
         IEnumerable<IEventDescriptor> Events { get; }
         bool IsSystemView { get; }
+        bool IsAnonymousView { get; }
     }
 }

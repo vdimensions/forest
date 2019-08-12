@@ -4,33 +4,13 @@ open System
 open System.Reflection
 open Axle
 open Axle.Verification
-open Axle.Reflection.Extensions.Type
 open Forest
 open Forest.ComponentModel
-open System.Collections.Generic
 
 
 [<RequireQualifiedAccessAttribute>]
 [<CompiledName("View")>]
 module View =
-    // TODO: argument verification
-    type [<Sealed;NoComparison>] internal Descriptor internal (name : vname, viewType : Type, viewModelType : Type, commands : IReadOnlyDictionary<cname, ICommandDescriptor>, links : IReadOnlyDictionary<string, ILinkDescriptor>, events : IEventDescriptor array) = 
-        member __.Name with get() = name
-        member __.ViewType with get() = viewType
-        member __.ViewModelType with get() = viewModelType
-        member __.Commands with get() = commands
-        member __.Links with get() = links
-        member __.Events with get() = upcast events : IEventDescriptor seq
-        member this.IsSystemView with get() = this.ViewType.ExtendsOrImplements<ISystemView>()
-        interface IViewDescriptor with
-            member this.Name = this.Name
-            member this.ViewType = this.ViewType
-            member this.ModelType = this.ViewModelType
-            member this.Commands = this.Commands
-            member this.Links = this.Links
-            member this.Events = this.Events
-            member this.IsSystemView = this.IsSystemView
-
     type [<Struct;NoComparison>] Error =
         | ViewAttributeMissing of nonAnnotatedViewType : Type
         | ViewTypeIsAbstract of abstractViewType : Type

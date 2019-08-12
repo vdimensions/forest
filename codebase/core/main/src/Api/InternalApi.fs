@@ -22,7 +22,7 @@ open Forest.ComponentModel
 type [<Interface>] internal IRuntimeView =
     inherit IView
 
-    abstract member AcquireContext : node : TreeNode -> vd : IViewDescriptor -> isLoaded : bool -> context : IForestExecutionContext -> unit
+    abstract member AcquireContext : node : TreeNode -> vd : IViewDescriptor -> context : IForestExecutionContext -> unit
     abstract member AbandonContext : runtime : IForestExecutionContext -> unit
 
     abstract member Load : unit -> unit
@@ -52,3 +52,4 @@ type [<Interface>] internal IRuntimeView =
     abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj -> IView
     abstract member ExecuteCommand : command : cname -> issuer : IRuntimeView -> arg : obj -> unit
     abstract member PublishEvent : sender : IRuntimeView -> message : 'M -> topics : string array -> unit
+    //abstract member ProcessMessages : unit -> unit

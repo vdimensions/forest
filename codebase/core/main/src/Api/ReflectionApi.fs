@@ -47,5 +47,4 @@ type IReflectionProvider = interface
     abstract member GetLinkToAttributes : viewType : Type -> LinkToAttribute array
     abstract member GetCommandMethods: viewType : Type -> ICommandMethod array
     abstract member GetSubscriptionMethods: viewType : Type -> IEventMethod array
-    abstract member GetLocalizeableProperties: vmType : Type -> IProperty array
 end

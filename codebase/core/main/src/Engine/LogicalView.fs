@@ -94,13 +94,12 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
     interface IRuntimeView with
         member this.Load () = 
             this.Load()
-            this.executionContext.SubscribeEvents this
 
         member this.Resume viewState =
             state <- this.executionContext.SetViewState true this.hierarchyKey viewState
             this.Resume()
 
-        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (isLoaded: bool) (NotNull "context" context : IForestExecutionContext) =
+        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "context" context : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
@@ -108,8 +107,8 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
                 match context.GetViewState this.HierarchyKey with
                 | Some viewState -> state <- viewState
                 | None -> ignore <| context.SetViewState true this.HierarchyKey state
-                if (isLoaded) then this |> context.SubscribeEvents
                 this.executionContext <- context
+                this.executionContext.SubscribeEvents this
                 ()
             | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a context", this.hierarchyKey.View))
 
@@ -147,22 +146,34 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
 
  and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
-        owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
+        let result = owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
+        //owner.Context.ProcessMessages()
+        result
 
     member __.ActivateView (NotNull "viewName" viewName : vname, NotNull "model" model : obj) =
-        owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
+        let result = owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
+        //owner.Context.ProcessMessages()
+        result
 
     member __.ActivateView (NotNull "viewType" viewType : Type) : IView =
-        owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID)
+        let result = owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID)
+        //owner.Context.ProcessMessages()
+        result
 
     member __.ActivateView (NotNull "viewType" viewType : Type, NotNull "model" model : obj) : IView =
-        owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID, model)
+        let result = owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID, model)
+        //owner.Context.ProcessMessages()
+        result
 
     member __.ActivateView<'v when 'v :> IView> () : 'v =
-        owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
+        let result = owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
+        //owner.Context.ProcessMessages()
+        result
 
     member __.ActivateView<'v, 'm when 'v :> IView<'m>> (NotNull "model" model : 'm) : 'v =
-        owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
+        let result = owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
+        //owner.Context.ProcessMessages()
+        result
 
     member this.Clear() =
         owner.Context.ClearRegion owner.InstanceID regionName

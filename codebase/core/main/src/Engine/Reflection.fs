@@ -153,6 +153,3 @@ type [<Sealed;NoComparison>] DefaultReflectionProvider() =
             |> consolidateMatchingMethods
             |> Seq.collect (fun (n, m) -> n |> Seq.map (fun x -> createEvt m x))
             |> Seq.toArray
-        member __.GetLocalizeableProperties vmType = 
-            // TODO
-            Array.empty

@@ -25,4 +25,4 @@ type [<AbstractClass;NoComparison>] AbstractForestContext (viewFactory : IViewFa
         member this.TemplateProvider = this.TemplateProvider
 
 type [<Sealed;NoComparison>] DefaultForestContext(viewFactory : IViewFactory, reflectionProvider : IReflectionProvider, securityManager : ISecurityManager, templateProvider : ITemplateProvider) =
-    inherit AbstractForestContext(viewFactory, DefaultViewRegistry(viewFactory, reflectionProvider), securityManager, templateProvider)
+    inherit AbstractForestContext(viewFactory, Forest.DefaultViewRegistry(viewFactory, reflectionProvider), securityManager, templateProvider)
