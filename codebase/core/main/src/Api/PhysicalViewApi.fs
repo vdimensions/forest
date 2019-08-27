@@ -24,7 +24,7 @@ type [<Interface>] IPhysicalView =
     abstract member InvokeCommand : name : cname -> arg : obj -> unit
     abstract member NavigateTo : string -> unit
     abstract member NavigateTo<'msg> : string * 'msg -> unit
-    abstract member Hash : thash
+    abstract member InstanceID : thash
 
 [<Interface>] 
 type IPhysicalViewRenderer =

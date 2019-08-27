@@ -30,12 +30,12 @@ type [<Sealed;NoEquality;NoComparison>] Remoting =
         }
 
     [<Rpc>]
-    static member ExecuteCommand cmd hash (arg : obj) =
+    static member ExecuteCommand cmd instanceID (arg : obj) =
         async { 
             let result =
                 match (Remoting._facade, Remoting._nodeProvider) with
                 | (ValueSome facade, ValueSome nodeProvider) -> 
-                    facade.ExecuteCommand cmd hash arg |> ignore 
+                    facade.ExecuteCommand(cmd, instanceID, arg)
                     nodeProvider.UpdatedNodes
                 | _ -> invalidOp "A forest facade has not been initialized yet"
             return result

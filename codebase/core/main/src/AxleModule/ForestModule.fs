@@ -9,10 +9,8 @@ open Axle.Modularity
 open Axle.Verification
 open Forest
 open Forest.ComponentModel
-open Forest.Reflection
-open Forest.Resources
 open Forest.Security
-open Forest.Templates.Raw
+open Forest.Templates
 open Forest.UI
 
 type [<Interface>] IForestIntegrationProvider =
@@ -25,7 +23,7 @@ type [<Sealed>] RequiresForestAttribute() = inherit RequiresAttribute(typeof<For
 and [<Interface;Module;RequiresForest>] IForestViewProvider =
     abstract member RegisterViews: registry : IViewRegistry -> unit
 
-and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule>)>] 
+and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModule>)>] 
     internal ForestModule(
         container : IContainer, 
         templateProvider : ITemplateProvider, 
@@ -50,10 +48,6 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
     
     [<ModuleInit>]
     member this.Init(e : ModuleExporter) =
-        let reflectionProvider =
-            match container.TryResolve<IReflectionProvider>() with
-            | (true, rp) -> rp
-            | (false, _) -> upcast DefaultReflectionProvider()
         let securityManager =
             match container.TryResolve<ISecurityManager>() with
             | (true, sm) -> sm
@@ -62,8 +56,8 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
             match null2vopt container.Parent with
             | ValueSome c -> (c, app)
             | ValueNone -> (container, app)
-            |> AxleViewFactory
-        let context : IForestContext = upcast DefaultForestContext(viewFactory, reflectionProvider, securityManager, templateProvider)
+            |> ContainerViewFactory
+        let context : IForestContext = upcast DefaultForestContext(viewFactory, securityManager, templateProvider)
         this._context <- context
         this.InitForest()
         context |> e.Export<IForestContext> |> ignore
@@ -91,19 +85,19 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestResourceModule
             this.ForestEngine.RegisterSystemView<'sv>()
 
     interface ITreeNavigator with
-        member this.LoadTree t = 
-            this.ForestEngine.LoadTree t
+        member this.Navigate t = 
+            this.ForestEngine.Navigate t
 
-        member this.LoadTree (t, m) = 
-            this.ForestEngine.LoadTree (t, m)
+        member this.Navigate (t, m) = 
+            this.ForestEngine.Navigate (t, m)
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
             this.ForestEngine.SendMessage msg
 
     interface ICommandDispatcher with
-        member this.ExecuteCommand cmd target arg = 
-            this.ForestEngine.ExecuteCommand cmd target arg
+        member this.ExecuteCommand (cmd, target, arg) = 
+            this.ForestEngine.ExecuteCommand (cmd, target, arg)
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type) : IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

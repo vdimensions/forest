@@ -5,10 +5,10 @@ open Forest
 
 
 [<AbstractClass;NoComparison>] 
-type AbstractPhysicalView(engine : IForestEngine, hash : thash) =
+type AbstractPhysicalView(engine : IForestEngine, instanceID : thash) =
     do 
         ignore <| ``|NotNull|`` "engine" engine
-        ignore <| ``|NotNull|`` "hash" hash
+        ignore <| ``|NotNull|`` "instanceID" instanceID
 
     [<DefaultValue>]
     val mutable private _node : DomNode voption
@@ -16,15 +16,15 @@ type AbstractPhysicalView(engine : IForestEngine, hash : thash) =
     abstract member Refresh : node : DomNode -> unit
     abstract member Dispose : disposing : bool -> unit
 
-    member __.ExecuteCommand (NotNull "name" name) arg = engine.ExecuteCommand name hash arg
+    member __.ExecuteCommand ((NotNull "name" name), arg) = engine.ExecuteCommand (name, instanceID, arg)
 
-    member __.NavigateTo (NotNull "name" name) = engine.LoadTree name
-    member __.NavigateTo<'msg> (NotNull "name" name, arg) = engine.LoadTree<'msg>(name, arg)
+    member __.NavigateTo (NotNull "name" name) = engine.Navigate name
+    member __.NavigateTo<'msg> (NotNull "name" name, arg) = engine.Navigate<'msg>(name, arg)
 
     override this.Finalize() = this.Dispose(false)
         
     interface IPhysicalView with
-        member this.InvokeCommand (NotNull "name" name) arg = this.ExecuteCommand name arg
+        member this.InvokeCommand (NotNull "name" name) arg = this.ExecuteCommand (name, arg)
         member this.NavigateTo(NotNull "name" name) = this.NavigateTo(name)
         member this.NavigateTo<'msg>(NotNull "name" name, arg) = this.NavigateTo<'msg>(name, arg)
         member this.Update (NotNull "node" node : DomNode) =
@@ -35,7 +35,7 @@ type AbstractPhysicalView(engine : IForestEngine, hash : thash) =
             if update then
                 this._node <- ValueSome node
                 this.Refresh node
-        member __.Hash with get() = hash
+        member __.InstanceID with get() = instanceID
 
     interface IDisposable with
         member this.Dispose() = 

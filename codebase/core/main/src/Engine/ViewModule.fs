@@ -46,28 +46,3 @@ module View =
             | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName), e) : exn
             | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e) : exn
     let handleError(e : Error) = e |> resolveError |> raise
-
-    type [<Sealed;NoComparison>] Factory() = 
-        member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor) : IView = 
-            let flags = BindingFlags.Public|||BindingFlags.Instance
-            let constructors = 
-                descriptor.ViewType.GetConstructors(flags) 
-                |> Array.toList
-                |> List.filter (fun c -> c.GetParameters().Length = 0) 
-            match constructors with
-            | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", descriptor.ViewType.FullName)))
-            | head::_ -> downcast head.Invoke([||]) : IView
-
-        member __.Resolve (NotNull "descriptor" descriptor : IViewDescriptor, NotNull "model" model : obj) : IView = 
-            let flags = BindingFlags.Public|||BindingFlags.Instance
-            let constructors = 
-                descriptor.ViewType.GetConstructors(flags) 
-                |> Array.toList
-                |> List.filter (fun c -> c.GetParameters().Length = 1 && c.GetParameters().[0].ParameterType.GetTypeInfo().IsAssignableFrom(model.GetType().GetTypeInfo())) 
-            match constructors with
-            | [] -> raise (InvalidOperationException(String.Format("View `{0}` does not have suitable constructor", descriptor.ViewType.FullName)))
-            | head::_ -> downcast head.Invoke([|model|]) : IView
-        
-        interface IViewFactory with 
-            member this.Resolve d = this.Resolve d
-            member this.Resolve (d, m) = this.Resolve(d, m)

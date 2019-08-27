@@ -11,14 +11,14 @@ module Runtime =
     [<CompiledName("Operation")>]
     [<NoComparison>]
     type Operation =
-        | InstantiateView of viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj option
-        | InstantiateViewByNode of node : TreeNode * model : obj option
+        | InstantiateView of viewHandle : ViewHandle * region : rname * parent : Tree.Node * model : obj option
+        | InstantiateViewByNode of node : Tree.Node * model : obj option
         | UpdateModel of node : thash * model : obj
-        | DestroyView of subtree : TreeNode
+        | DestroyView of subtree : Tree.Node
         | InvokeCommand of command : cname * node : thash * commandArg : obj
         | SendMessage of node : thash * message : obj * topics : string array
         | DispatchMessage of message : obj * topics : string array
-        | ClearRegion of owner : TreeNode * region : rname
+        | ClearRegion of owner : Tree.Node * region : rname
         | Multiple of operations : Operation list
 
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -45,9 +45,9 @@ module Runtime =
         /// Unable to find a descriptor for the given view.
         | NoDescriptor of viewHandle : ViewHandle
         /// A tree node was found to be already present in the hierarchy at a place where it was about to be created.
-        | SubTreeNotExpected of node : TreeNode
+        | SubTreeNotExpected of node : Tree.Node
         /// A tree node was expected to be present in the hierarchy but was not found.
-        | SubTreeAbsent of node : TreeNode
+        | SubTreeAbsent of node : Tree.Node
         /// An command-specific error occurred while invoking a command. See `cause` for details on the error.
         | CommandError of cause : Command.Error
         /// An view-specific error occurred while invoking a command. See `cause` for details on the error.

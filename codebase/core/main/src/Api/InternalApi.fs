@@ -17,18 +17,19 @@ namespace Forest
 
 open System
 open Forest.ComponentModel
+open Forest
 
 // internal functionality needed by the forest runtime
 type [<Interface>] internal IRuntimeView =
     inherit IView
 
-    abstract member AcquireContext : node : TreeNode -> vd : IViewDescriptor -> context : IForestExecutionContext -> unit
+    abstract member AcquireContext : node : Tree.Node -> vd : IViewDescriptor -> context : IForestExecutionContext -> unit
     abstract member AbandonContext : runtime : IForestExecutionContext -> unit
 
     abstract member Load : unit -> unit
     abstract member Resume : viewState : ViewState -> unit
 
-    abstract InstanceID : TreeNode with get
+    abstract InstanceID : Tree.Node with get
     abstract Descriptor : IViewDescriptor with get
     abstract Context : IForestExecutionContext with get
 
@@ -39,17 +40,17 @@ type [<Interface>] internal IRuntimeView =
     abstract member SubscribeEvents : receiver : IRuntimeView -> unit
     abstract member UnsubscribeEvents : receiver : IRuntimeView -> unit
 
-    abstract member GetViewState : id : TreeNode -> ViewState option
-    abstract member SetViewState : silent : bool -> id : TreeNode -> model : ViewState -> ViewState
+    abstract member GetViewState : id : Tree.Node -> ViewState option
+    abstract member SetViewState : silent : bool -> id : Tree.Node -> model : ViewState -> ViewState
 
     //abstract member GetLinks : id : TreeNode -> List
 
-    abstract member ClearRegion : node : TreeNode -> region : rname -> unit
-    abstract member GetRegionContents : node : TreeNode -> region : rname -> IView seq
-    abstract member RemoveViewFromRegion : node : TreeNode -> region : rname -> predicate : System.Predicate<IView> -> unit
+    abstract member ClearRegion : node : Tree.Node -> region : rname -> unit
+    abstract member GetRegionContents : node : Tree.Node -> region : rname -> IView seq
+    abstract member RemoveViewFromRegion : node : Tree.Node -> region : rname -> predicate : System.Predicate<IView> -> unit
 
-    abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode -> IView
-    abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : TreeNode * model : obj -> IView
-    abstract member ExecuteCommand : command : cname -> issuer : IRuntimeView -> arg : obj -> unit
+    abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : Tree.Node -> IView
+    abstract member ActivateView : viewHandle : ViewHandle * region : rname * parent : Tree.Node * model : obj -> IView
+    abstract member ExecuteCommand : command : cname * issuer : IRuntimeView * arg : obj -> unit
     abstract member PublishEvent : sender : IRuntimeView -> message : 'M -> topics : string array -> unit
     //abstract member ProcessMessages : unit -> unit

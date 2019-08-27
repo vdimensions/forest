@@ -16,9 +16,6 @@
 namespace Forest
 
 open System
-open Axle.Verification
-open Forest.ComponentModel
-open Forest.Reflection
 
 [<RequireQualifiedAccess>]
 [<CompiledName("Link")>]
@@ -28,19 +25,6 @@ module Link =
         | LinkNotFound of owner : Type * target : string
         | RedirectError of owner : Type * target : string * cause : exn
         | MultipleErrors of errors : Error list
-
-    [<Sealed;NoComparison>] 
-    type internal Descriptor(target : string, parametrized : bool) = 
-        do
-            ignore <| (|NotNullOrEmpty|) "target" target
-        member __.Follow (arg : obj) (engine : IForestEngine) : unit = 
-            if (parametrized) 
-            then engine.LoadTree(target, arg)
-            else engine.LoadTree target
-        member __.Name with get() = target
-        interface ILinkDescriptor with
-            member this.Name = this.Name
-            //member this.Follow arg engine = this.Follow arg engine
 
     [<CompiledName("LinkModel")>]
     type [<Sealed;NoComparison>] internal Model(name : string, displayName : string, tooltip : string, description : string) =

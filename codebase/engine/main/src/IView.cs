@@ -1,4 +1,7 @@
 ﻿using System;
+using Forest.ComponentModel;
+using Forest.Security;
+using Forest.Templates;
 
 namespace Forest
 {
@@ -23,8 +26,15 @@ namespace Forest
         new T Model { get; }
     }
 
-
     /// An interface representing a system view, that is a special type of view which
     /// aids the internal workings of Forest, rather than serving any presentational purpose.
     public interface ISystemView : IView { }
+
+    public interface IForestContext
+    {
+        IViewFactory ViewFactory { get; }
+        IViewRegistry ViewRegistry { get; }
+        ISecurityManager SecurityManager { get; }
+        ITemplateProvider TemplateProvider { get; }
+    }
 }

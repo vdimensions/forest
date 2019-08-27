@@ -3,5 +3,6 @@ storage none
 
 source ../../../../dist
 source https://api.nuget.org/v3/index.json
-  nuget Axle.Web.AspNetCore
-  nuget Forest.Core
+
+nuget Axle.Web.AspNetCore
+nuget Forest.Core

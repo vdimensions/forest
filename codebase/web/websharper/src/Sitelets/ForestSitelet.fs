@@ -13,11 +13,11 @@ module internal ForestSitelet =
     let Render (f : IForestEngine) (pvs: array<vname*WebSharperPhysicalView>) (dop : (Doc -> Doc -> Doc)) (h : Doc) (b : Doc list) (endpoint : ForestEndPoint<'msg>) =
         match endpoint with
         | ForestEndPoint.ForestTreeWithMessage (tree, msg) -> 
-            f.LoadTree(tree, msg)
+            f.Navigate(tree, msg)
         | ForestEndPoint.ForestTree tree -> 
-            f.LoadTree tree
-        | ForestEndPoint.ForestCommand (name, hash, arg) -> 
-            f.ExecuteCommand name hash arg
+            f.Navigate tree
+        | ForestEndPoint.ForestCommand (name, instanceID, arg) -> 
+            f.ExecuteCommand(name, instanceID, arg)
         let shellID = "shell"
         let body = [
             div [ attr.id shellID; on.afterRender <@ fun this -> Client.init(); Client.render() |> Doc.RunReplace this @> ] []

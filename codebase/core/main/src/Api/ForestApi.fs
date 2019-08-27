@@ -15,14 +15,6 @@
 //
 namespace Forest
 
-type [<Interface>] ICommandDispatcher =
-    abstract member ExecuteCommand : command : cname -> hash : thash -> arg : obj -> unit
-
-type [<Interface>] ITreeNavigator =
-    abstract member LoadTree : string -> unit
-    abstract member LoadTree<'msg> : string * 'msg -> unit
-
-
 type [<Interface>] IForestEngine =
     inherit IMessageDispatcher
     inherit ICommandDispatcher

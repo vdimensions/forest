@@ -43,11 +43,13 @@ namespace Forest.Web.AspNetCore.Dom
         public override DomPhysicalView CreatePhysicalView(IForestEngine engine, DomNode node)
         {
             var result = new DomPhysicalView(engine, node.Hash);
+            return result;
         }
 
         public override DomPhysicalView CreateNestedPhysicalView(IForestEngine engine, DomPhysicalView parent, DomNode node)
         {
             var result = new DomPhysicalView(engine, node.Hash);
+            return result;
         }
     }
 }

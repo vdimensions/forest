@@ -11,7 +11,7 @@ open Forest.ComponentModel
 type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> private(state : ViewState) =
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
-    val mutable private hierarchyKey : TreeNode
+    val mutable private hierarchyKey : Tree.Node
     [<DebuggerBrowsable(DebuggerBrowsableState.Never)>]
     [<DefaultValue>]
     val mutable private executionContext : IForestExecutionContext
@@ -47,16 +47,16 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
     default __.Resume() = ()
 
     member this.DisableCommand(NotNull "command" command : cname) =
-        this |> updateViewState (fun state -> { state with DisabledCommands = state.DisabledCommands |> Set.add command })
+        this |> updateViewState (fun state -> ViewState.DisableCommand(state, command))
 
     member this.EnableCommand(NotNull "command" command : cname) =
-        this |> updateViewState (fun state -> { state with DisabledCommands = state.DisabledCommands |> Set.remove command })
+        this |> updateViewState (fun state -> ViewState.EnableCommand(state, command))
 
     member this.DisableLink(NotNull "link" link : cname) =
-        this |> updateViewState (fun state -> { state with DisabledLinks = state.DisabledLinks |> Set.add link })
+        this |> updateViewState (fun state -> ViewState.DisableLink(state, link))
 
     member this.EnableLink(NotNull "link" link : string) =
-        this |> updateViewState (fun state -> { state with DisabledLinks = state.DisabledLinks |> Set.remove link })
+        this |> updateViewState (fun state -> ViewState.EnableLink(state, link))
         
     abstract member Dispose : bool -> unit
     default __.Dispose(_) = ()
@@ -79,8 +79,8 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             // The default behaviour
             | ValueSome rt -> 
                 match rt.GetViewState this.hierarchyKey with
-                | Some vs -> { vs with Model = newModel }
-                | None -> newModel |> ViewState.withModel
+                | Some vs -> ViewState.UpdateModel(vs, newModel)
+                | None -> ViewState.Create(newModel)
                 |> rt.SetViewState false this.hierarchyKey
             // This case is entered if the view model is set at construction time, for example, by a DI container.
             | ValueNone -> newModel |> ViewState.withModel
@@ -99,7 +99,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             state <- this.executionContext.SetViewState true this.hierarchyKey viewState
             this.Resume()
 
-        member this.AcquireContext (node : TreeNode) (vd : IViewDescriptor) (NotNull "context" context : IForestExecutionContext) =
+        member this.AcquireContext (node : Tree.Node) (vd : IViewDescriptor) (NotNull "context" context : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd

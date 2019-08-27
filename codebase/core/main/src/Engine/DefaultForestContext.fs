@@ -2,9 +2,8 @@ namespace Forest
 
 open Axle.Verification
 open Forest.ComponentModel
-open Forest.Reflection
 open Forest.Security
-open Forest.Templates.Raw
+open Forest.Templates
 
 
 type [<AbstractClass;NoComparison>] AbstractForestContext (viewFactory : IViewFactory, viewRegistry : IViewRegistry, securityManager : ISecurityManager, templateProvider : ITemplateProvider) =
@@ -24,5 +23,5 @@ type [<AbstractClass;NoComparison>] AbstractForestContext (viewFactory : IViewFa
         member this.SecurityManager = this.SecurityManager
         member this.TemplateProvider = this.TemplateProvider
 
-type [<Sealed;NoComparison>] DefaultForestContext(viewFactory : IViewFactory, reflectionProvider : IReflectionProvider, securityManager : ISecurityManager, templateProvider : ITemplateProvider) =
-    inherit AbstractForestContext(viewFactory, Forest.DefaultViewRegistry(viewFactory, reflectionProvider), securityManager, templateProvider)
+type [<Sealed;NoComparison>] DefaultForestContext(viewFactory : IViewFactory, securityManager : ISecurityManager, templateProvider : ITemplateProvider) =
+    inherit AbstractForestContext(viewFactory, Forest.DefaultViewRegistry(viewFactory), securityManager, templateProvider)

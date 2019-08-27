@@ -1,47 +1,32 @@
 ﻿namespace Forest
 
-open System
-open System.Runtime.InteropServices
+open Axle
 open Axle.Verification
-
-#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-[<Serializable>]
-[<StructLayout(LayoutKind.Sequential)>]
-#endif
-[<NoComparison>]
-[<Struct>]
-type ViewState = 
-    {
-        Model : obj
-        DisabledCommands : Set<cname>
-        DisabledLinks : Set<string>
-    }
+open Forest
 
 module internal ViewState =
 
-    let internal withModelUnchecked (model) = 
-        {
-            Model = model
-            DisabledCommands = Set.empty
-            DisabledLinks = Set.empty
-        }
+    let internal withModelUnchecked model =
+        match null2opt model with
+        | Some m -> ViewState.Create(m)
+        | None -> ViewState.Empty
 
-    let withModel (NotNull "model" model) =  withModelUnchecked model
+    let withModel (model) =  model |> ViewState.Create
 
-    let enableCommand (NotNull "command" command) viewState =
-        { viewState with DisabledCommands = Set.remove command viewState.DisabledCommands }
+    let enableCommand (command) viewState =
+        ViewState.EnableCommand (viewState, command)
 
-    let disableCommand (NotNull "command" command) viewState =
-        { viewState with DisabledCommands = Set.add command viewState.DisabledCommands }
+    let disableCommand (command) viewState =
+        ViewState.DisableCommand (viewState, command)
 
-    let enableLink (NotNull "link" link) viewState =
-        { viewState with DisabledLinks = Set.remove link viewState.DisabledLinks }
+    let enableLink (link) viewState =
+        ViewState.EnableLink (viewState, link)
 
-    let disableLink (NotNull "link" link) viewState =
-        { viewState with DisabledLinks = Set.add link viewState.DisabledLinks }
+    let disableLink (link) viewState =
+        ViewState.DisableLink (viewState, link)
 
-    let isCommandEnabled (NotNull "command" command) viewState =
-        viewState.DisabledCommands |> Set.contains command |> not
+    let isCommandEnabled (NotNull "command" command) (viewState : ViewState) =
+        viewState.DisabledCommands.Contains command |> not
 
-    let isLinkEnabled (NotNull "command" command) viewState =
-        viewState.DisabledLinks |> Set.contains command |> not
+    let isLinkEnabled (NotNull "command" command) (viewState : ViewState) =
+        viewState.DisabledLinks.Contains command |> not

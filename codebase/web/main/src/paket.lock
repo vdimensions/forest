@@ -303,8 +303,8 @@ NUGET
     System.Threading.Tasks.Extensions (4.5.3)
       System.Runtime.CompilerServices.Unsafe (>= 4.5.2)
   remote: ../../../../dist
-    Forest.Core (2.5.2412.13100)
+    Forest.Core (2.5.2419.14295)
       Axle.FSharp (>= 1.5.2396.13956)
-      Forest.Engine (>= 2.5.2410.12824)
-    Forest.Engine (2.5.2410.12824)
+      Forest.Engine (>= 2.5.2419.14223)
+    Forest.Engine (2.5.2419.14223)
       Axle.Application (>= 1.5.2396.27060)

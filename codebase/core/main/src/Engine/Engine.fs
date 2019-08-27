@@ -23,17 +23,17 @@ module ForestEngine =
                 use ec = ForestExecutionContext.Create(ctx, sp, PhysicalViewDomProcessor(engine, renderer))
                 log op action ec
 
-        member this.ExecuteCommand command target arg =
-            wrap "ExecuteCommand" this (fun e -> e.ExecuteCommand command target arg)
+        member this.ExecuteCommand (command, target, arg) =
+            wrap "ExecuteCommand" this (fun e -> e.ExecuteCommand(command, target, arg))
 
         member this.SendMessage msg =
             wrap "SendMessage" this (fun e -> e.SendMessage msg)
 
         member this.LoadTree ( name) =
-            wrap "LoadTree" this (fun e -> e.LoadTree name)
+            wrap "LoadTree" this (fun e -> e.Navigate name)
 
         member this.LoadTree (name, msg) =
-            wrap "LoadTree" this (fun e -> e.LoadTree (name, msg))
+            wrap "LoadTree" this (fun e -> e.Navigate (name, msg))
 
         member this.RegisterSystemView<'sv when 'sv :> ISystemView> () =
             wrap "RegisterSystemView" this (fun e -> e.RegisterSystemView<'sv> ())
@@ -41,10 +41,10 @@ module ForestEngine =
         interface IForestEngine with
             member this.RegisterSystemView<'sv when 'sv :> ISystemView> () = this.RegisterSystemView<'sv>()
         interface ITreeNavigator with
-            member this.LoadTree(name) = this.LoadTree(name)
-            member this.LoadTree(name, msg) = this.LoadTree(name, msg)
+            member this.Navigate(name) = this.LoadTree(name)
+            member this.Navigate(name, msg) = this.LoadTree(name, msg)
         interface ICommandDispatcher with
-            member this.ExecuteCommand c t a = this.ExecuteCommand c t a
+            member this.ExecuteCommand (c, t, a) = this.ExecuteCommand (c, t, a)
         interface IMessageDispatcher with
             member this.SendMessage msg = this.SendMessage msg
 

@@ -1,4 +1,5 @@
 ﻿namespace Forest
+open Forest
 open Forest.ComponentModel
 
 type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode -> DomNode), complete : (DomNode list -> unit), ctx : IForestContext) =
@@ -24,7 +25,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
     interface IForestStateVisitor with
         member __.BFS treeNode i viewState descriptor = 
             // go ahead top-to-bottom and collect the basic model data
-            let hash = treeNode.Hash
+            let hash = treeNode.InstanceID
             if descriptor |> ctx.SecurityManager.HasAccess then
                 let commands = 
                     descriptor.Commands.Values
@@ -64,7 +65,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
         member __.DFS treeNode _ _ _ = 
             // go backwards bottom-to-top and properly update the hierarchy
             nodeMap <-
-            match (treeNode.Parent.Hash, nodeMap.TryFind treeNode.Parent.Hash, nodeMap.TryFind treeNode.Hash) with
+            match (treeNode.Parent.InstanceID, nodeMap.TryFind treeNode.Parent.InstanceID, nodeMap.TryFind treeNode.InstanceID) with
             | (parentKey, Some parent, Some node) ->
                 let region = treeNode.Region
                 let newRegionContents = 

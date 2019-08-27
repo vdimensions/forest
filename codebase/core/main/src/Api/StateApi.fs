@@ -16,12 +16,13 @@
 namespace Forest
 
 open Forest.ComponentModel
+open Forest
 
 /// An interface representing a forest state visitor
 type [<Interface>] internal IForestStateVisitor =
     /// Called upon visiting a sibling or child BFS-style
-    abstract member BFS: node : TreeNode -> index : int -> viewState : ViewState -> descriptor : IViewDescriptor -> unit
+    abstract member BFS: node : Tree.Node -> index : int -> viewState : ViewState -> descriptor : IViewDescriptor -> unit
     /// Called upon visiting a sibling or child DFS-style
-    abstract member DFS: node : TreeNode -> index : int -> viewState : ViewState -> descriptor : IViewDescriptor -> unit
+    abstract member DFS: node : Tree.Node -> index : int -> viewState : ViewState -> descriptor : IViewDescriptor -> unit
     /// Executed once when the traversal is complete.
     abstract member Complete: unit -> unit

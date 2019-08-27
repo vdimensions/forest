@@ -16,9 +16,7 @@
 namespace Forest
 
 open System
-open Axle.Verification
-open Forest.ComponentModel
-open Forest.Reflection
+//open Forest.Reflection
 
 [<RequireQualifiedAccess>]
 [<CompiledName("Command")>]
@@ -27,21 +25,9 @@ module Command =
     type Error =
         | CommandNotFound of owner : Type * command : cname
         | InvocationError of owner : Type * command : cname * cause : exn
-        | NonVoidReturnType of commandMethod : ICommandMethod
-        | MoreThanOneArgument of commandMethod : ICommandMethod
+        //| NonVoidReturnType of commandMethod : ICommandMethod
+        //| MoreThanOneArgument of commandMethod : ICommandMethod
         | MultipleErrors of errors : Error list
-
-    [<Sealed;NoComparison>] 
-    type internal Descriptor(argType : Type, method : ICommandMethod) = 
-        do
-            ignore <| (|NotNull|) "argType" argType
-            ignore <| (|NotNull|) "mi" method
-        member __.Invoke (arg : obj) (view : IView) : unit = method.Invoke view arg
-        member __.ArgumentType with get() = argType
-        interface ICommandDescriptor with
-            member __.Name = method.CommandName
-            member this.Invoke(view, arg) = this.Invoke arg view
-            member this.ArgumentType = this.ArgumentType
 
     [<CompiledName("CommandModel")>]
     type [<Sealed;NoComparison>] internal Model(name : cname, displayName : string, tooltip : string, description : string) =
@@ -57,8 +43,8 @@ module Command =
             member this.Description = this.Description
 
     let resolveError = function
-        | MoreThanOneArgument mi -> upcast InvalidOperationException() : exn
-        | NonVoidReturnType mi -> upcast InvalidOperationException() : exn
+        //| MoreThanOneArgument mi -> upcast InvalidOperationException() : exn
+        //| NonVoidReturnType mi -> upcast InvalidOperationException() : exn
         | CommandNotFound (o, c) -> upcast InvalidOperationException() : exn
         | InvocationError (o, c, e) -> upcast InvalidOperationException() : exn
         | MultipleErrors e -> upcast InvalidOperationException() : exn

@@ -78,7 +78,6 @@ namespace Forest.ComponentModel
             return new DefaultIntrospector(viewType);
         }
         
-
         private static IEnumerable<MethodAndAttributes<TAttribute>> ConsolidateMethods<TAttribute>(
                 IEnumerable<MethodAndAttributes<TAttribute>> data) 
             where TAttribute : Attribute
@@ -143,14 +142,14 @@ namespace Forest.ComponentModel
         public IViewRegistry Register(Type viewType) => DoRegister(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value);
         public IViewRegistry Register<T>() where T : IView => DoRegister(typeof(T));
 
-        private IViewDescriptor DoGetViewDescriptor(Type viewType)
-        {
-            return _descriptorsByType.TryGetValue(viewType, out var result) ? result : null;
-        }
-        public IViewDescriptor GetDescriptor(Type viewType) => DoGetViewDescriptor(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>());
+        private IViewDescriptor DoGetDescriptor(Type viewType) => 
+            _descriptorsByType.TryGetValue(viewType, out var result) ? result : null;
+
+        public IViewDescriptor GetDescriptor(Type viewType) => 
+            DoGetDescriptor(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>());
 
         public IViewDescriptor GetDescriptor(string viewName) =>
             _namedDescriptors.TryGetValue(viewName.VerifyArgument(nameof(viewName)).IsNotNullOrEmpty().Value, out var viewType)
-                ? DoGetViewDescriptor(viewType) : null;
+                ? DoGetDescriptor(viewType) : null;
     }
 }

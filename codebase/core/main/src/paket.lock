@@ -180,6 +180,8 @@ NUGET
       System.Runtime.Extensions (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
       System.Threading (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
       System.Threading.Tasks (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
+    System.Collections.Immutable (1.5)
+      NETStandard.Library (>= 1.6.1) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (&& (== netstandard2.0) (< netstandard1.3))
     System.Configuration.ConfigurationManager (4.5) - restriction: || (&& (== net45) (< net35) (>= netstandard2.0)) (&& (== net46) (< net35) (>= netstandard2.0)) (&& (== netstandard1.6) (>= netstandard2.0)) (== netstandard2.0)
       System.Security.Cryptography.ProtectedData (>= 4.5) - restriction: || (&& (== net45) (>= netstandard2.0)) (&& (== net46) (>= netstandard2.0)) (&& (== netstandard1.6) (>= netstandard2.0)) (== netstandard2.0)
       System.Security.Permissions (>= 4.5) - restriction: || (&& (== net45) (>= monoandroid)) (&& (== net45) (>= monotouch)) (&& (== net45) (>= net461)) (&& (== net45) (>= netstandard2.0)) (&& (== net45) (>= xamarintvos)) (&& (== net45) (>= xamarinwatchos)) (&& (== net46) (>= monoandroid)) (&& (== net46) (>= monotouch)) (&& (== net46) (>= net461)) (&& (== net46) (>= netstandard2.0)) (&& (== net46) (>= xamarintvos)) (&& (== net46) (>= xamarinwatchos)) (&& (== netstandard1.6) (>= monoandroid)) (&& (== netstandard1.6) (>= monotouch)) (&& (== netstandard1.6) (>= net461)) (&& (== netstandard1.6) (>= netstandard2.0)) (&& (== netstandard1.6) (>= xamarintvos)) (&& (== netstandard1.6) (>= xamarinwatchos)) (== netstandard2.0)
@@ -665,5 +667,6 @@ NUGET
       System.Xml.ReaderWriter (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
       System.Xml.XmlDocument (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
   remote: ../../../../dist
-    Forest.Engine (2.5.2413.25259)
+    Forest.Engine (2.5.2429.36304)
       Axle.Application (>= 1.5.2396.27060)
+      System.Collections.Immutable (>= 1.5)

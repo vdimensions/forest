@@ -1,7 +1,7 @@
 ﻿namespace Forest
 
 open System
-open Forest.Collections
+open Forest
 open Forest.UI
 
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -15,7 +15,7 @@ type [<Sealed;NoComparison>] State
                  hash: thash) =
     internal new (tree : Tree, viewModels : Map<thash, ViewState>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID().Hash)
     [<CompiledName("Empty")>]
-    static member initial = State(Tree.root, Map.empty, Map.empty, Map.empty, Fuid.empty.Hash)
+    static member initial = State(Tree.Root, Map.empty, Map.empty, Map.empty, Fuid.empty.Hash)
     member internal __.Tree with get() = tree
     member internal __.ViewState with get() = viewState
     member internal __.Views with get() = views
@@ -38,12 +38,12 @@ module internal State =
     let createWithFuid (hs, m, vs, pv, fuid) = State(hs, m, vs, pv, fuid)
     let discardViewStates (st : State) = State(st.Tree, st.ViewState, Map.empty, Map.empty)
 
-    let rec private _traverseState (v : IForestStateVisitor) parent (ids : TreeNode list) (siblingsCount : int) (st : State) =
+    let rec private _traverseState (v : IForestStateVisitor) parent (ids : Tree.Node list) (siblingsCount : int) (st : State) =
         match ids with
         | [] -> ()
         | head::tail ->
             let ix = siblingsCount - ids.Length // TODO
-            let hash = head.Hash
+            let hash = head.InstanceID
             let viewState = st.ViewState.[hash]
             let vs = st.Views.[hash]
             let descriptor = vs.Descriptor
@@ -51,18 +51,18 @@ module internal State =
             // visit siblings 
             _traverseState v parent tail siblingsCount st
             // visit children
-            match st.Tree.Hierarchy.TryFind head with
-            | Some children -> _traverseState v head (children |> List.rev) children.Length st
-            | None -> ()
+            match st.Tree.[head] |> List.ofSeq with
+            | [] -> ()
+            | children -> _traverseState v head (children) children.Length st
             v.DFS head ix viewState descriptor
             ()
 
     [<CompiledName("Traverse")>]
     let traverse (v : IForestStateVisitor) (st : State) =
-        let root = TreeNode.shell
-        match st.Tree.Hierarchy.TryFind root with
-        | Some ch -> _traverseState v root ch ch.Length st
-        | None -> ()
+        let root = Tree.Node.Shell
+        match st.Tree.[root] |> List.ofSeq with
+        | [] -> ()
+        | ch -> _traverseState v root ch ch.Length st
         v.Complete()
 
 type [<Interface>] IForestStateProvider =
