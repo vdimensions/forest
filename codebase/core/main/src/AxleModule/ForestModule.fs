@@ -9,6 +9,7 @@ open Axle.Modularity
 open Axle.Verification
 open Forest
 open Forest.ComponentModel
+open Forest.Engine
 open Forest.Security
 open Forest.Templates
 open Forest.UI

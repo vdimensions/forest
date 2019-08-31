@@ -15,6 +15,7 @@ open Forest
 open Forest.ComponentModel
 open Forest.Web.WebSharper
 open Forest.Web.WebSharper.UI
+open Forest.Engine
 
 type [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>] RequiresForestSiteletAttribute() = 
     inherit RequiresAttribute(typeof<ForestSiteletModule>)
@@ -83,7 +84,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;Requires
             let descriptor = 
                 viewRegistry
                 |> ViewRegistry.registerViewType logicalViewType
-                |> ViewRegistry.getDescriptor (ViewHandle.ByType logicalViewType)
+                |> ViewRegistry.getDescriptor (ViewHandle.FromType logicalViewType)
             let n = descriptor.Name
             
             let newExpr = String.Format("new {0}.New()", v.GetClientTypeName())

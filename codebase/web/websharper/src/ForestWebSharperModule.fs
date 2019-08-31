@@ -7,6 +7,7 @@ open Axle.Modularity
 open Axle.Web.AspNetCore.Session
 open Axle.Web.WebSharper
 open Forest
+open Forest.Engine
 
 type [<Sealed;AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>] RequiresForestWebSharperAttribute() = 
     inherit RequiresAttribute(typeof<ForestWebSharperModule>)

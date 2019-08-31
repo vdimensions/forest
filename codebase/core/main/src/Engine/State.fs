@@ -2,6 +2,7 @@
 
 open System
 open Forest
+open Forest.Engine
 open Forest.UI
 
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK

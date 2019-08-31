@@ -54,18 +54,26 @@ namespace Forest
         [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
         public sealed class Node : IComparable<Node>, IEquatable<Node>
         {
-            public static Node Create(string region, string view, Node parent)
+            public static Node Create(string region, ViewHandle viewHandle, Node parent)
             {
-                return new Node(parent, region, view, GenerateInstanceID().ToString());
+                return new Node(parent, region, viewHandle, GenerateInstanceID().ToString());
+            }
+            public static Node Create(string region, string viewName, Node parent)
+            {
+                return new Node(parent, region, ViewHandle.FromName(viewName), GenerateInstanceID().ToString());
+            }
+            public static Node Create(string region, Type viewType, Node parent)
+            {
+                return new Node(parent, region, ViewHandle.FromType(viewType), GenerateInstanceID().ToString());
             }
 
-            public static readonly Node Shell = new Node(null, string.Empty, string.Empty, Guid.Empty.ToString());
+            public static readonly Node Shell = new Node(null, string.Empty, ViewHandle.FromName(string.Empty), Guid.Empty.ToString());
 
-            internal Node(Node parent, string region, string view, string instanceID)
+            internal Node(Node parent, string region, ViewHandle viewHandle, string instanceID)
             {
                 Parent = parent;
                 Region = region;
-                View = view;
+                ViewHandle = viewHandle;
                 InstanceID = instanceID;
             }
 
@@ -92,14 +100,14 @@ namespace Forest
                 var sb = Parent == null
                     ? new StringBuilder() 
                     : Parent.ToStringBuilder(false).Append(Region.Length == 0 ? "shell" : Region);
-                return (stopAtRegion ? sb : sb.AppendFormat("/{0} #{1}", View, InstanceID)).Append('/');
+                return (stopAtRegion ? sb : sb.AppendFormat("/{0} #{1}", ViewHandle, InstanceID)).Append('/');
             }
 
             public override string ToString() => ToStringBuilder(false).ToString();
 
             public Node Parent { get; }
             public string Region { get; }
-            public string View { get; }
+            public ViewHandle ViewHandle { get; }
             public string InstanceID { get; }
             public string RegionSegment => ToStringBuilder(true).ToString();
         }
@@ -205,7 +213,7 @@ namespace Forest
                 var line = string.Format(
                     "{0}/{1} #{2}", 
                     (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
-                    tuple.Item1.View, 
+                    tuple.Item1.ViewHandle, 
                     tuple.Item1.InstanceID);
                 sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
             }

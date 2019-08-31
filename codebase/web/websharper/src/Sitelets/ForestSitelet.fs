@@ -1,5 +1,6 @@
 ﻿namespace Forest.Web.WebSharper.Sitelets
 open Forest
+open Forest.Engine
 open Forest.Web.WebSharper.UI
 open WebSharper
 open WebSharper.Sitelets

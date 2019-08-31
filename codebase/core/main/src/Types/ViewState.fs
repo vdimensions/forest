@@ -4,6 +4,7 @@ open Axle
 open Axle.Verification
 open Forest
 
+[<System.Obsolete>]
 module internal ViewState =
 
     let internal withModelUnchecked model =

@@ -2,24 +2,25 @@
 
 open System
 open Forest
+open Forest.Engine
 
 [<RequireQualifiedAccess>]
 module Runtime =
-    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-    [<System.Serializable>]
-    #endif
-    [<CompiledName("Operation")>]
-    [<NoComparison>]
-    type Operation =
-        | InstantiateView of viewHandle : ViewHandle * region : rname * parent : Tree.Node * model : obj option
-        | InstantiateViewByNode of node : Tree.Node * model : obj option
-        | UpdateModel of node : thash * model : obj
-        | DestroyView of subtree : Tree.Node
-        | InvokeCommand of command : cname * node : thash * commandArg : obj
-        | SendMessage of node : thash * message : obj * topics : string array
-        | DispatchMessage of message : obj * topics : string array
-        | ClearRegion of owner : Tree.Node * region : rname
-        | Multiple of operations : Operation list
+    //#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    //[<System.Serializable>]
+    //#endif
+    //[<CompiledName("Operation")>]
+    //[<NoComparison>]
+    //type Operation =
+    //    | InstantiateView of viewHandle : ViewHandle * region : rname * parent : Tree.Node * model : obj option
+    //    | InstantiateViewByNode of node : Tree.Node * model : obj option
+    //    | UpdateModel of node : thash * model : obj
+    //    | DestroyView of subtree : Tree.Node
+    //    | InvokeCommand of command : cname * node : thash * commandArg : obj
+    //    | SendMessage of node : thash * message : obj * topics : string array
+    //    | DispatchMessage of message : obj * topics : string array
+    //    | ClearRegion of owner : Tree.Node * region : rname
+    //    | Multiple of operations : Operation list
 
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [<System.Serializable>]
@@ -61,8 +62,8 @@ module Runtime =
         | CommandError ce -> ce |> Command.handleError 
         | NoDescriptor vh -> 
             match vh with
-            | ByName vn -> invalidOp <| String.Format("Unable to obtain descriptor for view '{0}'", vn)
-            | ByType vt -> invalidOp <| String.Format("Unable to obtain descriptor for view `{0}`", vt.AssemblyQualifiedName)
+            | :? ViewHandle.NamedViewHandle as vn -> invalidOp <| String.Format("Unable to obtain descriptor for view '{0}'", vn.Name)
+            | :? ViewHandle.TypedViewHandle as vt -> invalidOp <| String.Format("Unable to obtain descriptor for view `{0}`", vt.ViewType.AssemblyQualifiedName)
         // TODO
         | _ -> ()
 

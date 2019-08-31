@@ -16,10 +16,9 @@ type [<Sealed;NoComparison>] DefaultViewRegistry(reg : IViewRegistry, factory : 
     new(factory) = DefaultViewRegistry(Forest.ComponentModel.ViewRegistry(), factory)
 
     member private __.InstantiateView model decriptor = 
-        try match model with
-            | Some m -> factory.Resolve(decriptor, m)
-            | None -> factory.Resolve decriptor
-        with e -> raise <| ViewInstantiationException(decriptor.ViewType, e)
+        match model with
+        | Some m -> factory.Resolve(decriptor, m)
+        | None -> factory.Resolve decriptor
 
     interface IViewRegistry with
         member __.Register t = reg.Register t

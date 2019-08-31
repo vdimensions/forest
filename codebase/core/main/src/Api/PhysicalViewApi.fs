@@ -17,6 +17,7 @@ namespace Forest.UI
 
 open System
 open Forest
+open Forest.Engine
 
 type [<Interface>] IPhysicalView =
     inherit IDisposable

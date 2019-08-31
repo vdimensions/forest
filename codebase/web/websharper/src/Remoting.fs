@@ -1,6 +1,6 @@
 ﻿namespace Forest.Web.WebSharper
 
-open Forest
+open Forest.Engine
 open Forest.Web.WebSharper
 open WebSharper
 open WebSharper.UI

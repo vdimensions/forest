@@ -50,7 +50,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                 let node = 
                     { 
                         Hash = hash 
-                        Name = treeNode.View
+                        Name = descriptor.Name
                         Region = treeNode.Region
                         Index = i
                         Model = viewState.Model

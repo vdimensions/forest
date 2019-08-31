@@ -6,6 +6,8 @@ open Axle.Option
 open Axle.Verification
 open Forest
 open Forest.ComponentModel
+open Forest.Engine
+open Forest.Engine.Instructions
 
 
 type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> private(state : ViewState) =
@@ -26,10 +28,11 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             match null2vopt v.executionContext with
             // The default behaviour
             | ValueSome context -> 
-                match context.GetViewState v.hierarchyKey with
-                | Some vs -> fn vs
-                | None -> invalidOp "ViewState not found"
-                |> context.SetViewState false v.hierarchyKey
+                let viewState =
+                    match context.GetViewState v.hierarchyKey |> nullable2opt with
+                    | Some vs -> fn vs
+                    | None -> invalidOp "ViewState not found"
+                context.SetViewState (false, v.hierarchyKey, viewState)
             | ValueNone -> invalidOp "This operation cannot be applied without execution context"
 
     new (model : 'T) = new LogicalView<'T>(model |> ViewState.withModelUnchecked)
@@ -38,7 +41,7 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
         this.Dispose(false)
 
     member this.Publish<'M> (message : 'M, [<ParamArray>] topics : string[]) = 
-        this.executionContext.PublishEvent this message topics
+        this.executionContext.ProcessInstructions [|(SendMessageInstruction(message, topics, this.hierarchyKey.InstanceID))|]
 
     abstract member Load : unit -> unit
     default __.Load() = ()
@@ -69,8 +72,9 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
         | ValueNone ->
             invalidOp("No runtime available!")
         | ValueSome rt -> 
-            let (parent, region) = (this.hierarchyKey.Parent, this.hierarchyKey.Region)
-            rt.RemoveViewFromRegion parent region (System.Predicate(fun v -> obj.ReferenceEquals(v, this)))
+            //let (parent, region) = (this.hierarchyKey.Parent, this.hierarchyKey.Region)
+            //rt.RemoveViewFromRegion (parent, region, (System.Predicate(fun v -> obj.ReferenceEquals(v, this))))
+            rt.ProcessInstructions [| DestroyViewInstruction this.HierarchyKey |]
 
     member this.UpdateModel (NotNull "updateFn" updateFn : Func<'T, 'T>) : unit =
         let newModel = updateFn.Invoke(this.Model)
@@ -78,12 +82,13 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             match null2vopt this.executionContext with
             // The default behaviour
             | ValueSome rt -> 
-                match rt.GetViewState this.hierarchyKey with
-                | Some vs -> ViewState.UpdateModel(vs, newModel)
-                | None -> ViewState.Create(newModel)
-                |> rt.SetViewState false this.hierarchyKey
+                let viewState =
+                    match rt.GetViewState this.hierarchyKey |> nullable2opt with
+                    | Some vs -> ViewState.UpdateModel(vs, newModel)
+                    | None -> ViewState.Create(newModel)
+                rt.SetViewState (false, this.hierarchyKey, viewState)
             // This case is entered if the view model is set at construction time, for example, by a DI container.
-            | ValueNone -> newModel |> ViewState.withModel
+            | ValueNone -> ViewState.Create(newModel)
 
     member this.Engine with get() = this.executionContext :> IForestEngine
 
@@ -96,34 +101,34 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
             this.Load()
 
         member this.Resume viewState =
-            state <- this.executionContext.SetViewState true this.hierarchyKey viewState
+            state <- this.executionContext.SetViewState (true, this.hierarchyKey, viewState)
             this.Resume()
 
-        member this.AcquireContext (node : Tree.Node) (vd : IViewDescriptor) (NotNull "context" context : IForestExecutionContext) =
+        member this.AcquireContext (node : Tree.Node, vd : IViewDescriptor, NotNull "context" context : IForestExecutionContext) =
             match null2vopt this.executionContext with
             | ValueNone ->
                 this.descriptor <- vd
                 this.hierarchyKey <- node
-                match context.GetViewState this.HierarchyKey with
+                match context.GetViewState this.HierarchyKey |> nullable2opt with
                 | Some viewState -> state <- viewState
-                | None -> ignore <| context.SetViewState true this.HierarchyKey state
+                | None -> ignore <| context.SetViewState (true, this.HierarchyKey, state)
                 this.executionContext <- context
                 this.executionContext.SubscribeEvents this
                 ()
-            | ValueSome _ -> invalidOp(String.Format("View {0} is already captured by a context", this.hierarchyKey.View))
+            | ValueSome _ -> invalidOp(String.Format("{0} is already captured by a context", this.hierarchyKey.ViewHandle))
 
         member this.AbandonContext (_) =
             match null2vopt this.executionContext with
             | ValueSome context ->
                 context.UnsubscribeEvents this                
                 // FIXME: when exception occurs, context is not abandoned
-                match context.GetViewState this.HierarchyKey with 
+                match context.GetViewState this.HierarchyKey |> nullable2opt with 
                 | Some viewState -> state <- viewState
                 | None -> () 
                 this.executionContext <- Unchecked.defaultof<IForestExecutionContext>
             | ValueNone -> ()
 
-        member this.InstanceID with get() = this.hierarchyKey
+        member this.Node with get() = this.hierarchyKey
         member this.Descriptor with get() = this.descriptor
         member this.Context with get() = this.executionContext
 
@@ -146,45 +151,46 @@ type [<AbstractClass;NoComparison>] LogicalView<[<EqualityConditionalOn>] 'T> pr
 
  and [<Sealed;NoComparison>] private RegionImpl(regionName : rname, owner : IRuntimeView) =
     member __.ActivateView (NotNull "viewName" viewName : vname) =
-        let result = owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID)
-        //owner.Context.ProcessMessages()
+        let result = owner.Context.ActivateView(InstantiateViewInstruction(Tree.Node.Create(regionName, viewName, owner.Node), null))
         result
 
     member __.ActivateView (NotNull "viewName" viewName : vname, NotNull "model" model : obj) =
-        let result = owner.Context.ActivateView((ViewHandle.ByName viewName), regionName, owner.InstanceID, model)
-        //owner.Context.ProcessMessages()
+        let result = owner.Context.ActivateView(InstantiateViewInstruction(Tree.Node.Create(regionName, viewName, owner.Node), model))
         result
 
     member __.ActivateView (NotNull "viewType" viewType : Type) : IView =
-        let result = owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID)
-        //owner.Context.ProcessMessages()
+        let result = owner.Context.ActivateView(InstantiateViewInstruction(Tree.Node.Create(regionName, viewType, owner.Node), null))
         result
 
     member __.ActivateView (NotNull "viewType" viewType : Type, NotNull "model" model : obj) : IView =
-        let result = owner.Context.ActivateView((ViewHandle.ByType viewType), regionName, owner.InstanceID, model)
-        //owner.Context.ProcessMessages()
+        let result = owner.Context.ActivateView(InstantiateViewInstruction(Tree.Node.Create(regionName, viewType, owner.Node), model))
         result
 
     member __.ActivateView<'v when 'v :> IView> () : 'v =
-        let result = owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID) :?> 'v
-        //owner.Context.ProcessMessages()
-        result
+        let result = owner.Context.ActivateView(InstantiateViewInstruction(Tree.Node.Create(regionName, typeof<'v>, owner.Node), null))
+        downcast result : 'v
 
     member __.ActivateView<'v, 'm when 'v :> IView<'m>> (NotNull "model" model : 'm) : 'v =
-        let result = owner.Context.ActivateView((ViewHandle.ByType typeof<'v>), regionName, owner.InstanceID, model) :?> 'v
-        //owner.Context.ProcessMessages()
-        result
+        let result = owner.Context.ActivateView(InstantiateViewInstruction(Tree.Node.Create(regionName, typeof<'v>, owner.Node), model))
+        downcast result : 'v
 
     member this.Clear() =
-        owner.Context.ClearRegion owner.InstanceID regionName
+        owner.Context.ProcessInstructions [|(ClearRegionInstruction(owner.Node, regionName))|]
         this
 
     member this.Remove(NotNull "predicate" predicate : System.Predicate<IView>) =
-        owner.Context.RemoveViewFromRegion owner.InstanceID regionName predicate
+        owner.Context.GetRegionContents(owner.Node, regionName)
+        |> Seq.filter (predicate.Invoke)
+        |> Seq.map (fun x -> x :?> IRuntimeView)
+        |> Seq.map (fun x -> x.Node)
+        |> Seq.map (fun x -> upcast DestroyViewInstruction(x) : ForestInstruction)
+        |> Array.ofSeq
+        |> owner.Context.ProcessInstructions
+        //owner.Context.RemoveViewFromRegion (owner.Node, regionName, predicate)s
         this
 
     member __.GetContents() =
-        owner.Context.GetRegionContents owner.InstanceID regionName
+        owner.Context.GetRegionContents (owner.Node, regionName)
 
     member __.Name 
         with get() = regionName

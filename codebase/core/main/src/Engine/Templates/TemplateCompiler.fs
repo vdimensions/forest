@@ -1,13 +1,14 @@
 ﻿namespace Forest.Templates
 
 open Forest
+open Forest.Engine.Instructions
 open Forest.Templates
 
 
 [<RequireQualifiedAccess>]
 module TemplateCompiler =
-    let rec private expandView (node : Tree.Node) (vcl : Template.ViewItem seq) =
-        let mutable result = [(Runtime.Operation.InstantiateViewByNode(node, None))]
+    let rec private expandView (node : Tree.Node) (vcl : Template.ViewItem seq)  =
+        let mutable result : ForestInstruction list = [(InstantiateViewInstruction(node, None))]
         for vc in vcl do
             match vc with
             | :? Template.ViewItem.Region as r -> result <- expandRegion node r.Name r.Contents @ result
@@ -31,8 +32,8 @@ module TemplateCompiler =
     let internal compileOps (template : Template.Definition) =
         let (templateParentNode, templateRegion) = (Tree.Node.Shell, Tree.Node.Shell.Region)
         let templateNode = Tree.Node.Create(templateRegion, template.Name, templateParentNode)
-        let ops = Runtime.Operation.ClearRegion(templateParentNode, templateRegion)::List.rev(expandView templateNode template.Contents)
+        let ops : ForestInstruction list = (upcast ClearRegionInstruction(templateParentNode, templateRegion))::List.rev(expandView templateNode template.Contents)
         ops
 
     [<CompiledName("Compile")>]
-    let compile = compileOps >> Runtime.Operation.Multiple
+    let compile = compileOps

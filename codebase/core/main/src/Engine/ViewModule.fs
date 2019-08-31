@@ -6,16 +6,18 @@ open Axle
 open Axle.Verification
 open Forest
 open Forest.ComponentModel
+open Forest.Engine
+open Forest.Engine.Instructions
 
 
 [<RequireQualifiedAccessAttribute>]
 [<CompiledName("View")>]
 module View =
-    type [<Struct;NoComparison>] Error =
+    type [<NoComparison>] Error =
         | ViewAttributeMissing of nonAnnotatedViewType : Type
-        | ViewTypeIsAbstract of abstractViewType : Type
-        | NonGenericView of nonGenericViewType : Type
-        | InstantiationError of viewHandle : ViewHandle * cause : exn
+        | ViewTypeIsAbstract of instruction : InstantiateViewInstruction
+        | NonGenericView of instruction : InstantiateViewInstruction
+        | InstantiationError of instruction : InstantiateViewInstruction * cause : exn
 
     #if NETSTANDARD
     let inline private _selectViewModelTypes (tt : TypeInfo) =
@@ -35,14 +37,11 @@ module View =
         |> Seq.choose _selectViewModelTypes
         |> Seq.tryHead
 
-    let getModelType (NotNull "viewType" viewType : Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
+    //let getModelType (NotNull "viewType" viewType : Type) = Result.some (NonGenericView viewType) (_tryGetViewModelType viewType)
 
     let resolveError = function
         | ViewAttributeMissing t -> upcast ViewAttributeMissingException(t) : exn
         | ViewTypeIsAbstract t -> upcast ViewTypeIsAbstractException(t) : exn
-        | NonGenericView t -> upcast ArgumentException("t", String.Format("The type `{0}` does not implement the {1} interface. ", t.FullName, typedefof<IView<_>>.FullName)) : exn
-        | InstantiationError (h, e) -> 
-            match h with
-            | ByType t -> upcast ArgumentException("h", String.Format("Failed to instantiate view type `{0}` See inner exception for more details. ", t.FullName), e) : exn
-            | ByName n -> upcast ArgumentException("h", String.Format("Failed to instantiate view `{0}` See inner exception for more details. ", n, typedefof<IView<_>>.FullName), e) : exn
+        | NonGenericView t -> upcast ViewTypeIsNotGenericException(t) : exn
+        | InstantiationError (h, e) -> upcast ViewInstantiationException(h, e)
     let handleError(e : Error) = e |> resolveError |> raise

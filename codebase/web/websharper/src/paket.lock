@@ -10,7 +10,7 @@ NUGET
       Microsoft.Extensions.Configuration.Binder (>= 2.2.4)
       Microsoft.Extensions.Configuration.FileExtensions (>= 2.2)
       System.Configuration.ConfigurationManager (>= 4.5)
-    Axle.Core (1.6.2398.24144)
+    Axle.Core (1.6.2433.37836)
     Axle.FSharp (1.6.2406.31168)
       Axle.Core (>= 1.6.2398.24144)
       FSharp.Core (>= 4.6.2)
@@ -27,10 +27,10 @@ NUGET
       WebSharper.AspNetCore (>= 4.5.4.106)
       WebSharper.UI (>= 4.5.8.161)
   remote: ../../../../dist
-    Forest.Core (2.5.2428.26485)
+    Forest.Core (2.5.2434.24618)
       Axle.FSharp (>= 1.5.2396.13956)
-      Forest.Engine (>= 2.5.2428.26265)
-    Forest.Engine (2.5.2428.26265)
+      Forest.Engine (>= 2.5.2434.23878)
+    Forest.Engine (2.5.2434.23878)
       Axle.Application (>= 1.5.2396.27060)
       System.Collections.Immutable (>= 1.5)
   remote: https://api.nuget.org/v3/index.json

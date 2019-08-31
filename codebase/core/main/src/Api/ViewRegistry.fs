@@ -17,8 +17,10 @@ namespace Forest
 
 open System
 open Forest.ComponentModel
+open Forest.Engine
 
 
+[<Obsolete>]
 module ViewRegistry =
     let register<'T when 'T :> IView> (reg : IViewRegistry) =
         reg.Register<'T>()
@@ -31,10 +33,8 @@ module ViewRegistry =
     let internal getDescriptorByType (viewType : Type) (reg : IViewRegistry) = 
         reg.GetDescriptor viewType
 
-    let getDescriptor (viewHandle : ViewHandle) =
-        match viewHandle with
-        | ByName n -> getDescriptorByName n
-        | ByType t -> getDescriptorByType t
+    let getDescriptor (viewHandle : ViewHandle) (reg : IViewRegistry) =
+        reg.GetDescriptor viewHandle
 
     let internal resolve (descriptor : IViewDescriptor) (model : obj option) (reg : IViewFactory) =
         match model with
