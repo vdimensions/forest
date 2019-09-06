@@ -2,7 +2,7 @@
 {
     public interface ITreeNavigator
     {
-        void Navigate(string tree);
-        void Navigate<T>(string tree, T message);
+        void Navigate(string template);
+        void Navigate<T>(string template, T message);
     }
 }

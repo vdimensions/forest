@@ -2,6 +2,6 @@
 {
     public interface IForestEngine : IMessageDispatcher, ICommandDispatcher, ITreeNavigator
     {
-        T RegisterSystemView<T>() where T : ISystemView;
+        T RegisterSystemView<T>() where T : class, ISystemView;
     }
 }

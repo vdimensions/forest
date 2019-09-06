@@ -56,7 +56,7 @@ namespace Forest.Forms.Controls
                     ItemView = FindRegion(Regions.Item).Clear().ActivateView<TView, TModel>(Model.ItemModel);
                 }
 
-                public override void Dispose(bool disposing)
+                protected override void Dispose(bool disposing)
                 {
                     if (disposing)
                     {
@@ -118,7 +118,7 @@ namespace Forest.Forms.Controls
                 SelectionChanged?.Invoke(selectedOption.ItemView.Model);
             }
 
-            public override void Dispose(bool disposing)
+            protected override void Dispose(bool disposing)
             {
                 SelectionChanged = null;
                 base.Dispose(disposing);

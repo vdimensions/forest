@@ -3,12 +3,10 @@
 open System
 open System.Collections.Generic
 open Axle
-open Axle.Verification
 open Forest
 open Forest.ComponentModel
 open Forest.Engine
 open Forest.Engine.Instructions
-open Forest.Templates
 open Forest.UI
   
 module internal ForestExecutionContext =
@@ -58,10 +56,6 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
     //    ForestExecutionContext.createRuntimeView executionContext ctx views node model d
     //    |> Result.map (prepareView changeLog (tree.Insert node) node model)
     //    |> Result.map Runtime.Status.ViewCreated
-
-    let getRegionContents (owner : Tree.Node) (region : rname) =
-        let isInRegion (node:Tree.Node) = StringComparer.Ordinal.Equals(region, node.Region)
-        (self.GetTree()).Filter(new Predicate<Tree.Node>(isInRegion), owner)
 
     //let clearRegion (owner : Tree.Node) (region : rname) =
     //    let errors = [
@@ -187,27 +181,27 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
                 | _ -> ignore()
         this
 
-    member internal this.ActivateView (node : Tree.Node) =
-        (InstantiateViewInstruction(node, null))
-        |> this.ActivateView 
-        //|> Runtime.resolve (function
-        //    | Runtime.Status.ViewCreated view -> view
-        //    | _ -> Unchecked.defaultof<_>
-        //)
-    member internal this.ActivateView (node : Tree.Node, model : obj) =
-        (InstantiateViewInstruction(node, model))
-        |> this.ActivateView 
+    //member internal this.ActivateView (node : Tree.Node) =
+    //    (InstantiateViewInstruction(node, null))
+    //    |> this.ActivateView 
+    //    //|> Runtime.resolve (function
+    //    //    | Runtime.Status.ViewCreated view -> view
+    //    //    | _ -> Unchecked.defaultof<_>
+    //    //)
+    //member internal this.ActivateView (node : Tree.Node, model : obj) =
+    //    (InstantiateViewInstruction(node, model))
+    //    |> this.ActivateView 
         //|> Runtime.resolve (function
         //    | Runtime.Status.ViewCreated view -> view
         //    | _ -> Unchecked.defaultof<_>
         //)
 
-    member internal this.GetOrActivateView (node : Tree.Node) : 'TView when 'TView :> IView =
-        let result =
-            match node.InstanceID |> views.TryGetValue with
-            | (true, viewState) -> (upcast viewState : IView)
-            | (false, _) -> this.ActivateView node
-        downcast result:'TView
+    //member internal this.GetOrActivateView (node : Tree.Node) : 'TView when 'TView :> IView =
+    //    let result =
+    //        match node.InstanceID |> views.TryGetValue with
+    //        | (true, viewState) -> (upcast viewState : IView)
+    //        | (false, _) -> this.ActivateView node
+    //    downcast result:'TView
     member internal this.base_ProcessInstructions i = this.ProcessInstructions i
     //member this.Do (operation : ForestInstruction list) =
     //    match processChanges (this.base_ProcessInstructions) this ctx operation with
@@ -260,7 +254,6 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             views.[node.InstanceID].Resume state
             None
 
-    member this.GetTree () : Tree = this._tree
     member this.UpdateTree t = this._tree <- t
 
     static member Current with get() = ForestExecutionContext._currentEngine
@@ -299,50 +292,35 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             changeLog |> List.ofSeq
         )
 
-    override this.RegisterSystemView<'sv when 'sv :> ISystemView> () = 
-        let descriptor = 
-            match typeof<'sv> |> ctx.ViewRegistry.GetDescriptor |> null2vopt with
-            | ValueNone -> 
-                ctx.ViewRegistry
-                |> ViewRegistry.registerViewType typeof<'sv> 
-                |> ViewRegistry.getDescriptorByType typeof<'sv> 
-            | ValueSome d -> d
-        let key = Tree.Node.Create(Tree.Node.Shell.Region, descriptor.Name, Tree.Node.Shell)
-        this.GetOrActivateView<'sv> key
-
-    override this.Navigate (NotNullOrEmpty "name" name) =
-        if (this._nestedCalls > 1) then
-            this._eventBus.ClearDeadLetters() |> ignore
-        Template.LoadTemplate(ctx.TemplateProvider, name)
-        |> Templates.TemplateCompiler.compileOps
-        |> Array.ofList
-        |> this.base_ProcessInstructions
-
-    override this.Navigate (NotNullOrEmpty "name" name, message) =
-        if (this._nestedCalls > 1) then
-            this._eventBus.ClearDeadLetters() |> ignore
-        [
-            yield (upcast SendMessageInstruction(message, [||], null) : ForestInstruction)
-            yield! Template.LoadTemplate(ctx.TemplateProvider, name) |> Templates.TemplateCompiler.compileOps
-        ]
-        |> Array.ofList
-        |> this.base_ProcessInstructions   
+    //override this.Navigate (NotNullOrEmpty "name" name) =
+    //    if (this._nestedCalls > 1) then
+    //        this._eventBus.ClearDeadLetters() |> ignore
+    //    Template.LoadTemplate(ctx.TemplateProvider, name)
+    //    |> Templates.TemplateCompiler.compileOps
+    //    |> Array.ofList
+    //    |> this.base_ProcessInstructions
+    //
+    //override this.Navigate (NotNullOrEmpty "name" name, message) =
+    //    if (this._nestedCalls > 1) then
+    //        this._eventBus.ClearDeadLetters() |> ignore
+    //    [
+    //        yield (upcast SendMessageInstruction(message, [||], null) : ForestInstruction)
+    //        yield! Template.LoadTemplate(ctx.TemplateProvider, name) |> Templates.TemplateCompiler.compileOps
+    //    ]
+    //    |> Array.ofList
+    //    |> this.base_ProcessInstructions   
 
     // ------------------
-
-    override __.GetViewState node = 
-        match viewStates.TryGetValue node.InstanceID with
-        | (true, vs) -> vs |> Nullable
-        | (false, _) -> Nullable()
 
     override __.SetViewState(silent, node, vs) = 
         viewStates.[node.InstanceID] <- vs
         if not silent then changeLog.Add(ViewStateChange.ViewStateUpdated(node, vs))
         vs
 
-    override __.GetRegionContents (node, region) =
-        getRegionContents node region 
-        |> Seq.map (fun node -> (upcast views.[node.InstanceID] : IView))
+    //override __.GetRegionContents (node, region) =
+    //    let isInRegion (node:Tree.Node) = StringComparer.Ordinal.Equals(region, node.Region)
+    //    (self.GetTree()).Filter(new Predicate<Tree.Node>(isInRegion), node)
+    //    |> Seq.map (fun node -> (upcast views.[node.InstanceID] : IView))
 
     //override __.RemoveViewFromRegion (node, region, predicate) =
     //    removeViewsFromRegion node region predicate 

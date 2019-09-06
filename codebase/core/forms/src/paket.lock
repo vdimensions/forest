@@ -9,7 +9,7 @@ NUGET
       Microsoft.Extensions.Configuration.Binder (>= 2.2.4) - restriction: || (&& (< net35) (>= netstandard2.0)) (>= net461)
       Microsoft.Extensions.Configuration.FileExtensions (>= 2.2) - restriction: || (&& (< net35) (>= netstandard2.0)) (>= net461)
       System.Configuration.ConfigurationManager (>= 4.5) - restriction: && (< net35) (>= netstandard2.0)
-    Axle.Core (1.6.2433.31008) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
+    Axle.Core (1.6.2433.37836) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
       NETStandard.Library (>= 1.6.1) - restriction: || (&& (< net20) (>= netstandard1.0) (< netstandard1.3)) (&& (< net20) (>= netstandard1.3) (< netstandard1.5)) (&& (< net20) (>= netstandard1.5) (< netstandard1.6)) (&& (< net20) (>= netstandard1.6) (< netstandard2.0))
       System.Diagnostics.TraceSource (>= 4.3) - restriction: && (< net20) (>= netstandard1.6) (< netstandard2.0)
       System.Threading.Thread (>= 4.3) - restriction: && (< net20) (>= netstandard1.6) (< netstandard2.0)
@@ -21,10 +21,10 @@ NUGET
       Axle.Core (>= 1.6.2398.24144) - restriction: || (&& (>= net35) (< net40) (< netstandard1.3)) (&& (< net35) (>= netstandard1.3) (< netstandard1.6)) (&& (< net35) (>= netstandard1.6) (< netstandard2.0)) (&& (< net35) (>= netstandard2.0)) (&& (>= net40) (< netstandard1.3)) (>= net45)
       System.Resources.ResourceManager (>= 4.3) - restriction: || (&& (< net35) (>= netstandard1.3) (< netstandard1.6)) (&& (< net35) (>= netstandard1.6) (< netstandard2.0))
   remote: ../../../../dist
-    Forest.Core (2.5.2433.35643)
+    Forest.Core (2.5.2438.20679)
       Axle.FSharp (>= 1.5.2396.13956) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
-      Forest.Engine (>= 2.5.2433.35362) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
-    Forest.Engine (2.5.2433.35362) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
+      Forest.Engine (>= 2.5.2438.20638) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
+    Forest.Engine (2.5.2438.20740) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net46)
       Axle.Application (>= 1.5.2396.27060) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net461)
       System.Collections.Immutable (>= 1.5) - restriction: || (&& (>= net45) (< netstandard1.6)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0)) (&& (< net45) (>= netstandard2.0)) (>= net461)
   remote: https://api.nuget.org/v3/index.json
