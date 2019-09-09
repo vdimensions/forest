@@ -13,6 +13,7 @@ namespace Forest
         TView ActivateView<TView, T>(T model) where TView: IView<T>;
         IRegion Clear();
         IRegion Remove(Predicate<IView> predicate);
+
         string Name { get; }
         IEnumerable<IView> Views { get; }
     }

@@ -3,6 +3,7 @@
 open System
 open Forest
 open Forest.Engine
+open Axle
 
 
 [<NoComparison;StructuralEquality>] 
@@ -35,14 +36,14 @@ type internal PhysicalViewDomProcessor =
 
     interface IDomProcessor with
         member this.ProcessNode n =
-            this._nodesToPreserve <- this._nodesToPreserve |> Set.add n.Hash
+            this._nodesToPreserve <- this._nodesToPreserve |> Set.add n.InstanceID
             this._nodeStates <- 
-                match this.physicalViews.TryFind n.Hash with
+                match this.physicalViews.TryFind n.InstanceID with
                 | Some _ -> (UpdatedNode n)::this._nodeStates
                 | None -> (NewNode n)::this._nodeStates
             n
 
-        member this.Complete(_ : DomNode list) = 
+        member this.Complete(_ : DomNode seq) = 
             let physicalViews = System.Collections.Generic.Dictionary<thash, IPhysicalView>(StringComparer.Ordinal)
             for kvp in this.physicalViews do
                 if not <| this._nodesToPreserve.Contains(kvp.Key) then
@@ -63,31 +64,31 @@ type internal PhysicalViewDomProcessor =
                     match nodeState with 
                     | NewNode n -> (n, n.Parent, true) 
                     | UpdatedNode n -> (n, n.Parent, false)
-                match (p, isNewView) with
+                match (null2opt p, isNewView) with
                 | (Some p, isNewView) -> 
-                    match (isNewView, dictTryFind(physicalViews, p.Hash), dictTryFind(physicalViews, n.Hash)) with
+                    match (isNewView, dictTryFind(physicalViews, p.InstanceID), dictTryFind(physicalViews, n.InstanceID)) with
                     | (true, Some parent, None) ->
-                        let physicalView = this._renderer.CreateNestedPhysicalView this._engine parent n
+                        let physicalView = this._renderer.CreateNestedPhysicalView (this._engine, parent, n)
                         updateCallArguments <- (physicalView,n)::updateCallArguments
-                        physicalViews.Add(n.Hash, physicalView)
+                        physicalViews.Add(n.InstanceID, physicalView)
                     | (true, Some _, Some _) ->
-                        invalidOp(String.Format("Expecting physical view {0} #{1} not to contain child {2} #{3}", p.Name, p.Hash, n.Name, n.Hash))
+                        invalidOp(String.Format("Expecting physical view {0} #{1} not to contain child {2} #{3}", p.Name, p.InstanceID, n.Name, n.InstanceID))
                     | (false, Some _, Some renderer) ->
                         updateCallArguments <- (renderer,n)::updateCallArguments
                     | (false, Some _, None) ->
-                        invalidOp(String.Format("Could not locate physical view {0} #{1}", n.Name, n.Hash))
+                        invalidOp(String.Format("Could not locate physical view {0} #{1}", n.Name, n.InstanceID))
                     | (_, None, _) ->
-                        invalidOp(String.Format("Could not locate physical view {0} #{1} that should be parent of {2} #{3}", p.Name, p.Hash, n.Name, n.Hash))
+                        invalidOp(String.Format("Could not locate physical view {0} #{1} that should be parent of {2} #{3}", p.Name, p.InstanceID, n.Name, n.InstanceID))
                 | (None, isNewView) ->
-                    match (isNewView, dictTryFind(physicalViews, n.Hash)) with
+                    match (isNewView, dictTryFind(physicalViews, n.InstanceID)) with
                     | (true, Some _) ->
-                        invalidOp(String.Format("Physical view {0} #{1} already exists", n.Name, n.Hash))
+                        invalidOp(String.Format("Physical view {0} #{1} already exists", n.Name, n.InstanceID))
                     | (true, None) ->
-                        let physicalView = this._renderer.CreatePhysicalView this._engine n
+                        let physicalView = this._renderer.CreatePhysicalView(this._engine, n)
                         updateCallArguments <- (physicalView,n)::updateCallArguments
-                        physicalViews.Add(n.Hash, physicalView)
+                        physicalViews.Add(n.InstanceID, physicalView)
                     | (false, None) -> 
-                        invalidOp(String.Format("Could not locate physical view {0} #{1}", n.Name, n.Hash))
+                        invalidOp(String.Format("Could not locate physical view {0} #{1}", n.Name, n.InstanceID))
                     | (false, Some renderer) ->
                         updateCallArguments <- (renderer,n)::updateCallArguments
 
@@ -103,17 +104,4 @@ type internal PhysicalViewDomProcessor =
             for (renderer,n) in updateCallArguments do 
                 renderer.Update n
 
-[<AbstractClass;NoComparison>] 
-type AbstractPhysicalViewRenderer<'PV when 'PV :> IPhysicalView>() =
-    abstract member CreatePhysicalView: engine : IForestEngine -> n : DomNode -> 'PV
-    abstract member CreateNestedPhysicalView: engine : IForestEngine -> parent : 'PV -> n : DomNode  -> 'PV
 
-    interface IPhysicalViewRenderer with
-        member this.CreatePhysicalView engine n = 
-            upcast this.CreatePhysicalView engine n : IPhysicalView
-        member this.CreateNestedPhysicalView engine parent n = 
-            upcast this.CreateNestedPhysicalView engine (parent :?> 'PV) n : IPhysicalView
-
-    interface IPhysicalViewRenderer<'PV> with
-        member this.CreatePhysicalViewG engine n = this.CreatePhysicalView engine n
-        member this.CreateNestedPhysicalViewG engine parent n = this.CreateNestedPhysicalView engine parent n

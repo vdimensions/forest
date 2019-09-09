@@ -16,7 +16,7 @@
 namespace Forest
 
 open System
-//open Forest.Reflection
+open Forest.UI
 
 [<RequireQualifiedAccess>]
 [<CompiledName("Command")>]

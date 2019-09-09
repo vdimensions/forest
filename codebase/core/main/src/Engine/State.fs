@@ -1,6 +1,7 @@
 ﻿namespace Forest
 
 open System
+open System.Collections.Immutable
 open Forest
 open Forest.Engine
 open Forest.UI
@@ -10,13 +11,13 @@ open Forest.UI
 #endif
 type [<Sealed;NoComparison>] State 
         internal(tree : Tree, 
-                 viewState : Map<thash, ViewState>, 
-                 views : Map<thash, IRuntimeView>, 
-                 physicalViews : Map<thash, IPhysicalView>, 
+                 viewState : IImmutableDictionary<thash, ViewState>, 
+                 views : IImmutableDictionary<thash, IRuntimeView>, 
+                 physicalViews : IImmutableDictionary<thash, IPhysicalView>, 
                  hash: thash) =
-    internal new (tree : Tree, viewModels : Map<thash, ViewState>, viewStates :  Map<thash, IRuntimeView>, physicalViews : Map<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID().Hash)
+    internal new (tree : Tree, viewModels : IImmutableDictionary<thash, ViewState>, viewStates :  IImmutableDictionary<thash, IRuntimeView>, physicalViews : IImmutableDictionary<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID().Hash)
     [<CompiledName("Empty")>]
-    static member initial = State(Tree.Root, Map.empty, Map.empty, Map.empty, Fuid.empty.Hash)
+    static member initial = State(Tree.Root, ImmutableDictionary<thash, ViewState>.Empty, ImmutableDictionary<thash, IRuntimeView>.Empty, ImmutableDictionary<thash, IPhysicalView>.Empty, Fuid.empty.Hash)
     member internal __.Tree with get() = tree
     member internal __.ViewState with get() = viewState
     member internal __.Views with get() = views
@@ -37,7 +38,7 @@ type [<Sealed;NoComparison>] State
 module internal State =
     let create (hs, m, vs, pv) = State(hs, m, vs, pv)
     let createWithFuid (hs, m, vs, pv, fuid) = State(hs, m, vs, pv, fuid)
-    let discardViewStates (st : State) = State(st.Tree, st.ViewState, Map.empty, Map.empty)
+    let discardViewStates (st : State) = State(st.Tree, st.ViewState, ImmutableDictionary<thash, IRuntimeView>.Empty, ImmutableDictionary<thash, IPhysicalView>.Empty)
 
     let rec private _traverseState (v : IForestStateVisitor) parent (ids : Tree.Node list) (siblingsCount : int) (st : State) =
         match ids with

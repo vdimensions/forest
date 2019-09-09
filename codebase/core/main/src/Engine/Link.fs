@@ -16,6 +16,7 @@
 namespace Forest
 
 open System
+open Forest.UI
 
 [<RequireQualifiedAccess>]
 [<CompiledName("Link")>]

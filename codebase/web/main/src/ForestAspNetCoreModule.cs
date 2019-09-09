@@ -1,6 +1,7 @@
 ﻿using Axle.Logging;
 using Axle.Modularity;
 using Axle.Web.AspNetCore.Session;
+using Forest.Engine;
 using Microsoft.AspNetCore.Http;
 
 namespace Forest.Web.AspNetCore

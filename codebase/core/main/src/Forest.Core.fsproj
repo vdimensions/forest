@@ -32,34 +32,28 @@
     <Compile Include="$(AppDesignerFolder)\AssemblyInfo.fs" />
     <Compile Include="Types\Types.fs" />
     <Compile Include="Types\Fuid.fs" />
-    <Compile Include="Types\ViewState.fs" />
-    <Compile Include="Types\CommandModel.fs" />
-    <Compile Include="Types\LinkModel.fs" />
     <Compile Include="Types\ViewStateChange.fs" />
     <Compile Include="Types\DomTypes.fs" />
     <Compile Include="Api\ViewRegistry.fs" />
-    <Compile Include="Api\Region.fs" />
     <Compile Include="Api\Exceptions.fs" />
     <Compile Include="Api\StateApi.fs" />
-    <Compile Include="Api\DomApi.fs" />
-    <Compile Include="Api\PhysicalViewApi.fs" />
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\Link.fs" />
-    <Compile Include="Engine\Event.fs" />
     <Compile Include="Engine\ViewModule.fs" />
     <Compile Include="Engine\DefaultViewRegistry.fs" />
     <Compile Include="Engine\DefaultForestContext.fs" />
     <Compile Include="Engine\Runtime.fs" />
-    <Compile Include="Engine\Templates\TemplateCompiler.fs" />
-    <Compile Include="Engine\UI\PhysicalView.fs" />
-    <Compile Include="Engine\UI\PhysicalViewDomProcessor.fs" />
     <Compile Include="Engine\Dom.fs" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ExecutionContext.fs" />
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="AxleModule\NoOp.fs" />
     <Compile Include="AxleModule\ForestModule.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Engine\UI\" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

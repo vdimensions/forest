@@ -3,12 +3,12 @@ open System
 open Axle.Verification
 open Forest
 open Forest.ComponentModel
-open Forest.Events
+//open Forest.Events
 
 
-type [<Struct;NoComparison>] ViewRegistryError = 
-    | ViewError of viewError: View.Error
-    | BindingError of commandError: Command.Error * eventError: Event.Error
+//type [<Struct;NoComparison>] ViewRegistryError = 
+//    | ViewError of viewError: View.Error
+//    | BindingError of commandError: Command.Error * eventError: Event.Error
 
 type [<Sealed;NoComparison>] DefaultViewRegistry(reg : IViewRegistry, factory : IViewFactory) = 
     do ignore <| (|NotNull|) "factory" factory

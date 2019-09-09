@@ -19,16 +19,16 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
 
     static member domNode2Node (dn : DomNode) =
         { 
-            Hash = dn.Hash; 
-            Name = dn.Name; 
-            Model = dn.Model; 
-            Regions = dn.Regions |> Map.map (fun _ v -> v |> List.map (fun x -> x.Hash) |> Array.ofList ) |> Map.toArray;
-            Commands = dn.Commands |> Map.map (fun _ c -> { Name = c.Name; DisplayName = c.DisplayName; ToolTip = c.Tooltip; Description = c.Description }) |> Map.toArray;
-            Links = dn.Links |> Map.map (fun _ l -> { Href= ""; Name = l.Name; DisplayName = l.DisplayName; ToolTip = l.Tooltip; Description = l.Description }) |> Map.toArray;
+            Hash = dn.InstanceID
+            Name = dn.Name
+            Model = dn.Model
+            Regions = dn.Regions |> Seq.map(|KeyValue|) |> Seq.map (fun (k, v) -> k, v |> Seq.map (fun x -> x.InstanceID) |> Array.ofSeq ) |> Seq.toArray;
+            Commands = dn.Commands |> Seq.map(|KeyValue|) |> Seq.map (fun (k, c) -> k, { Name = c.Name; DisplayName = c.DisplayName; ToolTip = c.Tooltip; Description = c.Description }) |> Seq.toArray;
+            Links = dn.Links |> Seq.map(|KeyValue|) |> Seq.map (fun (k, l) -> k, { Href= ""; Name = l.Name; DisplayName = l.DisplayName; ToolTip = l.Tooltip; Description = l.Description }) |> Seq.toArray;
         }
 
     override __.Refresh node = 
-        allNodes.[node.Hash] <- node |> RemotingPhysicalView.domNode2Node
+        allNodes.[node.InstanceID] <- node |> RemotingPhysicalView.domNode2Node
 
     member __.Embed region pv =
         regionMap <- regionMap |> Map.add region (match regionMap.TryFind region with Some data -> pv::data | None -> List.singleton pv)
@@ -49,15 +49,15 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
     let topLevelViews = List<RemotingRootPhysicalView>()
     let allNodes = Dictionary<thash,Node>(System.StringComparer.Ordinal)
 
-    override __.CreatePhysicalView engine domNode = 
+    override __.CreatePhysicalView (engine, domNode) = 
         // TODO: pass context
-        let result = new RemotingRootPhysicalView(engine, domNode.Hash, topLevelViews, allNodes)
+        let result = new RemotingRootPhysicalView(engine, domNode.InstanceID, topLevelViews, allNodes)
         topLevelViews.Add result
         upcast result
 
-    override __.CreateNestedPhysicalView engine parent domNode =
+    override __.CreateNestedPhysicalView (engine, parent, domNode) =
         // TODO: pass context
-        new RemotingPhysicalView(engine, domNode.Hash, allNodes)
+        new RemotingPhysicalView(engine, domNode.InstanceID, allNodes)
         |> parent.Embed domNode.Region
 
     interface INodeStateProvider with
@@ -82,10 +82,10 @@ type [<Sealed;NoComparison>] WebSharperSessionStateProvider(httpContextAccessor 
     inherit SessionScoped<WebSharperForestState>(httpContextAccessor)
 
     interface IPhysicalViewRenderer with
-        member this.CreatePhysicalView commandDispatcher node =
-            (this.Current.Renderer :> IPhysicalViewRenderer).CreatePhysicalView commandDispatcher node
-        member this.CreateNestedPhysicalView commandDispatcher parent node =
-            (this.Current.Renderer :> IPhysicalViewRenderer).CreateNestedPhysicalView commandDispatcher parent node
+        member this.CreatePhysicalView (commandDispatcher, node) =
+            (this.Current.Renderer :> IPhysicalViewRenderer).CreatePhysicalView(commandDispatcher, node)
+        member this.CreateNestedPhysicalView(commandDispatcher, parent, node) =
+            (this.Current.Renderer :> IPhysicalViewRenderer).CreateNestedPhysicalView(commandDispatcher, parent, node)
 
     interface INodeStateProvider with
         member this.ResetStates() = (this.Current.Renderer :> INodeStateProvider).ResetStates()

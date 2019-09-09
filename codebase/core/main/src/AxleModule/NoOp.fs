@@ -24,5 +24,5 @@ module private NoOp =
     type [<Sealed;NoComparison;NoEquality>] PhysicalViewRenderer private (message : string) =
         new () = PhysicalViewRenderer(DefaultErrorMessage)
         interface IPhysicalViewRenderer with
-            member  __.CreateNestedPhysicalView _ _ _ = invalidOp message
-            member  __.CreatePhysicalView _ _ = invalidOp message
+            member  __.CreateNestedPhysicalView (_, _, _) = invalidOp message
+            member  __.CreatePhysicalView (_, _) = invalidOp message

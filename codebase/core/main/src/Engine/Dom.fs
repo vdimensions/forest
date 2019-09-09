@@ -1,6 +1,10 @@
 ﻿namespace Forest
 open Forest
 open Forest.ComponentModel
+open Forest.UI
+open System.Collections.Immutable
+open System.Collections.Generic
+open System
 
 type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode -> DomNode), complete : (DomNode list -> unit), ctx : IForestContext) =
     /// Stores the rendered node state
@@ -8,7 +12,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
     /// Stores the original view-model state. Used to determine which nodes to be re-rendered
     let mutable modelMap : Map<thash, obj> = Map.empty
     /// A list holding the tuples of a view's hash and a boolean telling whether the view should be refreshed
-    let mutable changeStateList : List<thash*bool> = List.empty
+    let mutable changeStateList : (thash*bool) list = List.empty
 
     let createCommandModel (descriptor : ICommandDescriptor) : (cname*ICommandModel) =
         (descriptor.Name, upcast Command.Model(descriptor.Name))
@@ -29,13 +33,13 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
             if descriptor |> ctx.SecurityManager.HasAccess then
                 let commands = 
                     descriptor.Commands.Values
-                    |> Seq.filter (fun cmd -> viewState |> ViewState.isCommandEnabled cmd.Name)
+                    |> Seq.filter (fun cmd -> viewState.DisabledCommands.Contains cmd.Name |> not)
                     |> Seq.filter ctx.SecurityManager.HasAccess 
                     |> Seq.map createCommandModel
                     |> Map.ofSeq
                 let links = 
                     descriptor.Links.Values
-                    |> Seq.filter (fun lnk -> viewState |> ViewState.isLinkEnabled lnk.Name)
+                    |> Seq.filter (fun lnk -> viewState.DisabledLinks.Contains lnk.Name |> not)
                     |> Seq.filter ctx.SecurityManager.HasAccess
                     |> Seq.map createLinkModel
                     |> Map.ofSeq
@@ -47,18 +51,7 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
                     | None ->
                         modelMap <- modelMap |> Map.add hash viewState.Model
                         false
-                let node = 
-                    { 
-                        Hash = hash 
-                        Name = descriptor.Name
-                        Region = treeNode.Region
-                        Index = i
-                        Model = viewState.Model
-                        Parent = None
-                        Regions = Map.empty
-                        Commands = commands
-                        Links = links
-                    } 
+                let node = DomNode(hash, i, descriptor.Name, treeNode.Region, viewState.Model, null, ImmutableDictionary<string, IEnumerable<DomNode>>.Empty, ImmutableDictionary.CreateRange(StringComparer.Ordinal, commands |> Seq.map id), ImmutableDictionary.CreateRange(StringComparer.Ordinal, links |> Seq.map id))
                 nodeMap <- nodeMap |> Map.add hash node
                 changeStateList <- (hash, canSkipRenderCall)::changeStateList
                 
@@ -69,13 +62,15 @@ type [<Sealed;NoComparison>] internal ForestDomRenderer private(visit : (DomNode
             | (parentKey, Some parent, Some node) ->
                 let region = treeNode.Region
                 let newRegionContents = 
-                    match parent.Regions.TryFind region with
-                    | Some nodes -> node::nodes
-                    | None -> List.singleton node
-                let newRegions = parent.Regions |> Map.remove region |> Map.add region newRegionContents
+                    match parent.Regions.TryGetValue region with
+                    | (true, nodes) -> node::Seq.toList nodes
+                    | (false, _) -> List.singleton node
+                let newRegions = parent.Regions.Remove(region).Add(region, newRegionContents)
+                let newParent = DomNode(parent.InstanceID, parent.Index, parent.Name, parent.Region, parent.Model, parent.Parent, newRegions, parent.Commands, parent.Links)
+                let newNode = DomNode(node.InstanceID, node.Index, node.Name, node.Region, node.Model, newParent, node.Regions, node.Commands, node.Links)
                 nodeMap
-                |> Map.remove parentKey |> Map.add parentKey { parent with Regions = newRegions }
-                |> Map.remove node.Hash |> Map.add node.Hash { node with Parent = Some parent }
+                |> Map.remove parentKey |> Map.add parentKey newParent
+                |> Map.remove node.InstanceID |> Map.add node.InstanceID newNode
             | _ -> nodeMap
 
         member __.Complete() = 
