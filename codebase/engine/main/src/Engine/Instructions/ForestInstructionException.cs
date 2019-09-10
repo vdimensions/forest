@@ -21,10 +21,7 @@ namespace Forest.Engine.Instructions
             _faultyInstruction = faultyInstruction.VerifyArgument(nameof(faultyInstruction)).IsNotNull();
         }
         public ForestInstructionException(ForestInstruction faultyInstruction, Exception inner) 
-            : this(faultyInstruction, "Failed processing instruction. ", inner)
-        {
-            _faultyInstruction = faultyInstruction.VerifyArgument(nameof(faultyInstruction)).IsNotNull();
-        }
+            : this(faultyInstruction, string.Format("Failed processing instruction `{0}`. ", faultyInstruction.VerifyArgument(nameof(faultyInstruction)).IsNotNull().Value), inner) { }
         public ForestInstructionException(ForestInstruction faultyInstruction) : this(faultyInstruction, null) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK

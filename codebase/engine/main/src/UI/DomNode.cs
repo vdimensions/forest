@@ -27,9 +27,9 @@ namespace Forest.UI
             public int GetHashCode(IEnumerable<DomNode> obj) => obj == null ? 0 : this.CalculateHashCode(obj.ToArray());
         }
 
-        public static bool operator ==(DomNode left, DomNode right) => Equals(left, right);
+        public static bool operator == (DomNode left, DomNode right) => Equals(left, right);
 
-        public static bool operator !=(DomNode left, DomNode right) => !Equals(left, right);
+        public static bool operator != (DomNode left, DomNode right) => !Equals(left, right);
 
         public DomNode(string instanceId, int index, string name, string region, object model, DomNode parent, IImmutableDictionary<string, IEnumerable<DomNode>> regions, IImmutableDictionary<string, ICommandModel> commands, IImmutableDictionary<string, ILinkModel> links)
         {

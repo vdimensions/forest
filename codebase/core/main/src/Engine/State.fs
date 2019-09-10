@@ -5,49 +5,22 @@ open System.Collections.Immutable
 open Forest
 open Forest.Engine
 open Forest.UI
-
-#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-[<Serializable>]
-#endif
-type [<Sealed;NoComparison>] State 
-        internal(tree : Tree, 
-                 viewState : IImmutableDictionary<thash, ViewState>, 
-                 views : IImmutableDictionary<thash, IRuntimeView>, 
-                 physicalViews : IImmutableDictionary<thash, IPhysicalView>, 
-                 hash: thash) =
-    internal new (tree : Tree, viewModels : IImmutableDictionary<thash, ViewState>, viewStates :  IImmutableDictionary<thash, IRuntimeView>, physicalViews : IImmutableDictionary<thash, IPhysicalView>) = State(tree, viewModels, viewStates, physicalViews, Fuid.newID().Hash)
-    [<CompiledName("Empty")>]
-    static member initial = State(Tree.Root, ImmutableDictionary<thash, ViewState>.Empty, ImmutableDictionary<thash, IRuntimeView>.Empty, ImmutableDictionary<thash, IPhysicalView>.Empty, Fuid.empty.Hash)
-    member internal __.Tree with get() = tree
-    member internal __.ViewState with get() = viewState
-    member internal __.Views with get() = views
-    member internal __.PhysicalViews with get() = physicalViews
-    member __.Hash with get() = hash
-    member private this.eq (other : State) : bool =
-        StringComparer.Ordinal.Equals(this.Hash, other.Hash)
-        && LanguagePrimitives.GenericEqualityComparer.Equals(this.Tree, other.Tree)
-        && System.Object.Equals(this.ViewState, other.ViewState)
-    override this.Equals(o : obj):bool =
-        match o with
-        | :? State as other -> this.eq other
-        | _ -> false
-    override this.GetHashCode() = this.Hash.GetHashCode()
-    interface IEquatable<State> with member this.Equals(other:State) = this.eq other
+open Forest.StateManagement
 
 [<RequireQualifiedAccess>]
 module internal State =
-    let create (hs, m, vs, pv) = State(hs, m, vs, pv)
-    let createWithFuid (hs, m, vs, pv, fuid) = State(hs, m, vs, pv, fuid)
-    let discardViewStates (st : State) = State(st.Tree, st.ViewState, ImmutableDictionary<thash, IRuntimeView>.Empty, ImmutableDictionary<thash, IPhysicalView>.Empty)
+    let create (hs, m, vs, pv) = ForestState((GuidGenerator.NewID()), hs, m, vs, pv)
+    let createWithFuid (hs, m, vs, pv, fuid) = ForestState(fuid, hs, m, vs, pv)
+    let discardViewStates (st : ForestState) = ForestState(st.StateID, st.Tree, st.ViewStates, ImmutableDictionary<thash, IRuntimeView>.Empty, ImmutableDictionary<thash, IPhysicalView>.Empty)
 
-    let rec private _traverseState (v : IForestStateVisitor) parent (ids : Tree.Node list) (siblingsCount : int) (st : State) =
+    let rec private _traverseState (v : IForestStateVisitor) parent (ids : Tree.Node list) (siblingsCount : int) (st : ForestState) =
         match ids with
         | [] -> ()
         | head::tail ->
             let ix = siblingsCount - ids.Length // TODO
-            let hash = head.InstanceID
-            let viewState = st.ViewState.[hash]
-            let vs = st.Views.[hash]
+            let instanceID = head.InstanceID
+            let viewState = st.ViewStates.[instanceID]
+            let vs = st.LogicalViews.[instanceID]
             let descriptor = vs.Descriptor
             v.BFS head ix viewState descriptor
             // visit siblings 
@@ -60,7 +33,7 @@ module internal State =
             ()
 
     [<CompiledName("Traverse")>]
-    let traverse (v : IForestStateVisitor) (st : State) =
+    let traverse (v : IForestStateVisitor) (st : ForestState) =
         let root = Tree.Node.Shell
         match st.Tree.[root] |> List.ofSeq with
         | [] -> ()
@@ -68,18 +41,18 @@ module internal State =
         v.Complete()
 
 type [<Interface>] IForestStateProvider =
-    abstract member LoadState : unit -> State
-    abstract member CommitState : State -> unit
+    abstract member LoadState : unit -> ForestState
+    abstract member CommitState : ForestState -> unit
     abstract member RollbackState : unit -> unit
 
 type [<Sealed;NoComparison;NoEquality>] DefaultForestStateProvider() =
     [<DefaultValue>]
-    val mutable private _st : State voption
+    val mutable private _st : ForestState voption
 
     member this.LoadState () =
         match this._st with
         | ValueNone -> 
-            let res = State.initial
+            let res = ForestState()
             this._st <- ValueSome res
             res
         | ValueSome s -> s

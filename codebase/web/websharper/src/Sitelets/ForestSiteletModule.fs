@@ -81,10 +81,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;Requires
         member this.Register<'PV when 'PV :> WebSharperPhysicalView and 'PV : (new : unit -> 'PV)> () =
             let v = new 'PV()
             let logicalViewType = v.GetLogicalViewType()
-            let descriptor = 
-                viewRegistry
-                |> ViewRegistry.registerViewType logicalViewType
-                |> ViewRegistry.getDescriptor (ViewHandle.FromType logicalViewType)
+            let descriptor = viewRegistry.Register(logicalViewType).GetDescriptor(logicalViewType)
             let n = descriptor.Name
             
             let newExpr = String.Format("new {0}.New()", v.GetClientTypeName())

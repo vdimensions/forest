@@ -74,7 +74,7 @@ namespace Forest
 
         protected IForestEngine Engine => ExecutionContext;
 
-        public T Model => (T)_state.Model;
+        public T Model => (T) _state.Model;
 
         object IView.Model => Model;
 

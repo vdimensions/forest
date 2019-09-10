@@ -8,30 +8,36 @@ namespace Forest.UI
 {
     internal sealed class PhysicalViewDomProcessor : IDomProcessor
     {
-        public enum NodeState
+        public enum NodeState : sbyte
         {
             NewNode = 0,
             UpdatedNode = 1
         }
-        private IImmutableDictionary<string, IPhysicalView> _physicalViews;
+
+        private ImmutableDictionary<string, IPhysicalView> _physicalViews;
         private IImmutableSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
         private IImmutableList<Tuple<DomNode, NodeState>> _nodeStates = ImmutableList<Tuple<DomNode, NodeState>>.Empty;
 
         private readonly IForestEngine _engine;
         private readonly IPhysicalViewRenderer _renderer;
+        private readonly StringComparer _stringComparer = StringComparer.Ordinal;
 
-        internal PhysicalViewDomProcessor(IDictionary<string, IPhysicalView> physicalViews, IForestEngine engine, IPhysicalViewRenderer renderer)
+        private PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, StringComparer stringComparer, ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
-            _physicalViews = physicalViews == null 
-                ? ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal) 
-                : ImmutableDictionary.CreateRange(StringComparer.Ordinal, physicalViews);
             _engine = engine;
             _renderer = renderer;
+            _stringComparer = stringComparer;
+            _physicalViews = physicalViews == null
+                ? ImmutableDictionary.Create<string, IPhysicalView>(_stringComparer)
+                : ImmutableDictionary.CreateRange(_stringComparer, physicalViews);
         }
-        public PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer) : this(null, engine, renderer) { }
+        internal PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, ImmutableDictionary<string, IPhysicalView> physicalViews = null)
+            : this(engine, renderer, StringComparer.Ordinal, physicalViews) { }
+        public PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer) 
+            : this(engine, renderer, null) { }
 
         [Obsolete]
-        public IImmutableDictionary<string, IPhysicalView> PhysicalViews
+        public ImmutableDictionary<string, IPhysicalView> PhysicalViews
         {
             get => _physicalViews;
             set => _physicalViews = value;
@@ -49,7 +55,7 @@ namespace Forest.UI
 
         void IDomProcessor.Complete(IEnumerable<DomNode> nodes)
         {
-            var physicalViews = new Dictionary<string, IPhysicalView>(StringComparer.Ordinal);
+            var physicalViews = new Dictionary<string, IPhysicalView>(_stringComparer);
             foreach (var kvp in _physicalViews)
             {
                 if (_nodesToPreserve.Contains(kvp.Key))
@@ -70,9 +76,7 @@ namespace Forest.UI
             foreach(var nodeState in _nodeStates.Reverse())
             {
                 var n = nodeState.Item1;
-                //var p = n.Parent;
                 var isNewView = nodeState.Item2 == NodeState.NewNode;
-                //var parent = p != null && physicalViews.TryGetValue(p.InstanceID, out var _p) ? _p : null;
                 var current = physicalViews.TryGetValue(n.InstanceID, out var _n) ? _n : null;
 
                 IPhysicalView parent = null;
@@ -93,14 +97,9 @@ namespace Forest.UI
                     }
                     else if (current != null && isNewView)
                     {
-                        if (n.Parent != null)
-                        {
-                            throw new InvalidOperationException(string.Format("Did not expect physical view {0} #{1} to contain child {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID));
-                        }
-                        else
-                        {
-                            throw new InvalidOperationException(string.Format("Physical view {0} #{1} already exists", n.Name, n.InstanceID));
-                        }
+                        throw new InvalidOperationException(n.Parent != null
+                            ? string.Format("Did not expect physical view {0} #{1} to contain child {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID)
+                            : string.Format("Physical view {0} #{1} already exists", n.Name, n.InstanceID));
                     }
                     else if (current == null && !isNewView)
                     {
@@ -109,16 +108,13 @@ namespace Forest.UI
                 }
                 else if (n.Parent != null && parent == null)
                 {
-                    //var x = n.Parent == null;
-                    //var y = parent == null;
-                    // TODO: exception: parent not found
                     throw new InvalidOperationException(string.Format("Could not locate physical view {0} #{1} that should be parent of {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID));
                 }
             }
 
-            _physicalViews = ImmutableDictionary.CreateRange(StringComparer.Ordinal, physicalViews);
-            _nodesToPreserve = ImmutableHashSet.Create<string>(StringComparer.Ordinal);
-            _nodeStates = ImmutableList.Create<Tuple<DomNode, NodeState>>();
+            _physicalViews = ImmutableDictionary.CreateRange(_stringComparer, physicalViews);
+            _nodesToPreserve = _nodesToPreserve.Clear();
+            _nodeStates = _nodeStates.Clear();
 
             // Initiate the update calls for the enumerated physical views.
             //

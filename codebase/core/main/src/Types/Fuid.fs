@@ -9,6 +9,7 @@ open System.Text
 [<Struct;StructLayout(LayoutKind.Explicit)>]
 [<CustomComparison>]
 [<CustomEquality>]
+[<Obsolete>]
 type internal Fuid =
     static member inline private hex2Str (bytes:byte seq) : thash =
         let inline folder (sb:StringBuilder) (x:byte) = sb.AppendFormat("{0:x2}", x)

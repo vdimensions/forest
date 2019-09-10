@@ -21,7 +21,7 @@ namespace Forest.Engine.Instructions
 
         protected override bool DoEquals(ForestInstruction other)
         {
-            return other is CommandStateInstruction um && Node.Equals(um.Node) && StringComparer.Ordinal.Equals(Command, um.Command);
+            return other is CommandStateInstruction csi && Node.Equals(csi.Node) && StringComparer.Ordinal.Equals(Command, csi.Command);
         }
 
         protected override int DoGetHashCode() => this.CalculateHashCode(Node, Command);

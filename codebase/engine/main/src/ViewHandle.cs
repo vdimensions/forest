@@ -41,11 +41,11 @@ namespace Forest
             public override string ToString()
             {
                 var asmName = ViewType.GetTypeInfo().Assembly.GetName();
-                return new StringBuilder("View by type '")
+                return new StringBuilder("View by type `")
                     .Append(ViewType.FullName)
                     .Append(", ")
                     .Append(asmName.Name)
-                    .Append("'")
+                    .Append("`")
                     .ToString();
             }
 

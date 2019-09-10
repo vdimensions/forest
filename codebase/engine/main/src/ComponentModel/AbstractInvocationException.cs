@@ -16,7 +16,7 @@ namespace Forest.ComponentModel
                     message ?? string.Empty,
                     viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value.FullName,
                     method.VerifyArgument(nameof(method)).IsNotNull().Value.Name,
-                    inner == null ? string.Empty : " See the inner exception for more information on the cause of this error."),
+                    inner == null ? string.Empty : " See the inner exception for more information on the cause of this error. "),
                 inner) { }
         protected AbstractInvocationException(Type viewType, IMethod method, Exception inner)
             : this(viewType, method, null, inner) { }

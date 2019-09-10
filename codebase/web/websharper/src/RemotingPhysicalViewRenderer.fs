@@ -6,6 +6,7 @@ open WebSharper.UI
 open Axle.Web.AspNetCore.Session
 open Forest
 open Forest.UI
+open Forest.StateManagement
 
 
 type [<Interface>] IDocumentStateProvider = 
@@ -69,10 +70,10 @@ type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer(
 
 
 // TODO: pass context
-type WebSharperForestState private (state : State, renderer : WebSharperPhysicalViewRenderer, syncRoot : obj) =
+type WebSharperForestState private (state : ForestState, renderer : WebSharperPhysicalViewRenderer, syncRoot : obj) =
     internal new (state) = WebSharperForestState (state, WebSharperPhysicalViewRenderer(), obj())
-    internal new () = WebSharperForestState (State.initial)
-    static member ReplaceState (state : State) (fws : WebSharperForestState) = 
+    internal new () = WebSharperForestState (ForestState())
+    static member ReplaceState (state : ForestState) (fws : WebSharperForestState) = 
         WebSharperForestState(state, fws.Renderer, fws.SyncRoot)
     member __.State with get() = state
     member internal __.SyncRoot = syncRoot
@@ -97,7 +98,7 @@ type [<Sealed;NoComparison>] WebSharperSessionStateProvider(httpContextAccessor 
             // TODO: pass context
             this.AddOrReplace(
                 httpContextAccessor.HttpContext.Session.Id,
-                WebSharperForestState(State.initial),
+                WebSharperForestState(ForestState()),
                 new System.Func<WebSharperForestState, WebSharperForestState, WebSharperForestState>(fun existing _ -> existing))
             let v = this.Current
             System.Threading.Monitor.Enter v.SyncRoot

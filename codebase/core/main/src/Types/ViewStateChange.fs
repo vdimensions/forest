@@ -6,7 +6,7 @@ open Forest
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 [<Serializable>]
 #endif
-[<NoComparison>] 
+[<NoComparison;Obsolete>] 
 type ViewStateChange =
     | ViewAdded of parent : Tree.Node * viewState : ViewState
     | ViewAddedWithModel of parent : Tree.Node * viewState : ViewState

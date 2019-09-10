@@ -13,41 +13,6 @@ namespace Forest
     [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
     public class Tree
     {
-        /// <summary>
-        /// Generate a new <see cref="Guid"/> using the comb algorithm.
-        /// <para>
-        /// Implementation references from: 
-        /// <para>https://stackoverflow.com/a/12580020/795158</para>
-        /// <para>https://github.com/nhibernate/nhibernate-core/blob/5e71e83ac45439239b9028e6e87d1a8466aba551/src/NHibernate/Id/GuidCombGenerator.cs</para>
-        /// </para>
-        /// </summary>
-        private static Guid GenerateInstanceID()
-        {
-            var guidArray = Guid.NewGuid().ToByteArray();
-
-            var baseDate = new DateTime(1900, 1, 1);
-            var now = DateTime.UtcNow;
-
-            // Get the days and milliseconds which will be used to build the byte string 
-            var days = new TimeSpan(now.Ticks - baseDate.Ticks);
-            var milliseconds = now.TimeOfDay.TotalMilliseconds;
-
-            // Convert to a byte array 
-            // Note that SQL Server is accurate to 1/300th of a millisecond so we divide by 3.333333 
-            var daysArray = BitConverter.GetBytes(days.Days);
-            var msecsArray = BitConverter.GetBytes((long)(milliseconds / 3.333333));
-
-            // Reverse the bytes to match SQL Servers ordering 
-            Array.Reverse(daysArray);
-            Array.Reverse(msecsArray);
-
-            // Copy the bytes into the guid 
-            Array.Copy(daysArray, daysArray.Length - 2, guidArray, guidArray.Length - 6, 2);
-            Array.Copy(msecsArray, msecsArray.Length - 4, guidArray, guidArray.Length - 4, 4);
-
-            return new Guid(guidArray);
-        }
-
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [Serializable]
         #endif
@@ -56,15 +21,15 @@ namespace Forest
         {
             public static Node Create(string region, ViewHandle viewHandle, Node parent)
             {
-                return new Node(parent, region, viewHandle, GenerateInstanceID().ToString());
+                return new Node(parent, region, viewHandle, GuidGenerator.NewID().ToString());
             }
             public static Node Create(string region, string viewName, Node parent)
             {
-                return new Node(parent, region, ViewHandle.FromName(viewName), GenerateInstanceID().ToString());
+                return new Node(parent, region, ViewHandle.FromName(viewName), GuidGenerator.NewID().ToString());
             }
             public static Node Create(string region, Type viewType, Node parent)
             {
-                return new Node(parent, region, ViewHandle.FromType(viewType), GenerateInstanceID().ToString());
+                return new Node(parent, region, ViewHandle.FromType(viewType), GuidGenerator.NewID().ToString());
             }
 
             public static readonly Node Shell = new Node(null, string.Empty, ViewHandle.FromName(string.Empty), Guid.Empty.ToString());
@@ -112,7 +77,7 @@ namespace Forest
             public string RegionSegment => ToStringBuilder(true).ToString();
         }
 
-        private static LinkedList<Tuple<Node, int>> loopfn(Node p, ImmutableDictionary<Node, ImmutableList<Node>> map, LinkedList<Tuple<Node, int>> list, int i)
+        private static LinkedList<Tuple<Node, int>> Loop(Node p, ImmutableDictionary<Node, ImmutableList<Node>> map, LinkedList<Tuple<Node, int>> list, int i)
         {
             while (true)
             {
@@ -124,7 +89,7 @@ namespace Forest
 
                 var first = children[0];
                 var newMap = map.Remove(p).Add(p, children.RemoveAt(0));
-                list = loopfn(first, newMap, list, i + 1);
+                list = Loop(first, newMap, list, i + 1);
             }
         }
 
@@ -208,7 +173,7 @@ namespace Forest
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var tuple in loopfn(Node.Shell, Hierarchy, new LinkedList<Tuple<Node, int>>(), 0))
+            foreach (var tuple in Loop(Node.Shell, Hierarchy, new LinkedList<Tuple<Node, int>>(), 0))
             {
                 var line = string.Format(
                     "{0}/{1} #{2}", 

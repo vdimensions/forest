@@ -34,7 +34,6 @@
     <Compile Include="Types\Fuid.fs" />
     <Compile Include="Types\ViewStateChange.fs" />
     <Compile Include="Types\DomTypes.fs" />
-    <Compile Include="Api\ViewRegistry.fs" />
     <Compile Include="Api\Exceptions.fs" />
     <Compile Include="Api\StateApi.fs" />
     <Compile Include="Engine\ChangeList.fs" />
@@ -50,10 +49,6 @@
     <Compile Include="Engine\Engine.fs" />
     <Compile Include="AxleModule\NoOp.fs" />
     <Compile Include="AxleModule\ForestModule.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Engine\UI\" />
   </ItemGroup>
   <Import Project=".paket\Paket.Restore.targets" />
 </Project>

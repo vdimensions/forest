@@ -63,7 +63,7 @@ NUGET
     Microsoft.Extensions.Primitives (2.2) - restriction: || (&& (== net45) (< net35) (>= netstandard2.0)) (&& (== net45) (>= net461) (>= netstandard2.0)) (&& (== net46) (< net35) (>= netstandard2.0)) (&& (== net46) (>= net461) (>= netstandard2.0)) (&& (== netstandard1.6) (>= netstandard2.0)) (== netstandard2.0)
       System.Memory (>= 4.5.1) - restriction: || (&& (== net45) (>= netstandard2.0)) (&& (== net46) (>= netstandard2.0)) (&& (== netstandard1.6) (>= netstandard2.0)) (== netstandard2.0)
       System.Runtime.CompilerServices.Unsafe (>= 4.5.1) - restriction: || (&& (== net45) (>= netstandard2.0)) (&& (== net46) (>= netstandard2.0)) (&& (== netstandard1.6) (>= netstandard2.0)) (== netstandard2.0)
-    Microsoft.NETCore.Platforms (2.2.2) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netcoreapp1.1)) (== netstandard1.6)
+    Microsoft.NETCore.Platforms (2.2.3) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netcoreapp1.1)) (== netstandard1.6)
     Microsoft.NETCore.Targets (2.1) - restriction: || (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net45) (>= netstandard1.6)) (&& (== net46) (>= netcoreapp1.1)) (== netstandard1.6)
     Microsoft.Win32.Primitives (4.3) - restriction: || (&& (== net45) (== netstandard2.0)) (&& (== net45) (< net20) (>= net46)) (&& (== net45) (< net20) (>= netstandard1.3)) (&& (== net45) (< net20) (>= netstandard1.4)) (&& (== net45) (< net20) (>= netstandard1.5)) (&& (== net45) (< net20) (>= netstandard1.6)) (&& (== net45) (>= uap10.0)) (&& (== net46) (== netstandard2.0)) (&& (== net46) (< net20)) (&& (== net46) (>= uap10.0)) (== netstandard1.6) (&& (== netstandard2.0) (< netstandard1.3)) (&& (== netstandard2.0) (< netstandard1.4)) (&& (== netstandard2.0) (< netstandard1.5)) (&& (== netstandard2.0) (< netstandard1.6))
       Microsoft.NETCore.Platforms (>= 1.1) - restriction: || (&& (== net45) (>= netstandard1.3)) (== netstandard1.6) (== netstandard2.0)
@@ -667,6 +667,6 @@ NUGET
       System.Xml.ReaderWriter (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
       System.Xml.XmlDocument (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
   remote: ../../../../dist
-    Forest.Engine (2.5.2442.24872)
+    Forest.Engine (2.5.2443.37403)
       Axle.Application (>= 1.5.2396.27060)
       System.Collections.Immutable (>= 1.5)

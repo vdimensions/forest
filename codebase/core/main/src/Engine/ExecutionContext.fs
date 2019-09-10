@@ -32,10 +32,10 @@ module internal ForestExecutionContext =
         with 
         | e -> View.Error.InstantiationError(InstantiateViewInstruction(node, (model |> opt2ns).Value),  e) |> Runtime.Error.ViewError |> Error
 
-type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : IImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) as self =
+type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) as self =
     inherit Forest.Engine.ForestExecutionContext(t, ctx, eventBus, views, viewStates)
 
-    new (t : Tree, viewState : IImmutableDictionary<thash, ViewState>, views : IImmutableDictionary<thash, IRuntimeView>, pv : IImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
+    new (t : Tree, viewState : IImmutableDictionary<thash, ViewState>, views : IImmutableDictionary<thash, IRuntimeView>, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
         = new ForestExecutionContext(t, pv, ctx, sp, dp, new EventBus(), Dictionary<thash, ViewState>(viewState |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), Dictionary<thash, IRuntimeView>(views |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), System.Collections.Generic.List())
 
     [<DefaultValue;ThreadStatic>]
@@ -117,16 +117,15 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
 
     static member Create (ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor) = 
         let state = sp.LoadState()
-        let ctx = new ForestExecutionContext(state.Tree, state.ViewState, state.Views, state.PhysicalViews, ctx, sp, dp)
+        let ctx = new ForestExecutionContext(state.Tree, state.ViewStates, state.LogicalViews, state.PhysicalViews, ctx, sp, dp)
         ForestExecutionContext._currentEngine <- ValueSome (ctx :> IForestExecutionContext)
         ctx.Init()
 
+    member this.base_Dispose() = base.Dispose();
     override this.Dispose() = 
         ForestExecutionContext._currentEngine <- ValueNone
         try
-            for kvp in views do 
-                kvp.Value.AbandonContext this
-            this._eventBus.Dispose()
+            this.base_Dispose();
             let a, b, c, cl = this.Deconstruct()
             dp.PhysicalViews <- pv
             State.create(a, b, c, pv) |> State.traverse (ForestDomRenderer(seq { yield dp :> IDomProcessor }, ctx))

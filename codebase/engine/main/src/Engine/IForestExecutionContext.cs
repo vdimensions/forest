@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Forest.Engine.Instructions;
 
 namespace Forest.Engine
@@ -22,18 +21,5 @@ namespace Forest.Engine
         IEnumerable<IView> GetRegionContents(Tree.Node node, string region);
 
         //abstract member ProcessMessages : unit -> unit
-    }
-
-    public sealed class ForestState
-    {
-        private readonly IImmutableDictionary<string, ViewState> _viewStates;
-        private readonly IImmutableDictionary<string, IRuntimeView> _viewInstances;
-        //private readonly 
-
-        internal ForestState(IImmutableDictionary<string, ViewState> viewStates, IImmutableDictionary<string, IRuntimeView> viewInstances)
-        {
-            _viewStates = viewStates;
-            _viewInstances = viewInstances;
-        }
     }
 }
