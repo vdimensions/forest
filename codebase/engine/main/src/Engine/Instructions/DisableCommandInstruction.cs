@@ -9,8 +9,8 @@ namespace Forest.Engine.Instructions
     {
         public DisableCommandInstruction(Tree.Node node, string command) : base(node, command) { }
 
-        protected override bool DoEquals(ForestInstruction other) => other is DisableCommandInstruction && base.DoEquals(other);
+        protected override bool IsEqualTo(ForestInstruction other) => other is DisableCommandInstruction && base.IsEqualTo(other);
 
-        bool IEquatable<DisableCommandInstruction>.Equals(DisableCommandInstruction other) => other != null && base.DoEquals(other);
+        bool IEquatable<DisableCommandInstruction>.Equals(DisableCommandInstruction other) => other != null && base.IsEqualTo(other);
     }
 }

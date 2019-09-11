@@ -11,6 +11,9 @@ namespace Forest
             Name = name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
         }
 
+        /// <summary>
+        /// Gets the name of the command associated with the method this attribute is applied to.
+        /// </summary>
         public string Name { get; }
     }
 }

@@ -9,7 +9,7 @@ namespace Forest.Engine.Instructions
     {
         public DestroyViewInstruction(Tree.Node node) : base(node) { }
 
-        protected override bool DoEquals(ForestInstruction other) => other is DestroyViewInstruction dv && Node.Equals(dv.Node);
+        protected override bool IsEqualTo(ForestInstruction other) => other is DestroyViewInstruction dv && Node.Equals(dv.Node);
 
         protected override int DoGetHashCode() => this.CalculateHashCode(Node);
 

@@ -18,9 +18,9 @@ namespace Forest.Engine.Instructions
             _model = model;
         }
 
-        protected override bool DoEquals(ForestInstruction other)
+        protected override bool IsEqualTo(ForestInstruction other)
         {
-            return other is InstantiateViewInstruction iv && Node.Equals(iv.Node) && Equals(Model, iv.Model);
+            return other is InstantiateViewInstruction ivi && Node.Equals(ivi.Node) && Equals(Model, ivi.Model);
         }
 
         protected override int DoGetHashCode() => this.CalculateHashCode(Node, Model);

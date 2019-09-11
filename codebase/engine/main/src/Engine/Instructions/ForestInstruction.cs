@@ -10,7 +10,7 @@ namespace Forest.Engine.Instructions
         /// An internal default constructor to prevent creating custom instances of this class.
         internal ForestInstruction() {}
 
-        protected abstract bool DoEquals(ForestInstruction other);
+        protected abstract bool IsEqualTo(ForestInstruction other);
 
         protected abstract int DoGetHashCode();
 
@@ -20,7 +20,7 @@ namespace Forest.Engine.Instructions
             if (ReferenceEquals(this, obj)) return true;
             return Equals((ForestInstruction) obj);
         }
-        bool IEquatable<ForestInstruction>.Equals(ForestInstruction other) => DoEquals(other);
+        bool IEquatable<ForestInstruction>.Equals(ForestInstruction other) => IsEqualTo(other);
 
         public sealed override int GetHashCode() => DoGetHashCode();
     }

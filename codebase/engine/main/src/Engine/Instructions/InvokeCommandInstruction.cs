@@ -12,7 +12,7 @@ namespace Forest.Engine.Instructions
             CommandArg = commandArg;
         }
 
-        protected override bool DoEquals(ForestInstruction other)
+        protected override bool IsEqualTo(ForestInstruction other)
         {
             var cmp = StringComparer.Ordinal;
             return other is InvokeCommandInstruction ic

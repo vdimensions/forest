@@ -11,14 +11,14 @@ namespace Forest.Engine.Instructions
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
         #endif
-        private object _model;
+        private readonly object _model;
 
         public UpdateModelInstruction(Tree.Node node, object model) : base(node)
         {
             _model = model;
         }
 
-        protected override bool DoEquals(ForestInstruction other)
+        protected override bool IsEqualTo(ForestInstruction other)
         {
             return other is UpdateModelInstruction um && Node.Equals(um.Node) && Equals(Model, um.Model);
         }

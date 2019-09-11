@@ -11,19 +11,18 @@ namespace Forest.Engine.Instructions
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
         #endif
-        private string _region;
+        private readonly string _region;
 
         public ClearRegionInstruction(Tree.Node node, string region) : base(node)
         {
             _region = region;
         }
 
-        protected override bool DoEquals(ForestInstruction other)
+        protected override bool IsEqualTo(ForestInstruction other)
         {
-            var cmp = StringComparer.Ordinal;
             return other is ClearRegionInstruction sm
-                   && cmp.Equals(Region, sm.Region)
-                   && Node.Equals(sm.Node);
+                && StringComparer.Ordinal.Equals(Region, sm.Region)
+                && Node.Equals(sm.Node);
         }
 
         protected override int DoGetHashCode() => this.CalculateHashCode(Node, Region);

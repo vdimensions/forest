@@ -16,7 +16,7 @@ namespace Forest.Engine.Instructions
             SenderInstanceID = senderInstanceID;
         }
 
-        protected override bool DoEquals(ForestInstruction other)
+        protected override bool IsEqualTo(ForestInstruction other)
         {
             var cmp = StringComparer.Ordinal;
             return other is SendMessageInstruction sm

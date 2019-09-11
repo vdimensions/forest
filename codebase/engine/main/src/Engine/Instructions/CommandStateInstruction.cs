@@ -12,19 +12,19 @@ namespace Forest.Engine.Instructions
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
         #endif
-        private string _command;
+        private readonly string _command;
 
         internal CommandStateInstruction(Tree.Node node, string command) : base(node)
         {
             _command = command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
         }
 
-        protected override bool DoEquals(ForestInstruction other)
+        protected override bool IsEqualTo(ForestInstruction other)
         {
-            return other is CommandStateInstruction csi && Node.Equals(csi.Node) && StringComparer.Ordinal.Equals(Command, csi.Command);
+            return other is CommandStateInstruction csi && other.GetType() == GetType() && Node.Equals(csi.Node) && StringComparer.Ordinal.Equals(Command, csi.Command);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(Node, Command);
+        protected override int DoGetHashCode() => this.CalculateHashCode(GetType(), Node, Command);
 
         public void Deconstruct(out Tree.Node node, out string command)
         {
