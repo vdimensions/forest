@@ -161,8 +161,8 @@ namespace Forest.UI
         public string Region => _region;
         public object Model => _model;
         public DomNode Parent => _parent;
-        public IImmutableDictionary<string, IEnumerable<DomNode>> Regions => _regions;
-        public IImmutableDictionary<string, ICommandModel> Commands => _commands;
-        public IImmutableDictionary<string, ILinkModel> Links => _links;
+        public ImmutableDictionary<string, IEnumerable<DomNode>> Regions => _regions;
+        public ImmutableDictionary<string, ICommandModel> Commands => _commands;
+        public ImmutableDictionary<string, ILinkModel> Links => _links;
     }
 }
