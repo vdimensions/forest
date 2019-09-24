@@ -323,7 +323,6 @@ namespace Forest.Engine
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
             ProcessInstructions(CompileTemplate(templateDefinition, null).ToArray());
         }
-
         public void Navigate<T>(string template, T message)
         {
             template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
@@ -350,7 +349,17 @@ namespace Forest.Engine
         public ViewState? GetViewState(Tree.Node node) => 
             _viewStates.TryGetValue(node.InstanceID, out var viewState) ? viewState : null as ViewState?;
 
-        public abstract ViewState SetViewState(bool silent, Tree.Node node, ViewState viewState);
+        public ViewState SetViewState(bool silent, Tree.Node node, ViewState viewState)
+        {
+            _viewStates[node.InstanceID] = viewState;
+
+            //if (!silent)
+            //{
+            //    changeLog.Add(ViewStateChange.ViewStateUpdated(node, viewState));
+            //}
+
+            return viewState;
+        }
 
         public IView ActivateView(InstantiateViewInstruction instantiateViewInstruction)
         {

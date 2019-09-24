@@ -148,10 +148,3 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
             changeLog |> List.ofSeq
         )
 
-    // ------------------
-
-    override __.SetViewState(silent, node, vs) = 
-        viewStates.[node.InstanceID] <- vs
-        if not silent then changeLog.Add(ViewStateChange.ViewStateUpdated(node, vs))
-        vs
-
