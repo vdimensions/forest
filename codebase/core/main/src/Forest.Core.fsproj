@@ -35,7 +35,6 @@
     <Compile Include="Types\ViewStateChange.fs" />
     <Compile Include="Types\DomTypes.fs" />
     <Compile Include="Api\Exceptions.fs" />
-    <Compile Include="Api\StateApi.fs" />
     <Compile Include="Engine\ChangeList.fs" />
     <Compile Include="Engine\Command.fs" />
     <Compile Include="Engine\Link.fs" />
@@ -43,7 +42,6 @@
     <Compile Include="Engine\DefaultViewRegistry.fs" />
     <Compile Include="Engine\DefaultForestContext.fs" />
     <Compile Include="Engine\Runtime.fs" />
-    <Compile Include="Engine\Dom.fs" />
     <Compile Include="Engine\State.fs" />
     <Compile Include="Engine\ExecutionContext.fs" />
     <Compile Include="Engine\Engine.fs" />

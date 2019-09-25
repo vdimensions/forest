@@ -22,14 +22,14 @@ module internal State =
             let viewState = st.ViewStates.[instanceID]
             let vs = st.LogicalViews.[instanceID]
             let descriptor = vs.Descriptor
-            v.BFS head ix viewState descriptor
+            v.BFS (head, ix, viewState, descriptor)
             // visit siblings 
             _traverseState v parent tail siblingsCount st
             // visit children
             match st.Tree.[head] |> List.ofSeq with
             | [] -> ()
             | children -> _traverseState v head (children) children.Length st
-            v.DFS head ix viewState descriptor
+            v.DFS (head, ix, viewState, descriptor)
             ()
 
     [<CompiledName("Traverse")>]
@@ -39,11 +39,6 @@ module internal State =
         | [] -> ()
         | ch -> _traverseState v root ch ch.Length st
         v.Complete()
-
-type [<Interface>] IForestStateProvider =
-    abstract member LoadState : unit -> ForestState
-    abstract member CommitState : ForestState -> unit
-    abstract member RollbackState : unit -> unit
 
 type [<Sealed;NoComparison;NoEquality>] DefaultForestStateProvider() =
     [<DefaultValue>]

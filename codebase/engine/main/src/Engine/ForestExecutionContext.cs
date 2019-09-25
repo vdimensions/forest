@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Axle.Verification;
 using Forest.ComponentModel;
@@ -10,7 +11,8 @@ using Forest.UI;
 
 namespace Forest.Engine
 {
-    internal abstract class ForestExecutionContext : IForestExecutionContext
+    // TODO: convert from abstract to sealed after the relevan F# code is moved
+    internal abstract class SlaveExecutionContext : IForestExecutionContext
     {
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
@@ -18,29 +20,37 @@ namespace Forest.Engine
         private readonly IDictionary<string, IRuntimeView> _logicalViews;
         private readonly IDictionary<string, IPhysicalView> _physicalViews;
         private readonly IForestExecutionContext _exposedExecutionContext;
+        private readonly IForestStateProvider _stateProvider;
+        private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
 
         protected Tree _tree;
         private int _nestedCalls = 0;
 
-        protected ForestExecutionContext(IForestContext context, ForestState initialState, IForestExecutionContext exposedExecutionContext)
+        protected SlaveExecutionContext(IForestContext context, IForestStateProvider stateProvider, PhysicalViewDomProcessor physicalViewDomProcessor, ForestState initialState, IForestExecutionContext exposedExecutionContext)
             : this(
                 initialState.Tree,
                 context,
+                stateProvider,
+                physicalViewDomProcessor,
                 new EventBus(), 
                 initialState.ViewStates,
                 initialState.LogicalViews,
                 initialState.PhysicalViews,
                 exposedExecutionContext) { }
-        protected ForestExecutionContext(
+        protected SlaveExecutionContext(
                 Tree tree,
                 IForestContext context,
+                IForestStateProvider stateProvider, 
+                PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus,
                 IDictionary<string, IRuntimeView> logicalViews,
                 IDictionary<string, ViewState> viewStates) 
-            : this(tree, context, eventBus, viewStates, logicalViews, new Dictionary<string, IPhysicalView>(StringComparer.Ordinal), null) { }
-        protected ForestExecutionContext(
+            : this(tree, context, stateProvider, physicalViewDomProcessor, eventBus, viewStates, logicalViews, new Dictionary<string, IPhysicalView>(StringComparer.Ordinal), null) { }
+        protected SlaveExecutionContext(
                 Tree tree, 
                 IForestContext context, 
+                IForestStateProvider stateProvider, 
+                PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus, 
                 IDictionary<string, ViewState> viewStates,
                 IDictionary<string, IRuntimeView> logicalViews,
@@ -49,6 +59,8 @@ namespace Forest.Engine
         {
             _tree = tree;
             _context = context;
+            _stateProvider = stateProvider;
+            _physicalViewDomProcessor = physicalViewDomProcessor;
             _eventBus = eventBus;
             _viewStates = viewStates;
             _logicalViews = logicalViews;
@@ -66,6 +78,32 @@ namespace Forest.Engine
             }
         }
 
+        private void TraverseState(IForestStateVisitor v, Tree.Node parent, IEnumerable<Tree.Node> ids, int siblingsCount, ForestState st)
+        {
+            var head = ids.FirstOrDefault();
+            if (head != null)
+            {
+                var ix = siblingsCount - ids.Count();
+                var instanceID = head.InstanceID;
+                var viewState = st.ViewStates[instanceID];
+                var vs = st.LogicalViews[instanceID];
+                var descriptor = vs.Descriptor;
+                v.BFS(head, ix, viewState, descriptor);
+                TraverseState(v, parent, ids.Skip(1), siblingsCount, st);
+                var children = st.Tree[head];
+                TraverseState(v, head, children, children.Count(), st);
+                v.DFS(head, ix, viewState, descriptor);
+            }
+        }
+
+        void Traverse(IForestStateVisitor v, ForestState st)
+        {
+            var root = Tree.Node.Shell;
+            var ch = st.Tree[root];
+            TraverseState(v, root, ch, ch.Count(), st);
+            v.Complete();
+        }
+
         protected virtual void Dispose()
         {
             try
@@ -75,6 +113,19 @@ namespace Forest.Engine
                     kvp.Value.AbandonContext(_exposedExecutionContext);
                 }
                 _eventBus.Dispose();
+
+                var a = this._tree;
+                var b = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _viewStates);
+                var c = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _logicalViews);
+                _physicalViewDomProcessor.PhysicalViews = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _physicalViews);
+                Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
+                var newPv = _physicalViewDomProcessor.PhysicalViews;
+                var newState = new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
+                    //match fuid with
+                    //| Some f -> State.createWithFuid(a, b, c, f)
+                    //| None -> State.create(a, b, c)
+                _stateProvider.CommitState(newState);
+
                 //let a, b, c, cl = this.Deconstruct()
                 //dp.PhysicalViews < -pv
                 //State.create(a, b, c, pv) |> State.traverse(ForestDomRenderer(seq {
@@ -89,7 +140,7 @@ namespace Forest.Engine
             }
             catch (Exception e)
             {
-                //sp.RollbackState();
+                _stateProvider.RollbackState();
                 throw;
             }
         }

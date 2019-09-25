@@ -1,6 +1,7 @@
 ﻿namespace Forest
 open Forest
 open Forest.ComponentModel
+open Forest.StateManagement
 open Forest.UI
 open System.Collections.Immutable
 open System.Collections.Generic

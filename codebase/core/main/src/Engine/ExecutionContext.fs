@@ -8,6 +8,7 @@ open Forest
 open Forest.ComponentModel
 open Forest.Engine
 open Forest.Engine.Instructions
+open Forest.StateManagement
 open Forest.UI
   
 module internal ForestExecutionContext =
@@ -33,7 +34,7 @@ module internal ForestExecutionContext =
         | e -> View.Error.InstantiationError(InstantiateViewInstruction(node, (model |> opt2ns).Value),  e) |> Runtime.Error.ViewError |> Error
 
 type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) as self =
-    inherit Forest.Engine.ForestExecutionContext(t, ctx, eventBus, views, viewStates)
+    inherit Forest.Engine.SlaveExecutionContext(t, ctx, sp, dp, eventBus, views, viewStates)
 
     new (t : Tree, viewState : IImmutableDictionary<thash, ViewState>, views : IImmutableDictionary<thash, IRuntimeView>, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
         = new ForestExecutionContext(t, pv, ctx, sp, dp, new EventBus(), Dictionary<thash, ViewState>(viewState |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), Dictionary<thash, IRuntimeView>(views |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), System.Collections.Generic.List())
@@ -124,21 +125,22 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
     member this.base_Dispose() = base.Dispose();
     override this.Dispose() = 
         ForestExecutionContext._currentEngine <- ValueNone
-        try
-            this.base_Dispose();
-            let a, b, c, cl = this.Deconstruct()
-            dp.PhysicalViews <- pv
-            State.create(a, b, c, pv) |> State.traverse (ForestDomRenderer(seq { yield dp :> IDomProcessor }, ctx))
-            let newPv = dp.PhysicalViews
-            let newState = State.create(a, b, c, newPv)
-                //match fuid with
-                //| Some f -> State.createWithFuid(a, b, c, f)
-                //| None -> State.create(a, b, c)
-            sp.CommitState newState
-        with
-        | e -> 
-            sp.RollbackState()
-            raise e
+        this.base_Dispose();
+        //try
+        //    this.base_Dispose();
+        //    let a, b, c, cl = this.Deconstruct()
+        //    dp.PhysicalViews <- pv
+        //    State.create(a, b, c, pv) |> State.traverse (ForestDomRenderer(seq { yield dp :> IDomProcessor }, ctx))
+        //    let newPv = dp.PhysicalViews
+        //    let newState = State.create(a, b, c, newPv)
+        //        //match fuid with
+        //        //| Some f -> State.createWithFuid(a, b, c, f)
+        //        //| None -> State.create(a, b, c)
+        //    sp.CommitState newState
+        //with
+        //| e -> 
+        //    sp.RollbackState()
+        //    raise e
 
     member internal this.Deconstruct() = 
         (

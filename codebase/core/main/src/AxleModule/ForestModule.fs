@@ -11,6 +11,7 @@ open Forest
 open Forest.ComponentModel
 open Forest.Engine
 open Forest.Security
+open Forest.StateManagement
 open Forest.Templates
 open Forest.UI
 

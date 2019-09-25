@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
+using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.UI;
 
@@ -60,4 +61,24 @@ namespace Forest.StateManagement
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
         internal ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
     }
+
+    [Obsolete]
+    public interface IForestStateProvider
+    {
+        ForestState LoadState();
+        void CommitState(ForestState state);
+        void RollbackState();
+    }
+
+    /// An interface representing a forest state visitor
+    internal interface IForestStateVisitor
+    {
+        /// Called upon visiting a sibling or child BFS-style
+        void BFS(Tree.Node node, int index, ViewState viewState, IViewDescriptor descriptor);
+        /// Called upon visiting a sibling or child DFS-style
+        void DFS(Tree.Node node, int index, ViewState viewState, IViewDescriptor descriptor);
+        /// Executed once when the traversal is complete.
+        void Complete();
+    }
+    
 }

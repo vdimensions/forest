@@ -683,6 +683,6 @@ NUGET
       System.Xml.ReaderWriter (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
       System.Xml.XmlDocument (>= 4.3) - restriction: || (&& (== net46) (< net45)) (== netstandard1.6) (== netstandard2.0)
   remote: ../../../../dist
-    Forest.Engine (2.5.2455.15857)
+    Forest.Engine (2.5.2458.26764)
       Axle.Application (>= 1.5.2396.27060)
       System.Collections.Immutable (>= 1.5)
