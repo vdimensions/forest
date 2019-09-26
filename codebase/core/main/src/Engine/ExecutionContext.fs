@@ -34,7 +34,7 @@ module internal ForestExecutionContext =
         | e -> View.Error.InstantiationError(InstantiateViewInstruction(node, (model |> opt2ns).Value),  e) |> Runtime.Error.ViewError |> Error
 
 type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) as self =
-    inherit Forest.Engine.SlaveExecutionContext(t, ctx, sp, dp, eventBus, views, viewStates)
+    inherit Forest.Engine.SlaveExecutionContext(t, ctx, sp, dp, eventBus, viewStates, views, pv)
 
     new (t : Tree, viewState : IImmutableDictionary<thash, ViewState>, views : IImmutableDictionary<thash, IRuntimeView>, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
         = new ForestExecutionContext(t, pv, ctx, sp, dp, new EventBus(), Dictionary<thash, ViewState>(viewState |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), Dictionary<thash, IRuntimeView>(views |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), System.Collections.Generic.List())

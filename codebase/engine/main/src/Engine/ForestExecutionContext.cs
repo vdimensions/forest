@@ -18,7 +18,7 @@ namespace Forest.Engine
         private readonly IEventBus _eventBus;
         private readonly IDictionary<string, ViewState> _viewStates;
         private readonly IDictionary<string, IRuntimeView> _logicalViews;
-        private readonly IDictionary<string, IPhysicalView> _physicalViews;
+        private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
         private readonly IForestExecutionContext _exposedExecutionContext;
         private readonly IForestStateProvider _stateProvider;
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
@@ -45,16 +45,16 @@ namespace Forest.Engine
                 IEventBus eventBus,
                 IDictionary<string, IRuntimeView> logicalViews,
                 IDictionary<string, ViewState> viewStates) 
-            : this(tree, context, stateProvider, physicalViewDomProcessor, eventBus, viewStates, logicalViews, new Dictionary<string, IPhysicalView>(StringComparer.Ordinal), null) { }
+            : this(tree, context, stateProvider, physicalViewDomProcessor, eventBus, viewStates, logicalViews, ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal), null) { }
         protected SlaveExecutionContext(
-                Tree tree, 
+                Tree tree,
                 IForestContext context, 
                 IForestStateProvider stateProvider, 
                 PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus, 
                 IDictionary<string, ViewState> viewStates,
                 IDictionary<string, IRuntimeView> logicalViews,
-                IDictionary<string, IPhysicalView> physicalViews,
+                ImmutableDictionary<string, IPhysicalView> physicalViews,
                 IForestExecutionContext exposedExecutionContext = null)
         {
             _tree = tree;
@@ -117,7 +117,7 @@ namespace Forest.Engine
                 var a = this._tree;
                 var b = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _viewStates);
                 var c = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _logicalViews);
-                _physicalViewDomProcessor.PhysicalViews = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _physicalViews);
+                _physicalViewDomProcessor.PhysicalViews = _physicalViews;
                 Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
                 var newPv = _physicalViewDomProcessor.PhysicalViews;
                 var newState = new ForestState(GuidGenerator.NewID(), a, b, c, newPv);

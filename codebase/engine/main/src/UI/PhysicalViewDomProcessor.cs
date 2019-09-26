@@ -73,7 +73,7 @@ namespace Forest.UI
 
             // store tuples of renderer and node to initiate an update call after the views are rendered
             var updateCallArguments = new List<Tuple<IPhysicalView, DomNode>>();
-            foreach(var nodeState in _nodeStates.Reverse())
+            foreach(var nodeState in _nodeStates)
             {
                 var n = nodeState.Item1;
                 var isNewView = nodeState.Item2 == NodeState.NewNode;

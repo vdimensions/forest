@@ -107,7 +107,7 @@ namespace Forest.UI
             {
                 var h = item.Item1;
                 var skip = item.Item2;
-                nodes.Add(skip ? nodeMap[h] : _visit(nodeMap[h]));
+                nodes = nodes.Add(skip ? nodeMap[h] : _visit(nodeMap[h]));
             }
             _complete(nodes);
             //// clean-up the accumulated state.
