@@ -33,7 +33,7 @@ module internal ForestExecutionContext =
         with 
         | e -> View.Error.InstantiationError(InstantiateViewInstruction(node, (model |> opt2ns).Value),  e) |> Runtime.Error.ViewError |> Error
 
-type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) as self =
+type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) =
     inherit Forest.Engine.SlaveExecutionContext(t, ctx, sp, dp, eventBus, viewStates, views, pv)
 
     new (t : Tree, viewState : IImmutableDictionary<thash, ViewState>, views : IImmutableDictionary<thash, IRuntimeView>, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
@@ -126,27 +126,3 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
     override this.Dispose() = 
         ForestExecutionContext._currentEngine <- ValueNone
         this.base_Dispose();
-        //try
-        //    this.base_Dispose();
-        //    let a, b, c, cl = this.Deconstruct()
-        //    dp.PhysicalViews <- pv
-        //    State.create(a, b, c, pv) |> State.traverse (ForestDomRenderer(seq { yield dp :> IDomProcessor }, ctx))
-        //    let newPv = dp.PhysicalViews
-        //    let newState = State.create(a, b, c, newPv)
-        //        //match fuid with
-        //        //| Some f -> State.createWithFuid(a, b, c, f)
-        //        //| None -> State.create(a, b, c)
-        //    sp.CommitState newState
-        //with
-        //| e -> 
-        //    sp.RollbackState()
-        //    raise e
-
-    member internal this.Deconstruct() = 
-        (
-            this._tree, 
-            ImmutableDictionary.CreateRange(StringComparer.Ordinal, Seq.map id viewStates), 
-            ImmutableDictionary.CreateRange(StringComparer.Ordinal, Seq.map id views), 
-            changeLog |> List.ofSeq
-        )
-

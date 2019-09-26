@@ -12,7 +12,7 @@ using Forest.UI;
 namespace Forest.Engine
 {
     // TODO: convert from abstract to sealed after the relevan F# code is moved
-    internal abstract class SlaveExecutionContext : IForestExecutionContext
+    internal class SlaveExecutionContext : IForestExecutionContext
     {
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
@@ -26,7 +26,7 @@ namespace Forest.Engine
         protected Tree _tree;
         private int _nestedCalls = 0;
 
-        protected SlaveExecutionContext(IForestContext context, IForestStateProvider stateProvider, PhysicalViewDomProcessor physicalViewDomProcessor, ForestState initialState, IForestExecutionContext exposedExecutionContext)
+        internal SlaveExecutionContext(IForestContext context, IForestStateProvider stateProvider, PhysicalViewDomProcessor physicalViewDomProcessor, ForestState initialState, IForestExecutionContext exposedExecutionContext)
             : this(
                 initialState.Tree,
                 context,
@@ -37,7 +37,7 @@ namespace Forest.Engine
                 initialState.LogicalViews,
                 initialState.PhysicalViews,
                 exposedExecutionContext) { }
-        protected SlaveExecutionContext(
+        internal SlaveExecutionContext(
                 Tree tree,
                 IForestContext context,
                 IForestStateProvider stateProvider, 
@@ -46,7 +46,7 @@ namespace Forest.Engine
                 IDictionary<string, IRuntimeView> logicalViews,
                 IDictionary<string, ViewState> viewStates) 
             : this(tree, context, stateProvider, physicalViewDomProcessor, eventBus, viewStates, logicalViews, ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal), null) { }
-        protected SlaveExecutionContext(
+        internal SlaveExecutionContext(
                 Tree tree,
                 IForestContext context, 
                 IForestStateProvider stateProvider, 

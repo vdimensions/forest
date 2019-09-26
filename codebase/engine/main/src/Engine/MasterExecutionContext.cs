@@ -1,31 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using Axle.Verification;
 using Forest.Engine.Instructions;
+using Forest.StateManagement;
+using Forest.UI;
 
 namespace Forest.Engine
 {
-    public abstract class MasterExecutionContext : IForestExecutionContext
+    public sealed class MasterExecutionContext : IForestExecutionContext
     {
-        private readonly IForestExecutionContext _forestContext;
+        private readonly IForestContext _context;
+        private readonly IForestStateProvider _stateProvider;
+        private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
+        internal IForestExecutionContext _slave;
 
-        internal MasterExecutionContext() { }
-        internal MasterExecutionContext(IForestExecutionContext forestContext)
+        internal MasterExecutionContext(IForestContext context, IForestStateProvider stateProvider, PhysicalViewDomProcessor physicalViewDomProcessor)
         {
-            _forestContext = forestContext.VerifyArgument(nameof(forestContext)).IsNotNull().Value;
+            _context = context;
+            _stateProvider = stateProvider;
+            _physicalViewDomProcessor = physicalViewDomProcessor;
         }
 
-        // TODO: Implement by instantiating a ForestExecutionContext when that class becomes non-abstract
-        internal abstract IForestExecutionContext CreateSlaveContext();
 
         // TODO: Replace this with a constructor of this class that uses a constructor argument, when the class becomes non-abstract (sealed).
-        internal abstract IForestExecutionContext CreateActualContext(IForestExecutionContext slaveContext);
+        internal IForestExecutionContext CreateActualContext()
+        {
+            var result = new MasterExecutionContext(_context, _stateProvider, _physicalViewDomProcessor);
+            var slaveContext = new SlaveExecutionContext(_context, _stateProvider, _physicalViewDomProcessor, _stateProvider.LoadState(), result);
+            result._slave = slaveContext;
+            return result;
+        }
 
-        private IForestExecutionContext GetActualContext() => _forestContext ?? CreateActualContext(CreateSlaveContext());
+        private IForestExecutionContext GetActualContext() => _slave ?? CreateActualContext();
 
         IView IForestExecutionContext.ActivateView(InstantiateViewInstruction instantiateViewInstruction) => GetActualContext().ActivateView(instantiateViewInstruction);
 
-        void IDisposable.Dispose() => _forestContext?.Dispose();
+        void IDisposable.Dispose() => _slave?.Dispose();
 
         void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg) => GetActualContext().ExecuteCommand(command, instanceID, arg);
 

@@ -14,22 +14,19 @@ namespace Forest.UI
             UpdatedNode = 1
         }
 
-        private ImmutableDictionary<string, IPhysicalView> _physicalViews;
         private IImmutableSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
         private IImmutableList<Tuple<DomNode, NodeState>> _nodeStates = ImmutableList<Tuple<DomNode, NodeState>>.Empty;
 
         private readonly IForestEngine _engine;
         private readonly IPhysicalViewRenderer _renderer;
-        private readonly StringComparer _stringComparer = StringComparer.Ordinal;
 
         private PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, StringComparer stringComparer, ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
             _engine = engine;
             _renderer = renderer;
-            _stringComparer = stringComparer;
-            _physicalViews = physicalViews == null
-                ? ImmutableDictionary.Create<string, IPhysicalView>(_stringComparer)
-                : ImmutableDictionary.CreateRange(_stringComparer, physicalViews);
+            PhysicalViews = physicalViews == null
+                ? ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal)
+                : ImmutableDictionary.CreateRange(physicalViews.KeyComparer, physicalViews);
         }
         internal PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, ImmutableDictionary<string, IPhysicalView> physicalViews = null)
             : this(engine, renderer, StringComparer.Ordinal, physicalViews) { }
@@ -37,11 +34,7 @@ namespace Forest.UI
             : this(engine, renderer, null) { }
 
         [Obsolete]
-        public ImmutableDictionary<string, IPhysicalView> PhysicalViews
-        {
-            get => _physicalViews;
-            set => _physicalViews = value;
-        }
+        public ImmutableDictionary<string, IPhysicalView> PhysicalViews { get; internal set; }
 
         DomNode IDomProcessor.ProcessNode(DomNode node)
         {
@@ -49,14 +42,14 @@ namespace Forest.UI
             _nodeStates = _nodeStates.Add(
                 Tuple.Create(
                     node, 
-                    _physicalViews.TryGetValue(node.InstanceID, out _) ? NodeState.UpdatedNode : NodeState.NewNode));
+                    PhysicalViews.TryGetValue(node.InstanceID, out _) ? NodeState.UpdatedNode : NodeState.NewNode));
             return node;
         }
 
         void IDomProcessor.Complete(IEnumerable<DomNode> nodes)
         {
-            var physicalViews = new Dictionary<string, IPhysicalView>(_stringComparer);
-            foreach (var kvp in _physicalViews)
+            var physicalViews = new Dictionary<string, IPhysicalView>(PhysicalViews.KeyComparer);
+            foreach (var kvp in PhysicalViews)
             {
                 if (_nodesToPreserve.Contains(kvp.Key))
                 {
@@ -112,7 +105,7 @@ namespace Forest.UI
                 }
             }
 
-            _physicalViews = ImmutableDictionary.CreateRange(_stringComparer, physicalViews);
+            PhysicalViews = ImmutableDictionary.CreateRange(physicalViews.Comparer, physicalViews);
             _nodesToPreserve = _nodesToPreserve.Clear();
             _nodeStates = _nodeStates.Clear();
 
