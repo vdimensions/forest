@@ -1,8 +1,0 @@
-framework: auto-detect
-storage: none
-
-source https://api.nuget.org/v3/index.json
-source ../../../../dist
-nuget Forest.Engine
-nuget Axle.FSharp
-nuget FSharp.Core = 4.6.2

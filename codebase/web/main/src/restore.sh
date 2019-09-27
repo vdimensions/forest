@@ -1,4 +1,4 @@
-paket='.paket/paket.sh'
+paket='../../../.paket/paket.sh'
 project='Forest.Web.AspNetCore'
 project_format='csproj'
 
@@ -8,4 +8,3 @@ if [ $? -ne 0 ]; then
   echo ""
   exit
 fi
-$paket simplify

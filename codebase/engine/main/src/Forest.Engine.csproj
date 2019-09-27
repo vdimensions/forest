@@ -15,5 +15,5 @@
     <Folder Include="paket-files\" />
   </ItemGroup>
   <Import Project="../../../Forest.Common.props" />
-  <Import Project=".paket\Paket.Restore.targets" />
+  <Import Project="..\..\..\.paket\Paket.Restore.targets" />
 </Project>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Forest.Engine;
 using Forest.UI;
 
 
@@ -20,12 +21,12 @@ namespace Forest.Web.AspNetCore.Dom
         {
         }
 
-        public override void Refresh(DomNode node)
+        protected override void Refresh(DomNode node)
         {
             throw new NotImplementedException();
         }
 
-        public override void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
             throw new NotImplementedException();
         }
@@ -42,13 +43,13 @@ namespace Forest.Web.AspNetCore.Dom
 
         public override DomPhysicalView CreatePhysicalView(IForestEngine engine, DomNode node)
         {
-            var result = new DomPhysicalView(engine, node.Hash);
+            var result = new DomPhysicalView(engine, node.InstanceID);
             return result;
         }
 
         public override DomPhysicalView CreateNestedPhysicalView(IForestEngine engine, DomPhysicalView parent, DomNode node)
         {
-            var result = new DomPhysicalView(engine, node.Hash);
+            var result = new DomPhysicalView(engine, node.InstanceID);
             return result;
         }
     }

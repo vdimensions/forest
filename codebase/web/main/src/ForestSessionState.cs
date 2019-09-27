@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 
 namespace Forest.Web.AspNetCore
@@ -6,16 +7,16 @@ namespace Forest.Web.AspNetCore
     [Serializable]
     internal sealed class ForestSessionState
     {
-        private ForestSessionState(State state, object syncRoot)
+        private ForestSessionState(ForestState state, object syncRoot)
         {
             State = state;
             Renderer = new DomPhysicalViewRenderer(this);
             SyncRoot = syncRoot;
         }
-        internal ForestSessionState(State state) : this(state, new object()) { }
-        public ForestSessionState() : this(State.Empty) { }
+        internal ForestSessionState(ForestState state) : this(state, new object()) { }
+        public ForestSessionState() : this(new ForestState()) { }
 
-        public State State { get; }
+        public ForestState State { get; }
         internal DomPhysicalViewRenderer Renderer { get; }
         internal object SyncRoot { get; }
     }

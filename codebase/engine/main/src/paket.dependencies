@@ -1,7 +1,0 @@
-framework: auto-detect
-storage: none
-
-source https://api.nuget.org/v3/index.json
-
-nuget System.Collections.Immutable
-nuget Axle.Application

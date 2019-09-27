@@ -8,4 +8,3 @@ if [ $? -ne 0 ]; then
   echo ""
   exit
 fi
-$paket simplify

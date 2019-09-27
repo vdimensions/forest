@@ -1,7 +1,7 @@
 msbuild="../../../../submodules/btw/msbuild.sh"
 project='Forest.Web.WebSharper'
 
- ./restore.sh
+./restore.sh
 
 dotnet clean $project.fsproj && $msbuild $project.fsproj && dotnet pack $project.fsproj --no-build
 if [ $? -ne 0 ]; then
