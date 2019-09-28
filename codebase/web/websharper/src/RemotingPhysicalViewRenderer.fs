@@ -6,6 +6,7 @@ open WebSharper.UI
 open Axle.Web.AspNetCore.Session
 open Forest
 open Forest.UI
+open Forest.Web.AspNetCore.Dom
 open Forest.StateManagement
 
 
@@ -18,14 +19,31 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
     inherit AbstractPhysicalView(engine, hash)
     let mutable regionMap : Map<rname, RemotingPhysicalView list> = Map.empty
 
+    static member toNode (c : ICommandModel) = 
+        let result = CommandNode()
+        result.Name <- c.Name
+        result.DisplayName <- c.DisplayName
+        result.Description <- c.Description
+        result.ToolTip <- c.Tooltip
+        result
+
+    static member toNode (c : ILinkModel) = 
+        let result = LinkNode()
+        result.Href <- c.Name
+        result.Name <- c.Name
+        result.DisplayName <- c.DisplayName
+        result.Description <- c.Description
+        result.ToolTip <- c.Tooltip
+        result
+
     static member domNode2Node (dn : DomNode) =
         { 
             Hash = dn.InstanceID
             Name = dn.Name
             Model = dn.Model
             Regions = dn.Regions |> Seq.map(|KeyValue|) |> Seq.map (fun (k, v) -> k, v |> Seq.map (fun x -> x.InstanceID) |> Array.ofSeq ) |> Seq.toArray;
-            Commands = dn.Commands |> Seq.map(|KeyValue|) |> Seq.map (fun (k, c) -> k, { Name = c.Name; DisplayName = c.DisplayName; ToolTip = c.Tooltip; Description = c.Description }) |> Seq.toArray;
-            Links = dn.Links |> Seq.map(|KeyValue|) |> Seq.map (fun (k, l) -> k, { Href= ""; Name = l.Name; DisplayName = l.DisplayName; ToolTip = l.Tooltip; Description = l.Description }) |> Seq.toArray;
+            Commands = dn.Commands |> Seq.map(|KeyValue|) |> Seq.map (fun (k, c) -> k, c |> RemotingPhysicalView.toNode) |> Seq.toArray;
+            Links = dn.Links |> Seq.map(|KeyValue|) |> Seq.map (fun (k, l) -> k, l |> RemotingPhysicalView.toNode) |> Seq.toArray;
         }
 
     override __.Refresh node = 

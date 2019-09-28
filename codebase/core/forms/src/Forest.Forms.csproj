@@ -10,15 +10,15 @@
   </PropertyGroup>
   <Import Project="../../../Forest.Common.props" />
   <ItemGroup>
-    <None Include="paket.dependencies" />
+    <Compile Remove="paket-files\**" />
+    <EmbeddedResource Remove="paket-files\**" />
+    <None Remove="paket-files\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Include="paket.references" />
   </ItemGroup>
   <ItemGroup>
     <None Include="restore.sh" />
-    <None Include="paket.lock" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="paket-files\" />
   </ItemGroup>
   <Import Project="..\..\..\.paket\Paket.Restore.targets" />
 </Project>

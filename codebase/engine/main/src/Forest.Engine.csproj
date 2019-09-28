@@ -12,7 +12,9 @@
     <Description>Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer</Description>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="paket-files\" />
+    <Compile Remove="paket-files\**" />
+    <EmbeddedResource Remove="paket-files\**" />
+    <None Remove="paket-files\**" />
   </ItemGroup>
   <Import Project="../../../Forest.Common.props" />
   <Import Project="..\..\..\.paket\Paket.Restore.targets" />

@@ -33,11 +33,11 @@ module internal ForestExecutionContext =
         with 
         | e -> View.Error.InstantiationError(InstantiateViewInstruction(node, (model |> opt2ns).Value),  e) |> Runtime.Error.ViewError |> Error
 
-type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : System.Collections.Generic.Dictionary<thash, ViewState>, views : System.Collections.Generic.Dictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) =
-    inherit Forest.Engine.SlaveExecutionContext(t, ctx, sp, dp, eventBus, viewStates, views, pv)
+type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor, eventBus : IEventBus, viewStates : ImmutableDictionary<thash, ViewState>, logicalViews : ImmutableDictionary<thash, IRuntimeView>, changeLog : System.Collections.Generic.List<ViewStateChange>) =
+    inherit Forest.Engine.SlaveExecutionContext(ctx, dp, eventBus, t, viewStates, logicalViews, pv)
 
-    new (t : Tree, viewState : IImmutableDictionary<thash, ViewState>, views : IImmutableDictionary<thash, IRuntimeView>, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
-        = new ForestExecutionContext(t, pv, ctx, sp, dp, new EventBus(), Dictionary<thash, ViewState>(viewState |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), Dictionary<thash, IRuntimeView>(views |> Seq.map (|KeyValue|) |> Map.ofSeq, StringComparer.Ordinal), System.Collections.Generic.List())
+    new (t : Tree, viewState : ImmutableDictionary<thash, ViewState>, views : ImmutableDictionary<thash, IRuntimeView>, pv : ImmutableDictionary<thash, IPhysicalView>, ctx : IForestContext, sp : IForestStateProvider, dp : PhysicalViewDomProcessor)
+        = new ForestExecutionContext(t, pv, ctx, sp, dp, new EventBus(), viewState, views, System.Collections.Generic.List())
 
     [<DefaultValue;ThreadStatic>]
     static val mutable private _currentEngine : IForestExecutionContext voption
@@ -58,9 +58,9 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
 
     member private this.Init() =
         for node in this._tree.Roots do
-            if (not <| Tree.Node.Shell.Equals node) && (not <| views.ContainsKey node.InstanceID) then 
+            if (not <| Tree.Node.Shell.Equals node) && (not <| logicalViews.ContainsKey node.InstanceID) then 
                 let handle = node.ViewHandle
-                match handle |> ForestExecutionContext.getDescriptor ctx |> Result.bind (ForestExecutionContext.createRuntimeView this ctx views node None) with
+                match handle |> ForestExecutionContext.getDescriptor ctx |> Result.bind (ForestExecutionContext.createRuntimeView this ctx logicalViews node None) with
                 | Ok view ->
                     view.Resume(viewStates.[node.InstanceID])
                 | _ -> ignore()
@@ -81,7 +81,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
                 | (false, _) ->
                     node.ViewHandle
                     |> ForestExecutionContext.getDescriptor ctx 
-                    |> Result.bind (ForestExecutionContext.createRuntimeView this ctx views node (Some viewState.Model))
+                    |> Result.bind (ForestExecutionContext.createRuntimeView this ctx logicalViews node (Some viewState.Model))
                     |> Result.map (
                         fun view ->
                             this.UpdateTree hs
@@ -98,7 +98,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
                 | (false, _) ->
                     node.ViewHandle
                     |> ForestExecutionContext.getDescriptor ctx 
-                    |> Result.bind (ForestExecutionContext.createRuntimeView this ctx views node (Some viewState.Model))
+                    |> Result.bind (ForestExecutionContext.createRuntimeView this ctx logicalViews node (Some viewState.Model))
                     |> Result.map (
                         fun view ->
                             this.UpdateTree hs
@@ -109,7 +109,7 @@ type [<Sealed;NoComparison>] internal ForestExecutionContext private (t : Tree, 
         //| ViewStateChange.ViewDestroyed (node) -> 
         //    destroyView node |> Result.error
         | ViewStateChange.ViewStateUpdated (node, state) -> 
-            views.[node.InstanceID].Resume state
+            logicalViews.[node.InstanceID].Resume state
             None
 
     member this.UpdateTree t = this._tree <- t

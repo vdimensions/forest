@@ -24,10 +24,9 @@
     <Compile Include="Sitelets\ForestEndPoint.fs" />
     <Compile Include="Sitelets\ForestSitelet.fs" />
     <Compile Include="Sitelets\ForestSiteletModule.fs" />
+    <Compile Include="JSExports.fs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="paket.dependencies" />
-    <None Include="paket.lock" />
     <None Include="paket.references" />
     <None Include="build.sh" />
     <None Include="restore.sh" />

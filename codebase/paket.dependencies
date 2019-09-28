@@ -12,6 +12,9 @@ nuget System.Collections.Immutable
 nuget WebSharper.FSharp
 nuget WebSharper.UI < 4.5.9
 
+nuget NUnit
+nuget NUnit3TestAdapter
+
 nuget Axle.Application
 nuget Axle.Web.AspNetCore
 nuget Axle.Web.WebSharper

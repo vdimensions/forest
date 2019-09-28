@@ -1,25 +1,9 @@
 ﻿namespace Forest.Web.WebSharper
 
 open Forest
+open Forest.Web.AspNetCore.Dom
 open WebSharper
 
-[<NoComparison;JavaScriptExport>]
-type CommandNode =
-    {
-        Name : cname
-        DisplayName : string
-        ToolTip : string
-        Description : string
-    }
-[<NoComparison;JavaScriptExport>]
-type LinkNode =
-    {
-        Href : string
-        Name : string
-        DisplayName : string
-        ToolTip : string
-        Description : string
-    }
 [<NoComparison;JavaScriptExport>]
 type Node =
     {

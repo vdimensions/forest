@@ -16,8 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="build.sh" />
-    <None Include="paket.dependencies" />
-    <None Include="paket.lock" />
     <None Include="paket.references" />
     <None Include="paket.sh" />
     <None Include="restore.sh" />
@@ -36,5 +34,5 @@
   <ItemGroup>
     <Folder Include="Properties\" />
   </ItemGroup>
-  <Import Project=".paket\Paket.Restore.targets" />
+  <Import Project="..\..\..\.paket\Paket.Restore.targets" />
 </Project>

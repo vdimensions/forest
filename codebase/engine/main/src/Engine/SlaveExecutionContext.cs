@@ -11,87 +11,78 @@ using Forest.UI;
 
 namespace Forest.Engine
 {
-    // TODO: convert from abstract to sealed after the relevan F# code is moved
+    // TODO: convert from abstract to sealed after the relevant F# code is moved
     internal class SlaveExecutionContext : IForestExecutionContext
     {
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
-        private readonly IDictionary<string, ViewState> _viewStates;
-        private readonly IDictionary<string, IRuntimeView> _logicalViews;
         private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
         private readonly IForestExecutionContext _exposedExecutionContext;
-        private readonly IForestStateProvider _stateProvider;
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
+
+        private ImmutableDictionary<string, ViewState> _viewStates;
+        private ImmutableDictionary<string, IRuntimeView> _logicalViews;
 
         protected Tree _tree;
         private int _nestedCalls = 0;
 
-        internal SlaveExecutionContext(IForestContext context, IForestStateProvider stateProvider, PhysicalViewDomProcessor physicalViewDomProcessor, ForestState initialState, IForestExecutionContext exposedExecutionContext)
-            : this(
-                initialState.Tree,
-                context,
-                stateProvider,
+        internal SlaveExecutionContext(
+                IForestContext context, 
+                PhysicalViewDomProcessor physicalViewDomProcessor, 
+                ForestState initialState, 
+                IForestExecutionContext exposedExecutionContext)
+            : this(context,
                 physicalViewDomProcessor,
                 new EventBus(), 
+                initialState.Tree,
                 initialState.ViewStates,
                 initialState.LogicalViews,
-                initialState.PhysicalViews,
-                exposedExecutionContext) { }
+                initialState.PhysicalViews, exposedExecutionContext) { }
         internal SlaveExecutionContext(
-                Tree tree,
                 IForestContext context,
-                IForestStateProvider stateProvider, 
                 PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus,
-                IDictionary<string, IRuntimeView> logicalViews,
-                IDictionary<string, ViewState> viewStates) 
-            : this(tree, context, stateProvider, physicalViewDomProcessor, eventBus, viewStates, logicalViews, ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal), null) { }
-        internal SlaveExecutionContext(
                 Tree tree,
-                IForestContext context, 
-                IForestStateProvider stateProvider, 
-                PhysicalViewDomProcessor physicalViewDomProcessor,
-                IEventBus eventBus, 
-                IDictionary<string, ViewState> viewStates,
-                IDictionary<string, IRuntimeView> logicalViews,
+                ImmutableDictionary<string, ViewState> viewStates,
+                ImmutableDictionary<string, IRuntimeView> logicalViews,
                 ImmutableDictionary<string, IPhysicalView> physicalViews,
                 IForestExecutionContext exposedExecutionContext = null)
         {
             _tree = tree;
             _context = context;
-            _stateProvider = stateProvider;
             _physicalViewDomProcessor = physicalViewDomProcessor;
             _eventBus = eventBus;
             _viewStates = viewStates;
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
-
-            // TODO
             _exposedExecutionContext = exposedExecutionContext ?? this;
+        }
 
-            foreach (var kvp in logicalViews)
+        public void Init()
+        {
+            foreach (var kvp in _logicalViews)
             {
                 var view = kvp.Value;
                 var node = view.Node;
                 var descriptor = view.Descriptor;
-                view.AcquireContext(node, descriptor, _exposedExecutionContext);
+                view.AcquireContext(node, descriptor, this);
             }
         }
 
-        private void TraverseState(IForestStateVisitor v, Tree.Node parent, IEnumerable<Tree.Node> ids, int siblingsCount, ForestState st)
+        private void TraverseState(IForestStateVisitor v, IEnumerable<Tree.Node> ids, int idsCount, int siblingsCount, ForestState st)
         {
             var head = ids.FirstOrDefault();
             if (head != null)
             {
-                var ix = siblingsCount - ids.Count();
+                var ix = siblingsCount - idsCount;
                 var instanceID = head.InstanceID;
                 var viewState = st.ViewStates[instanceID];
                 var vs = st.LogicalViews[instanceID];
                 var descriptor = vs.Descriptor;
                 v.BFS(head, ix, viewState, descriptor);
-                TraverseState(v, parent, ids.Skip(1), siblingsCount, st);
-                var children = st.Tree[head];
-                TraverseState(v, head, children, children.Count(), st);
+                TraverseState(v, ids.Skip(1), idsCount-1, siblingsCount, st);
+                var children = st.Tree[head].ToArray();
+                TraverseState(v, children, children.Length, children.Length, st);
                 v.DFS(head, ix, viewState, descriptor);
             }
         }
@@ -99,50 +90,34 @@ namespace Forest.Engine
         void Traverse(IForestStateVisitor v, ForestState st)
         {
             var root = Tree.Node.Shell;
-            var ch = st.Tree[root];
-            TraverseState(v, root, ch, ch.Count(), st);
+            var ch = st.Tree[root].ToArray();
+            TraverseState(v, ch, ch.Length, ch.Length, st);
             v.Complete();
+        }
+
+        internal ForestState ResolveState()
+        {
+            foreach (var kvp in _logicalViews)
+            {
+                kvp.Value.AbandonContext(_exposedExecutionContext);
+            }
+            _eventBus.Dispose();
+
+            var a = _tree;
+            var b = _viewStates;
+            var c = _logicalViews;
+            _physicalViewDomProcessor.PhysicalViews = _physicalViews;
+            Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
+            var newPv = _physicalViewDomProcessor.PhysicalViews;
+            var newState = new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
+            //match fuid with
+            //| Some f -> State.createWithFuid(a, b, c, f)
+            //| None -> State.create(a, b, c)
+            return newState;
         }
 
         protected virtual void Dispose()
         {
-            try
-            {
-                foreach (var kvp in _logicalViews)
-                {
-                    kvp.Value.AbandonContext(_exposedExecutionContext);
-                }
-                _eventBus.Dispose();
-
-                var a = this._tree;
-                var b = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _viewStates);
-                var c = ImmutableDictionary.CreateRange(StringComparer.Ordinal, _logicalViews);
-                _physicalViewDomProcessor.PhysicalViews = _physicalViews;
-                Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
-                var newPv = _physicalViewDomProcessor.PhysicalViews;
-                var newState = new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
-                    //match fuid with
-                    //| Some f -> State.createWithFuid(a, b, c, f)
-                    //| None -> State.create(a, b, c)
-                _stateProvider.CommitState(newState);
-
-                //let a, b, c, cl = this.Deconstruct()
-                //dp.PhysicalViews < -pv
-                //State.create(a, b, c, pv) |> State.traverse(ForestDomRenderer(seq {
-                //    yield dp :> IDomProcessor
-                //}, ctx))
-                //let newPv = dp.PhysicalViews
-                //let newState = State.create(a, b, c, newPv)
-                ////match fuid with
-                ////| Some f -> State.createWithFuid(a, b, c, f)
-                ////| None -> State.create(a, b, c)
-                //sp.CommitState newState
-            }
-            catch (Exception e)
-            {
-                _stateProvider.RollbackState();
-                throw;
-            }
         }
 
         private void RemoveNode(Tree tree, Tree.Node node, out Tree newTree)
@@ -153,9 +128,9 @@ namespace Forest.Engine
                 var key = removedNode.InstanceID;
                 if (_logicalViews.TryGetValue(key, out var view))
                 {
-                    _logicalViews.Remove(key);
+                    _logicalViews = _logicalViews.Remove(key);
                     view.Destroy();
-                    _viewStates.Remove(key);
+                    _viewStates = _viewStates.Remove(key);
                     // todo: removedNode |> ViewStateChange.ViewDestroyed |> changeLog.Add
                 }
             }
@@ -163,21 +138,22 @@ namespace Forest.Engine
 
         private void ProcessCommandStateInstruction(CommandStateInstruction csi)
         {
-            var instanceID = csi.Node.InstanceID;
             var command = csi.Command;
+            var instanceID = csi.Node.InstanceID;
             if (_viewStates.TryGetValue(instanceID, out var viewState))
             {
                 switch (csi)
                 {
                     case DisableCommandInstruction _:
-                        _viewStates[instanceID] = ViewState.DisableCommand(viewState, command);
+                        viewState = ViewState.DisableCommand(viewState, command);
                         break;
                     case EnableCommandInstruction _:
-                        _viewStates[instanceID] = ViewState.EnableCommand(viewState, command);
+                        viewState = ViewState.EnableCommand(viewState, command);
                         break;
                     default:
                         throw new InstructionNotSupportedException(csi);
                 }
+                _viewStates = _viewStates.Remove(instanceID).Add(instanceID, viewState);
             }
             else
             {
@@ -201,10 +177,10 @@ namespace Forest.Engine
                     }
 
                     var viewInstance = ivi.Model != null
-                        ? (IRuntimeView)_context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
-                        : (IRuntimeView)_context.ViewFactory.Resolve(viewDescriptor);
+                        ? (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
+                        : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
                     viewInstance.AcquireContext(ivi.Node, viewDescriptor, _exposedExecutionContext);
-                    _logicalViews[ivi.Node.InstanceID] = viewInstance;
+                    _logicalViews =  _logicalViews.Remove(ivi.Node.InstanceID).Add(ivi.Node.InstanceID, viewInstance);
                     _tree = _tree.Insert(ivi.Node);
                     viewInstance.Load();
                     break;
@@ -226,14 +202,16 @@ namespace Forest.Engine
                     break;
 
                 case UpdateModelInstruction umi:
-                    if (_viewStates.TryGetValue(umi.Node.InstanceID, out var viewState))
+                    var instanceID = umi.Node.InstanceID;
+                    if (_viewStates.TryGetValue(instanceID, out var viewState))
                     {
-                        _viewStates[umi.Node.InstanceID] = ViewState.UpdateModel(viewState, umi.Model);
+                        viewState = ViewState.UpdateModel(viewState, umi.Model);
                     }
                     else
                     {
-                        _viewStates[umi.Node.InstanceID] = ViewState.Create(umi.Model);
+                        viewState = ViewState.Create(umi.Model);
                     }
+                    _viewStates = _viewStates.Remove(instanceID).Add(instanceID, viewState);
                     break;
 
                 case CommandStateInstruction csi:
@@ -402,7 +380,7 @@ namespace Forest.Engine
 
         public ViewState SetViewState(bool silent, Tree.Node node, ViewState viewState)
         {
-            _viewStates[node.InstanceID] = viewState;
+            _viewStates = _viewStates.Remove(node.InstanceID).Add(node.InstanceID, viewState);
 
             //if (!silent)
             //{

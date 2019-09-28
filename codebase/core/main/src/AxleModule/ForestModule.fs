@@ -36,17 +36,17 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModul
     val mutable private _context : IForestContext
     [<DefaultValue>]
     val mutable private _integrationProvider : IForestIntegrationProvider voption
-    [<DefaultValue>]
-    val mutable private _forestEngine : IForestEngine
+    //[<DefaultValue>]
+    //val mutable private _forestEngine : IForestEngine
 
-    member this.InitForest() =
-        let pvr, sp =
-            match this._integrationProvider with
-            | ValueSome ip ->
-                ip.Renderer, ip.StateProvider
-            | ValueNone ->
-                (NoOp.PhysicalViewRenderer() :> IPhysicalViewRenderer, DefaultForestStateProvider() :> IForestStateProvider)
-        this._forestEngine <- ForestEngine.Create this._context sp pvr logger
+    //member this.InitForest() =
+        //let pvr, sp =
+        //    match this._integrationProvider with
+        //    | ValueSome ip ->
+        //        ip.Renderer, ip.StateProvider
+        //    | ValueNone ->
+        //        (NoOp.PhysicalViewRenderer() :> IPhysicalViewRenderer, DefaultForestStateProvider() :> IForestStateProvider)
+        //this._forestEngine <- ForestEngine.Create this._context sp pvr logger
     
     [<ModuleInit>]
     member this.Init(e : ModuleExporter) =
@@ -61,7 +61,7 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModul
             |> ContainerViewFactory
         let context : IForestContext = upcast DefaultForestContext(viewFactory, securityManager, templateProvider)
         this._context <- context
-        this.InitForest()
+        //this.InitForest()
         context |> e.Export<IForestContext> |> ignore
         this |> e.Export<IForestEngine> |> ignore
 
@@ -77,29 +77,48 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModul
             this._integrationProvider <- ValueSome integration
         | ValueSome _ ->
             invalidOp "Forest integration is already configured"
-        this.InitForest()
+        //this.InitForest()
 
-    member private this.ForestEngine with get() = this._forestEngine            
+    //member private this.ForestEngine with get() = this._forestEngine   
+    
+    member private this.CreateExecutionContext() =
+        let pvr, sp =
+            match this._integrationProvider with
+            | ValueSome ip ->
+                ip.Renderer, ip.StateProvider
+            | ValueNone ->
+                (NoOp.PhysicalViewRenderer() :> IPhysicalViewRenderer, DefaultForestStateProvider() :> IForestStateProvider)
+        upcast new ForestExecutionContext(this._context, sp, pvr) : IForestEngine
 
     interface IForestEngine with
         [<Obsolete>]
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
-            this.ForestEngine.RegisterSystemView<'sv>()
+            //this.ForestEngine.RegisterSystemView<'sv>()
+            let ctx = this.CreateExecutionContext()
+            ctx.RegisterSystemView<'sv>()
 
     interface ITreeNavigator with
         member this.Navigate t = 
-            this.ForestEngine.Navigate t
+            //this.ForestEngine.Navigate t
+            let ctx = this.CreateExecutionContext()
+            ctx.Navigate t
 
         member this.Navigate (t, m) = 
-            this.ForestEngine.Navigate (t, m)
+            //this.ForestEngine.Navigate (t, m)
+            let ctx = this.CreateExecutionContext()
+            ctx.Navigate (t, m)
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
-            this.ForestEngine.SendMessage msg
+            //this.ForestEngine.SendMessage msg
+            let ctx = this.CreateExecutionContext()
+            ctx.SendMessage (msg)
 
     interface ICommandDispatcher with
         member this.ExecuteCommand (cmd, target, arg) = 
-            this.ForestEngine.ExecuteCommand (cmd, target, arg)
+            //this.ForestEngine.ExecuteCommand (cmd, target, arg)
+            let ctx = this.CreateExecutionContext()
+            ctx.ExecuteCommand (cmd, target, arg)
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type) : IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

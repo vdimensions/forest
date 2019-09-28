@@ -1,4 +1,4 @@
-paket=".paket/paket.sh"
+paket="../../../.paket/paket.sh"
 project='Forest.Core.Tests'
 project_format='csproj'
 
