@@ -11,8 +11,12 @@ using Forest.UI;
 
 namespace Forest.Engine
 {
+    internal interface IStateResolver
+    {
+        ForestState ResolveState();
+    }
     // TODO: convert from abstract to sealed after the relevant F# code is moved
-    internal class SlaveExecutionContext : IForestExecutionContext
+    internal class SlaveExecutionContext : IForestExecutionContext, IStateResolver
     {
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
@@ -95,7 +99,7 @@ namespace Forest.Engine
             v.Complete();
         }
 
-        internal ForestState ResolveState()
+        ForestState IStateResolver.ResolveState()
         {
             foreach (var kvp in _logicalViews)
             {

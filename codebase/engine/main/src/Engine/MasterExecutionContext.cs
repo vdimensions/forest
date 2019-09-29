@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Forest.Engine.Aspects;
 using Forest.Engine.Instructions;
 using Forest.StateManagement;
 using Forest.UI;
@@ -49,6 +51,7 @@ namespace Forest.Engine
     {
         private readonly IForestContext _context;
         private readonly IForestStateProvider _stateProvider;
+        private readonly IEnumerable<ForestAspectExecutionContext> _contexts;
         internal IForestExecutionContext _slave;
 
         internal MasterExecutionContext(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer, IForestEngine sourceEngine)
@@ -56,8 +59,12 @@ namespace Forest.Engine
             var initialState = stateProvider.LoadState();
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
             var slave = new SlaveExecutionContext(_context = context, physicalViewDomProcessor, initialState, this);
-            _slave = slave;
             _stateProvider = stateProvider;
+            var aspect = _context.Aspects.Reverse()
+                .Aggregate(
+                    new SlaveAspectExecutionContext(slave) as AbstractForestExecutionAspect,
+                    (former, x) => new ForestAspectExecutionContext(former, slave, x));
+            _slave = aspect;
             slave.Init();
         }
 
@@ -67,7 +74,7 @@ namespace Forest.Engine
         {
             try
             {
-                _stateProvider.CommitState(((SlaveExecutionContext) _slave).ResolveState());
+                _stateProvider.CommitState(((IStateResolver) _slave).ResolveState());
             }
             catch
             {

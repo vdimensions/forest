@@ -62,7 +62,6 @@ namespace Forest.StateManagement
         internal ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
     }
 
-    [Obsolete]
     public interface IForestStateProvider
     {
         ForestState LoadState();

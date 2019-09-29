@@ -10,10 +10,12 @@ open Axle.Verification
 open Forest
 open Forest.ComponentModel
 open Forest.Engine
+open Forest.Engine.Aspects
 open Forest.Security
 open Forest.StateManagement
 open Forest.Templates
 open Forest.UI
+open System.Diagnostics
 
 type [<Interface>] IForestIntegrationProvider =
     abstract member Renderer : IPhysicalViewRenderer with get
@@ -59,7 +61,7 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModul
             | ValueSome c -> (c, app)
             | ValueNone -> (container, app)
             |> ContainerViewFactory
-        let context : IForestContext = upcast DefaultForestContext(viewFactory, securityManager, templateProvider)
+        let context : IForestContext = upcast DefaultForestContext(viewFactory, securityManager, templateProvider, seq { yield this :> IForestExecutionAspect })
         this._context <- context
         //this.InitForest()
         context |> e.Export<IForestContext> |> ignore
@@ -127,6 +129,23 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModul
     interface IViewFactory with
         member this.Resolve(descriptor : IViewDescriptor): IView = this._context.ViewFactory.Resolve descriptor
         member this.Resolve(descriptor : IViewDescriptor, model : obj): IView = this._context.ViewFactory.Resolve(descriptor, model)
+
+    interface IForestExecutionAspect with
+        member __.Navigate(cutPoint: IForestExecutionCutPoint) =
+            let sw = Stopwatch.StartNew()
+            cutPoint.Proceed()
+            sw.Stop()
+            logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds)
+        member __.ExecuteCommand(cutPoint: IForestExecutionCutPoint) =
+            let sw = Stopwatch.StartNew()
+            cutPoint.Proceed()
+            sw.Stop()
+            logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds)
+        member __.SendMessage(cutPoint: IForestExecutionCutPoint) =
+            let sw = Stopwatch.StartNew()
+            cutPoint.Proceed()
+            sw.Stop()
+            logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds)
 
 [<Extension>]
 type Extensions =
