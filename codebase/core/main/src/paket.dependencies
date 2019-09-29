@@ -1,0 +1,15 @@
+framework auto-detect
+storage none
+
+source ../../../../dist
+source ../../../../../axle/dist
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Core < 4.7
+
+nuget System.Collections.Immutable
+
+nuget Axle.FSharp
+nuget Axle.Application
+
+nuget Forest.Engine

@@ -4,3 +4,6 @@
 [submodule "submodules/btw"]
 	path = submodules/btw
 	url = https://github.com/vdimensions/btw.git
+[submodule "submodules/vdimensions_fake_sdk"]
+	path = submodules/vdimensions_fake_sdk
+	url = https://github.com/vdimensions/vdimensions_fake_sdk.git

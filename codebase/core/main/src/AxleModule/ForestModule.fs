@@ -81,44 +81,39 @@ and [<Sealed;NoEquality;NoComparison;Module;Requires(typeof<ForestTemplatesModul
 
     //member private this.ForestEngine with get() = this._forestEngine   
     
-    member private this.CreateExecutionContext() =
+    member private this.CreateEngine() =
         let pvr, sp =
             match this._integrationProvider with
             | ValueSome ip ->
                 ip.Renderer, ip.StateProvider
             | ValueNone ->
                 (NoOp.PhysicalViewRenderer() :> IPhysicalViewRenderer, DefaultForestStateProvider() :> IForestStateProvider)
-        upcast new ForestExecutionContext(this._context, sp, pvr) : IForestEngine
+        upcast new ForestEngine(this._context, sp, pvr) : IForestEngine
 
     interface IForestEngine with
         [<Obsolete>]
         member this.RegisterSystemView<'sv when 'sv :> ISystemView>() = 
             //this.ForestEngine.RegisterSystemView<'sv>()
-            let ctx = this.CreateExecutionContext()
-            ctx.RegisterSystemView<'sv>()
+            this.CreateEngine().RegisterSystemView<'sv>()
 
     interface ITreeNavigator with
         member this.Navigate t = 
             //this.ForestEngine.Navigate t
-            let ctx = this.CreateExecutionContext()
-            ctx.Navigate t
+            this.CreateEngine().Navigate t
 
         member this.Navigate (t, m) = 
             //this.ForestEngine.Navigate (t, m)
-            let ctx = this.CreateExecutionContext()
-            ctx.Navigate (t, m)
+            this.CreateEngine().Navigate (t, m)
 
     interface IMessageDispatcher with
         member this.SendMessage msg = 
             //this.ForestEngine.SendMessage msg
-            let ctx = this.CreateExecutionContext()
-            ctx.SendMessage (msg)
+            this.CreateEngine().SendMessage (msg)
 
     interface ICommandDispatcher with
         member this.ExecuteCommand (cmd, target, arg) = 
             //this.ForestEngine.ExecuteCommand (cmd, target, arg)
-            let ctx = this.CreateExecutionContext()
-            ctx.ExecuteCommand (cmd, target, arg)
+            this.CreateEngine().ExecuteCommand (cmd, target, arg)
 
     interface IViewRegistry with
         member this.GetDescriptor(viewType : Type) : IViewDescriptor = this._context.ViewRegistry.GetDescriptor viewType

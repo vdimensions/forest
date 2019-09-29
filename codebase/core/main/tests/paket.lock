@@ -1,0 +1,27 @@
+STORAGE: NONE
+RESTRICTION: == net45
+NUGET
+  remote: ../../../../../axle/dist
+    Axle.Application (1.6.2462.20925)
+      Axle.Configuration (>= 1.6.2462.20925)
+      Axle.Resources (>= 1.6.2462.20925)
+    Axle.Configuration (1.6.2462.20925)
+      Axle.Core (>= 1.6.2462.20925)
+    Axle.Core (1.6.2462.20925)
+    Axle.FSharp (1.6.2462.20925)
+      Axle.Core (>= 1.6.2462.20925)
+      FSharp.Core (>= 4.6.2)
+    Axle.Resources (1.6.2462.20925)
+      Axle.Core (>= 1.6.2462.20925)
+  remote: ../../../../dist
+    Forest.Core (2.5.2462.21205)
+      Axle.FSharp (>= 1.6.2462.20925)
+      Forest.Engine (>= 2.5.2462.21205)
+    Forest.Engine (2.5.2462.21205)
+      Axle.Application (>= 1.5.2396.27060)
+      System.Collections.Immutable (>= 1.6)
+  remote: https://api.nuget.org/v3/index.json
+    FSharp.Core (4.6.2)
+    NUnit (3.12)
+    NUnit3TestAdapter (3.15.1)
+    System.Collections.Immutable (1.6)

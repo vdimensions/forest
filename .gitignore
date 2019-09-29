@@ -5,7 +5,10 @@
 # dirs
 
 **/node_modules/
+**/.fake/
 **/.nuget/
+**/.paket
+!codebase/.paket
 **/.project-template/
 **/.svn/
 **/.vs/
@@ -70,6 +73,7 @@ _site
 *.vsmdi
 *.vym.lock
 *~$*.dot
+build.fsx.lock
 browse.VC.db
 desktop.ini
 [Ss]tyle[Cc]op.*

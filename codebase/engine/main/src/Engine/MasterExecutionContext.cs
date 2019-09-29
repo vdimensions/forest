@@ -6,7 +6,7 @@ using Forest.UI;
 
 namespace Forest.Engine
 {
-    public sealed class ForestExecutionContext : IForestEngine
+    public sealed class ForestEngine : IForestEngine
     {
         private readonly IForestContext _context;
         private readonly IForestStateProvider _stateProvider;
@@ -27,7 +27,7 @@ namespace Forest.Engine
             }
         }
 
-        public ForestExecutionContext(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer)
+        internal ForestEngine(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer)
         {
             _context = context;
             _stateProvider = stateProvider;
@@ -51,7 +51,7 @@ namespace Forest.Engine
         private readonly IForestStateProvider _stateProvider;
         internal IForestExecutionContext _slave;
 
-        internal MasterExecutionContext(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer, IForestEngine sourceEngine = null)
+        internal MasterExecutionContext(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer, IForestEngine sourceEngine)
         {
             var initialState = stateProvider.LoadState();
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
