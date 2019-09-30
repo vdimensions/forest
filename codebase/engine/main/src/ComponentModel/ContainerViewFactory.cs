@@ -17,7 +17,7 @@ namespace Forest.ComponentModel
 
         private IView DoResolve(IViewDescriptor descriptor, object model)
         {
-            using (var tmpContainer = _app.DependencyContainerProvider.Create(_container))
+            using (var tmpContainer = _app.CreateContainer(_container))
             {
                 tmpContainer.RegisterType(descriptor.ViewType, descriptor.Name);
                 if (model != null)
