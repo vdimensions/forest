@@ -17,10 +17,6 @@ open Forest.Templates
 open Forest.UI
 open System.Diagnostics
 
-type [<Interface>] IForestIntegrationProvider =
-    abstract member Renderer : IPhysicalViewRenderer with get
-    abstract member StateProvider : IForestStateProvider with get
-
 [<AttributeUsage(AttributeTargets.Class|||AttributeTargets.Interface, Inherited = true, AllowMultiple = false)>]
 type [<Sealed>] RequiresForestAttribute() = inherit RequiresAttribute(typeof<ForestModule>)
 
