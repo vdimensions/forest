@@ -7,10 +7,10 @@ open WebSharper
 [<NoComparison;JavaScriptExport>]
 type Node =
     {
-        Hash: thash
-        Name: vname
+        Hash: string
+        Name: string
         Model: obj
-        Regions: array<rname*thash array>
+        Regions: array<string*string array>
         Commands: array<string*CommandNode>
         Links: array<string*LinkNode>
     }

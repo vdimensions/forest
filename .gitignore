@@ -4,6 +4,7 @@
 
 # dirs
 
+**/dist/restore/
 **/node_modules/
 **/.fake/
 **/.nuget/

@@ -15,9 +15,9 @@ type [<Interface>] IDocumentStateProvider =
     // TODO
     end
 
-and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, allNodes : IDictionary<thash, Node>) =
+and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, allNodes : IDictionary<string, Node>) =
     inherit AbstractPhysicalView(engine, hash)
-    let mutable regionMap : Map<rname, RemotingPhysicalView list> = Map.empty
+    let mutable regionMap : Map<string, RemotingPhysicalView list> = Map.empty
 
     static member toNode (c : ICommandModel) = 
         let result = CommandNode()
@@ -66,7 +66,7 @@ type [<Sealed;NoEquality;NoComparison>] internal RemotingRootPhysicalView(engine
 type [<Sealed;NoEquality;NoComparison>] internal WebSharperPhysicalViewRenderer() =
     inherit AbstractPhysicalViewRenderer<RemotingPhysicalView>()
     let topLevelViews = List<RemotingRootPhysicalView>()
-    let allNodes = Dictionary<thash,Node>(System.StringComparer.Ordinal)
+    let allNodes = Dictionary<string,Node>(System.StringComparer.Ordinal)
 
     override __.CreatePhysicalView (engine, domNode) = 
         // TODO: pass context

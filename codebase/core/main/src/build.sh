@@ -1,6 +1,6 @@
 msbuild="../../../../submodules/btw/msbuild.sh"
-project='Forest.Core'
-project_format='fsproj'
+project='Forest.Engine'
+project_format='csproj'
 
 ./restore.sh
 

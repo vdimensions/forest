@@ -3,15 +3,16 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
+
   <PropertyGroup>
     <Name>Forest.Web.WebSharper</Name>
     <AssemblyName>Forest.Web.WebSharper</AssemblyName>
     <ProjectGuid>{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
+    <!-- <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion> -->
     <Description>A library to integrate WebSharper with Forest.</Description>
   </PropertyGroup>
-  <Import Project="../../../Forest.Common.props" />
+
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
     <Compile Include="Node.fs" />
@@ -26,10 +27,14 @@
     <Compile Include="Sitelets\ForestSiteletModule.fs" />
     <Compile Include="JSExports.fs" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="paket.references" />
-    <None Include="build.sh" />
-    <None Include="restore.sh" />
+    <PackageReference Include="Axle.FSharp" Version="1.6.*" />
+    <PackageReference Include="Axle.Web.AspNetCore" Version="1.6.*" />
+    <PackageReference Include="Axle.Web.WebSharper" Version="1.6.*" />
+    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
+    <PackageReference Include="Forest.Web.AspNetCore" Version="$(PackageVersionRange)" />
   </ItemGroup>
-  <Import Project=".paket\Paket.Restore.targets" />
+
+  <Import Project="../../../Forest.Common.props" />
 </Project>

@@ -3,22 +3,16 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;netstandard1.6;net46;net45</TargetFrameworks>
   </PropertyGroup>
+
   <PropertyGroup>
     <ProjectGuid>{C8F6B80C-0E82-4E1D-B646-8FC84C6033E2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
+  </ItemGroup>
+
   <Import Project="../../../Forest.Common.props" />
-  <ItemGroup>
-    <Compile Remove="paket-files\**" />
-    <EmbeddedResource Remove="paket-files\**" />
-    <None Remove="paket-files\**" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="paket.references" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="restore.sh" />
-  </ItemGroup>
-  <Import Project=".paket\Paket.Restore.targets" />
 </Project>

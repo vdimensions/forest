@@ -10,7 +10,7 @@ open WebSharper.UI
 type [<AbstractClass;NoEquality;NoComparison>] WebSharperPhysicalView() =
 
     [<JavaScriptExport>]
-    abstract member Doc: array<rname*Doc> -> Node -> Doc
+    abstract member Doc: array<string*Doc> -> Node -> Doc
 
     [<JavaScript(false)>]
     member this.GetClientTypeName() =
@@ -26,14 +26,14 @@ module Client =
     [<NoEquality;NoComparison>]
     type Engine =
         {
-            executeRawCommand : (cname -> obj -> unit)
-            executeRpcCommand : ((thash -> Async<Node array>) -> unit)
-            renderRegion : (rname -> Doc)
+            executeRawCommand : (string -> obj -> unit)
+            executeRpcCommand : ((string -> Async<Node array>) -> unit)
+            renderRegion : (string -> Doc)
             // TODO: render link
         }
 
     let private _nodes = List.empty |> ListModel.Create<obj,Node> (fun n -> n.Model)
-    let private _views : Var<Map<vname, WebSharperPhysicalView>> = Var.Create <| Map.empty
+    let private _views : Var<Map<string, WebSharperPhysicalView>> = Var.Create <| Map.empty
 
     let setNodes nodes = nodes |> _nodes.Set
     let setViews nodes = nodes |> _views.Set
@@ -56,7 +56,7 @@ module Client =
     let init () = 
         syncNodes(false)
 
-    let private tree () : View<Map<thash,Node*WebSharperPhysicalView>> =
+    let private tree () : View<Map<string,Node*WebSharperPhysicalView>> =
         View.Map2
             (fun (a : Node seq) b -> 
                 a 
@@ -68,7 +68,7 @@ module Client =
             (_nodes.View)
             (_views.View)
 
-    let private treeRooted (t : Map<thash,Node*WebSharperPhysicalView>) =
+    let private treeRooted (t : Map<string,Node*WebSharperPhysicalView>) =
         let mutable rootKeys = t |> Seq.map (fun x -> x.Key) |> Set.ofSeq
         for (n, _) in t |> Seq.map (fun x -> x.Value) do
             for (_, rs) in n.Regions do
@@ -76,7 +76,7 @@ module Client =
                     rootKeys <- rootKeys |> Set.remove h
         rootKeys |> Set.toArray, t
         
-    let rec private traverseTree (t : Map<thash,Node*WebSharperPhysicalView>) (hash : thash) : Doc =
+    let rec private traverseTree (t : Map<string,Node*WebSharperPhysicalView>) (hash : string) : Doc =
         match t |> Map.tryFind hash with
         | None -> Doc.Empty
         | Some (node, pv) ->
@@ -91,7 +91,7 @@ module Client =
     let render () =
         tree().Map treeRooted |> Doc.BindView (fun (r, t) -> r |> Seq.map (traverseTree t) |> Doc.Concat)
 
-    let internal executeRpcCommand (rpc : (thash -> Async<Node array>)) hash =
+    let internal executeRpcCommand (rpc : (string -> Async<Node array>)) hash =
         async {
             let! nodes = rpc hash            
             setNodes nodes
@@ -100,7 +100,7 @@ module Client =
     let internal executeRawCommand cmd hash (arg : obj) = executeRpcCommand (fun h -> Remoting.ExecuteCommand cmd h arg) hash
 
     [<JavaScriptExport>]
-    type ViewRegistry internal(name : vname) =
+    type ViewRegistry internal(name : string) =
         member __.Register(view : WebSharperPhysicalView) = registerView name view
 
 [<JavaScriptExport>]

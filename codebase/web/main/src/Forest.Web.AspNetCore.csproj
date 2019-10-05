@@ -3,13 +3,16 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
+
   <PropertyGroup>
     <ProjectGuid>{0238180F-15FD-49DD-B045-9453FC0AA7C8}</ProjectGuid>
     <Description>Forest integration with ASP.NET Core.</Description>
   </PropertyGroup>
+
   <ItemGroup>
-    <Folder Include="paket-files\" />
+    <PackageReference Include="Axle.Web.AspNetCore" Version="1.6.*" />
+    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
   </ItemGroup>
+
   <Import Project="../../../Forest.Common.props" />
-  <Import Project=".paket\Paket.Restore.targets" />
 </Project>
