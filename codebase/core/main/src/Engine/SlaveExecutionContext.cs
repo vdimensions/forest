@@ -69,7 +69,7 @@ namespace Forest.Engine
                 var view = kvp.Value;
                 var node = view.Node;
                 var descriptor = view.Descriptor;
-                view.AcquireContext(node, descriptor, this);
+                view.AcquireContext(node, descriptor, _exposedExecutionContext);
             }
         }
 

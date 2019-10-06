@@ -17,7 +17,6 @@ open Fake.Core
 open Fake.IO
 
 let projectLocations = [
-    "engine/main"
     "core/main"
     "core/forms"
     "web/main"
