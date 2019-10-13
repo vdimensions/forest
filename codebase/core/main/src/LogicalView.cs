@@ -26,6 +26,7 @@ namespace Forest
             if (disposing)
             {
                 Close();
+                GC.SuppressFinalize(this);
             }
             else
             {

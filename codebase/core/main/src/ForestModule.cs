@@ -20,6 +20,22 @@ namespace Forest
     [Requires(typeof(ForestTemplatesModule))]
     internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
     {
+        [Obsolete]
+        private sealed class InternalEngineContextProvider : ForestEngineContextProvider
+        {
+            private readonly IForestStateProvider _stateProvider;
+            private readonly IPhysicalViewRenderer _physicalViewRenderer;
+
+            public InternalEngineContextProvider(IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer)
+            {
+                _stateProvider = stateProvider;
+                _physicalViewRenderer = physicalViewRenderer;
+            }
+
+            protected override IForestStateProvider GetForestStateProvider() => _stateProvider ?? base.GetForestStateProvider();
+            protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => _physicalViewRenderer ?? base.GetPhysicalViewRenderer();
+        }
+    
         private readonly IViewFactory _viewFactory;
         private readonly IViewRegistry _viewRegistry;
         private readonly ISecurityManager _securityManager;
@@ -29,6 +45,7 @@ namespace Forest
         private readonly ILogger _logger;
 
 
+        private ForestEngineContextProvider _engineProvider;
         private IForestIntegrationProvider _integrationProvider;
         private IForestContext _context;
 
@@ -39,7 +56,7 @@ namespace Forest
             _securityManager = container.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
             _templateProvider = templateProvider;
             _resourceTemplateProvider = rtp;
-            _aspects = new HashSet<IForestExecutionAspect>(new ReferenceEqualityComparer<IForestExecutionAspect>());
+            _aspects = new List<IForestExecutionAspect>();
             _logger = logger;
         }
 
@@ -50,7 +67,7 @@ namespace Forest
             exporter.Export(this);
         }
 
-        [ModuleDependencyInitialized]
+        [ModuleDependencyInitialized,Obsolete]
         internal void DependencyInitialized (IForestIntegrationProvider integrationProvider)
         {
             if (_integrationProvider != null)
@@ -58,6 +75,15 @@ namespace Forest
                 throw new InvalidOperationException("Forest integration is already configured");
             }
             _integrationProvider = integrationProvider;
+        }
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(ForestEngineContextProvider engineProvider)
+        {
+            if (_engineProvider != null)
+            {
+                throw new InvalidOperationException("Forest engine provider is already configured");
+            }
+            _engineProvider = engineProvider;
         }
 
         [ModuleDependencyInitialized]
@@ -69,22 +95,46 @@ namespace Forest
         [ModuleDependencyTerminated]
         internal void DependencyTerminated(IForestExecutionAspect forestExecutionAspect) => _aspects.Remove(forestExecutionAspect);
 
-        internal IForestEngine CreateEngine()
+        internal ForestEngineContextProvider EngineContextProvider
         {
-            var pvr = _integrationProvider?.Renderer ?? new NoOpPhysicalViewRenderer();
-            var sp = _integrationProvider?.StateProvider ?? new DefaultForestStateProvider();
-            return new ForestEngine(this, sp, pvr);
+            get => _engineProvider ?? new InternalEngineContextProvider(_integrationProvider?.StateProvider, _integrationProvider?.Renderer);
         }
 
-        T IForestEngine.RegisterSystemView<T>() => CreateEngine().RegisterSystemView<T>();
-
-        void ITreeNavigator.Navigate(string tree) => CreateEngine().Navigate(tree);
-
-        void ITreeNavigator.Navigate<T>(string tree, T message) => CreateEngine().Navigate(tree, message);
-
-        void IMessageDispatcher.SendMessage<T>(T msg) => CreateEngine().SendMessage(msg);
-
-        void ICommandDispatcher.ExecuteCommand(string command, string target, object arg) => CreateEngine().ExecuteCommand(command, target, arg);
+        T IForestEngine.RegisterSystemView<T>()
+        {
+            using (var ctx = EngineContextProvider.CreateContext(this))
+            {
+                return ctx.Engine.RegisterSystemView<T>();
+            }
+        }
+        void ITreeNavigator.Navigate(string tree)
+        {
+            using (var ctx = EngineContextProvider.CreateContext(this))
+            {
+                ctx.Engine.Navigate(tree);
+            }
+        }
+        void ITreeNavigator.Navigate<T>(string tree, T message)
+        {
+            using (var ctx = EngineContextProvider.CreateContext(this))
+            {
+                ctx.Engine.Navigate(tree, message);
+            }
+        }
+        void IMessageDispatcher.SendMessage<T>(T msg)
+        {
+            using (var ctx = EngineContextProvider.CreateContext(this))
+            {
+                ctx.Engine.SendMessage(msg);
+            }
+        }
+        void ICommandDispatcher.ExecuteCommand(string command, string target, object arg)
+        {
+            using (var ctx = EngineContextProvider.CreateContext(this))
+            {
+                ctx.Engine.ExecuteCommand(command, target, arg);
+            }
+        }
 
         IView IViewFactory.Resolve(IViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
         IView IViewFactory.Resolve(IViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
