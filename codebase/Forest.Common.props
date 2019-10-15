@@ -40,6 +40,13 @@
     <!-- Enable local nuget feed for packages produced by this project -->
     <EnabeLocalPackageRestore>true</EnabeLocalPackageRestore>
   </PropertyGroup>
+
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\axle\dist\restore')">
+    <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\axle\dist\restore;$(RestoreSources)</RestoreSources>
+  </PropertyGroup>
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore')">
+    <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore;$(RestoreSources)</RestoreSources>
+  </PropertyGroup>
   
   <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\VDimensions.MSBuild.Sdk.targets" />
 

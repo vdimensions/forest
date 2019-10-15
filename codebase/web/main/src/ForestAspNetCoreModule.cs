@@ -1,15 +1,19 @@
 ﻿using Axle.Logging;
 using Axle.Modularity;
+using Axle.Web.AspNetCore;
+using Axle.Web.AspNetCore.Mvc;
 using Axle.Web.AspNetCore.Session;
 using Forest.Engine;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Forest.Web.AspNetCore
 {
     [Module]
     [RequiresForest]
     [RequiresAspNetSession]
-    internal sealed class ForestAspNetCoreModule : ISessionEventListener
+    [RequiresAspNetMvc]
+    internal sealed class ForestAspNetCoreModule : ISessionEventListener, IServiceConfigurer
     {
         private readonly IForestEngine _forestEngine;
         private readonly ForestSessionStateProvider _sessionStateProvider;
@@ -20,6 +24,11 @@ namespace Forest.Web.AspNetCore
             _forestEngine = forestEngine;
             _sessionStateProvider = new ForestSessionStateProvider(httpContextAccessor);
             _logger = logger;
+        }
+
+        void IServiceConfigurer.Configure(IServiceCollection services)
+        {
+            services.AddSingleton(_forestEngine);
         }
 
         void ISessionEventListener.OnSessionStart(ISession session)

@@ -10,8 +10,32 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Axle.Web.AspNetCore" Version="1.6.*" />
+    <Compile Remove="Http\ForestApiController.cs" />
+    <Compile Remove="Http\ForestCommandArgAttribute.cs" />
+    <Compile Remove="Http\ForestCommandArgumentAttribute.cs" />
+    <Compile Remove="Http\ForestCommandArgumentSource.cs" />
+    <Compile Remove="Http\ForestCommandNameAttribute.cs" />
+    <Compile Remove="Http\ForestController.cs" />
+    <Compile Remove="Http\ForestDecodedCommandInvokerAttribute.cs" />
+    <Compile Remove="Http\ForestEncodedCommandInvokerAttribute.cs" />
+    <Compile Remove="Http\ForestTemplateNameAttribute.cs" />
+    <Compile Remove="Http\Response.cs" />
+    <Compile Remove="Http\ResponseFormat.cs" />
+    <Compile Remove="Http\ResponseHeader.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Axle.Core" Version="1.7.*" />
+    <PackageReference Include="Axle.Configuration" Version="1.7.*" />
+    <PackageReference Include="Axle.Resources" Version="1.7.*" />
+    <PackageReference Include="Axle.Application" Version="1.7.*" />
+    <PackageReference Include="Axle.Web.AspNetCore" Version="1.7.*" />
+    <PackageReference Include="Axle.Web.AspNetCore.Mvc" Version="1.7.*" />
     <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Http\" />
   </ItemGroup>
 
   <Import Project="../../../Forest.Common.props" />
