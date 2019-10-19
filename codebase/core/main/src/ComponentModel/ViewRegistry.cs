@@ -152,5 +152,7 @@ namespace Forest.ComponentModel
         public IViewDescriptor GetDescriptor(string viewName) =>
             _namedDescriptors.TryGetValue(viewName.VerifyArgument(nameof(viewName)).IsNotNullOrEmpty().Value, out var viewType)
                 ? DoGetDescriptor(viewType) : null;
+
+        public IEnumerable<IViewDescriptor> Descriptors => _descriptorsByType.Values;
     }
 }

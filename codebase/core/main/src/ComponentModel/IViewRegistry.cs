@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using Axle.Verification;
-using Forest.Engine;
 
 namespace Forest.ComponentModel
 {
@@ -10,6 +10,8 @@ namespace Forest.ComponentModel
         IViewRegistry Register<T>() where T: IView;
         IViewDescriptor GetDescriptor(Type viewType);
         IViewDescriptor GetDescriptor(string viewName);
+
+        IEnumerable<IViewDescriptor> Descriptors { get; }
     }
     public static class ViewRegistryExtensions
     {

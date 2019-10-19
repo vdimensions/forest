@@ -15,8 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" Version="1.6.*" />
-    <PackageReference Include="Axle.Core" Version="[1.6.*,)" />
-    <PackageReference Include="Axle.Application" Version="[1.6.*,)" />
+    <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
   </ItemGroup>
 
   <Import Project="../../../Forest.Common.props" />

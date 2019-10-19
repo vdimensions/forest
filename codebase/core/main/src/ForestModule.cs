@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
+using System.Linq;
 using Axle;
 using Axle.DependencyInjection;
 using Axle.Logging;
@@ -17,8 +17,9 @@ using Forest.UI;
 namespace Forest
 {
     [Module]
+    [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
-    internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
+    internal sealed class ForestModule : CollectorModule<ForestViewRegistry>, IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
     {
         [Obsolete]
         private sealed class InternalEngineContextProvider : ForestEngineContextProvider
@@ -35,27 +36,25 @@ namespace Forest
             protected override IForestStateProvider GetForestStateProvider() => _stateProvider ?? base.GetForestStateProvider();
             protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => _physicalViewRenderer ?? base.GetPhysicalViewRenderer();
         }
-    
+        private readonly ForestViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
-        private readonly IViewRegistry _viewRegistry;
         private readonly ISecurityManager _securityManager;
         private readonly ITemplateProvider _templateProvider;
-        private readonly ResourceTemplateProvider _resourceTemplateProvider;
+        private readonly ResourceTemplateProvider _rtp;
         private readonly ICollection<IForestExecutionAspect> _aspects;
         private readonly ILogger _logger;
 
 
         private ForestEngineContextProvider _engineProvider;
         private IForestIntegrationProvider _integrationProvider;
-        private IForestContext _context;
 
-        public ForestModule(IContainer container, ITemplateProvider templateProvider, Application app, ResourceTemplateProvider rtp, ILogger logger)
+        public ForestModule(ForestViewRegistry viewRegistry, IContainer container, ITemplateProvider templateProvider, ResourceTemplateProvider rtp, Application app, ILogger logger) : base(viewRegistry)
         {
+            _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(container.Parent ?? container, app);
-            _viewRegistry = new ViewRegistry();
             _securityManager = container.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
             _templateProvider = templateProvider;
-            _resourceTemplateProvider = rtp;
+            _rtp = rtp;
             _aspects = new List<IForestExecutionAspect>();
             _logger = logger;
         }
@@ -63,6 +62,17 @@ namespace Forest
         [ModuleInit]
         internal void Init(ModuleExporter exporter)
         {
+            foreach (var viewAssembly in _viewRegistry.Descriptors
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+                .Select(x => x.ViewType.Assembly)
+            #else
+                .Select(x => System.Reflection.IntrospectionExtensions.GetTypeInfo(x.ViewType).Assembly)
+            #endif
+                .Distinct())
+            {
+                _rtp.RegisterAssemblySource(viewAssembly);
+            }
+
             _aspects.Add(this);
             exporter.Export(this);
         }
@@ -88,9 +98,6 @@ namespace Forest
 
         [ModuleDependencyInitialized]
         internal void DependencyInitialized(IForestExecutionAspect forestExecutionAspect) => _aspects.Add(forestExecutionAspect);
-
-        [ModuleDependencyInitialized]
-        internal void DependencyInitialized(IForestViewProvider viewProvider) => viewProvider.RegisterViews(this);
 
         [ModuleDependencyTerminated]
         internal void DependencyTerminated(IForestExecutionAspect forestExecutionAspect) => _aspects.Remove(forestExecutionAspect);
@@ -138,23 +145,7 @@ namespace Forest
 
         IView IViewFactory.Resolve(IViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
         IView IViewFactory.Resolve(IViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
-
-        IViewDescriptor IViewRegistry.GetDescriptor(Type viewType) => _viewRegistry.GetDescriptor(viewType);
-        IViewDescriptor IViewRegistry.GetDescriptor(string viewName) => _viewRegistry.GetDescriptor(viewName);
-
-        IViewRegistry IViewRegistry.Register<T>()
-        {
-            _resourceTemplateProvider.RegisterAssemblySource(typeof(T).GetTypeInfo().Assembly);
-            _viewRegistry.Register<T>();
-            return this;
-        }
-        IViewRegistry IViewRegistry.Register(Type viewType)
-        {
-            _resourceTemplateProvider.RegisterAssemblySource(viewType.GetTypeInfo().Assembly);
-            _viewRegistry.Register(viewType);
-            return this;
-        }
-
+        
         IViewFactory IForestContext.ViewFactory => this;
         IViewRegistry IForestContext.ViewRegistry => this;
         ISecurityManager IForestContext.SecurityManager => _securityManager;
@@ -184,5 +175,31 @@ namespace Forest
             sw.Stop();
             _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds);
         }
+
+        IViewRegistry IViewRegistry.Register(Type viewType)
+        {
+            _viewRegistry.Register(viewType);
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            _rtp.RegisterAssemblySource(viewType.Assembly);
+            #else
+            _rtp.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(viewType).Assembly);
+            #endif
+            return this;
+        }
+
+        IViewRegistry IViewRegistry.Register<T>()
+        {
+            _viewRegistry.Register<T>();
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            _rtp.RegisterAssemblySource(typeof(T).Assembly);
+            #else
+            _rtp.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(T)).Assembly);
+            #endif
+            return this;
+        }
+
+        IViewDescriptor IViewRegistry.GetDescriptor(Type viewType) => _viewRegistry.GetDescriptor(viewType);
+        IViewDescriptor IViewRegistry.GetDescriptor(string viewName) => _viewRegistry.GetDescriptor(viewName);
+        IEnumerable<IViewDescriptor> IViewRegistry.Descriptors => _viewRegistry.Descriptors;
     }
 }

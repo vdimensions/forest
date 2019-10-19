@@ -7,14 +7,17 @@ using Forest.Templates.Xml;
 
 namespace Forest.Templates
 {
+    [Requires(typeof(ForestViewRegistry))]
     [Module]
     internal sealed class ForestTemplatesModule : IForestTemplateMarshallerConfigurer, IForestTemplateMarshallerRegistry
     {
         private readonly ResourceManager _resourceManager;
         private readonly ResourceTemplateProvider _templateProvider;
+        private readonly ForestViewRegistry _viewRegistry;
 
-        public ForestTemplatesModule()
+        public ForestTemplatesModule(ForestViewRegistry viewRegistry)
         {
+            _viewRegistry = viewRegistry;
             _templateProvider = new ResourceTemplateProvider(_resourceManager = new DefaultResourceManager());
         }
 

@@ -1,9 +1,10 @@
-﻿using Forest.ComponentModel;
-using Forest.Engine;
+﻿using Axle.Modularity;
+using Forest.ComponentModel;
 
 namespace Forest
 {
-    [RequiresForest]
+    [Requires(typeof(ForestViewRegistry))]
+    [UtilizedBy(typeof(ForestModule))]
     public interface IForestViewProvider
     {
         void RegisterViews(IViewRegistry registry);

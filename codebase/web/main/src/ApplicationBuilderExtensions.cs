@@ -7,6 +7,7 @@ namespace Forest.Web.AspNetCore
     public static class ApplicationBuilderExtensions
     {
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
-        public static IApplicationBuilder UseForestAspNetCore(this IApplicationBuilder app) => app.ConfigureModules(m => m.Load<ForestAspNetCoreModule>());
+        public static IApplicationBuilder UseForestAspNetCore(this IApplicationBuilder app) => 
+            app.ConfigureModules(m => m.Load<ForestAspNetCoreModule>());
     }
 }

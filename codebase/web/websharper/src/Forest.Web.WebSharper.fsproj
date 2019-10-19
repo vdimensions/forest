@@ -29,9 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Axle.FSharp" Version="1.6.*" />
-    <PackageReference Include="Axle.Web.AspNetCore" Version="1.6.*" />
-    <PackageReference Include="Axle.Web.WebSharper" Version="1.6.*" />
+    <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.FSharp" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Configuration" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Resources" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Web.AspNetCore" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Web.WebSharper" Version="$(AxleVersion)" />
     <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
     <PackageReference Include="Forest.Web.AspNetCore" Version="$(PackageVersionRange)" />
   </ItemGroup>
