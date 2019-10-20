@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 
@@ -7,17 +8,35 @@ namespace Forest.Web.AspNetCore
     [Serializable]
     internal sealed class ForestSessionState
     {
-        private ForestSessionState(ForestState state, object syncRoot)
+        public static ForestSessionState ReplaceState(ForestSessionState sessionState, ForestState forestState)
+        {
+            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.AllViews, sessionState.UpdatedViews);
+        }
+        public static ForestSessionState ReplaceAllViews(ForestSessionState sessionState, IImmutableDictionary<string, ViewNode> views)
+        {
+            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, views, sessionState.UpdatedViews);
+        }
+        public static ForestSessionState ReplaceUpdatedViews(ForestSessionState sessionState, IImmutableDictionary<string, ViewNode> views)
+        {
+            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, sessionState.AllViews, views);
+        }
+
+        private ForestSessionState(ForestState state, object syncRoot, IImmutableDictionary<string, ViewNode> allViews, IImmutableDictionary<string, ViewNode> updatedViews)
         {
             State = state;
-            Renderer = new DomPhysicalViewRenderer(this);
             SyncRoot = syncRoot;
+            AllViews = allViews;
+            UpdatedViews = updatedViews;
         }
-        internal ForestSessionState(ForestState state) : this(state, new object()) { }
-        public ForestSessionState() : this(new ForestState()) { }
+        internal ForestSessionState() : this(
+            new ForestState(), 
+            new object(), 
+            ImmutableDictionary.Create<string, ViewNode>(StringComparer.Ordinal),
+            ImmutableDictionary.Create<string, ViewNode>(StringComparer.Ordinal)) { }
 
         public ForestState State { get; }
-        internal DomPhysicalViewRenderer Renderer { get; }
         internal object SyncRoot { get; }
+        internal IImmutableDictionary<string, ViewNode> AllViews { get; }
+        internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }
 }

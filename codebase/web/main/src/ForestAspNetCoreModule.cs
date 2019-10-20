@@ -1,47 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Axle.Logging;
 using Axle.Modularity;
-using Axle.Verification;
 using Axle.Web.AspNetCore;
 using Axle.Web.AspNetCore.Mvc;
 using Axle.Web.AspNetCore.Mvc.ModelBinding;
 using Axle.Web.AspNetCore.Session;
+using Forest.ComponentModel;
 using Forest.Engine;
+using Forest.StateManagement;
+using Forest.UI;
 using Forest.Web.AspNetCore.Controllers;
+using Forest.Web.AspNetCore.Dom;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using ILogger = Axle.Logging.ILogger;
 
 namespace Forest.Web.AspNetCore
 {
     [Module]
     [RequiresForest]
-    [RequiresAspNetSession]
-    [RequiresAspNetMvc]
-    internal sealed class ForestAspNetCoreModule : ISessionEventListener, IServiceConfigurer, IModelResolverProvider
+    internal sealed class ForestAspNetCoreModule : ForestEngineContextProvider, ISessionEventListener, IServiceConfigurer, IModelResolverProvider, IForestStateProvider
     {
         private readonly IForestEngine _forestEngine;
+        private readonly IViewRegistry _viewRegistry;
         private readonly ForestSessionStateProvider _sessionStateProvider;
         private readonly ILogger _logger;
 
-        public ForestAspNetCoreModule(IForestEngine forestEngine, IHttpContextAccessor httpContextAccessor, ILogger logger)
+        public ForestAspNetCoreModule(IForestEngine forestEngine, IViewRegistry viewRegistry, IHttpContextAccessor httpContextAccessor, IForestStateInspector stateInspector, ILogger logger)
         {
             _forestEngine = forestEngine;
-            _sessionStateProvider = new ForestSessionStateProvider(httpContextAccessor);
+            _viewRegistry = viewRegistry;
+            _sessionStateProvider = new ForestSessionStateProvider(httpContextAccessor, stateInspector);
             _logger = logger;
         }
 
-        void IServiceConfigurer.Configure(IServiceCollection services)
-        {
-            services.AddSingleton(_forestEngine);
-        }
+        void IServiceConfigurer.Configure(IServiceCollection services) => services.AddSingleton(_forestEngine).AddSingleton<IClientViewsHelper>(_sessionStateProvider);
 
         void ISessionEventListener.OnSessionStart(ISession session)
         {
@@ -57,38 +52,62 @@ namespace Forest.Web.AspNetCore
             }
         }
 
+        public void RegisterTypes(IModelTypeRegistry registry)
+        {
+            foreach (var descriptor in _viewRegistry.Descriptors)
+            {
+                registry.Register(descriptor.ViewType);
+                foreach (var eventDescriptor in descriptor.Events)
+                {
+                    if (!string.IsNullOrEmpty(eventDescriptor.Topic))
+                    {
+                        continue;
+                    }
+                    registry.Register(eventDescriptor.MessageType);
+                }
+            }
+        }
+
         IModelResolver IModelResolverProvider.GetModelResolver(Type modelType)
         {
             if (modelType == typeof(IForestMessageArg))
             {
-                return new ForestMessageBinder();
+                return new ForestMessageResolver(_sessionStateProvider);
             }
             if (modelType == typeof(IForestCommandArg))
             {
-                return new ForestCommandBinder();
+                return new ForestCommandResolver(_sessionStateProvider);
             }
             return null;
         }
-    }
 
-    internal sealed class ForestCommandBinder : IModelResolver
-    {
+        protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => new WebApiPhysicalViewRenderer(_sessionStateProvider);
+        protected override IForestStateProvider GetForestStateProvider() => this;
 
-        public Task<object> Resolve(IReadOnlyDictionary<string, object> routeData, ModelResolutionChain next)
+        ForestState IForestStateProvider.LoadState()
         {
-            var instanceId = routeData.TryGetValue(ForestController.InstanceId, out var iid) ? iid : null;
-            var command = routeData.TryGetValue(ForestController.Command, out var cmd) ? cmd : null;
-            return next();
+            var state = _sessionStateProvider.Current;
+            Monitor.Enter(state.SyncRoot);
+            return state.State;
         }
-    }
 
-    internal sealed class ForestMessageBinder : IModelResolver
-    {
-        public Task<object> Resolve(IReadOnlyDictionary<string, object> routeData, ModelResolutionChain next)
+        void IForestStateProvider.CommitState(ForestState state)
         {
-            var template = routeData.TryGetValue(ForestController.Template, out var tpl) ? tpl : null;
-            var command = routeData.TryGetValue(ForestController.Message, out var msg) ? msg : null;
-            return next();
+            var s = _sessionStateProvider.Current;
+            try
+            {
+                _sessionStateProvider.UpdateState(state);
+            }
+            finally
+            {
+                Monitor.Exit(s.SyncRoot);
+            }
+        }
+
+        void IForestStateProvider.RollbackState()
+        {
+            var s = _sessionStateProvider.Current;
+            Monitor.Exit(s.SyncRoot);
         }
     }
 }

@@ -63,18 +63,18 @@ namespace Forest
         internal void Init(ModuleExporter exporter)
         {
             foreach (var viewAssembly in _viewRegistry.Descriptors
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+                #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
                 .Select(x => x.ViewType.Assembly)
-            #else
+                #else
                 .Select(x => System.Reflection.IntrospectionExtensions.GetTypeInfo(x.ViewType).Assembly)
-            #endif
+                #endif
                 .Distinct())
             {
                 _rtp.RegisterAssemblySource(viewAssembly);
             }
 
             _aspects.Add(this);
-            exporter.Export(this);
+            exporter.Export(this).Export<IForestStateInspector>(new DefaultForestStateInspector());
         }
 
         [ModuleDependencyInitialized,Obsolete]
