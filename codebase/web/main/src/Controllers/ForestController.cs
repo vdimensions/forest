@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Net;
 using Forest.Engine;
-using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -51,7 +50,11 @@ namespace Forest.Web.AspNetCore.Controllers
         [HttpGet(GetForestViewTemplate)]
         public ActionResult GetPartial(string instanceId)
         {
-            return new ForestResult(_clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
+            if (_clientViewsHelper.AllViews.TryGetValue(instanceId, out var view))
+            {
+                return new ForestResult(new []{ view }, HttpStatusCode.PartialContent);
+            }
+            return new NotFoundResult();
         }
 
         [HttpGet(NavigateTemplate)]
