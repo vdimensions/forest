@@ -54,7 +54,7 @@ namespace Forest.Web.AspNetCore
         {
             foreach (var descriptor in _viewRegistry.Descriptors)
             {
-                registry.Register(descriptor.ViewType);
+                registry.Register(descriptor.ModelType);
                 foreach (var eventDescriptor in descriptor.Events)
                 {
                     if (!string.IsNullOrEmpty(eventDescriptor.Topic))
@@ -62,6 +62,14 @@ namespace Forest.Web.AspNetCore
                         continue;
                     }
                     registry.Register(eventDescriptor.MessageType);
+                }
+                foreach (var commandDescriptor in descriptor.Commands.Values)
+                {
+                    if (commandDescriptor.ArgumentType == null)
+                    {
+                        continue;
+                    }
+                    registry.Register(commandDescriptor.ArgumentType);
                 }
             }
         }

@@ -36,7 +36,7 @@ namespace Forest.Web.AspNetCore.Controllers
                 {
                     return new ForestVoidArg();
                 }
-                var commandArg = next.Resolve(cd.ArgumentType);
+                var commandArg = await next.Resolve(cd.ArgumentType);
                 return new ForestDynamicArg(commandArg);
             }
             return null;
