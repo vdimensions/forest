@@ -62,9 +62,9 @@ namespace Forest.ComponentModel
 
         private bool _processing = false;
 
-        private static bool Filter(IView sender, ISubscriptionHandler subscription)
+        private static bool IsSameReceiver(IView sender, ISubscriptionHandler subscription)
         {
-            return !ReferenceEquals(sender, subscription.Receiver);
+            return ReferenceEquals(sender, subscription.Receiver);
         }
 
         private int InvokeMatchingSubscriptions(
@@ -81,7 +81,7 @@ namespace Forest.ComponentModel
                 topicSubscriptionHandlers
                     .Where(x => x.Key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo()))
                     .SelectMany(x => x.Value)
-                    .Where(x => Filter(sender, x))
+                    .Where(x => !IsSameReceiver(sender, x))
                     .Where(subscribersToIgnore.Add)
                     .ToList();
             // Now that we've collected all potential subscribers, it is safe to invoke them
@@ -176,7 +176,7 @@ namespace Forest.ComponentModel
         public IEventBus Unsubscribe(IView receiver)
         {
             foreach (var topicSubscriptionHandlers in _subscriptions.Values.SelectMany(x => x.Values))
-            foreach (var subscriptionHandler in topicSubscriptionHandlers.Where(y => Filter(receiver, y)).ToList())
+            foreach (var subscriptionHandler in topicSubscriptionHandlers.Where(y => IsSameReceiver(receiver, y)).ToList())
             {
                 topicSubscriptionHandlers.Remove(subscriptionHandler);
             }

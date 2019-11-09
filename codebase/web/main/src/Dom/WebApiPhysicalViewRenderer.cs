@@ -14,6 +14,7 @@ namespace Forest.Web.AspNetCore.Dom
 
         public override WebApiPhysicalView CreatePhysicalView(IForestEngine engine, DomNode node)
         {
+            _sessionStateProvider.UpdateAllViews(_sessionStateProvider.Current.AllViews.Clear());
             _sessionStateProvider.UpdateUpdatedViews(_sessionStateProvider.Current.UpdatedViews.Clear());
             return new WebApiPhysicalView(engine, node.InstanceID, _sessionStateProvider);
         }
