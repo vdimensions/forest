@@ -58,6 +58,7 @@ namespace Forest.Web.AspNetCore
             return _stateInspector.TryGetViewDescriptor(state, instanceId, out descriptor);
         }
 
+        public NavigationInfo NavigationInfo => Current.NavigationInfo;
         public IImmutableDictionary<string, ViewNode> AllViews => Current.AllViews;
         public IImmutableDictionary<string, ViewNode> UpdatedViews => Current.UpdatedViews;
     }

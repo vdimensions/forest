@@ -1,30 +1,36 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using Forest.Engine;
+using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
 namespace Forest.Web.AspNetCore.Controllers
 {
-    public interface IForestCommandArg
-    {
-        object Value { get; }
-    }
-    public interface IForestMessageArg
-    {
-        object Value { get; }
-    }
-
     [Route("api/forest")]
     public class ForestController : ControllerBase
     {
+        [Serializable]
+        private sealed class ForestResponse
+        {
+            public ForestResponse(string path, ViewNode[] views)
+            {
+                Path = path;
+                Views = views;
+            }
+
+            public string Path { get; }
+            public ViewNode[] Views { get; }
+        }
         public sealed class ForestResult : ObjectResult, IClientErrorActionResult
         {
-            public ForestResult(ViewNode[] views, HttpStatusCode statusCode) : base(views)
+            private ForestResult(ForestResponse response, HttpStatusCode statusCode) : base(response)
             {
                 StatusCode = (int) statusCode;
             }
+            public ForestResult(string path, ViewNode[] views, HttpStatusCode statusCode) : this(new ForestResponse(path, views), statusCode) { }
         }
 
         internal const string Command = "command";
@@ -46,13 +52,18 @@ namespace Forest.Web.AspNetCore.Controllers
             _forest = forest;
             _clientViewsHelper = clientViewsHelper;
         }
+        
+        private string GetPath(NavigationInfo navigationInfo)
+        {
+            return navigationInfo.Template;
+        }
 
         [HttpGet(GetForestViewTemplate)]
         public ActionResult GetPartial(string instanceId)
         {
             if (_clientViewsHelper.AllViews.TryGetValue(instanceId, out var view))
             {
-                return new ForestResult(new []{ view }, HttpStatusCode.PartialContent);
+                return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), new []{ view }, HttpStatusCode.PartialContent);
             }
             return new NotFoundResult();
         }
@@ -61,14 +72,14 @@ namespace Forest.Web.AspNetCore.Controllers
         public ActionResult Navigate(string template)
         {
             _forest.Navigate(template);
-            return new ForestResult(_clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
+            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
         }
 
         [HttpGet(NavigateToTemplate)]
-        public ActionResult Navigate(string template, [FromBody] IForestMessageArg arg)
+        public ActionResult Navigate(string template, [FromRoute] IForestMessageArg arg)
         {
             _forest.Navigate(template, arg.Value);
-            return new ForestResult(_clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
+            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
         }
 
         [HttpPatch(InvokeCommandTemplate)]
@@ -76,7 +87,7 @@ namespace Forest.Web.AspNetCore.Controllers
         public ActionResult InvokeCommand(string instanceId, string command, [FromBody] IForestCommandArg arg)
         {
             _forest.ExecuteCommand(command, instanceId, arg.Value);
-            return new ForestResult(_clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
+            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
         }
     }
 }

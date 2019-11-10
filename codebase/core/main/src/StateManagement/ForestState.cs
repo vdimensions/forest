@@ -21,6 +21,11 @@ namespace Forest.StateManagement
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
+        private readonly NavigationInfo _navigationInfo;
+        
+        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+        [DataMember]
+        #endif
         private readonly Tree _tree;
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -40,21 +45,24 @@ namespace Forest.StateManagement
 
         internal ForestState(
             Guid stateID,
+            NavigationInfo navigationInfo,
             Tree tree,
             ImmutableDictionary<string, ViewState> viewStates, 
             ImmutableDictionary<string, IRuntimeView> logicalViews,
             ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
             _stateID = stateID;
+            _navigationInfo = navigationInfo;
             _tree = tree;
             _viewStates = viewStates;
 
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
-        public ForestState() : this(Guid.Empty, Tree.Root, ImmutableDictionary<string, ViewState>.Empty, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
+        public ForestState() : this(Guid.Empty, new NavigationInfo(), Tree.Root, ImmutableDictionary<string, ViewState>.Empty, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
+        public NavigationInfo NavigationInfo => _navigationInfo;
         internal Tree Tree => _tree;
         internal ImmutableDictionary<string, ViewState> ViewStates => _viewStates;
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;

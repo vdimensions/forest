@@ -27,7 +27,8 @@ namespace Forest.Engine
         private ImmutableDictionary<string, ViewState> _viewStates;
         private ImmutableDictionary<string, IRuntimeView> _logicalViews;
 
-        protected Tree _tree;
+        private NavigationInfo _navigationInfo;
+        private Tree _tree;
         private int _nestedCalls = 0;
 
         internal SlaveExecutionContext(
@@ -35,9 +36,11 @@ namespace Forest.Engine
                 PhysicalViewDomProcessor physicalViewDomProcessor, 
                 ForestState initialState, 
                 IForestExecutionContext exposedExecutionContext)
-            : this(context,
+            : this(
+                context,
                 physicalViewDomProcessor,
                 new EventBus(), 
+                initialState.NavigationInfo,
                 initialState.Tree,
                 initialState.ViewStates,
                 initialState.LogicalViews,
@@ -46,12 +49,14 @@ namespace Forest.Engine
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus,
+                NavigationInfo navigationInfo,
                 Tree tree,
                 ImmutableDictionary<string, ViewState> viewStates,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
                 ImmutableDictionary<string, IPhysicalView> physicalViews,
                 IForestExecutionContext exposedExecutionContext = null)
         {
+            _navigationInfo = navigationInfo;
             _tree = tree;
             _context = context;
             _physicalViewDomProcessor = physicalViewDomProcessor;
@@ -107,13 +112,14 @@ namespace Forest.Engine
             }
             _eventBus.Dispose();
 
-            var a = _tree;
-            var b = _viewStates;
-            var c = _logicalViews;
+            var a = _navigationInfo;
+            var b = _tree;
+            var c = _viewStates;
+            var d = _logicalViews;
             _physicalViewDomProcessor.PhysicalViews = _physicalViews;
-            Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
+            Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, d, _physicalViewDomProcessor.PhysicalViews));
             var newPv = _physicalViewDomProcessor.PhysicalViews;
-            var newState = new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
+            var newState = new ForestState(GuidGenerator.NewID(), a, b, c, d, newPv);
             //match fuid with
             //| Some f -> State.createWithFuid(a, b, c, f)
             //| None -> State.create(a, b, c)
@@ -355,6 +361,7 @@ namespace Forest.Engine
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
             ProcessInstructions(CompileTemplate(templateDefinition, null).ToArray());
+            _navigationInfo = new NavigationInfo(template, null);
         }
         public void Navigate<T>(string template, T message)
         {
@@ -366,6 +373,7 @@ namespace Forest.Engine
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
             ProcessInstructions(CompileTemplate(templateDefinition, message).ToArray());
+            _navigationInfo = new NavigationInfo(template, message);
         }
 
         T IForestEngine.RegisterSystemView<T>()
