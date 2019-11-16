@@ -7,7 +7,6 @@ using Forest.Forms.Controls.Dialogs;
 namespace Forest.Forms
 {
     [Module]
-    [RequiresForest]
     [Requires(typeof(ForestDialogsModule))]
     internal sealed class ForestFormsModule : IForestViewProvider
     {
