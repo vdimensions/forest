@@ -1,0 +1,25 @@
+version: 2.{build}
+pull_requests:
+  do_not_increment_build_number: true
+branches:
+  only:
+  - master
+skip_tags: true
+skip_branch_with_pr: true
+image: Visual Studio 2019
+platform: Any CPU
+cache:
+- '%USERPROFILE%\.nuget\packages'
+- '%LocalAppData%\NuGet\Cache'
+- '%LocalAppData%\NuGet\v3-cache'
+build_script:
+- ps: "git submodule init -q \ngit submodule update -q \ngit submodule foreach git fetch origin -q \ngit submodule foreach git pull origin master -q \ncd dist \nmkdir restore \ncd .. \ncd codebase\ndotnet tool install fake-cli --tool-path .\\.tools\n.\\.tools\\fake --silent run .\\build.fsx"
+artifacts:
+- path: dist/*.nupkg
+  name: NuGet Package
+deploy:
+- provider: NuGet
+  api_key:
+    secure: Q6ho6fe6sOA1/bPGHAguZAvVxNK9xugl/CteNAa9Pqzj61RzTPwLS8Ivabg+CS15
+  on:
+    branch: master
