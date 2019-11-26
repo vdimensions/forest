@@ -19,7 +19,7 @@
   <PropertyGroup>
     <Deterministic>false</Deterministic>
     <VersionMajor>2</VersionMajor>
-    <VersionMinor>6</VersionMinor>
+    <VersionMinor>7</VersionMinor>
   </PropertyGroup>
   <Choose>
     <When Condition="'$(APPVEYOR_BUILD_NUMBER)' != ''">
@@ -29,7 +29,7 @@
     </When>
     <Otherwise>
       <PropertyGroup>
-        <VersionMinor>6</VersionMinor>
+        <VersionMinor>7</VersionMinor>
       </PropertyGroup>
     </Otherwise>
   </Choose>
