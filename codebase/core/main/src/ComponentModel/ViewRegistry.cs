@@ -73,10 +73,7 @@ namespace Forest.ComponentModel
         private readonly ConcurrentDictionary<Type, IViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
 
-        protected virtual IIntrospector CreateIntrospector(Type viewType)
-        {
-            return new DefaultIntrospector(viewType);
-        }
+        protected virtual ITypeIntrospector CreateIntrospector(Type viewType) => new TypeIntrospector(viewType);
         
         private static IEnumerable<MethodAndAttributes<TAttribute>> ConsolidateMethods<TAttribute>(
                 IEnumerable<MethodAndAttributes<TAttribute>> data) 

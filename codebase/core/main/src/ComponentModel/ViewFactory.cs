@@ -10,7 +10,7 @@ namespace Forest.ComponentModel
     {
         private IView DoResolve(IViewDescriptor descriptor, object model)
         {
-            var introspector = new DefaultIntrospector(descriptor.ViewType);
+            var introspector = new TypeIntrospector(descriptor.ViewType);
             var constructors = introspector
                 .GetConstructors(ScanOptions.PublicInstance)
                 .Select(x => new { Constructor = x, Parameters = x.GetParameters() });
