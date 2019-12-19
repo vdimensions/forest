@@ -21,7 +21,7 @@
     <VersionMajor>2</VersionMajor>
     <VersionMinor>7</VersionMinor>
   </PropertyGroup>
-  <Choose>
+  <!-- <Choose>
     <When Condition="'$(APPVEYOR_BUILD_NUMBER)' != ''">
       <PropertyGroup>
         <VersionMinor>$(APPVEYOR_BUILD_NUMBER)</VersionMinor>
@@ -32,7 +32,7 @@
         <VersionMinor>7</VersionMinor>
       </PropertyGroup>
     </Otherwise>
-  </Choose>
+  </Choose> -->
 
   <!-- Common props -->
   <PropertyGroup>
