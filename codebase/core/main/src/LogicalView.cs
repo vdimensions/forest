@@ -52,6 +52,13 @@ namespace Forest
             return new RegionImpl(this, name);
         }
 
+        public void WithRegion(string regionName, Action<IRegion> action)
+        {
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            action.VerifyArgument(nameof(action)).IsNotNull();
+            action.Invoke(new RegionImpl(this, regionName));
+        }
+        
         public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_node));
 
         public void UpdateModel(Func<T, T> updateFunc)
@@ -60,7 +67,9 @@ namespace Forest
             if (_executionContext != null)
             {
                 var vs = _executionContext.GetViewState(_node);
-                _state = _executionContext.SetViewState(false, _node, vs.HasValue ? ViewState.UpdateModel(vs.Value, newModel) : ViewState.Create(newModel));
+                _state = _executionContext.SetViewState(false, _node, vs.HasValue 
+                    ? ViewState.UpdateModel(vs.Value, newModel) 
+                    : ViewState.Create(newModel));
             }
             else
             {
@@ -117,8 +126,7 @@ namespace Forest
 
         void IRuntimeView.Resume(ViewState viewState)
         {
-            
-            _state = this.ExecutionContext.SetViewState(true, _node, viewState);
+            _state = ExecutionContext.SetViewState(true, _node, viewState);
             Resume();
         }
 
@@ -132,7 +140,7 @@ namespace Forest
             {
                 if (_executionContext != null)
                 {
-                    ((IRuntimeView)this).AbandonContext(_executionContext);
+                    ((IRuntimeView) this).AbandonContext(_executionContext);
                 }
             }
         }

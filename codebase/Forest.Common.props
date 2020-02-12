@@ -92,7 +92,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AxleVersion>1.8.*</AxleVersion>
+    <AxleVersion>1.9.*</AxleVersion>
   </PropertyGroup>
 
   <!-- Paket paths -->
