@@ -12,7 +12,6 @@ using Forest.Engine.Aspects;
 using Forest.Security;
 using Forest.StateManagement;
 using Forest.Templates;
-using Forest.UI;
 
 namespace Forest
 {
@@ -21,21 +20,6 @@ namespace Forest
     [Requires(typeof(ForestTemplatesModule))]
     internal sealed class ForestModule : CollectorModule<ForestViewRegistry>, IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
     {
-        [Obsolete]
-        private sealed class InternalEngineContextProvider : ForestEngineContextProvider
-        {
-            private readonly IForestStateProvider _stateProvider;
-            private readonly IPhysicalViewRenderer _physicalViewRenderer;
-
-            public InternalEngineContextProvider(IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer)
-            {
-                _stateProvider = stateProvider;
-                _physicalViewRenderer = physicalViewRenderer;
-            }
-
-            protected override IForestStateProvider GetForestStateProvider() => _stateProvider ?? base.GetForestStateProvider();
-            protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => _physicalViewRenderer ?? base.GetPhysicalViewRenderer();
-        }
         private readonly ForestViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
         private readonly ISecurityManager _securityManager;
@@ -44,11 +28,15 @@ namespace Forest
         private readonly ICollection<IForestExecutionAspect> _aspects;
         private readonly ILogger _logger;
 
+        private ForestEngineContextProvider _engineContextProvider;
 
-        private ForestEngineContextProvider _engineProvider;
-        private IForestIntegrationProvider _integrationProvider;
-
-        public ForestModule(ForestViewRegistry viewRegistry, IContainer container, ITemplateProvider templateProvider, ResourceTemplateProvider rtp, Application app, ILogger logger) : base(viewRegistry)
+        public ForestModule(
+                ForestViewRegistry viewRegistry, 
+                IContainer container, 
+                ITemplateProvider templateProvider, 
+                ResourceTemplateProvider rtp, 
+                Application app, 
+                ILogger logger) : base(viewRegistry)
         {
             _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(container.Parent ?? container, app);
@@ -77,23 +65,14 @@ namespace Forest
             exporter.Export(this).Export<IForestStateInspector>(new DefaultForestStateInspector());
         }
 
-        [ModuleDependencyInitialized,Obsolete]
-        internal void DependencyInitialized (IForestIntegrationProvider integrationProvider)
-        {
-            if (_integrationProvider != null)
-            {
-                throw new InvalidOperationException("Forest integration is already configured");
-            }
-            _integrationProvider = integrationProvider;
-        }
         [ModuleDependencyInitialized]
-        internal void DependencyInitialized(ForestEngineContextProvider engineProvider)
+        internal void DependencyInitialized(ForestEngineContextProvider engineContextProvider)
         {
-            if (_engineProvider != null)
+            if (_engineContextProvider != null)
             {
                 throw new InvalidOperationException("Forest engine provider is already configured");
             }
-            _engineProvider = engineProvider;
+            _engineContextProvider = engineContextProvider;
         }
 
         [ModuleDependencyInitialized]
@@ -104,7 +83,7 @@ namespace Forest
 
         internal ForestEngineContextProvider EngineContextProvider
         {
-            get => _engineProvider ?? new InternalEngineContextProvider(_integrationProvider?.StateProvider, _integrationProvider?.Renderer);
+            get => _engineContextProvider;
         }
 
         T IForestEngine.RegisterSystemView<T>()
@@ -157,7 +136,7 @@ namespace Forest
             var sw = Stopwatch.StartNew();
             cutPoint.Proceed();
             sw.Stop();
-            _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds);
+            _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
         }
 
         void IForestExecutionAspect.Navigate(NavigateCutPoint cutPoint)
@@ -165,7 +144,7 @@ namespace Forest
             var sw = Stopwatch.StartNew();
             cutPoint.Proceed();
             sw.Stop();
-            _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds);
+            _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
         }
 
         void IForestExecutionAspect.SendMessage(IForestExecutionCutPoint cutPoint)
@@ -173,7 +152,7 @@ namespace Forest
             var sw = Stopwatch.StartNew();
             cutPoint.Proceed();
             sw.Stop();
-            _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds);
+            _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
         }
 
         IViewRegistry IViewRegistry.Register(Type viewType)

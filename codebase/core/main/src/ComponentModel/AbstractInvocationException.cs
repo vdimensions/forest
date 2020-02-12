@@ -23,8 +23,9 @@ namespace Forest.ComponentModel
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         protected AbstractInvocationException(
-            System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+                System.Runtime.Serialization.SerializationInfo info,
+                System.Runtime.Serialization.StreamingContext context) 
+            : base(info, context) { }
         #endif
     }
 }
