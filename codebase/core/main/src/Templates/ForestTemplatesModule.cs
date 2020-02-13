@@ -1,6 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using Axle.Modularity;
-using Axle.References;
 using Axle.Resources;
 using Axle.Resources.Extraction;
 using Axle.Resources.Xml.Extraction;
@@ -12,23 +15,32 @@ namespace Forest.Templates
     internal sealed class ForestTemplatesModule : 
         IForestTemplateMarshallerConfigurer, 
         IForestTemplateMarshallerRegistry,
-        IForestTemplateExtractorRegistry
+        IForestTemplateExtractorRegistry,
+        ITemplateProvider
     {
-        private static string[] ForestBundleNames => new[] {ResourceTemplateProvider.BundleName, ResourceTemplateProvider.OldBundleName};
+        internal const string BundleName = "Forest";
+        [Obsolete]
+        internal const string OldBundleName = "ForestTemplates";
+        
+        private static string[] ForestBundleNames => new[] {BundleName, OldBundleName};
+        
+        private readonly IList<string> _bundles = new List<string>();
+        private readonly LinkedList<IResourceExtractor> _templateSourceExtractors = new LinkedList<IResourceExtractor>();
+        private readonly IList<ForestTemplateExtractor> _marshallingExtractors = new List<ForestTemplateExtractor>();
+        private readonly ISet<string> _assemblies = new HashSet<string>(StringComparer.Ordinal);
 
-        private readonly ResourceManager _resourceManager;
-        private readonly ResourceTemplateProvider _templateProvider;
+        private ResourceManager _resourceManager;
+        
 
         public ForestTemplatesModule()
         {
-            _templateProvider = new ResourceTemplateProvider(_resourceManager = new DefaultResourceManager());
+            _resourceManager = new DefaultResourceManager();
         }
 
         [ModuleInit]
         internal void Init(ModuleExporter e)
         {
             ModuleDependencyInitialized(this);
-            e.Export(_templateProvider);
         }
 
         [ModuleTerminate]
@@ -47,11 +59,13 @@ namespace Forest.Templates
             registry.Register(new ForestTemplateMarshaller(new XmlTemplateReader(), "xml", new XDocumentExtractor()));
         }
 
-        public IForestTemplateMarshallerRegistry Register(IForestTemplateMarshaller marshaller)
+        private void InitResourceManager()
         {
+            var resourceManager = new DefaultResourceManager();
             var uriParser = new Axle.Conversion.Parsing.UriParser();
-            var marshallingExtractor = new ForestTemplateExtractor(marshaller);
-            var bundleNames = ForestBundleNames.Select(
+            foreach (var marshallingExtractor in _marshallingExtractors)
+            {
+                var bundleNames = ForestBundleNames.Select(
                     b =>
                     {
                         var fb = $"{b}/{marshallingExtractor.Extension}";
@@ -61,36 +75,77 @@ namespace Forest.Templates
                             SpecificBundle = fb
                         };
                     });
-            foreach (var bundleInfo in bundleNames)
-            {
-                _templateProvider.AddBundle(bundleInfo.DefaultBundle);
-                _templateProvider.AddBundle(bundleInfo.SpecificBundle);
-                _resourceManager.Bundles
-                    .Configure(bundleInfo.DefaultBundle)
-                    .Register(uriParser.Parse($"./{bundleInfo.DefaultBundle}"))
-                    .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
-                    .Extractors.Register(marshallingExtractor.ToExtractorList());
+                foreach (var bundleInfo in bundleNames)
+                {
+                    var bundle = bundleInfo.DefaultBundle;
+                    _bundles.Add(bundle);
+                    _bundles.Add(bundleInfo.SpecificBundle);
+                    var bundleContent = resourceManager.Bundles.Configure(bundle);
+                    bundleContent
+                        .Register(uriParser.Parse($"./{bundleInfo.DefaultBundle}"))
+                        .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
+                        .Extractors
+                        .Register(_templateSourceExtractors)
+                        .Register(marshallingExtractor.ToExtractorList());
+                    foreach (var assemblyName in _assemblies)
+                    {
+                        bundleContent.Register(uriParser.Parse($"assembly://{assemblyName}/{bundle}"));
+                    }
+                }
             }
 
+            _resourceManager = resourceManager;
+        }
+        
+        public void RegisterAssemblySource(Assembly assembly)
+        {
+            var assemblyName = assembly.GetName().Name;
+            _assemblies.Add(assemblyName);
+            InitResourceManager();
+        }
+
+        public IForestTemplateMarshallerRegistry Register(IForestTemplateMarshaller marshaller)
+        {
+            var marshallingExtractor = new ForestTemplateExtractor(marshaller);
+            _marshallingExtractors.Add(marshallingExtractor);
+            InitResourceManager();
             return this;
         }
         
         IForestTemplateExtractorRegistry IForestTemplateExtractorRegistry.Register(IResourceExtractor extractor)
         {
-            var bundleNames = ForestBundleNames;
-            foreach (var bundle in bundleNames)
-            {
-                _resourceManager.Bundles.Configure(bundle).Extractors.Register(extractor);
-            }
+            _templateSourceExtractors.AddFirst(extractor);
+            InitResourceManager();
             return this;
         }
-    }
-
-    internal sealed class PathTemplateExtractor : AbstractResourceExtractor
-    {
-        protected override Nullsafe<ResourceInfo> DoExtract(ResourceContext context, string name)
+        
+        private Template Load(IList<string> bundles, string name, int index)
         {
-            return base.DoExtract(context, name);
+            while (true)
+            {
+                if (index >= bundles.Count)
+                {
+                    return null;
+                }
+
+                var bundle = bundles[index];
+                var template = _resourceManager.Load(bundle, name, CultureInfo.InvariantCulture);
+                if (template.HasValue)
+                {
+                    return template.Value.Resolve<Template>();
+                }
+                index = index + 1;
+            }
+        }
+
+        Template ITemplateProvider.Load(string name)
+        {
+            var result = Load(_bundles, name, 0);
+            if (result != null)
+            {
+                return result;
+            }
+            throw new ResourceNotFoundException(name, BundleName, CultureInfo.InvariantCulture);
         }
     }
 }
