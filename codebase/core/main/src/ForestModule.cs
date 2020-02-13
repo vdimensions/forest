@@ -24,27 +24,29 @@ namespace Forest
         private readonly IViewFactory _viewFactory;
         private readonly ISecurityManager _securityManager;
         private readonly ITemplateProvider _templateProvider;
-        private readonly ResourceTemplateProvider _rtp;
         private readonly ICollection<IForestExecutionAspect> _aspects;
         private readonly ILogger _logger;
 
         private ForestEngineContextProvider _engineContextProvider;
+        [Obsolete("Replace usages of direct module with interfaces")]
+        private ForestTemplatesModule _forestTemplatesModule;
 
         public ForestModule(
                 ForestViewRegistry viewRegistry, 
                 IContainer container, 
-                ITemplateProvider templateProvider, 
-                ResourceTemplateProvider rtp, 
+                ITemplateProvider templateProvider,
                 Application app, 
+                ForestTemplatesModule forestTemplatesModule, 
                 ILogger logger) : base(viewRegistry)
         {
             _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(container.Parent ?? container, app);
             _securityManager = container.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
             _templateProvider = templateProvider;
-            _rtp = rtp;
             _aspects = new List<IForestExecutionAspect>();
             _logger = logger;
+
+            _forestTemplatesModule = forestTemplatesModule;
         }
 
         [ModuleInit]
@@ -58,7 +60,7 @@ namespace Forest
                 #endif
                 .Distinct())
             {
-                _rtp.RegisterAssemblySource(viewAssembly);
+                _forestTemplatesModule.RegisterAssemblySource(viewAssembly);
             }
 
             _aspects.Add(this);
@@ -159,9 +161,9 @@ namespace Forest
         {
             _viewRegistry.Register(viewType);
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            _rtp.RegisterAssemblySource(viewType.Assembly);
+            _forestTemplatesModule.RegisterAssemblySource(viewType.Assembly);
             #else
-            _rtp.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(viewType).Assembly);
+            _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(viewType).Assembly);
             #endif
             return this;
         }
@@ -170,9 +172,9 @@ namespace Forest
         {
             _viewRegistry.Register<T>();
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            _rtp.RegisterAssemblySource(typeof(T).Assembly);
+            _forestTemplatesModule.RegisterAssemblySource(typeof(T).Assembly);
             #else
-            _rtp.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(T)).Assembly);
+            _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(T)).Assembly);
             #endif
             return this;
         }
