@@ -17,7 +17,7 @@ namespace Forest.Templates
 
         protected override Nullsafe<ResourceInfo> DoExtract(ResourceContext context, string name)
         {
-            var baseResource = context.ExtractionChain.Extract(string.Format("{0}.{1}", name, Extension));
+            var baseResource = context.ExtractionChain.Extract($"{name}.{Extension}");
             if (baseResource.HasValue)
             {
                 var t = _marshaller.Unmarshal(name, baseResource.Value);
