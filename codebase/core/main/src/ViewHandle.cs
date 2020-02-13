@@ -33,7 +33,8 @@ namespace Forest
             public override bool Equals(ViewHandle other) => other is TypedViewHandle tvh && Equals(tvh);
             public bool Equals(TypedViewHandle other)
             {
-                return !ReferenceEquals(null, other) && (ReferenceEquals(this, other) || ViewType == other.ViewType);
+                return !ReferenceEquals(null, other) && 
+                       (ReferenceEquals(this, other) || ViewType == other.ViewType);
             }
 
             public override int GetHashCode() => (ViewType != null ? ViewType.GetHashCode() : 0);
@@ -80,6 +81,6 @@ namespace Forest
         internal ViewHandle() { }
 
         public abstract bool Equals(ViewHandle other);
-        public sealed override bool Equals(object obj) => !ReferenceEquals(null, obj) && Equals((ViewHandle) obj);
+        public sealed override bool Equals(object obj) => obj is ViewHandle handle && Equals(handle);
     }
 }

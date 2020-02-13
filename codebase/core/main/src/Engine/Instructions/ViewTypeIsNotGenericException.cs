@@ -15,13 +15,13 @@ namespace Forest.Engine.Instructions
     {
         private ViewTypeIsNotGenericException(InstantiateViewInstruction faultyInstruction, string message, Exception inner) 
             : base(faultyInstruction, message, inner) { }
-        public ViewTypeIsNotGenericException(InstantiateViewInstruction faultyInstruction, Exception inner) 
+        internal ViewTypeIsNotGenericException(InstantiateViewInstruction faultyInstruction, Exception inner) 
             : this(faultyInstruction, "The view type must implement the Forest.IView<> interface. ", inner) { }
-        public ViewTypeIsNotGenericException(InstantiateViewInstruction faultyInstruction) 
+        internal ViewTypeIsNotGenericException(InstantiateViewInstruction faultyInstruction) 
             : this(faultyInstruction, null) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        protected ViewTypeIsNotGenericException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        internal ViewTypeIsNotGenericException(SerializationInfo info, StreamingContext context) : base(info, context) { }
         #endif
     }
 }

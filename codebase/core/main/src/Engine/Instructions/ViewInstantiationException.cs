@@ -15,9 +15,9 @@ namespace Forest.Engine.Instructions
     {
         protected ViewInstantiationException(InstantiateViewInstruction faultyInstruction, string message, Exception inner) 
             : base(faultyInstruction, string.Format("An error occurred while instantiating view ({0}). {1}", faultyInstruction.Node.ViewHandle, message), inner) { }
-        public ViewInstantiationException(InstantiateViewInstruction faultyInstruction, Exception inner) 
+        internal ViewInstantiationException(InstantiateViewInstruction faultyInstruction, Exception inner) 
             : this(faultyInstruction, string.Empty, inner) { }
-        public ViewInstantiationException(InstantiateViewInstruction faultyInstruction) 
+        internal ViewInstantiationException(InstantiateViewInstruction faultyInstruction) 
             : this(faultyInstruction, null) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK

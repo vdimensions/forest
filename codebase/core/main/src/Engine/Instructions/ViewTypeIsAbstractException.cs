@@ -15,13 +15,13 @@ namespace Forest.Engine.Instructions
     {
         private ViewTypeIsAbstractException(InstantiateViewInstruction faultyInstruction, string message, Exception inner) 
             : base(faultyInstruction, message, inner) { }
-        public ViewTypeIsAbstractException(InstantiateViewInstruction faultyInstruction, Exception inner) 
+        internal ViewTypeIsAbstractException(InstantiateViewInstruction faultyInstruction, Exception inner) 
             : this(faultyInstruction, "The view type is abstract. ", inner) { }
-        public ViewTypeIsAbstractException(InstantiateViewInstruction faultyInstruction) 
+        internal ViewTypeIsAbstractException(InstantiateViewInstruction faultyInstruction) 
             : this(faultyInstruction, null) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        protected ViewTypeIsAbstractException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        internal ViewTypeIsAbstractException(SerializationInfo info, StreamingContext context) : base(info, context) { }
         #endif
     }
 }

@@ -20,11 +20,10 @@ namespace Forest.ComponentModel
     /// An interface representing a Forest event bus
     internal interface IEventBus : IDisposable
     {
-
         /// <summary>
         /// Publishes a message trough the event bus
         /// </summary>
-        /// <typeparam name="T">
+        /// <typeparam name="TMessage">
         /// The type of the message being pushed.
         /// </typeparam>
         /// <param name="sender">
