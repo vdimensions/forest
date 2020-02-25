@@ -3,7 +3,7 @@
 [~-]*
 
 # dirs
-
+**/.idea/
 **/dist/restore/
 **/node_modules/
 **/.fake/

@@ -1,11 +1,11 @@
 # Forest
 
-|Item|Status|  
-|-|-|
-|CI Build (master)|[![Build status](https://ci.appveyor.com/api/projects/status/x6h5xcqbjn0nji0h/branch/master?svg=true)](https://ci.appveyor.com/project/ivaylo5ev/forest/branch/master)|  
-|Forest.Core|[![#](https://img.shields.io/nuget/v/Forest.Core.svg)](https://www.nuget.org/packages/Forest.Core/)|  
-|Forest.Forms|[![#](https://img.shields.io/nuget/v/Forest.Forms.svg)](https://www.nuget.org/packages/Forest.Forms/)|  
-|Forest.Web.AspNetCore|[![#](https://img.shields.io/nuget/v/Forest.Web.AspNetCore.svg)](https://www.nuget.org/packages/Forest.Web.AspNetCore/)|  
+|Item|Status| 
+|-|-| 
+|CI Build (master)|[![Build status](https://ci.appveyor.com/api/projects/status/x6h5xcqbjn0nji0h/branch/master?svg=true)](https://ci.appveyor.com/project/ivaylo5ev/forest/branch/master)|   
+|Forest.Core|[![#](https://img.shields.io/nuget/v/Forest.Core.svg)](https://www.nuget.org/packages/Forest.Core/)| 
+|Forest.Forms|[![#](https://img.shields.io/nuget/v/Forest.Forms.svg)](https://www.nuget.org/packages/Forest.Forms/)| 
+|Forest.Web.AspNetCore|[![#](https://img.shields.io/nuget/v/Forest.Web.AspNetCore.svg)](https://www.nuget.org/packages/Forest.Web.AspNetCore/)| 
 
 ----
 

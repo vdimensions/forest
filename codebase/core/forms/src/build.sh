@@ -1,10 +1,11 @@
-project='Forest.Forms'
+project_name='Forest.Forms'
 project_format='csproj'
+project="${project_name}.${project_format}"
 
 ./restore.sh
 
-dotnet clean $project.$project_format && dotnet build $project.$project_format && dotnet pack $project.$project_format --no-build
-if [ $? -ne 0 ]; then
+dotnet clean ${project} && dotnet build ${project} && dotnet pack ${project} --no-build
+if [[ $? -ne 0 ]]; then
   read -rsp "Press [Enter] to quit"
   echo ""
   exit

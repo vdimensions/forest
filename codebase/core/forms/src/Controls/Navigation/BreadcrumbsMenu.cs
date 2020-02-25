@@ -1,6 +1,6 @@
 ﻿namespace Forest.Forms.Controls.Navigation
 {
-    public static class Breadcrumbs
+    public static class BreadcrumbsMenu
     {
         private const string Name = "ForestBreadcrumbs";
 

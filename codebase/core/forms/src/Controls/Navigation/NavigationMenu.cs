@@ -1,6 +1,6 @@
 ﻿namespace Forest.Forms.Controls.Navigation
 {
-    public static class Navigation
+    public static class NavigationMenu
     {
         private const string Name = "ForestNavigation";
         public static class Item
