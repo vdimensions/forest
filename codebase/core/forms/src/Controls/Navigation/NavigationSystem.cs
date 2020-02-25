@@ -8,9 +8,9 @@ namespace Forest.Forms.Controls.Navigation
         private const string Name = "ForestNavigationSystem";
 
         [View(Name)]
-        public class View : LogicalView, ISystemView
+        public class View : LogicalView<NavigationTree>, ISystemView
         {
-
+            public View(NavigationTree navigationTree) : base(navigationTree) { }
         }
     }
 }
