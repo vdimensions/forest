@@ -1,4 +1,4 @@
-﻿namespace Forest.Forms.Controls.Navigation
+﻿namespace Forest.Forms.Menus.Navigation
 {
     public interface INavigationTarget
     {
