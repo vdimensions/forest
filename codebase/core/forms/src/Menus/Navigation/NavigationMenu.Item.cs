@@ -4,19 +4,17 @@ namespace Forest.Forms.Menus.Navigation
 {
     public static partial class NavigationMenu
     {
-        public static class Item
+        internal static class Item
         {
             private const string Name = "ForestNavigationItem";
 
-            public class View : LogicalView<MenuItemModel>
+            internal class View : LogicalView<MenuItemModel>
             {
-                protected View(MenuItemModel model) : base(model)
-                {
-                }
+                protected View(MenuItemModel model) : base(model) { }
             }
         }
         
-        public static class NavigableItem
+        internal static class NavigableItem
         {
             private const string Name = "ForestNavigationNavigableItem";
             
@@ -26,11 +24,9 @@ namespace Forest.Forms.Menus.Navigation
             }
             
             [View(Name)]
-            public sealed class NavigableItemView : NavigationMenu.Item.View
+            internal sealed class View : NavigationMenu.Item.View
             {
-                public NavigableItemView(MenuItemModel model) : base(model)
-                {
-                }
+                public View(MenuItemModel model) : base(model) { }
 
                 [Command(Commands.Navigate)]
                 [SuppressMessage("ReSharper", "UnusedMember.Global")]

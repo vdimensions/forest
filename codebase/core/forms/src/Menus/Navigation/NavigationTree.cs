@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
 
@@ -144,15 +146,38 @@ namespace Forest.Forms.Menus.Navigation
             
             return new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState);
         }
+        
+        public IEnumerable<string> GetChildren(string node)
+        {
+            node.VerifyArgument(nameof(node)).IsNotNull();
+            
+            return Hierarchy.TryGetValue(node, out var children)
+                ? children as IEnumerable<string>
+                : new string[0];
+        }
+        
+        public IEnumerable<string> GetSiblings(string node)
+        {
+            node.VerifyArgument(nameof(node)).IsNotNull();
+            
+            return InverseHierarchy.TryGetValue(node, out var parent)
+                ? GetChildren(parent)
+                : new string[1] {node};
+        }
+
+        public bool IsSelected(string node)
+        {
+            node.VerifyArgument(nameof(node)).IsNotNull();
+
+            return SelectedNodes.Contains(node);
+        }
 
         private IImmutableDictionary<string, ImmutableHashSet<string>> Hierarchy { get; }
         private IImmutableDictionary<string, string> InverseHierarchy { get; }
         private IImmutableDictionary<string, object> MessageData { get; }
         private ImmutableHashSet<string> SelectedState { get; }
 
-        public IEnumerable<string> TopLevelNodes => Hierarchy.TryGetValue(Root, out var result) 
-                ? result as IEnumerable<string> 
-                : new string[0];
+        public IEnumerable<string> TopLevelNodes => GetChildren(Root);
         public IEnumerable<string> SelectedNodes
         {
             get

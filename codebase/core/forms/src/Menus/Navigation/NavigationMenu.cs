@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using Axle.Verification;
-using Forest.Forms.Controls;
 
 namespace Forest.Forms.Menus.Navigation
 {
@@ -9,7 +8,7 @@ namespace Forest.Forms.Menus.Navigation
     {
         private const string Name = "ForestNavigation";
         
-        public static class Messages
+        internal static class Messages
         {
             internal const string Topic = "891A455D-07FA-44C0-8B20-8310BFD02CFF"; 
             
@@ -27,8 +26,12 @@ namespace Forest.Forms.Menus.Navigation
             }
         }
 
-        public abstract class AbstractView<TView> : Repeater.View<TView, MenuItemModel>
-            where TView: IView<MenuItemModel>
+        private static class Regions
+        {
+            public const string Items = "Items";
+        }
+
+        internal abstract class AbstractView : LogicalView
         {
             private readonly INotifyNavigationTreeChanged _notifyNavigationTreeChanged;
             private readonly INavigationTreeBuilder _navigationTreeBuilder;
@@ -66,7 +69,7 @@ namespace Forest.Forms.Menus.Navigation
         }
 
         [View(Name)]
-        public class View : AbstractView<NavigationMenu.Item.View>
+        internal sealed class View : AbstractView
         {
             internal View(INotifyNavigationTreeChanged notifyNavigationTreeChanged, INavigationTreeBuilder navigationTreeBuilder) 
                 : base(notifyNavigationTreeChanged, navigationTreeBuilder)
@@ -82,6 +85,7 @@ namespace Forest.Forms.Menus.Navigation
 
             protected override void OnNavigationTreeChanged(NavigationTree tree)
             {
+                var itemsRegion = FindRegion(Regions.Items).Clear();
                 var topLevel = tree.TopLevelNodes;
             }
         }
