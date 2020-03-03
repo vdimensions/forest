@@ -17,7 +17,7 @@ namespace Forest.Forms.Menus.Navigation
         
         internal static class NavigableItem
         {
-            private const string Name = "BreadcrumbsNavigableItem";
+            private const string Name = "BreadcrumbsMenuNavigableItem";
 
             private static class Commands
             {
@@ -33,7 +33,8 @@ namespace Forest.Forms.Menus.Navigation
                 [SuppressMessage("ReSharper", "UnusedMember.Global")]
                 internal void Navigate()
                 {
-                    Publish(new NavigationSystem.Messages.SelectNavigationItem(Model.ID));
+                    //Publish(new NavigationSystem.Messages.SelectNavigationItem(Model.ID));
+                    Engine.Navigate(Model.ID);
                 }
             }
         }
