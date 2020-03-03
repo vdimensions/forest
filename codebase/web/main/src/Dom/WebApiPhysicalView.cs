@@ -65,7 +65,6 @@ namespace Forest.Web.AspNetCore.Dom
                 Regions = regions
             };
 
-
             var currentState = _sessionStateProvider.Current;
             var allViews = currentState.AllViews.Remove(_instanceId).Add(_instanceId, Node);
             var updatedViews = currentState.UpdatedViews.Remove(_instanceId).Add(_instanceId, Node);

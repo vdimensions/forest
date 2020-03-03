@@ -1,30 +1,13 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Axle.Verification;
 
 namespace Forest.Forms.Menus.Navigation
 {
     public static partial class NavigationMenu
     {
-        private const string Name = "ForestNavigation";
-        
-        internal static class Messages
-        {
-            internal const string Topic = "891A455D-07FA-44C0-8B20-8310BFD02CFF"; 
-            
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            [Serializable]
-            #endif
-            public class SelectNavigationItem
-            {
-                public SelectNavigationItem(string id)
-                {
-                    ID = id;
-                }
-
-                public string ID { get; }
-            }
-        }
+        private const string Name = "NavigationMenu";
 
         private static class Regions
         {
@@ -33,60 +16,46 @@ namespace Forest.Forms.Menus.Navigation
 
         internal abstract class AbstractView : LogicalView
         {
-            private readonly INotifyNavigationTreeChanged _notifyNavigationTreeChanged;
-            private readonly INavigationTreeBuilder _navigationTreeBuilder;
-
-            internal AbstractView(INotifyNavigationTreeChanged notifyNavigationTreeChanged, INavigationTreeBuilder navigationTreeBuilder)
-            {
-                _notifyNavigationTreeChanged = notifyNavigationTreeChanged;
-                _navigationTreeBuilder = navigationTreeBuilder;
-            }
-
-            public override void Load()
-            {
-                base.Load();
-                _notifyNavigationTreeChanged.NavigationTreeChanged += OnNavigationTreeChanged;
-                OnNavigationTreeChanged(_navigationTreeBuilder.Build());
-            }
-
-            protected override void Dispose(bool disposing)
-            {
-                if (disposing && _notifyNavigationTreeChanged != null)
-                {
-                    _notifyNavigationTreeChanged.NavigationTreeChanged -= OnNavigationTreeChanged;
-                }
-                base.Dispose(disposing);
-            }
-
+            [Subscription(NavigationSystem.Messages.Topic)]
             protected abstract void OnNavigationTreeChanged(NavigationTree tree);
 
-            protected void UpdateNavigationTree(Action<INavigationTreeBuilder> updateAction)
-            {
-                updateAction.VerifyArgument(nameof(updateAction)).IsNotNull();
-                updateAction(_navigationTreeBuilder);
-                _navigationTreeBuilder.Build();
-            }
+            // TODO: implement navigation tree changes at runtime
+            // protected void UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> updateAction)
+            // {
+            //     updateAction.VerifyArgument(nameof(updateAction)).IsNotNull();
+            //     var builder = new NavigationTreeBuilder();
+            //     _navigationTreeManager.UpdateNavigationTree(updateAction);
+            // }
         }
 
         [View(Name)]
         internal sealed class View : AbstractView
         {
-            internal View(INotifyNavigationTreeChanged notifyNavigationTreeChanged, INavigationTreeBuilder navigationTreeBuilder) 
-                : base(notifyNavigationTreeChanged, navigationTreeBuilder)
+            public override void Load()
             {
-            }
-
-            [Subscription(Messages.Topic)]
-            [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            internal void OnSelectionChanged(Messages.SelectNavigationItem selectNavigationItem)
-            {
-                UpdateNavigationTree(b => b.Toggle(selectNavigationItem.ID, true));
+                Engine.RegisterSystemView<NavigationSystem.View>();
+                base.Load();
             }
 
             protected override void OnNavigationTreeChanged(NavigationTree tree)
             {
-                var itemsRegion = FindRegion(Regions.Items).Clear();
-                var topLevel = tree.TopLevelNodes;
+                WithRegion(Regions.Items, itemsRegion =>
+                {
+                    itemsRegion.Clear();
+                    var topLevel = tree.TopLevelNodes
+                            .Select(x => new MenuItemModel { ID = x, Selected = tree.IsSelected(x) });
+                    foreach (var item in topLevel)
+                    {
+                        if (item.Selected)
+                        {
+                            itemsRegion.ActivateView<Item.View, MenuItemModel>(item);
+                        }
+                        else
+                        {
+                            itemsRegion.ActivateView<NavigableItem.View, MenuItemModel>(item);
+                        }
+                    }
+                });
             }
         }
     }

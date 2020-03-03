@@ -87,7 +87,8 @@ namespace Forest.Web.AspNetCore.Controllers
         public ActionResult InvokeCommand(string instanceId, string command, [FromBody] IForestCommandArg arg)
         {
             _forest.ExecuteCommand(command, instanceId, arg.Value);
-            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
+            //return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
+            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
         }
     }
 }

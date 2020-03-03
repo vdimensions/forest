@@ -2,9 +2,7 @@
 {
     public interface INavigationTreeBuilder
     {
-        INavigationTreeBuilder GetOrAddNode(string node, object message);
+        INavigationTreeBuilder GetOrAddNode(string node, object message = null);
         INavigationTreeBuilder Remove(string node);
-        INavigationTreeBuilder Toggle(string node, bool selected);
-        NavigationTree Build();
     }
 }

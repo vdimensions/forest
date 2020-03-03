@@ -14,7 +14,7 @@ namespace Forest.Web.AspNetCore
         }
         public static ForestSessionState ReplaceAllViews(ForestSessionState sessionState, IImmutableDictionary<string, ViewNode> views)
         {
-            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, views, sessionState.UpdatedViews);
+            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, views, views);
         }
         public static ForestSessionState ReplaceUpdatedViews(ForestSessionState sessionState, IImmutableDictionary<string, ViewNode> views)
         {

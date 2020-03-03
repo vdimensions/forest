@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -13,7 +12,7 @@ namespace Forest.Forms.Menus.Navigation
     {
         private static ICollection<string> ExpandChildren(
             string node, 
-            IImmutableDictionary<string, ImmutableHashSet<string>> hierarchy, 
+            IImmutableDictionary<string, IImmutableList<string>> hierarchy, 
             ICollection<string> children)
         {
             if (hierarchy.TryGetValue(node, out var nc))
@@ -32,7 +31,7 @@ namespace Forest.Forms.Menus.Navigation
         {
             if (inverseHierarchy.TryGetValue(node, out var parent))
             {
-                ExpandAncestors(parent, inverseHierarchy, ancestors).Add(parent);
+                ExpandAncestors(parent, inverseHierarchy, ancestors);
             }
             ancestors.Add(node);
             return ancestors;
@@ -43,12 +42,12 @@ namespace Forest.Forms.Menus.Navigation
 
         public NavigationTree() 
             : this(
-                ImmutableDictionary.Create<string, ImmutableHashSet<string>>(Comparer),
+                ImmutableDictionary.Create<string, IImmutableList<string>>(Comparer),
                 ImmutableDictionary.Create<string, string>(Comparer),
                 ImmutableDictionary.Create<string, object>(Comparer), 
                 ImmutableHashSet.Create(Comparer)) { }
         private NavigationTree(
-            IImmutableDictionary<string, ImmutableHashSet<string>> hierarchy, 
+            IImmutableDictionary<string, IImmutableList<string>> hierarchy, 
             IImmutableDictionary<string, string> inverseHierarchy, 
             IImmutableDictionary<string, object> messageData, 
             ImmutableHashSet<string> selectedState)
@@ -68,7 +67,7 @@ namespace Forest.Forms.Menus.Navigation
             var hierarchy = Hierarchy;
             var messageData = MessageData;
             var selectedState = SelectedState;
-            if (!inverseHierarchy.ContainsKey(parent))
+            if (!Comparer.Equals(parent, Root) && !inverseHierarchy.ContainsKey(parent))
             {
                 throw new ArgumentException(string.Format("Invalid navigation hierarchy: parent structure '{0}' was not found", parent));
             }
@@ -83,9 +82,14 @@ namespace Forest.Forms.Menus.Navigation
             }
             if (!hierarchy.TryGetValue(existingParent, out var children))
             {
-                children = ImmutableHashSet.Create(Comparer);
+                children = ImmutableList.Create<string>();
             }
-            hierarchy = hierarchy.Remove(existingParent).Add(existingParent, children.Add(current));
+
+            if (!children.Contains(current, Comparer))
+            {
+                children = children.Add(current);
+            }
+            hierarchy = hierarchy.Remove(existingParent).Add(existingParent, children);
 
             messageData = messageData.Remove(current);
             
@@ -121,17 +125,23 @@ namespace Forest.Forms.Menus.Navigation
             return new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState);
         }
 
-        public NavigationTree ToggleNode(string node, bool selected)
+        public bool ToggleNode(string node, bool selected, out NavigationTree tree)
         {
             node.VerifyArgument(nameof(node)).IsNotNull();
             
+            var hierarchy = Hierarchy;
+            
             if (selected == SelectedState.Contains(node))
             {
-                return this;
+                var children = ExpandChildren(node, hierarchy, new HashSet<string>(Comparer));
+                if (children.All(x => !SelectedState.Contains(x)))
+                {
+                    tree = this;
+                    return false;
+                }
             }
             
             var inverseHierarchy = InverseHierarchy;
-            var hierarchy = Hierarchy;
             var messageData = MessageData;
             var selectedState = SelectedState.Clear();
 
@@ -144,7 +154,8 @@ namespace Forest.Forms.Menus.Navigation
                 }
             }
             
-            return new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState);
+            tree = new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState.Remove(Root));
+            return true;
         }
         
         public IEnumerable<string> GetChildren(string node)
@@ -172,7 +183,7 @@ namespace Forest.Forms.Menus.Navigation
             return SelectedNodes.Contains(node);
         }
 
-        private IImmutableDictionary<string, ImmutableHashSet<string>> Hierarchy { get; }
+        private IImmutableDictionary<string, IImmutableList<string>> Hierarchy { get; }
         private IImmutableDictionary<string, string> InverseHierarchy { get; }
         private IImmutableDictionary<string, object> MessageData { get; }
         private ImmutableHashSet<string> SelectedState { get; }
@@ -186,6 +197,7 @@ namespace Forest.Forms.Menus.Navigation
                 var currentParent = Root;
                 while (Hierarchy.TryGetValue(currentParent, out var currentChildren))
                 {
+                    var lastParent = currentParent;
                     foreach (var child in currentChildren)
                     {
                         if (SelectedState.Contains(child))
@@ -194,6 +206,11 @@ namespace Forest.Forms.Menus.Navigation
                             currentParent = child;
                             break;
                         }
+                    }
+
+                    if (Comparer.Equals(lastParent, currentParent))
+                    {
+                        break;
                     }
                 }
                 return result;

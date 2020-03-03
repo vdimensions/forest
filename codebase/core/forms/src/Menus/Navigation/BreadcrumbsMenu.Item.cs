@@ -6,8 +6,9 @@ namespace Forest.Forms.Menus.Navigation
     {
         internal static class Item
         {
-            private const string Name = "ForestBreadcrumbsItem";
+            private const string Name = "BreadcrumbsMenuItem";
 
+            [View(Name)]
             internal class View : LogicalView<MenuItemModel>
             {
                 protected View(MenuItemModel model) : base(model) { }
@@ -16,7 +17,7 @@ namespace Forest.Forms.Menus.Navigation
         
         internal static class NavigableItem
         {
-            private const string Name = "ForestBreadcrumbsNavigableItem";
+            private const string Name = "BreadcrumbsNavigableItem";
 
             private static class Commands
             {
@@ -32,7 +33,7 @@ namespace Forest.Forms.Menus.Navigation
                 [SuppressMessage("ReSharper", "UnusedMember.Global")]
                 internal void Navigate()
                 {
-                    Publish(new NavigationMenu.Messages.SelectNavigationItem(Model.ID));
+                    Publish(new NavigationSystem.Messages.SelectNavigationItem(Model.ID));
                 }
             }
         }

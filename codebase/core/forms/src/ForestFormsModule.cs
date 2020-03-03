@@ -9,7 +9,7 @@ namespace Forest.Forms
     [Module]
     [Requires(typeof(ForestDialogsModule))]
     [Requires(typeof(NavigationSystemModule))]
-    internal sealed class ForestFormsModule : IForestViewProvider, IForestFormsManagerProvider
+    internal sealed class ForestFormsModule : IForestViewProvider//, IForestFormsManagerProvider
     {
         public void RegisterViews(IViewRegistry registry)
         {

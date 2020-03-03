@@ -7,7 +7,8 @@ namespace Forest.Forms.Menus.Navigation
         private readonly string _parentNavigationItem;
         private readonly NavigationTree _navigationTree;
 
-        public NavigationTreeBuilder(string parentNavigationItem, NavigationTree navigationTree)
+        public NavigationTreeBuilder(NavigationTree navigationTree) : this(navigationTree, NavigationTree.Root) { }
+        public NavigationTreeBuilder(NavigationTree navigationTree, string parentNavigationItem)
         {
             _parentNavigationItem = parentNavigationItem;
             _navigationTree = navigationTree;
@@ -16,21 +17,13 @@ namespace Forest.Forms.Menus.Navigation
         public NavigationTreeBuilder GetOrAddNode(string node, object message)
         {
             node.VerifyArgument(nameof(node)).IsNotNullOrEmpty();
-            return new NavigationTreeBuilder(
-                node, 
-                _navigationTree.RegisterNavigationNode(node, _parentNavigationItem, message));
+            return new NavigationTreeBuilder(_navigationTree.RegisterNavigationNode(_parentNavigationItem, node, message), node);
         }
 
         public NavigationTreeBuilder Remove(string node)
         {
             node.VerifyArgument(nameof(node)).IsNotNullOrEmpty();
-            return new NavigationTreeBuilder(_parentNavigationItem, _navigationTree.UnregisterNavigationNode(node));
-        }
-
-        public NavigationTreeBuilder Toggle(string node, bool selected)
-        {
-            node.VerifyArgument(nameof(node)).IsNotNullOrEmpty();
-            return new NavigationTreeBuilder(_parentNavigationItem, _navigationTree.ToggleNode(node, selected));
+            return new NavigationTreeBuilder(_navigationTree.UnregisterNavigationNode(node), _parentNavigationItem);
         }
 
         INavigationTreeBuilder INavigationTreeBuilder.GetOrAddNode(string node, object message) 
@@ -38,9 +31,6 @@ namespace Forest.Forms.Menus.Navigation
 
         INavigationTreeBuilder INavigationTreeBuilder.Remove(string node) 
             => Remove(node);
-
-        INavigationTreeBuilder INavigationTreeBuilder.Toggle(string node, bool selected) 
-            => Toggle(node, selected);
 
         public NavigationTree Build() => _navigationTree;
     }

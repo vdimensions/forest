@@ -6,7 +6,7 @@ using Forest.ComponentModel;
 namespace Forest.Forms.Menus.Navigation
 {
     [Module]
-    internal sealed partial class NavigationSystemModule : IForestViewProvider, INotifyNavigationTreeChanged
+    internal sealed partial class NavigationSystemModule : IForestViewProvider
     {
         private volatile NavigationTree _navigationTree = new NavigationTree();
 
@@ -19,18 +19,16 @@ namespace Forest.Forms.Menus.Navigation
 
         [ModuleDependencyInitialized]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal void DependencyInitialized(INavigationTreeConfigurer navigationTreeConfigurer)
-        {
-            var builder = new DelegatingNavigationTreeBuilder(this);
-            navigationTreeConfigurer.Configure(builder);
-            _navigationTree = builder.Build();
-        }
+        internal void DependencyInitialized(INavigationTreeConfigurer navigationTreeConfigurer) => navigationTreeConfigurer.Configure(this);
 
-        void IForestViewProvider.RegisterViews(IViewRegistry registry) =>
-            registry
-                .Register<NavigationMenu.View>().Register<NavigationMenu.Item.View>()
-                .Register<BreadcrumbsMenu.View>().Register<BreadcrumbsMenu.Item.View>();
-
-        public event Action<NavigationTree> NavigationTreeChanged;
+        void IForestViewProvider.RegisterViews(IViewRegistry registry) 
+            => registry
+                .Register<NavigationSystem.View>()
+                .Register<NavigationMenu.View>()
+                    .Register<NavigationMenu.Item.View>()
+                    .Register<NavigationMenu.NavigableItem.View>()
+                .Register<BreadcrumbsMenu.View>()
+                    .Register<BreadcrumbsMenu.Item.View>()
+                    .Register<BreadcrumbsMenu.NavigableItem.View>();
     }
 }

@@ -7,7 +7,7 @@ namespace Forest.Forms.Controls.Dialogs
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class DialogSystem
     {
-        private const string Name = "ForestDialogSystem";
+        private const string Name = "DialogSystem";
         private const string MessageChannel = Name;
 
         public sealed class Regions
@@ -127,20 +127,20 @@ namespace Forest.Forms.Controls.Dialogs
             ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions));
         }
 
-        public static void ShowModal<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
-            where TView : IView<TModel>
-        {
-            formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions)));
-        }
-        public static void ShowConfirmation<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
-            where TView : IView<TModel>, IConfirmationDialogView
-        {
-            formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions)));
-        }
-        public static void ShowOkCancelDialog<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
-            where TView : IView<TModel>, IOkCancelDialogView
-        {
-            formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions)));
-        }
+        // public static void ShowModal<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
+        //     where TView : IView<TModel>
+        // {
+        //     formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions)));
+        // }
+        // public static void ShowConfirmation<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
+        //     where TView : IView<TModel>, IConfirmationDialogView
+        // {
+        //     formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions)));
+        // }
+        // public static void ShowOkCancelDialog<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
+        //     where TView : IView<TModel>, IOkCancelDialogView
+        // {
+        //     formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions)));
+        // }
     }
 }
