@@ -93,9 +93,12 @@ namespace Forest
             }
         }
 
-        private static ImmutableList<Node> GetChildren(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node) => 
-            hierarchy.TryGetValue(node, out var result) ? result : ImmutableList<Node>.Empty;
-        
+        private static ImmutableList<Node> GetChildren(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node)
+        {
+            //TODO: check if `node` belongs to the tree
+            return hierarchy.TryGetValue(node, out var result) ? result : ImmutableList<Node>.Empty;
+        }
+
         public static bool TryInsert(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node, out ImmutableDictionary<Node, ImmutableList<Node>> result)
         {
             if (hierarchy.TryGetValue(node, out _))
@@ -190,6 +193,6 @@ namespace Forest
 
         public IEnumerable<Node> Roots => Hierarchy.Keys;
 
-        public IEnumerable<Node> this[Node node] => GetChildren(Hierarchy, node);//TODO: check belongs
+        public IEnumerable<Node> this[Node node] => GetChildren(Hierarchy, node);
     }
 }
