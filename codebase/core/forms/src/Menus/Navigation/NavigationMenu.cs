@@ -18,14 +18,6 @@ namespace Forest.Forms.Menus.Navigation
         {
             [Subscription(NavigationSystem.Messages.Topic)]
             protected abstract void OnNavigationTreeChanged(NavigationTree tree);
-
-            // TODO: implement navigation tree changes at runtime
-            // protected void UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> updateAction)
-            // {
-            //     updateAction.VerifyArgument(nameof(updateAction)).IsNotNull();
-            //     var builder = new NavigationTreeBuilder();
-            //     _navigationTreeManager.UpdateNavigationTree(updateAction);
-            // }
         }
 
         [View(Name)]

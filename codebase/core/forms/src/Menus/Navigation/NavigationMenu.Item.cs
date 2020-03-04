@@ -33,7 +33,6 @@ namespace Forest.Forms.Menus.Navigation
                 [SuppressMessage("ReSharper", "UnusedMember.Global")]
                 internal void Navigate()
                 {
-                    //Publish(new NavigationSystem.Messages.SelectNavigationItem(Model.ID));
                     Engine.Navigate(Model.ID);
                 }
             }
