@@ -15,10 +15,13 @@ namespace Forest.Forms.Controls
             public const string Content = "Content";
         }
 
-        internal static class Messages
+        internal static class Topics
         {
             public const string TabStripInternalMessageTopic = "FC5F1876832B43EE9C01835BA658F98F";
+        }
 
+        internal static class Messages
+        {
             #if NETSTANDARD2_0 || NETFRAMEWORK
             [Serializable]
             #endif
@@ -47,35 +50,32 @@ namespace Forest.Forms.Controls
             #endif
             public class Model
             {
-                [SuppressMessage("ReSharper", "InconsistentNaming")]
-                private readonly string id;
-                [SuppressMessage("ReSharper", "InconsistentNaming")]
-                private readonly bool selected;
-                [SuppressMessage("ReSharper", "InconsistentNaming")]
-                private string name;
+                private readonly string _id;
+                private readonly bool _selected;
+                private string _name;
 
                 internal Model() : this(string.Empty) { }
                 public Model(string id) : this(id, false) { }
                 public Model(string id, bool selected)
                 {
-                    this.id = name = id;
-                    this.selected = selected;
+                    _id = _name = id;
+                    _selected = selected;
                 }
 
                 #if NETSTANDARD2_0 || NETFRAMEWORK
                 [Localizable(false)]
                 #endif
-                public string ID => id;
+                public string ID => _id;
 
-                public bool Selected => selected;
+                public bool Selected => _selected;
 
                 #if NETSTANDARD2_0 || NETFRAMEWORK
                 [Localizable(true)]
                 #endif
                 public string Name
                 {
-                    get => name;
-                    set => name = value;
+                    get => _name;
+                    set => _name = value;
                 }
             }
 
@@ -89,7 +89,7 @@ namespace Forest.Forms.Controls
                 [Command(Commands.Select)]
                 internal void Selected()
                 {
-                    Publish(new Messages.TabSelectedMessage(TabStripGuid, Model.ID), Messages.TabStripInternalMessageTopic);
+                    Publish(new Messages.TabSelectedMessage(TabStripGuid, Model.ID), Topics.TabStripInternalMessageTopic);
                 }
             }
         }
@@ -140,7 +140,7 @@ namespace Forest.Forms.Controls
                 OnTabSelected(new Messages.TabSelectedMessage(_guid, tabId));
             }
 
-            [Subscription(Messages.TabStripInternalMessageTopic)]
+            [Subscription(Topics.TabStripInternalMessageTopic)]
             internal void OnTabSelected(Messages.TabSelectedMessage message)
             {
                 if (!message.TabStripGuid.Equals(_guid))

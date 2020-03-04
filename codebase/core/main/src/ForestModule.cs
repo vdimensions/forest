@@ -26,8 +26,6 @@ namespace Forest
         private readonly ITemplateProvider _templateProvider;
         private readonly ICollection<IForestExecutionAspect> _aspects;
         private readonly ILogger _logger;
-
-        private ForestEngineContextProvider _engineContextProvider;
         [Obsolete("Replace usages of direct module with interfaces")]
         private ForestTemplatesModule _forestTemplatesModule;
 
@@ -70,11 +68,11 @@ namespace Forest
         [ModuleDependencyInitialized]
         internal void DependencyInitialized(ForestEngineContextProvider engineContextProvider)
         {
-            if (_engineContextProvider != null)
+            if (EngineContextProvider != null)
             {
                 throw new InvalidOperationException("Forest engine provider is already configured");
             }
-            _engineContextProvider = engineContextProvider;
+            EngineContextProvider = engineContextProvider;
         }
 
         [ModuleDependencyInitialized]
@@ -83,10 +81,7 @@ namespace Forest
         [ModuleDependencyTerminated]
         internal void DependencyTerminated(IForestExecutionAspect forestExecutionAspect) => _aspects.Remove(forestExecutionAspect);
 
-        internal ForestEngineContextProvider EngineContextProvider
-        {
-            get => _engineContextProvider;
-        }
+        internal ForestEngineContextProvider EngineContextProvider { get; private set; }
 
         T IForestEngine.RegisterSystemView<T>()
         {

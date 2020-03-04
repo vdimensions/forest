@@ -26,7 +26,7 @@ namespace Forest.UI
 
         void IDisposable.Dispose()
         {
-            this.Dispose(true);
+            Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -40,16 +40,23 @@ namespace Forest.UI
 
         public void NavigateTo(string template)
         {
-            _engine.Navigate(template.VerifyArgument(nameof(template)).IsNotNullOrEmpty());
+            template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
+
+            _engine.Navigate(template);
         }
         public void NavigateTo<T>(string template, T arg)
         {
-            _engine.Navigate(template.VerifyArgument(nameof(template)).IsNotNullOrEmpty(), arg.VerifyArgument(nameof(arg)).IsNotNull().Value);
+            template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
+            arg.VerifyArgument(nameof(arg)).IsNotNull();
+
+            _engine.Navigate(template, arg);
         }
 
         void IPhysicalView.Update(DomNode node)
         {
-            if (node.VerifyArgument(nameof(node)).IsNotNull().Value.Equals(_node))
+            node.VerifyArgument(nameof(node)).IsNotNull();
+
+            if (node.Equals(_node))
             {
                 return;
             }
