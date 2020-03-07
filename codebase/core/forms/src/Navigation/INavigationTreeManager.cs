@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     public interface INavigationTreeManager : INotifyNavigationTreeChanged
     {

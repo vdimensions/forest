@@ -108,39 +108,20 @@ namespace Forest.Forms.Controls.Dialogs
             forest.SendMessage(message);
         }
 
-        [Obsolete("Use overload accepting ForestFormsManager instead")]
         public static void ShowModal<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView: IView<TModel>
         {
             ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions));
         }
-        [Obsolete("Use overload accepting ForestFormsManager instead")]
         public static void ShowConfirmation<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView : IView<TModel>, IConfirmationDialogView
         {
             ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions));
         }
-        [Obsolete("Use overload accepting ForestFormsManager instead")]
         public static void ShowOkCancelDialog<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView : IView<TModel>, IOkCancelDialogView
         {
             ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions));
         }
-
-        // public static void ShowModal<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
-        //     where TView : IView<TModel>
-        // {
-        //     formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions)));
-        // }
-        // public static void ShowConfirmation<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
-        //     where TView : IView<TModel>, IConfirmationDialogView
-        // {
-        //     formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions)));
-        // }
-        // public static void ShowOkCancelDialog<TView, TModel>(this ForestFormsManager formsManager, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
-        //     where TView : IView<TModel>, IOkCancelDialogView
-        // {
-        //     formsManager.DelegateToEngine(forest => ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions)));
-        // }
     }
 }

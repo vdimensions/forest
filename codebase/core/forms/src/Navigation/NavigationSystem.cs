@@ -1,9 +1,10 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Axle.Verification;
 using Forest.Engine;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class NavigationSystem
@@ -17,14 +18,18 @@ namespace Forest.Forms.Menus.Navigation
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
             [Serializable]
             #endif
-            public class SelectNavigationItem
+            public class HighlightNavigationItem
             {
-                public SelectNavigationItem(string id)
+                public HighlightNavigationItem(string id)
                 {
                     ID = id;
                 }
 
                 public string ID { get; }
+            }
+            
+            internal sealed class UpOneLevel
+            {
             }
 
             internal sealed class UpdateTreeMessage
@@ -56,9 +61,9 @@ namespace Forest.Forms.Menus.Navigation
 
             [Subscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            internal void OnSelectionChanged(Messages.SelectNavigationItem selectNavigationItem)
+            internal void OnSelectionChanged(Messages.HighlightNavigationItem highlightNavigationItem)
             {
-                if (_navigationTree.ToggleNode(selectNavigationItem.ID, true, out var tree))
+                if (_navigationTree.ToggleNode(highlightNavigationItem.ID, true, out var tree))
                 {
                     OnNavigationTreeChanged(_navigationTree = tree);
                 }
@@ -76,6 +81,18 @@ namespace Forest.Forms.Menus.Navigation
                 var outBuilder = (NavigationTreeBuilder) message.UpdateTreeFunction(builder);
                 OnNavigationTreeChanged(_navigationTree = outBuilder.Build());
             }
+
+            [Subscription]
+            internal void UpOneLevel(Messages.UpOneLevel message)
+            {
+                var selected = _navigationTree.SelectedNodes;
+                var upOneLevelNode = selected.Reverse().Skip(1).FirstOrDefault();
+                if (upOneLevelNode != null && _navigationTree.ToggleNode(upOneLevelNode, true, out var newTree))
+                {
+                    OnNavigationTreeChanged(_navigationTree = newTree);
+                    // TODO: perform actual navigate
+                }
+            }
         }
 
         public static void UpdateNavigationTree(
@@ -85,6 +102,12 @@ namespace Forest.Forms.Menus.Navigation
             forest.VerifyArgument(nameof(forest)).IsNotNull();
             updateFn.VerifyArgument(nameof(updateFn)).IsNotNull();
             forest.SendMessage(new Messages.UpdateTreeMessage(updateFn));
+        }
+
+        public static void NavigateBack(this IForestEngine forest)
+        {
+            forest.VerifyArgument(nameof(forest)).IsNotNull();
+            forest.SendMessage(new Messages.UpOneLevel());
         }
     }
 }

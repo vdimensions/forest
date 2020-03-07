@@ -2,7 +2,7 @@
 using Forest.ComponentModel;
 using Forest.Forms.Controls;
 using Forest.Forms.Controls.Dialogs;
-using Forest.Forms.Menus.Navigation;
+using NavigationSystemModule = Forest.Forms.Navigation.NavigationSystemModule;
 
 namespace Forest.Forms
 {

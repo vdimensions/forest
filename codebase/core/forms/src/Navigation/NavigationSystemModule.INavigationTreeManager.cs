@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     internal sealed partial class NavigationSystemModule : INavigationTreeManager
     {

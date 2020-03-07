@@ -1,6 +1,6 @@
 ﻿using Axle.Modularity;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     [Requires(typeof(NavigationSystemModule))]
     public interface INavigationTreeConfigurer

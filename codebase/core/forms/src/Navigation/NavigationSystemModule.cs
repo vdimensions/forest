@@ -1,9 +1,8 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Axle.Modularity;
 using Forest.ComponentModel;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     [Module]
     internal sealed partial class NavigationSystemModule : IForestViewProvider
@@ -28,7 +27,7 @@ namespace Forest.Forms.Menus.Navigation
                     .Register<NavigationMenu.Item.View>()
                     .Register<NavigationMenu.NavigableItem.View>()
                 .Register<BreadcrumbsMenu.View>()
-                    .Register<BreadcrumbsMenu.Item.View>()
-                    .Register<BreadcrumbsMenu.NavigableItem.View>();
+                    .Register<BreadcrumbsMenuItem.View>()
+                    .Register<BreadcrumbsMenuNavigableItem.View>();
     }
 }

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Axle.Verification;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     public static partial class NavigationMenu
     {
@@ -17,6 +15,7 @@ namespace Forest.Forms.Menus.Navigation
         internal abstract class AbstractView : LogicalView
         {
             [Subscription(NavigationSystem.Messages.Topic)]
+            [SuppressMessage("ReSharper", "UnusedMember.Global")]
             protected abstract void OnNavigationTreeChanged(NavigationTree tree);
         }
 
@@ -35,16 +34,16 @@ namespace Forest.Forms.Menus.Navigation
                 {
                     itemsRegion.Clear();
                     var topLevel = tree.TopLevelNodes
-                            .Select(x => new MenuItemModel { ID = x, Selected = tree.IsSelected(x) });
+                            .Select(x => new NavigationNode { Key = x, Selected = tree.IsSelected(x) });
                     foreach (var item in topLevel)
                     {
                         if (item.Selected)
                         {
-                            itemsRegion.ActivateView<Item.View, MenuItemModel>(item);
+                            itemsRegion.ActivateView<NavigationMenu.Item.View, NavigationNode>(item);
                         }
                         else
                         {
-                            itemsRegion.ActivateView<NavigableItem.View, MenuItemModel>(item);
+                            itemsRegion.ActivateView<NavigationMenu.NavigableItem.View, NavigationNode>(item);
                         }
                     }
                 });

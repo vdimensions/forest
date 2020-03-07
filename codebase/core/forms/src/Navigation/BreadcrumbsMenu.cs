@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
-    public static partial class BreadcrumbsMenu
+    public static class BreadcrumbsMenu
     {
         private const string Name = "BreadcrumbsMenu";
 
@@ -20,7 +20,7 @@ namespace Forest.Forms.Menus.Navigation
                 {
                     itemsRegion.Clear();
                     var selectedItems = tree.SelectedNodes
-                        .Select(x => new MenuItemModel {ID = x, Selected = true})
+                        .Select(x => new NavigationNode {Key = x, Selected = true})
                         .ToArray();
                     if (selectedItems.Length == 0)
                     {
@@ -29,9 +29,9 @@ namespace Forest.Forms.Menus.Navigation
                     var last = selectedItems[selectedItems.Length - 1];
                     for (var i = 0; i < selectedItems.Length - 1; i++)
                     {
-                        itemsRegion.ActivateView<BreadcrumbsMenu.NavigableItem.View, MenuItemModel>(selectedItems[i]);
+                        itemsRegion.ActivateView<BreadcrumbsMenuNavigableItem.View, NavigationNode>(selectedItems[i]);
                     }
-                    itemsRegion.ActivateView<BreadcrumbsMenu.Item.View, MenuItemModel>(last);
+                    itemsRegion.ActivateView<BreadcrumbsMenuItem.View, NavigationNode>(last);
                 });
             }
         }

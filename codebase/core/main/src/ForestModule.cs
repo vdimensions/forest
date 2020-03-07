@@ -36,7 +36,8 @@ namespace Forest
                 ITemplateProvider templateProvider,
                 Application app, 
                 ForestTemplatesModule forestTemplatesModule, 
-                ILogger logger) : base(viewRegistry)
+                ILogger logger) 
+            : base(viewRegistry)
         {
             _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(container.Parent ?? container, app);

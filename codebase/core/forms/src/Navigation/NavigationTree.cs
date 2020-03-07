@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
 
-namespace Forest.Forms.Menus.Navigation
+namespace Forest.Forms.Navigation
 {
     [StructLayout(LayoutKind.Sequential)]
     public sealed class NavigationTree
@@ -49,13 +49,13 @@ namespace Forest.Forms.Menus.Navigation
         private NavigationTree(
             IImmutableDictionary<string, IImmutableList<string>> hierarchy, 
             IImmutableDictionary<string, string> inverseHierarchy, 
-            IImmutableDictionary<string, object> messageData, 
-            ImmutableHashSet<string> selectedState)
+            IImmutableDictionary<string, object> values, 
+            ImmutableHashSet<string> state)
         {
             Hierarchy = hierarchy;
             InverseHierarchy = inverseHierarchy;
-            MessageData = messageData;
-            SelectedState = selectedState;
+            Values = values;
+            State = state;
         }
 
         public NavigationTree RegisterNavigationNode(string parent, string current, object message = null)
@@ -65,8 +65,8 @@ namespace Forest.Forms.Menus.Navigation
             
             var inverseHierarchy = InverseHierarchy;
             var hierarchy = Hierarchy;
-            var messageData = MessageData;
-            var selectedState = SelectedState;
+            var messageData = Values;
+            var selectedState = State;
             if (!Comparer.Equals(parent, Root) && !inverseHierarchy.ContainsKey(parent))
             {
                 throw new ArgumentException(string.Format("Invalid navigation hierarchy: parent structure '{0}' was not found", parent));
@@ -107,8 +107,8 @@ namespace Forest.Forms.Menus.Navigation
             
             var inverseHierarchy = InverseHierarchy;
             var hierarchy = Hierarchy;
-            var messageData = MessageData;
-            var selectedState = SelectedState;
+            var messageData = Values;
+            var selectedState = State;
             
             if (inverseHierarchy.TryGetValue(node, out var parentNode) && hierarchy.TryGetValue(parentNode, out var siblings))
             {
@@ -131,10 +131,10 @@ namespace Forest.Forms.Menus.Navigation
             
             var hierarchy = Hierarchy;
             
-            if (selected == SelectedState.Contains(node))
+            if (selected == State.Contains(node))
             {
                 var children = ExpandChildren(node, hierarchy, new HashSet<string>(Comparer));
-                if (children.All(x => !SelectedState.Contains(x)))
+                if (children.All(x => !State.Contains(x)))
                 {
                     tree = this;
                     return false;
@@ -142,8 +142,8 @@ namespace Forest.Forms.Menus.Navigation
             }
             
             var inverseHierarchy = InverseHierarchy;
-            var messageData = MessageData;
-            var selectedState = SelectedState.Clear();
+            var messageData = Values;
+            var selectedState = State.Clear();
 
             if (selected)
             {
@@ -185,8 +185,9 @@ namespace Forest.Forms.Menus.Navigation
 
         private IImmutableDictionary<string, IImmutableList<string>> Hierarchy { get; }
         private IImmutableDictionary<string, string> InverseHierarchy { get; }
-        private IImmutableDictionary<string, object> MessageData { get; }
-        private ImmutableHashSet<string> SelectedState { get; }
+        private IImmutableDictionary<string, string> Names { get; }
+        private IImmutableDictionary<string, object> Values { get; }
+        private ImmutableHashSet<string> State { get; }
 
         public IEnumerable<string> TopLevelNodes => GetChildren(Root);
         public IEnumerable<string> SelectedNodes
@@ -200,7 +201,7 @@ namespace Forest.Forms.Menus.Navigation
                     var lastParent = currentParent;
                     foreach (var child in currentChildren)
                     {
-                        if (SelectedState.Contains(child))
+                        if (State.Contains(child))
                         {
                             result.Add(child);
                             currentParent = child;

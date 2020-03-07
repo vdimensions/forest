@@ -17,17 +17,27 @@ namespace Forest.ComponentModel
 
         private IView DoResolve(IViewDescriptor descriptor, object model)
         {
+            if (model == null)
+            {
+                using (var tmpModelContainer = _app.CreateContainer(_container))
+                {
+                    tmpModelContainer.RegisterType(descriptor.ModelType);
+                    if (!tmpModelContainer.TryResolve(descriptor.ModelType, out model))
+                    {
+                        model = null;
+                    }
+                }
+            }
             using (var tmpContainer = _app.CreateContainer(_container))
             {
                 tmpContainer.RegisterType(descriptor.ViewType, descriptor.Name);
+                
                 if (model != null)
                 {
+                    // TODO: model localization
                     tmpContainer.RegisterInstance(model);
                 }
-                else
-                {
-                    tmpContainer.RegisterType(descriptor.ModelType);
-                }
+
                 return (IView) tmpContainer.Resolve(descriptor.ViewType, descriptor.Name);
             }
         }
