@@ -7,6 +7,7 @@
   <PropertyGroup>
     <ProjectGuid>{0238180F-15FD-49DD-B045-9453FC0AA7C8}</ProjectGuid>
     <Description>Forest integration with ASP.NET Core.</Description>
+    <AxlePath>../../../../../axle</AxlePath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,18 +26,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Configuration" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Resources" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Web.AspNetCore" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Web.AspNetCore.Mvc" Version="$(AxleVersion)" />
-    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Http\" />
   </ItemGroup>
 
   <Import Project="../../../Forest.Common.props" />
+  <Import Project="../../../Reference.Forest.Core.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Application.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Web.AspNetCore.Mvc.targets" />
 </Project>

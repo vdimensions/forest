@@ -32,16 +32,16 @@ namespace Forest
 
         public ForestModule(
                 ForestViewRegistry viewRegistry, 
-                IContainer container, 
+                IDependencyContainer dependencyContainer, 
                 ITemplateProvider templateProvider,
-                Application app, 
+                IDependencyContainerFactory dependencyContainerFactory, 
                 ForestTemplatesModule forestTemplatesModule, 
                 ILogger logger) 
             : base(viewRegistry)
         {
             _viewRegistry = viewRegistry;
-            _viewFactory = new ContainerViewFactory(container.Parent ?? container, app);
-            _securityManager = container.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
+            _viewFactory = new ContainerViewFactory(dependencyContainer.Parent ?? dependencyContainer, dependencyContainerFactory);
+            _securityManager = dependencyContainer.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
             _templateProvider = templateProvider;
             _aspects = new List<IForestExecutionAspect>();
             _logger = logger;
@@ -50,7 +50,7 @@ namespace Forest
         }
 
         [ModuleInit]
-        internal void Init(ModuleExporter exporter)
+        internal void Init(IDependencyExporter exporter)
         {
             foreach (var viewAssembly in _viewRegistry.Descriptors
                 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK

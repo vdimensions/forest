@@ -1,4 +1,4 @@
-﻿namespace Forest.Forms.Navigation
+﻿namespace Forest.Forms.Navigation.Breadcrumbs
 {
     internal static class BreadcrumbsMenuItem
     {

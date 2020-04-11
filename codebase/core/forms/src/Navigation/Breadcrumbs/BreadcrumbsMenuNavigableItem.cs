@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Forms.Navigation.Breadcrumbs
 {
     internal static class BreadcrumbsMenuNavigableItem
     {

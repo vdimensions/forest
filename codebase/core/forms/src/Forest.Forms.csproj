@@ -10,9 +10,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
-  </ItemGroup>
-
   <Import Project="../../../Forest.Common.props" />
+  <Import Project="../../../Reference.Forest.Core.targets" />
 </Project>

@@ -2,7 +2,7 @@
 
 namespace Forest.Forms.Navigation
 {
-    public interface INavigationTreeManager : INotifyNavigationTreeChanged
+    public interface INavigationTreeManager
     {
         void UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> configure);
         

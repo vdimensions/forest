@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Axle.DependencyInjection;
 using Axle.Modularity;
 using Axle.Resources;
 using Axle.Resources.Extraction;
@@ -38,7 +39,7 @@ namespace Forest.Templates
         }
 
         [ModuleInit]
-        internal void Init(ModuleExporter e)
+        internal void Init(IDependencyExporter e)
         {
             ModuleDependencyInitialized(this);
         }
@@ -83,6 +84,10 @@ namespace Forest.Templates
                     var bundleContent = resourceManager.Bundles.Configure(bundle);
                     bundleContent
                         .Register(uriParser.Parse($"./{bundleInfo.DefaultBundle}"))
+                        .Extractors
+                        .Register(_templateSourceExtractors)
+                        .Register(marshallingExtractor.ToExtractorList());
+                    bundleContent
                         .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
                         .Extractors
                         .Register(_templateSourceExtractors)
@@ -130,9 +135,9 @@ namespace Forest.Templates
 
                 var bundle = bundles[index];
                 var template = _resourceManager.Load(bundle, name, CultureInfo.InvariantCulture);
-                if (template.HasValue)
+                if (template != null)
                 {
-                    return template.Value.Resolve<Template>();
+                    return template.Resolve<Template>();
                 }
                 index = index + 1;
             }

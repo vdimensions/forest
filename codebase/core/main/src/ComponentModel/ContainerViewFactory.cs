@@ -1,23 +1,22 @@
-﻿using Axle;
-using Axle.DependencyInjection;
+﻿using Axle.DependencyInjection;
 using Axle.Verification;
 
 namespace Forest.ComponentModel
 {
     internal sealed class ContainerViewFactory : IViewFactory
     {
-        private readonly Application _app;
-        private readonly IContainer _container;
+        private readonly IDependencyContainerFactory _dependencyContainerFactory;
+        private readonly IDependencyContext _dependencyContext;
 
-        public ContainerViewFactory(IContainer container, Application app)
+        public ContainerViewFactory(IDependencyContext dependencyContext, IDependencyContainerFactory dependencyContainerFactory)
         {
-            _container = container.VerifyArgument(nameof(container)).IsNotNull().Value;
-            _app = app.VerifyArgument(nameof(app)).IsNotNull().Value;
+            _dependencyContext = dependencyContext.VerifyArgument(nameof(dependencyContext)).IsNotNull().Value;
+            _dependencyContainerFactory = dependencyContainerFactory.VerifyArgument(nameof(dependencyContainerFactory)).IsNotNull().Value;
         }
 
         private IView DoResolve(IViewDescriptor descriptor, object model)
         {
-            using (var tmpContainer = _app.CreateContainer(_container))
+            using (var tmpContainer = _dependencyContainerFactory.CreateContainer(_dependencyContext))
             {
                 tmpContainer.RegisterType(descriptor.ViewType, descriptor.Name);
                 

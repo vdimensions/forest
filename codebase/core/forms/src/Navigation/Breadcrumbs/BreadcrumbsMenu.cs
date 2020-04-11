@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Forms.Navigation.Breadcrumbs
 {
     public static class BreadcrumbsMenu
     {

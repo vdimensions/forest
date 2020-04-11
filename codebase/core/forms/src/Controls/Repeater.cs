@@ -30,7 +30,7 @@ namespace Forest.Forms.Controls
 
             protected IRegion GetItemsRegion() => FindRegion(_itemsRegionName);
 
-            protected IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
+            public IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
             {
                 var itemsRegion = GetItemsRegion().Clear();
                 return items.Select(item => ActivateItemView(itemsRegion, item)).ToArray();

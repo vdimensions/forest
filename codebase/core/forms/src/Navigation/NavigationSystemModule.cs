@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Axle.DependencyInjection;
 using Axle.Modularity;
 using Forest.ComponentModel;
+using Forest.Forms.Navigation.Breadcrumbs;
 
 namespace Forest.Forms.Navigation
 {
@@ -11,7 +13,7 @@ namespace Forest.Forms.Navigation
 
         [ModuleInit]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal void Init(ModuleExporter exporter)
+        internal void Init(IDependencyExporter exporter)
         {
             exporter.Export(this);
         }

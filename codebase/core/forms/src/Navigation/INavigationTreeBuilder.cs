@@ -4,6 +4,7 @@ namespace Forest.Forms.Navigation
 {
     public interface INavigationTreeBuilder
     {
+        [Obsolete]
         INavigationTreeBuilder GetOrAddNode(
             string node, 
             object message,
