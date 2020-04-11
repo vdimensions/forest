@@ -23,7 +23,7 @@ namespace Forest.ComponentModel
                 if (model != null)
                 {
                     // TODO: model localization
-                    tmpContainer.RegisterInstance(model);
+                    tmpContainer.Export(model);
                 }
 
                 return (IView) tmpContainer.Resolve(descriptor.ViewType, descriptor.Name);

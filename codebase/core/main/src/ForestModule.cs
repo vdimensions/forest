@@ -32,7 +32,7 @@ namespace Forest
 
         public ForestModule(
                 ForestViewRegistry viewRegistry, 
-                IDependencyContainer dependencyContainer, 
+                IDependencyContext dependencyContainer, 
                 ITemplateProvider templateProvider,
                 IDependencyContainerFactory dependencyContainerFactory, 
                 ForestTemplatesModule forestTemplatesModule, 
