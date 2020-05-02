@@ -61,7 +61,7 @@ namespace Forest
         
         public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_node));
 
-        public void UpdateModel(Func<T, T> updateFunc)
+        public T UpdateModel(Func<T, T> updateFunc)
         {
             var newModel = updateFunc.Invoke(Model);
             if (_executionContext != null)
@@ -75,6 +75,7 @@ namespace Forest
             {
                 _state = ViewState.Create(newModel);
             }
+            return (T) _state.Model;
         }
 
         public virtual void Load() { }

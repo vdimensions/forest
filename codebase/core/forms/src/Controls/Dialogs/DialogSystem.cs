@@ -10,7 +10,7 @@ namespace Forest.Forms.Controls.Dialogs
         private const string Name = "DialogSystem";
         private const string MessageChannel = Name;
 
-        public sealed class Regions
+        internal sealed class Regions
         {
             public const string DialogArea = "DialogArea";
         }

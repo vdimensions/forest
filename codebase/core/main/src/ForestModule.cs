@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Axle;
 using Axle.DependencyInjection;
 using Axle.Logging;
 using Axle.Modularity;
@@ -18,7 +17,7 @@ namespace Forest
     [Module]
     [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
-    internal sealed class ForestModule : CollectorModule<ForestViewRegistry>, IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
+    internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
     {
         private readonly ForestViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
@@ -37,7 +36,6 @@ namespace Forest
                 IDependencyContainerFactory dependencyContainerFactory, 
                 ForestTemplatesModule forestTemplatesModule, 
                 ILogger logger) 
-            : base(viewRegistry)
         {
             _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(dependencyContainer.Parent ?? dependencyContainer, dependencyContainerFactory);

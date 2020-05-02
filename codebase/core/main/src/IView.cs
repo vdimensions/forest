@@ -18,7 +18,7 @@ namespace Forest
     
     public interface IView<T> : IView
     {
-        void UpdateModel(Func<T, T> updateFunc); 
+        T UpdateModel(Func<T, T> updateFunc); 
 
         new T Model { get; }
     }

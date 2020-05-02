@@ -12,14 +12,10 @@ namespace Forest.Engine
         ViewState? GetViewState(Tree.Node node);
         ViewState SetViewState(bool silent, Tree.Node node, ViewState viewState);
 
-        //abstract member GetLinks : id : TreeNode -> List
-
         void ProcessInstructions(params ForestInstruction[] instructions);
 
         IView ActivateView(InstantiateViewInstruction instantiateViewInstruction);
 
         IEnumerable<IView> GetRegionContents(Tree.Node node, string region);
-
-        //abstract member ProcessMessages : unit -> unit
     }
 }

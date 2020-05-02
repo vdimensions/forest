@@ -4,15 +4,15 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Axle.IO.Extensions.Stream;
-using Axle.Text.Data;
+using Axle.Text.Documents;
 using Axle.Web.AspNetCore.Mvc.ModelBinding;
 
 namespace Forest.Web.AspNetCore.Controllers
 {
     // TODO: make parameter parsing as router path detection
-    internal sealed class ForestMessageTextDataAdapter : ITextDataAdapter
+    internal sealed class ForestMessageTextDocumentAdapter : ITextDocumentAdapter
     {
-        public ForestMessageTextDataAdapter(string key, string value, params ITextDataAdapter[] children)
+        public ForestMessageTextDocumentAdapter(string key, string value, params ITextDocumentAdapter[] children)
         {
             Key = key;
             Value = value;
@@ -21,20 +21,20 @@ namespace Forest.Web.AspNetCore.Controllers
 
         public string Key { get; }
         public string Value { get; }
-        public IEnumerable<ITextDataAdapter> Children { get; }
+        public IEnumerable<ITextDocumentAdapter> Children { get; }
     }
-    internal sealed class MessageReader : AbstractTextDataReader
+    internal sealed class MessageReader : AbstractTextDocumentReader
     {
         public MessageReader(StringComparer comparer) : base(comparer)
         {
         }
 
-        protected override ITextDataAdapter CreateAdapter(Stream stream, Encoding encoding)
+        protected override ITextDocumentAdapter CreateAdapter(Stream stream, Encoding encoding)
         {
             return CreateAdapter(encoding.GetString(stream.ToByteArray()));
         }
 
-        protected override ITextDataAdapter CreateAdapter(string data)
+        protected override ITextDocumentAdapter CreateAdapter(string data)
         {
             throw new NotImplementedException();
         }

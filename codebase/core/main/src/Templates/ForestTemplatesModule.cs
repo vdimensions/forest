@@ -62,6 +62,7 @@ namespace Forest.Templates
 
         private void InitResourceManager()
         {
+            _bundles.Clear();
             var resourceManager = new DefaultResourceManager();
             var uriParser = new Axle.Conversion.Parsing.UriParser();
             foreach (var marshallingExtractor in _marshallingExtractors)
