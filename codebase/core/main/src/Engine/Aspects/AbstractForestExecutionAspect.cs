@@ -28,6 +28,8 @@ namespace Forest.Engine.Aspects
 
         void ITreeNavigator.Navigate<T>(string template, T message) => Navigate(new NavigateCutPoint(_chainEC, template, message));
 
+        void ITreeNavigator.NavigateBack() => _chainEC.NavigateBack();
+
         T IForestEngine.RegisterSystemView<T>() => ((IForestExecutionContext) _slaveEC).RegisterSystemView<T>();
 
         public void Dispose() => ((IDisposable) _slaveEC).Dispose();

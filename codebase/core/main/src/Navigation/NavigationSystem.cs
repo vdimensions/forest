@@ -56,15 +56,6 @@ namespace Forest.Navigation
                 }
             }
 
-            [Obsolete]
-            [Subscription(Messages.Topic)]
-            internal void OnUpdateTreeMessage(Messages.UpdateTreeMessage message)
-            {
-                var builder = new NavigationTreeBuilder(_navigationTree);
-                var outBuilder = (NavigationTreeBuilder) message.UpdateTreeFunction(builder);
-                OnNavigationTreeChanged(_navigationTree = outBuilder.Build());
-            }
-
             [Subscription(Messages.Topic)]
             internal void OnNavigateBack(NavigateBack message)
             {
@@ -83,22 +74,6 @@ namespace Forest.Navigation
                     }
                 }
             }
-        }
-
-        [Obsolete]
-        public static void UpdateNavigationTree(
-            this IForestEngine forest,
-            Func<INavigationTreeBuilder, INavigationTreeBuilder> updateFn)
-        {
-            forest.VerifyArgument(nameof(forest)).IsNotNull();
-            updateFn.VerifyArgument(nameof(updateFn)).IsNotNull();
-            forest.SendMessage(new Messages.UpdateTreeMessage(updateFn));
-        }
-
-        public static void NavigateBack(this IForestEngine forest)
-        {
-            forest.VerifyArgument(nameof(forest)).IsNotNull();
-            forest.SendMessage(new NavigateBack());
         }
     }
 }

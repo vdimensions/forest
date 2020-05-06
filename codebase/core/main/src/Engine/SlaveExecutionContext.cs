@@ -390,6 +390,14 @@ namespace Forest.Engine
             ProcessInstructions(CompileTemplate(template, templateDefinition, message).ToArray());
             _navigationInfo = new NavigationInfo(template, message);
         }
+        public void NavigateBack()
+        {
+            if (_nestedCalls > 0)
+            {
+                _eventBus.ClearDeadLetters();
+            }
+            ProcessInstructions(new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null));
+        }
 
         T IForestEngine.RegisterSystemView<T>()
         {

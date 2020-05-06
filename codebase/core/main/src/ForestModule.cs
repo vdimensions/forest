@@ -106,6 +106,13 @@ namespace Forest
                 ctx.Engine.Navigate(tree, message);
             }
         }
+        void ITreeNavigator.NavigateBack()
+        {
+            using (var ctx = EngineContextProvider.CreateContext(this))
+            {
+                ctx.Engine.NavigateBack();
+            }
+        }
         void IMessageDispatcher.SendMessage<T>(T msg)
         {
             using (var ctx = EngineContextProvider.CreateContext(this))

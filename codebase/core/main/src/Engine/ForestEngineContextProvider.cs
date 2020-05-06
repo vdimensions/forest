@@ -53,6 +53,14 @@ namespace Forest.Engine
                     ctx.Engine.Navigate(template, message);
                 }
             }
+            
+            void ITreeNavigator.NavigateBack()
+            {
+                using (var ctx = _provider.CreateContext(_context))
+                {
+                    ctx.Engine.NavigateBack();
+                }
+            }
     
             T IForestEngine.RegisterSystemView<T>()
             {
