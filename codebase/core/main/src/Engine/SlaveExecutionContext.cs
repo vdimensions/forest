@@ -329,14 +329,9 @@ namespace Forest.Engine
             var shell = Tree.Node.Shell;
             var templateNode = Tree.Node.Create(shell.Region, ViewHandle.FromName(template.Name), shell);
             yield return new ClearRegionInstruction(shell, shell.Region);
-            var navigationViewItems = new Template.ViewItem[]
-            {
-                new Template.ViewItem.Region(shell.Region, new[]
-                {
-                    new Template.RegionItem.View(NavigationSystem.Name, new Template.ViewItem[0])
-                })
-            };
-            foreach (var instruction in CompileViews(templateNode, template.Contents.Union(navigationViewItems)))
+            // TODO: add "IsEager" property to each system view and automatically register the eager ones
+            RegisterSystemView<NavigationSystem.View>();
+            foreach (var instruction in CompileViews(templateNode, template.Contents))
             {
                 yield return instruction;
             }
@@ -399,7 +394,7 @@ namespace Forest.Engine
             ProcessInstructions(new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null));
         }
 
-        T IForestEngine.RegisterSystemView<T>()
+        public T RegisterSystemView<T>() where T : class, ISystemView
         {
             var systemViewDescriptor =
                 _context.ViewRegistry.GetDescriptor(typeof(T)) ??
