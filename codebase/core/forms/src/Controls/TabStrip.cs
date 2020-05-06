@@ -108,24 +108,26 @@ namespace Forest.Forms.Controls
             public void AddTab(string tabId, bool activate)
             {
                 tabId.VerifyArgument("tabId").IsNotNullOrEmpty();
-                var tabsRegion = GetItemsRegion();
-                var knownTabs = tabsRegion.Views.Cast<Tab.View>().ToDictionary(x => x.Model.ID, _tabIdComparer);
-                Tab.Model tab;
-                if (knownTabs.TryGetValue(tabId, out var existing))
+                WithItemsRegion(tabsRegion =>
                 {
-                    tab = existing.Model;
-                }
-                else
-                {
-                    tab = new Tab.Model(tabId);
-                    var tabView = tabsRegion.ActivateView<Tab.View, Tab.Model>(tab);
-                    AfterItemViewActivated(tabView);
-                }
+                    var knownTabs = tabsRegion.Views.Cast<Tab.View>().ToDictionary(x => x.Model.ID, _tabIdComparer);
+                    Tab.Model tab;
+                    if (knownTabs.TryGetValue(tabId, out var existing))
+                    {
+                        tab = existing.Model;
+                    }
+                    else
+                    {
+                        tab = new Tab.Model(tabId);
+                        var tabView = tabsRegion.ActivateView<Tab.View, Tab.Model>(tab);
+                        AfterItemViewActivated(tabView);
+                    }
 
-                if (activate)
-                {
-                    ActivateTab(tab.ID);
-                }
+                    if (activate)
+                    {
+                        ActivateTab(tab.ID);
+                    }
+                });
             }
 
             protected override void AfterItemViewActivated(Tab.View view)
@@ -147,31 +149,35 @@ namespace Forest.Forms.Controls
                 {
                     return;
                 }
-
-                foreach (var tabView in GetItemsRegion().Views.Cast<Tab.View>())
-                {
-                    var tabModel = tabView.Model;
-                    if (_tabIdComparer.Equals(message.TabID, tabModel.ID))
+                
+                WithItemsRegion(
+                    itemsRegion =>
                     {
-                        if (!tabModel.Selected)
+                        foreach (var tabView in itemsRegion.Views.Cast<Tab.View>())
                         {
-                            tabView.UpdateModel(m => new Tab.Model(m.ID, true));
-                            var contentRegion = FindRegion(Regions.Content).Clear();
-                            ActivateContentView(contentRegion, tabView.Model.ID);
+                            var tabModel = tabView.Model;
+                            if (_tabIdComparer.Equals(message.TabID, tabModel.ID))
+                            {
+                                if (!tabModel.Selected)
+                                {
+                                    tabView.UpdateModel(m => new Tab.Model(m.ID, true));
+                                    var contentRegion = FindRegion(Regions.Content).Clear();
+                                    ActivateContentView(contentRegion, tabView.Model.ID);
+                                }
+                                else
+                                {
+                                    // warning -- tab already selected; this case should never occur
+                                }
+                            }
+                            else if (tabModel.Selected)
+                            {
+                                //
+                                // Mark any selected tabs as unselected since the selection has changed
+                                //
+                                tabView.UpdateModel(m => new Tab.Model(m.ID, false));
+                            }
                         }
-                        else
-                        {
-                            // warning -- tab already selected; this case should never occur
-                        }
-                    }
-                    else if (tabModel.Selected)
-                    {
-                        //
-                        // Mark any selected tabs as unselected since the selection has changed
-                        //
-                        tabView.UpdateModel(m => new Tab.Model(m.ID, false));
-                    }
-                }
+                    });
             }
 
             protected virtual void ActivateContentView(IRegion contentRegion, string id) => contentRegion.ActivateView(id);

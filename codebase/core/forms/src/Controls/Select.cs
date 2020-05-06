@@ -53,7 +53,9 @@ namespace Forest.Forms.Controls
 
                 public override void Load()
                 {
-                    ItemView = FindRegion(Regions.Item).Clear().ActivateView<TView, TModel>(Model.ItemModel);
+                    WithRegion(
+                        Regions.Item,
+                        itemRegion => ItemView = itemRegion.Clear().ActivateView<TView, TModel>(Model.ItemModel));
                 }
 
                 protected override void Dispose(bool disposing)

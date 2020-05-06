@@ -1,7 +1,7 @@
 ﻿using System;
 using Axle.Verification;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Navigation
 {
     internal sealed class NavigationTreeBuilder : INavigationTreeBuilder
     {
@@ -35,7 +35,7 @@ namespace Forest.Forms.Navigation
             return new NavigationTreeBuilder(_navigationTree.UnregisterNavigationNode(node), _parentNavigationItem);
         }
 
-        INavigationTreeBuilder INavigationTreeBuilder.GetOrAddNode(string node, Func<INavigationTreeBuilder, INavigationTreeBuilder> buildFn = null) 
+        INavigationTreeBuilder INavigationTreeBuilder.GetOrAddNode(string node, Func<INavigationTreeBuilder, INavigationTreeBuilder> buildFn) 
             => GetOrAddNode(node, null, buildFn);
         INavigationTreeBuilder INavigationTreeBuilder.GetOrAddNode(string node, object message, Func<INavigationTreeBuilder, INavigationTreeBuilder> buildFn) 
             => GetOrAddNode(node, message, buildFn);

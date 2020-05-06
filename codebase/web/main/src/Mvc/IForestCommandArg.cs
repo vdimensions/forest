@@ -1,4 +1,4 @@
-namespace Forest.Web.AspNetCore.Controllers
+namespace Forest.Web.AspNetCore.Mvc
 {
     public interface IForestCommandArg
     {

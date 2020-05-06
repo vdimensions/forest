@@ -96,8 +96,13 @@ namespace Forest.Forms.Controls.Dialogs
             [Subscription(MessageChannel)]
             internal void OnDialogMessage(Messages.IDialogMessage dialogMessage)
             {
-                var view = (IDialogFrame) FindRegion(Regions.DialogArea).ActivateView(dialogMessage.FrameViewType, dialogMessage.DialogOptions);
-                view.InitInternalView(dialogMessage.ViewType, dialogMessage.Model);
+                WithRegion(
+                    Regions.DialogArea, 
+                    dialogArea =>
+                    {
+                        var view = (IDialogFrame) dialogArea.ActivateView(dialogMessage.FrameViewType, dialogMessage.DialogOptions);
+                        view.InitInternalView(dialogMessage.ViewType, dialogMessage.Model);
+                    });
             }
         }
 

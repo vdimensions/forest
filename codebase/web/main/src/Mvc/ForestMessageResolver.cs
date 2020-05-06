@@ -7,7 +7,7 @@ using Axle.IO.Extensions.Stream;
 using Axle.Text.Documents;
 using Axle.Web.AspNetCore.Mvc.ModelBinding;
 
-namespace Forest.Web.AspNetCore.Controllers
+namespace Forest.Web.AspNetCore.Mvc
 {
     // TODO: make parameter parsing as router path detection
     internal sealed class ForestMessageTextDocumentAdapter : ITextDocumentAdapter

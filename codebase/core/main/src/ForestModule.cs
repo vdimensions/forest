@@ -8,6 +8,7 @@ using Axle.Modularity;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.Engine.Aspects;
+using Forest.Navigation;
 using Forest.Security;
 using Forest.StateManagement;
 using Forest.Templates;
@@ -17,6 +18,7 @@ namespace Forest
     [Module]
     [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
+    [Requires(typeof(NavigationModule))]
     internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
     {
         private readonly ForestViewRegistry _viewRegistry;

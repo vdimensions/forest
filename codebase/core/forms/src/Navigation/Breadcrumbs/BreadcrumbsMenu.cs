@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Forest.Navigation;
 
 namespace Forest.Forms.Navigation.Breadcrumbs
 {

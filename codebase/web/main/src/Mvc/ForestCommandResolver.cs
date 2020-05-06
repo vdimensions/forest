@@ -2,21 +2,8 @@
 using System.Threading.Tasks;
 using Axle.Web.AspNetCore.Mvc.ModelBinding;
 
-namespace Forest.Web.AspNetCore.Controllers
+namespace Forest.Web.AspNetCore.Mvc
 {
-    internal sealed class ForestDynamicArg : IForestCommandArg, IForestMessageArg
-    {
-        public ForestDynamicArg(object value)
-        {
-            Value = value;
-        }
-
-        public object Value { get; }
-    }
-    internal sealed class ForestVoidArg : IForestCommandArg, IForestMessageArg
-    {
-        public object Value => null;
-    }
     internal sealed class ForestCommandResolver : IModelResolver
     {
         private readonly IClientViewsHelper _clientViewsHelper;

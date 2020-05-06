@@ -5,7 +5,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Navigation
 {
     [StructLayout(LayoutKind.Sequential)]
     public sealed class NavigationTree
@@ -38,6 +38,7 @@ namespace Forest.Forms.Navigation
         }
 
         private static readonly IEqualityComparer<string> Comparer = StringComparer.OrdinalIgnoreCase;
+        // TODO: make internal
         internal const string Root = "";
 
         public NavigationTree() 
@@ -142,7 +143,7 @@ namespace Forest.Forms.Navigation
             }
             
             var inverseHierarchy = InverseHierarchy;
-            var messageData = Values;
+            var messageData = ImmutableDictionary<string, object>.Empty;
             var selectedState = State.Clear();
 
             if (selected)
@@ -151,6 +152,10 @@ namespace Forest.Forms.Navigation
                 foreach (var ancestor in ancestors)
                 {
                     selectedState = selectedState.Add(ancestor);
+                    if (Values.TryGetValue(ancestor, out var data))
+                    {
+                        messageData = messageData.Add(ancestor, data);
+                    }
                 }
             }
             
@@ -183,9 +188,10 @@ namespace Forest.Forms.Navigation
             return SelectedNodes.Contains(node);
         }
 
+        public bool TryGetValue(string node, out object value) => Values.TryGetValue(node, out value);
+
         private IImmutableDictionary<string, IImmutableList<string>> Hierarchy { get; }
         private IImmutableDictionary<string, string> InverseHierarchy { get; }
-        private IImmutableDictionary<string, string> Names { get; }
         private IImmutableDictionary<string, object> Values { get; }
         private ImmutableHashSet<string> State { get; }
 

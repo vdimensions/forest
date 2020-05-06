@@ -1,10 +1,10 @@
 ﻿using System;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Navigation
 {
-    internal sealed partial class NavigationSystemModule : INavigationTreeManager
+    internal sealed partial class NavigationModule : INavigationManager
     {
-        void INavigationTreeManager.UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> configure)
+        void INavigationManager.UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> configure)
         {
             var inputBuilder = new NavigationTreeBuilder(_navigationTree, NavigationTree.Root);
             var outputBuilder = configure(inputBuilder);

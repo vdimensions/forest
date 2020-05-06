@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Navigation
 {
-    public interface INavigationTreeManager
+    public interface INavigationManager
     {
         void UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> configure);
         

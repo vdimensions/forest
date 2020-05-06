@@ -5,6 +5,8 @@ using System.Linq;
 using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Engine.Instructions;
+using Forest.Navigation;
+using Forest.Navigation.Messages;
 using Forest.StateManagement;
 using Forest.Templates;
 using Forest.UI;
@@ -322,18 +324,36 @@ namespace Forest.Engine
             }
         }
 
-        private IEnumerable<ForestInstruction> CompileTemplate(Template.Definition template, object message)
+        private IEnumerable<ForestInstruction> CompileTemplate(string templateName, Template.Definition template, object message)
         {
             var shell = Tree.Node.Shell;
             var templateNode = Tree.Node.Create(shell.Region, ViewHandle.FromName(template.Name), shell);
             yield return new ClearRegionInstruction(shell, shell.Region);
-            foreach (var instruction in CompileViews(templateNode, template.Contents))
+            var navigationViewItems = new Template.ViewItem[]
+            {
+                new Template.ViewItem.Region(shell.Region, new[]
+                {
+                    new Template.RegionItem.View(NavigationSystem.Name, new Template.ViewItem[0])
+                })
+            };
+            foreach (var instruction in CompileViews(templateNode, template.Contents.Union(navigationViewItems)))
             {
                 yield return instruction;
             }
             if (message != null)
             {
                 yield return new SendMessageInstruction(message, new string[0], null);
+                yield return new SendMessageInstruction(
+                    new HighlightNavigationItem(templateName){Message = message}, 
+                    new [] { NavigationSystem.Messages.Topic }, 
+                    null);
+            }
+            else
+            {
+                yield return new SendMessageInstruction(
+                    new HighlightNavigationItem(templateName), 
+                    new [] { NavigationSystem.Messages.Topic }, 
+                    null);
             }
         }
 
@@ -355,7 +375,7 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
-            ProcessInstructions(CompileTemplate(templateDefinition, null).ToArray());
+            ProcessInstructions(CompileTemplate(template, templateDefinition, null).ToArray());
             _navigationInfo = new NavigationInfo(template, null);
         }
         public void Navigate<T>(string template, T message)
@@ -367,7 +387,7 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
-            ProcessInstructions(CompileTemplate(templateDefinition, message).ToArray());
+            ProcessInstructions(CompileTemplate(template, templateDefinition, message).ToArray());
             _navigationInfo = new NavigationInfo(template, message);
         }
 

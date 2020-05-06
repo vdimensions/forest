@@ -99,7 +99,7 @@ namespace Forest
             return hierarchy.TryGetValue(node, out var result) ? result : ImmutableList<Node>.Empty;
         }
 
-        public static bool TryInsert(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node, out ImmutableDictionary<Node, ImmutableList<Node>> result)
+        private static bool TryInsert(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node, out ImmutableDictionary<Node, ImmutableList<Node>> result)
         {
             if (hierarchy.TryGetValue(node, out _))
             {

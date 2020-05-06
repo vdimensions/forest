@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Forest.Web.AspNetCore.Controllers
+namespace Forest.Web.AspNetCore.Mvc
 {
     public abstract class ForestControllerBase : ControllerBase
     {

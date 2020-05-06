@@ -17,6 +17,7 @@ namespace Forest.Forms.Controls.Dialogs
             internal void Confirm()
             {
                 (view as IConfirmationDialogView)?.OnConfirm();
+                Close();
             }
         }
     }

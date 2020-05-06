@@ -7,8 +7,12 @@ using Forest.Web.AspNetCore.Dom;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 
-namespace Forest.Web.AspNetCore.Controllers
+namespace Forest.Web.AspNetCore.Mvc
 {
+    /// <summary>
+    /// A class that is used to delegate web request to the forest engine, and convert
+    /// the result to a format suitable for a REST-ful communication.
+    /// </summary>
     public sealed class ForestRequestExecutor
     {
         [Serializable]
@@ -30,12 +34,13 @@ namespace Forest.Web.AspNetCore.Controllers
             {
                 StatusCode = (int) statusCode;
             }
-            public ForestResult(string path, ViewNode[] views, HttpStatusCode statusCode) : this(new ForestResponse(path, views), statusCode) { }
-            
+
+            internal ForestResult(string path, ViewNode[] views, HttpStatusCode statusCode) : this(new ForestResponse(path, views), statusCode) { }
         }
         
         private static string GetPath(NavigationInfo navigationInfo)
         {
+            // TODO: add request parameter as well
             return navigationInfo.Template;
         }
         
@@ -55,16 +60,22 @@ namespace Forest.Web.AspNetCore.Controllers
             return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
         }
         
-        public ActionResult Navigate(string template)
+        public ActionResult Navigate(string template, string customPath = null)
         {
             _forest.Navigate(template);
-            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
+            return new ForestResult(
+                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.NavigationInfo) : customPath, 
+                _clientViewsHelper.AllViews.Values.ToArray(), 
+                HttpStatusCode.OK);
         }
         
-        public ActionResult Navigate(string template, object message)
+        public ActionResult Navigate(string template, object message, string customPath = null)
         {
             _forest.Navigate(template, message);
-            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
+            return new ForestResult(
+                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.NavigationInfo) : customPath, 
+                _clientViewsHelper.AllViews.Values.ToArray(), 
+                HttpStatusCode.OK);
         }
         
         public ActionResult GetPartial(string instanceId)

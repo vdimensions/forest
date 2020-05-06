@@ -1,5 +1,8 @@
-﻿namespace Forest.UI
+﻿using System;
+
+namespace Forest.UI
 {
+    [Obsolete]
     public interface ILinkModel
     {
         string Name { get; }
@@ -8,6 +11,7 @@
         string Tooltip { get; }
     }
 
+    [Obsolete]
     internal sealed class LinkModel : ILinkModel
     {
         public LinkModel(string name, string description, string displayName, string tooltip)

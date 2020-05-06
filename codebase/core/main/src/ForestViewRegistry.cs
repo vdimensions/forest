@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Axle.Modularity;
 using Forest.ComponentModel;
+using Forest.Navigation;
 
 namespace Forest
 {
@@ -10,12 +11,13 @@ namespace Forest
     {
         private readonly IViewRegistry _viewRegistry = new ViewRegistry();
 
-        public ForestViewRegistry()
-        {
-        }
-
         [ModuleDependencyInitialized]
         internal void DependencyInitialized(IForestViewProvider viewProvider)
+        {
+            viewProvider.RegisterViews(_viewRegistry);
+        }
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(_ForestViewProvider viewProvider)
         {
             viewProvider.RegisterViews(_viewRegistry);
         }

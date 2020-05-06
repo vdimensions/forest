@@ -28,7 +28,7 @@ namespace Forest.Forms.Controls.Dialogs
 
             void IDialogFrame.InitInternalView(Type viewType, object model) 
             {
-                view = FindRegion(Regions.Content).ActivateView(viewType, model);
+                WithRegion(Regions.Content, content => view = content.ActivateView(viewType, model));
             }
 
             [SuppressMessage("ReSharper", "UnusedMember.Global")]

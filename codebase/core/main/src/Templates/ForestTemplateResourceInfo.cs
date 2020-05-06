@@ -7,11 +7,12 @@ namespace Forest.Templates
 {
     internal sealed class ForestTemplateResourceInfo : ResourceInfo
     {
-        private const string ContentType = "text/forest-template+xml";
+        new private const string ContentType = "text/forest-template+xml";
 
         private readonly ResourceInfo _originalResource;
 
-        public ForestTemplateResourceInfo(string name, CultureInfo culture, ResourceInfo originalResource, Template template) : base(name, culture, ContentType)
+        public ForestTemplateResourceInfo(string name, CultureInfo culture, ResourceInfo originalResource, Template template) 
+            : base(name, culture, ContentType)
         {
             _originalResource = originalResource;
             Value = template;

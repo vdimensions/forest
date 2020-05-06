@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Forest.Navigation;
+using Forest.Navigation.Messages;
 
 namespace Forest.Forms.Navigation
 {
@@ -16,6 +18,11 @@ namespace Forest.Forms.Navigation
         {
             [Subscription(NavigationSystem.Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
+            internal void OnNavigationTreeChanged(NavigationTreeChanged message)
+            {
+                OnNavigationTreeChanged(message.NavigationTree);
+            }
+            
             protected abstract void OnNavigationTreeChanged(NavigationTree tree);
         }
 

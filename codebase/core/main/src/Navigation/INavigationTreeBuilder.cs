@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace Forest.Forms.Navigation
+namespace Forest.Navigation
 {
     public interface INavigationTreeBuilder
     {
-        [Obsolete]
         INavigationTreeBuilder GetOrAddNode(
             string node, 
             object message,

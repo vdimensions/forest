@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Axle.References;
 using Axle.Resources;
 using Axle.Resources.Extraction;
 

@@ -30,9 +30,7 @@ namespace Forest.Templates
 
             internal sealed class ClearInstruction : ViewItem
             {
-                internal ClearInstruction()
-                {
-                }
+                internal ClearInstruction() { }
             }
         }
     }

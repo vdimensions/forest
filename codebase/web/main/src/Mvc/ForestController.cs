@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Forest.Web.AspNetCore.Controllers
+namespace Forest.Web.AspNetCore.Mvc
 {
     [Route("api/forest")]
-    public class ForestController : ForestControllerBase
+    public sealed class ForestController : ForestControllerBase
     {
         internal const string Command = "command";
         internal const string InstanceId = "instanceId";
@@ -26,11 +26,11 @@ namespace Forest.Web.AspNetCore.Controllers
 
         [HttpGet(NavigateToTemplate)]
         public ActionResult Navigate(string template, [FromRoute] IForestMessageArg arg) 
-            => ForestRequestExecutor.Navigate(template, arg);
+            => ForestRequestExecutor.Navigate(template, arg.Value);
 
         [HttpPatch(InvokeCommandTemplate)]
         [HttpPost(InvokeCommandTemplate)]
         public ActionResult InvokeCommand(string instanceId, string command, [FromBody] IForestCommandArg arg) 
-            => ForestRequestExecutor.ExecuteCommand(instanceId, command, arg);
+            => ForestRequestExecutor.ExecuteCommand(instanceId, command, arg.Value);
     }
 }

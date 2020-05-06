@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Axle.Verification;
@@ -28,12 +29,18 @@ namespace Forest.Forms.Controls
             }
             public View() : this(Regions.Items) { }
 
-            protected IRegion GetItemsRegion() => FindRegion(_itemsRegionName);
+            protected void WithItemsRegion(Action<IRegion> action) => WithRegion(_itemsRegionName, action);
 
             public IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
             {
-                var itemsRegion = GetItemsRegion().Clear();
-                return items.Select(item => ActivateItemView(itemsRegion, item)).ToArray();
+                IEnumerable<TItemView> result = null;
+                WithItemsRegion( 
+                    itemsRegion =>
+                    {
+                        itemsRegion.Clear();
+                        result = items.Select(item => ActivateItemView(itemsRegion, item)).ToArray();
+                    });
+                return result;
             }
 
             protected virtual void AfterItemViewActivated(TItemView view) { }

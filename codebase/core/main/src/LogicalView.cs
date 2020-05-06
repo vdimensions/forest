@@ -46,6 +46,7 @@ namespace Forest
 
         public void Publish<TM>(TM message, params string[] topics) => ExecutionContext.ProcessInstructions(new SendMessageInstruction(message, topics, _node.InstanceID));
 
+        [Obsolete("Use `WithRegion` instead")]
         public IRegion FindRegion(string name)
         {
             name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
@@ -58,6 +59,12 @@ namespace Forest
             action.VerifyArgument(nameof(action)).IsNotNull();
             action.Invoke(new RegionImpl(this, regionName));
         }
+        // public T WithRegion<T>(string regionName, Func<IRegion, T> func)
+        // {
+        //     regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+        //     func.VerifyArgument(nameof(func)).IsNotNull();
+        //     return func.Invoke(new RegionImpl(this, regionName));
+        // }
         
         public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_node));
 
