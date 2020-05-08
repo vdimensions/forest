@@ -1,4 +1,7 @@
-﻿using Forest.StateManagement;
+﻿using System;
+using System.Collections.Generic;
+using Forest.ComponentModel;
+using Forest.StateManagement;
 using Forest.UI;
 
 namespace Forest.Engine
@@ -69,11 +72,28 @@ namespace Forest.Engine
                     return ctx.Engine.RegisterSystemView<T>();
                 }
             }
+            IView IForestEngine.RegisterSystemView(Type viewType)
+            {
+                using (var ctx = _provider.CreateContext(_context))
+                {
+                    return ctx.Engine.RegisterSystemView(viewType);
+                }
+            }
         }
         
         protected virtual IForestStateProvider GetForestStateProvider() => new DefaultForestStateProvider();
         protected virtual IPhysicalViewRenderer GetPhysicalViewRenderer() => new NoOpPhysicalViewRenderer();
 
-        public virtual IForestEngineContext CreateContext(IForestContext context) => new ForestEngineContext(context, this);
+        protected virtual IForestEngineContext CreateContext(IForestContext context) => new ForestEngineContext(context, this);
+
+        internal IForestEngineContext GetContext(IForestContext context, IEnumerable<IViewDescriptor> systemViewDescriptors)
+        {
+            var engineContext = CreateContext(context);
+            foreach (var systemViewDescriptor in systemViewDescriptors)
+            {
+                engineContext.Engine.RegisterSystemView(systemViewDescriptor.ViewType);
+            }
+            return engineContext;
+        }
     }
 }

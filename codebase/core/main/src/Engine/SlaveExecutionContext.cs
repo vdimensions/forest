@@ -329,8 +329,6 @@ namespace Forest.Engine
             var shell = Tree.Node.Shell;
             var templateNode = Tree.Node.Create(shell.Region, ViewHandle.FromName(template.Name), shell);
             yield return new ClearRegionInstruction(shell, shell.Region);
-            // TODO: add "IsEager" property to each system view and automatically register the eager ones
-            RegisterSystemView<NavigationSystem.View>();
             foreach (var instruction in CompileViews(templateNode, template.Contents))
             {
                 yield return instruction;
@@ -394,7 +392,7 @@ namespace Forest.Engine
             ProcessInstructions(new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null));
         }
 
-        public T RegisterSystemView<T>() where T : class, ISystemView
+        T IForestEngine.RegisterSystemView<T>()
         {
             var systemViewDescriptor =
                 _context.ViewRegistry.GetDescriptor(typeof(T)) ??
@@ -403,6 +401,20 @@ namespace Forest.Engine
                 .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
                 .Cast<T>()
                 .SingleOrDefault() ?? (T) ActivateView(new InstantiateViewInstruction(Tree.Node.Create(Tree.Node.Shell.Region, systemViewDescriptor.Name, Tree.Node.Shell), null));
+        }
+
+        IView IForestEngine.RegisterSystemView(Type viewType)
+        {
+            viewType.VerifyArgument(nameof(viewType))
+                .IsNotNull()
+                .Is<ISystemView>();
+            var systemViewDescriptor =
+                _context.ViewRegistry.GetDescriptor(viewType) ??
+                _context.ViewRegistry.Register(viewType).GetDescriptor(viewType);
+            return _logicalViews.Values
+                .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
+                .Cast<IView>()
+                .SingleOrDefault() ?? ActivateView(new InstantiateViewInstruction(Tree.Node.Create(Tree.Node.Shell.Region, systemViewDescriptor.Name, Tree.Node.Shell), null));
         }
 
         public ViewState? GetViewState(Tree.Node node) => 

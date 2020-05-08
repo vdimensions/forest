@@ -2,13 +2,10 @@
 {
     internal sealed class ForestAspectExecutionContext : AbstractForestExecutionAspect
     {
-        private readonly IForestExecutionContext _chainEC, _slaveEC;
         private readonly IForestExecutionAspect _nextAspect;
 
         public ForestAspectExecutionContext(IForestExecutionContext chainEc, SlaveExecutionContext slaveEc, IForestExecutionAspect nextAspect) : base(chainEc, slaveEc)
         {
-            _chainEC = chainEc;
-            _slaveEC = slaveEc;
             _nextAspect = nextAspect;
         }
 

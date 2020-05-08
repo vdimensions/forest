@@ -87,42 +87,49 @@ namespace Forest
 
         T IForestEngine.RegisterSystemView<T>()
         {
-            using (var ctx = EngineContextProvider.CreateContext(this))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 return ctx.Engine.RegisterSystemView<T>();
             }
         }
+        IView IForestEngine.RegisterSystemView(Type viewType)
+        {
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            {
+                return ctx.Engine.RegisterSystemView(viewType);
+            }
+        }
         void ITreeNavigator.Navigate(string tree)
         {
-            using (var ctx = EngineContextProvider.CreateContext(this))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 ctx.Engine.Navigate(tree);
             }
         }
         void ITreeNavigator.Navigate<T>(string tree, T message)
         {
-            using (var ctx = EngineContextProvider.CreateContext(this))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 ctx.Engine.Navigate(tree, message);
             }
         }
         void ITreeNavigator.NavigateBack()
         {
-            using (var ctx = EngineContextProvider.CreateContext(this))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 ctx.Engine.NavigateBack();
             }
         }
         void IMessageDispatcher.SendMessage<T>(T msg)
         {
-            using (var ctx = EngineContextProvider.CreateContext(this))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 ctx.Engine.SendMessage(msg);
             }
         }
         void ICommandDispatcher.ExecuteCommand(string command, string target, object arg)
         {
-            using (var ctx = EngineContextProvider.CreateContext(this))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 ctx.Engine.ExecuteCommand(command, target, arg);
             }
@@ -186,5 +193,7 @@ namespace Forest
         IViewDescriptor IViewRegistry.GetDescriptor(Type viewType) => _viewRegistry.GetDescriptor(viewType);
         IViewDescriptor IViewRegistry.GetDescriptor(string viewName) => _viewRegistry.GetDescriptor(viewName);
         IEnumerable<IViewDescriptor> IViewRegistry.Descriptors => _viewRegistry.Descriptors;
+
+        internal IEnumerable<IViewDescriptor> SystemViews => _viewRegistry.Descriptors.Where(x => x.IsSystemView);
     }
 }

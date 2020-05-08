@@ -1,31 +1,16 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Axle.Verification;
-using Forest.Engine;
 using Forest.Navigation.Messages;
 
 namespace Forest.Navigation
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class NavigationSystem
     {
         internal const string Name = "NavigationSystem";
-        
+
         public static class Messages
         {
             public const string Topic = "891A455D-07FA-44C0-8B20-8310BFD02CFF"; 
-            
-            [Obsolete]
-            internal sealed class UpdateTreeMessage
-            {
-                public UpdateTreeMessage(Func<INavigationTreeBuilder, INavigationTreeBuilder> updateTreeFunction)
-                {
-                    UpdateTreeFunction = updateTreeFunction;
-                }
-
-                public Func<INavigationTreeBuilder, INavigationTreeBuilder> UpdateTreeFunction { get; }
-            }
         }
 
         [View(Name)]

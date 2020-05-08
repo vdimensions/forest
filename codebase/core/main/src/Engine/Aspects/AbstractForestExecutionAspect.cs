@@ -31,6 +31,7 @@ namespace Forest.Engine.Aspects
         void ITreeNavigator.NavigateBack() => _chainEC.NavigateBack();
 
         T IForestEngine.RegisterSystemView<T>() => ((IForestExecutionContext) _slaveEC).RegisterSystemView<T>();
+        IView IForestEngine.RegisterSystemView(Type viewType) => ((IForestExecutionContext) _slaveEC).RegisterSystemView(viewType);
 
         public void Dispose() => ((IDisposable) _slaveEC).Dispose();
 

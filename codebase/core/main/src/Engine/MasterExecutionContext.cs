@@ -70,6 +70,7 @@ namespace Forest.Engine
         void IForestExecutionContext.ProcessInstructions(params ForestInstruction[] instructions) => _slave.ProcessInstructions(instructions);
 
         T IForestEngine.RegisterSystemView<T>() => _slave.RegisterSystemView<T>();
+        IView IForestEngine.RegisterSystemView(Type viewType) => _slave.RegisterSystemView(viewType);
 
         void IMessageDispatcher.SendMessage<T>(T message) => _slave.SendMessage(message);
 
