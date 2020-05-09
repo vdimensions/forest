@@ -5,9 +5,9 @@ namespace Forest.Navigation.Messages
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    internal class HighlightNavigationItem
+    public class NavigationHistoryEntry
     {
-        public HighlightNavigationItem(string id)
+        public NavigationHistoryEntry(string id)
         {
             ID = id;
         }

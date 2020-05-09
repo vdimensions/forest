@@ -66,6 +66,8 @@ namespace Forest.Engine
         void ITreeNavigator.Navigate<T>(string template, T message) => _slave.Navigate(template, message);
 
         void ITreeNavigator.NavigateBack() => _slave.NavigateBack();
+        
+        void ITreeNavigator.NavigateUp() => _slave.NavigateUp();
 
         void IForestExecutionContext.ProcessInstructions(params ForestInstruction[] instructions) => _slave.ProcessInstructions(instructions);
 

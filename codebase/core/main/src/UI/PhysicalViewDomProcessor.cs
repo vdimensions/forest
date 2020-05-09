@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Forest.Engine;
 
 namespace Forest.UI
@@ -80,7 +79,6 @@ namespace Forest.UI
                         var physicalView = parent != null
                             ? _renderer.CreateNestedPhysicalView(_engine, parent, n)
                             : _renderer.CreatePhysicalView(_engine, n);
-                        //updateCallArguments < -(physicalView, n)::updateCallArguments
                         updateCallArguments.Add(Tuple.Create(physicalView, n));
                         physicalViews.Add(n.InstanceID, physicalView);
                     }

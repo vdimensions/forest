@@ -337,14 +337,14 @@ namespace Forest.Engine
             {
                 yield return new SendMessageInstruction(message, new string[0], null);
                 yield return new SendMessageInstruction(
-                    new HighlightNavigationItem(templateName){Message = message}, 
+                    new NavigationHistoryEntry(templateName) { Message = message }, 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
             else
             {
                 yield return new SendMessageInstruction(
-                    new HighlightNavigationItem(templateName), 
+                    new NavigationHistoryEntry(templateName), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
@@ -390,6 +390,14 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             ProcessInstructions(new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null));
+        }
+        public void NavigateUp()
+        {
+            if (_nestedCalls > 0)
+            {
+                _eventBus.ClearDeadLetters();
+            }
+            ProcessInstructions(new SendMessageInstruction(new NavigateUp(), new []{NavigationSystem.Messages.Topic}, null));
         }
 
         T IForestEngine.RegisterSystemView<T>()

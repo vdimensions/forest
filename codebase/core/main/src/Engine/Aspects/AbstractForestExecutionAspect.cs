@@ -25,10 +25,9 @@ namespace Forest.Engine.Aspects
         void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg) => ExecuteCommand(new ExecuteCommandCutPoint(_chainEC, instanceID, command, arg));
 
         void ITreeNavigator.Navigate(string template) => Navigate(new NavigateCutPoint(_chainEC, template));
-
         void ITreeNavigator.Navigate<T>(string template, T message) => Navigate(new NavigateCutPoint(_chainEC, template, message));
-
         void ITreeNavigator.NavigateBack() => _chainEC.NavigateBack();
+        void ITreeNavigator.NavigateUp() => _chainEC.NavigateUp();
 
         T IForestEngine.RegisterSystemView<T>() => ((IForestExecutionContext) _slaveEC).RegisterSystemView<T>();
         IView IForestEngine.RegisterSystemView(Type viewType) => ((IForestExecutionContext) _slaveEC).RegisterSystemView(viewType);

@@ -120,6 +120,13 @@ namespace Forest
                 ctx.Engine.NavigateBack();
             }
         }
+        void ITreeNavigator.NavigateUp()
+        {
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            {
+                ctx.Engine.NavigateUp();
+            }
+        }
         void IMessageDispatcher.SendMessage<T>(T msg)
         {
             using (var ctx = EngineContextProvider.GetContext(this, SystemViews))

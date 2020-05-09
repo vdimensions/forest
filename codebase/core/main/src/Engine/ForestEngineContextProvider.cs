@@ -64,6 +64,14 @@ namespace Forest.Engine
                     ctx.Engine.NavigateBack();
                 }
             }
+            
+            void ITreeNavigator.NavigateUp()
+            {
+                using (var ctx = _provider.CreateContext(_context))
+                {
+                    ctx.Engine.NavigateUp();
+                }
+            }
     
             T IForestEngine.RegisterSystemView<T>()
             {
