@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using Axle;
 using Axle.Collections;
 using Axle.Extensions.Object;
@@ -16,6 +17,7 @@ namespace Forest.ComponentModel
             public SubscriptionHandlerSet() : base(new AdaptiveEqualityComparer<ISubscriptionHandler, IView>(sh => sh.Receiver, new ReferenceEqualityComparer<IView>())) { }
         }
 
+        [StructLayout(LayoutKind.Sequential)]
         private struct Letter : IComparable<Letter>, IEquatable<Letter>
         {
             public Letter(IView sender, object message, long timestamp, params string[] topics)
@@ -60,9 +62,9 @@ namespace Forest.ComponentModel
         private readonly IDictionary<Letter, SubscriptionHandlerSet> _messageHistory =
             new ChronologicalDictionary<Letter, SubscriptionHandlerSet>();
 
-        private bool _processing = false;
+        private bool _processing;
 
-        private static bool IsSameReceiver(IView sender, ISubscriptionHandler subscription)
+        private static bool ReceiverIsSender(IView sender, ISubscriptionHandler subscription)
         {
             return ReferenceEquals(sender, subscription.Receiver);
         }
@@ -73,15 +75,13 @@ namespace Forest.ComponentModel
             IDictionary<Type, SubscriptionHandlerSet> topicSubscriptionHandlers,
             ISet<ISubscriptionHandler> subscribersToIgnore)
         {
-
             // Collect the event subscriptions before invocation. 
             // This is necessary, as some commands may cause view disposal and event unsubscription in result, 
             // which is undesired while iterating over the subscription collections
             var subscriptionsToCall =
                 topicSubscriptionHandlers
                     .Where(x => x.Key.GetTypeInfo().IsAssignableFrom(message.GetType().GetTypeInfo()))
-                    .SelectMany(x => x.Value)
-                    .Where(x => !IsSameReceiver(sender, x))
+                    .SelectMany(x => x.Value.Where(y => !ReceiverIsSender(sender, y)))
                     .Where(subscribersToIgnore.Add)
                     .ToList();
             // Now that we've collected all potential subscribers, it is safe to invoke them
@@ -163,7 +163,12 @@ namespace Forest.ComponentModel
             _processing = true;
             try
             {
-                while (_messageHistory.ToList().Sum(x => DoPublish(x.Key, x.Value)) > 0) { ; }
+                var totalMessagesProcessed = 0;
+                do
+                {
+                    totalMessagesProcessed = _messageHistory.ToList().Sum(x => DoPublish(x.Key, x.Value));
+                } 
+                while (totalMessagesProcessed > 0);
             }
             finally
             {
@@ -176,7 +181,7 @@ namespace Forest.ComponentModel
         public IEventBus Unsubscribe(IView receiver)
         {
             foreach (var topicSubscriptionHandlers in _subscriptions.Values.SelectMany(x => x.Values))
-            foreach (var subscriptionHandler in topicSubscriptionHandlers.Where(y => IsSameReceiver(receiver, y)).ToList())
+            foreach (var subscriptionHandler in topicSubscriptionHandlers.Where(y => ReceiverIsSender(receiver, y)).ToList())
             {
                 topicSubscriptionHandlers.Remove(subscriptionHandler);
             }

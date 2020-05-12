@@ -15,6 +15,32 @@ namespace Forest.Engine
 {
     internal sealed class SlaveExecutionContext : IForestExecutionContext, IStateResolver
     {
+        private static void TraverseState(IForestStateVisitor v, IEnumerable<Tree.Node> ids, int idsCount, int siblingsCount, ForestState st)
+        {
+            var head = ids.FirstOrDefault();
+            if (head != null)
+            {
+                var ix = siblingsCount - idsCount;
+                var instanceID = head.InstanceID;
+                var viewState = st.ViewStates[instanceID];
+                var vs = st.LogicalViews[instanceID];
+                var descriptor = vs.Descriptor;
+                v.BFS(head, ix, viewState, descriptor);
+                TraverseState(v, ids.Skip(1), idsCount-1, siblingsCount, st);
+                var children = st.Tree[head].ToArray();
+                TraverseState(v, children, children.Length, children.Length, st);
+                v.DFS(head, ix, viewState, descriptor);
+            }
+        }
+        
+        private static void Traverse(IForestStateVisitor v, ForestState st)
+        {
+            var root = Tree.Node.Shell;
+            var ch = st.Tree[root].ToArray();
+            TraverseState(v, ch, ch.Length, ch.Length, st);
+            v.Complete();
+        }
+        
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
         private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
@@ -26,7 +52,7 @@ namespace Forest.Engine
 
         private NavigationInfo _navigationInfo;
         private Tree _tree;
-        private int _nestedCalls = 0;
+        private int _nestedCalls;
 
         internal SlaveExecutionContext(
                 IForestContext context, 
@@ -73,32 +99,6 @@ namespace Forest.Engine
                 var descriptor = view.Descriptor;
                 view.AcquireContext(node, descriptor, _exposedExecutionContext);
             }
-        }
-
-        private void TraverseState(IForestStateVisitor v, IEnumerable<Tree.Node> ids, int idsCount, int siblingsCount, ForestState st)
-        {
-            var head = ids.FirstOrDefault();
-            if (head != null)
-            {
-                var ix = siblingsCount - idsCount;
-                var instanceID = head.InstanceID;
-                var viewState = st.ViewStates[instanceID];
-                var vs = st.LogicalViews[instanceID];
-                var descriptor = vs.Descriptor;
-                v.BFS(head, ix, viewState, descriptor);
-                TraverseState(v, ids.Skip(1), idsCount-1, siblingsCount, st);
-                var children = st.Tree[head].ToArray();
-                TraverseState(v, children, children.Length, children.Length, st);
-                v.DFS(head, ix, viewState, descriptor);
-            }
-        }
-
-        void Traverse(IForestStateVisitor v, ForestState st)
-        {
-            var root = Tree.Node.Shell;
-            var ch = st.Tree[root].ToArray();
-            TraverseState(v, ch, ch.Length, ch.Length, st);
-            v.Complete();
         }
 
         ForestState IStateResolver.ResolveState()
@@ -285,71 +285,6 @@ namespace Forest.Engine
             }
         }
 
-        private IEnumerable<ForestInstruction> CompileViews(Tree.Node node, IEnumerable<Template.ViewItem> items)
-        {
-            yield return new InstantiateViewInstruction(node, null);
-            foreach (var viewItem in items)
-            {
-                switch (viewItem)
-                {
-                    case Template.ViewItem.Region r:
-                        foreach (var regionContentInstruction in CompileRegions(node, r.Name, r.Contents))
-                        {
-                            yield return regionContentInstruction;
-                        }
-                        break;
-                    default:
-                        throw new InvalidOperationException(string.Format("Unexpected view content item {0}", viewItem));
-                }
-            }
-        }
-        private IEnumerable<ForestInstruction> CompileRegions(Tree.Node parent, string regionName, IEnumerable<Template.RegionItem> items)
-        {
-            foreach (var regionItem in items)
-            {
-                switch (regionItem)
-                {
-                    case Template.RegionItem.View v:
-                        var node = Tree.Node.Create(regionName, v.Name, parent);
-                        foreach (var expandedViewInstruction in CompileViews(node, v.Contents))
-                        {
-                            yield return expandedViewInstruction;
-                        }
-                        break;
-                    case Template.RegionItem.Placeholder _:
-                        break;
-                    default:
-                        throw new InvalidOperationException(string.Format("Unexpected region content item {0}", regionItem));
-                }
-            }
-        }
-
-        private IEnumerable<ForestInstruction> CompileTemplate(string templateName, Template.Definition template, object message)
-        {
-            var shell = Tree.Node.Shell;
-            var templateNode = Tree.Node.Create(shell.Region, ViewHandle.FromName(template.Name), shell);
-            yield return new ClearRegionInstruction(shell, shell.Region);
-            foreach (var instruction in CompileViews(templateNode, template.Contents))
-            {
-                yield return instruction;
-            }
-            if (message != null)
-            {
-                yield return new SendMessageInstruction(message, new string[0], null);
-                yield return new SendMessageInstruction(
-                    new NavigationHistoryEntry(templateName) { Message = message }, 
-                    new [] { NavigationSystem.Messages.Topic }, 
-                    null);
-            }
-            else
-            {
-                yield return new SendMessageInstruction(
-                    new NavigationHistoryEntry(templateName), 
-                    new [] { NavigationSystem.Messages.Topic }, 
-                    null);
-            }
-        }
-
         public void SubscribeEvents(IRuntimeView receiver)
         {
             foreach (var evt in receiver.Descriptor.Events)
@@ -368,7 +303,7 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
-            ProcessInstructions(CompileTemplate(template, templateDefinition, null).ToArray());
+            ProcessInstructions(TemplateCompiler.CompileTemplate(template, templateDefinition, null).ToArray());
             _navigationInfo = new NavigationInfo(template, null);
         }
         public void Navigate<T>(string template, T message)
@@ -380,7 +315,7 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
-            ProcessInstructions(CompileTemplate(template, templateDefinition, message).ToArray());
+            ProcessInstructions(TemplateCompiler.CompileTemplate(template, templateDefinition, message).ToArray());
             _navigationInfo = new NavigationInfo(template, message);
         }
         public void NavigateBack()
