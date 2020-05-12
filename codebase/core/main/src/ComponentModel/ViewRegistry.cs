@@ -80,8 +80,7 @@ namespace Forest.ComponentModel
             where TAttribute : Attribute
         {
             const DeclarationType flags = DeclarationType.Virtual | DeclarationType.Abstract | DeclarationType.Override | DeclarationType.HideBySig | DeclarationType.Instance;
-            var eligible =
-                data
+            var eligible = data
                 .Select(a => new MethodAndAttributes<TAttribute>(a.Method, a.Attributes.Distinct()))
                 .Where(x => flags.HasFlag(x.Method.Declaration))
                 .ToArray();
