@@ -22,8 +22,8 @@ namespace Forest.Templates.Xml
             var root = doc.Root;
             var master = root.Attribute(XName.Get("master"))?.Value;
             return !string.IsNullOrEmpty(master)
-                ? this.CreateMasteredTemplate(master, ReadPlaceHolderDefinitions(root.Elements()))
-                : this.CreateTemplateDefinition(name, ReadViewContents(root.Elements()));
+                ? CreateMasteredTemplate(master, ReadPlaceHolderDefinitions(root.Elements()))
+                : CreateTemplateDefinition(name, ReadViewContents(root.Elements()));
         }
 
         private IEnumerable<Template.Content> ReadPlaceHolderDefinitions(IEnumerable<XElement> elements)

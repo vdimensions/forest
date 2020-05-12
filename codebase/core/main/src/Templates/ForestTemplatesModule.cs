@@ -20,10 +20,8 @@ namespace Forest.Templates
         ITemplateProvider
     {
         internal const string BundleName = "Forest";
-        [Obsolete]
-        internal const string OldBundleName = "ForestTemplates";
         
-        private static string[] ForestBundleNames => new[] {BundleName, OldBundleName};
+        private static string[] ForestBundleNames => new[] {BundleName};
         
         private readonly IList<string> _bundles = new List<string>();
         private readonly LinkedList<IResourceExtractor> _templateSourceExtractors = new LinkedList<IResourceExtractor>();
