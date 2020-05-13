@@ -7,76 +7,19 @@ using System.Text;
 
 namespace Forest
 {
+    /// <summary>
+    /// A class representing the tree data structure that holds the state of a forest application.
+    /// <remarks>
+    /// This class is immutable.
+    /// </remarks>
+    /// </summary>
+    /// <seealso cref="Node"/>
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
     [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
-    public class Tree
+    public sealed partial class Tree
     {
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        [Serializable]
-        #endif
-        [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
-        public sealed class Node : IComparable<Node>, IEquatable<Node>
-        {
-            public static Node Create(string region, ViewHandle viewHandle, Node parent)
-            {
-                return new Node(parent, region, viewHandle, GuidGenerator.NewID().ToString());
-            }
-            public static Node Create(string region, string viewName, Node parent)
-            {
-                return new Node(parent, region, ViewHandle.FromName(viewName), GuidGenerator.NewID().ToString());
-            }
-            public static Node Create(string region, Type viewType, Node parent)
-            {
-                return new Node(parent, region, ViewHandle.FromType(viewType), GuidGenerator.NewID().ToString());
-            }
-
-            public static readonly Node Shell = new Node(null, string.Empty, ViewHandle.FromName(string.Empty), Guid.Empty.ToString());
-
-            internal Node(Node parent, string region, ViewHandle viewHandle, string instanceID)
-            {
-                Parent = parent;
-                Region = region;
-                ViewHandle = viewHandle;
-                InstanceID = instanceID;
-            }
-
-            public int CompareTo(Node other)
-            {
-                if (ReferenceEquals(this, other)) return 0;
-                if (ReferenceEquals(null, other)) return 1;
-                return string.Compare(InstanceID, other.InstanceID, StringComparison.Ordinal);
-            }
-
-            public bool Equals(Node other)
-            {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return InstanceID == other.InstanceID;
-            }
-
-            public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Node other && Equals(other);
-
-            public override int GetHashCode() => (InstanceID != null ? InstanceID.GetHashCode() : 0);
-
-            private StringBuilder ToStringBuilder(bool stopAtRegion)
-            {
-                var sb = Parent == null
-                    ? new StringBuilder() 
-                    : Parent.ToStringBuilder(false).Append(Region.Length == 0 ? "shell" : Region);
-                return (stopAtRegion ? sb : sb.AppendFormat("/{0} #{1}", ViewHandle, InstanceID)).Append('/');
-            }
-
-            public override string ToString() => ToStringBuilder(false).ToString();
-
-            public Node Parent { get; }
-            public string Region { get; }
-            public ViewHandle ViewHandle { get; }
-            public string InstanceID { get; }
-            public string RegionSegment => ToStringBuilder(true).ToString();
-        }
-
         private static LinkedList<Tuple<Node, int>> Loop(Node p, ImmutableDictionary<Node, ImmutableList<Node>> map, LinkedList<Tuple<Node, int>> list, int i)
         {
             while (true)
@@ -101,54 +44,66 @@ namespace Forest
 
         private static bool TryInsert(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node, out ImmutableDictionary<Node, ImmutableList<Node>> result)
         {
-            if (hierarchy.TryGetValue(node, out _))
+            var parent = node.Parent;
+            if (hierarchy.TryGetValue(node, out _) || parent == null)
             {
                 result = ImmutableDictionary<Node, ImmutableList<Node>>.Empty;
                 return false;
             }
-            var parent = node.Parent; // TOOD: null check
+            var newParent = parent.UpdateRevision();
+            var newNode = node.ChangeParent(newParent);
             var list = hierarchy.TryGetValue(parent, out var l) ? l : ImmutableList<Node>.Empty;
             result = hierarchy
                 .Remove(parent)
-                .Add(parent, list.Add(node))
-                .Add(node, ImmutableList<Node>.Empty);
+                .Add(newParent, ImmutableList.Create(list.Select(n => n.ChangeParent(newParent)).ToArray()).Add(newNode))
+                .Add(newNode, ImmutableList<Node>.Empty)
+                ;
             return true;
         }
 
-        private static void DoRemove(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node, ICollection<Node> removedNodes, out ImmutableDictionary<Node, ImmutableList<Node>> result)
+        private static void DoRemove(
+            ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, 
+            Node node, 
+            ICollection<Node> removedNodes, 
+            out ImmutableDictionary<Node, ImmutableList<Node>> result)
         {
             result = hierarchy;
-            var items = new Stack<Node>();
-            items.Push(node);
+            var nodesToRemove = new Stack<Node>();
+            nodesToRemove.Push(node);
             do
             {
-                var n = items.Peek();
-                var children = GetChildren(result, n);
+                var currentNodeToBeRemoved = nodesToRemove.Peek();
+                var children = GetChildren(result, currentNodeToBeRemoved);
                 if (children.Count == 0)
                 {
-                    var ns = ImmutableList<Node>.Empty;
+                    var siblings = ImmutableList<Node>.Empty;
+                    var parent = currentNodeToBeRemoved.Parent;
                     // TODO: null check parent
-                    foreach (var childNode in result[n.Parent])
+                    foreach (var childNode in result[parent])
                     {
-                        if (!childNode.Equals(n))
+                        if (!childNode.Equals(currentNodeToBeRemoved))
                         {
-                            ns = ns.Add(childNode);
+                            siblings = siblings.Add(childNode);
                         }
                     }
 
-                    removedNodes.Add(n);
-                    result = result.Remove(n.Parent).Add(n.Parent, ns).Remove(n);
-                    items.Pop();
+                    removedNodes.Add(currentNodeToBeRemoved);
+                    result = result
+                        .Remove(parent)
+                        // The current node is the last of the nodesToRemove stack, we will need to update parent node revision
+                        .Add(nodesToRemove.Count == -1 ? parent.UpdateRevision() : parent, siblings)
+                        .Remove(currentNodeToBeRemoved);
+                    nodesToRemove.Pop();
                 }
                 else
                 {
                     foreach (var child in children)
                     {
-                        items.Push(child);
+                        nodesToRemove.Push(child);
                     }
                 }
             }
-            while (items.Count > 0);
+            while (nodesToRemove.Count > 0);
         }
 
         public static readonly Tree Root = new Tree();
@@ -179,10 +134,11 @@ namespace Forest
             foreach (var tuple in Loop(Node.Shell, Hierarchy, new LinkedList<Tuple<Node, int>>(), 0))
             {
                 var line = string.Format(
-                    "{0}/{1} #{2}", 
+                    "{0}/{1} #{2} ({3})", 
                     (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
                     tuple.Item1.ViewHandle, 
-                    tuple.Item1.InstanceID);
+                    tuple.Item1.InstanceID,
+                    tuple.Item1.Revision);
                 sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
             }
             return sb.ToString();
@@ -190,8 +146,6 @@ namespace Forest
 
         [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
         private ImmutableDictionary<Node, ImmutableList<Node>> Hierarchy { get; }
-
-        public IEnumerable<Node> Roots => Hierarchy.Keys;
 
         public IEnumerable<Node> this[Node node] => GetChildren(Hierarchy, node);
     }

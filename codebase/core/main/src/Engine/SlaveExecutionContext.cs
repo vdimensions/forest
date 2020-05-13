@@ -117,9 +117,9 @@ namespace Forest.Engine
             Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, d, _physicalViewDomProcessor.PhysicalViews));
             var newPv = _physicalViewDomProcessor.PhysicalViews;
             var newState = new ForestState(GuidGenerator.NewID(), a, b, c, d, newPv);
-            //match fuid with
-            //| Some f -> State.createWithFuid(a, b, c, f)
-            //| None -> State.create(a, b, c)
+            
+            Console.WriteLine("TREE STATE: \n{0}", newState.Tree);
+            
             return newState;
         }
 
