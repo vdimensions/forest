@@ -47,6 +47,7 @@ namespace Forest.Engine
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
 
         private ImmutableDictionary<string, IRuntimeView> _logicalViews;
+        private ImmutableDictionary<string, uint> _revisionMap = ImmutableDictionary.Create<string, uint>(StringComparer.Ordinal);
         private Tree _tree;
         private NavigationInfo _navigationInfo;
         private int _nestedCalls;
@@ -86,22 +87,29 @@ namespace Forest.Engine
 
         public void Init()
         {
-            // TODO: walk the `_tree` instead of the `_logicalViews` collection
-            foreach (var kvp in _logicalViews)
+            _revisionMap = _revisionMap.Clear();
+            foreach (var node in _tree.Reverse())
             {
-                var view = kvp.Value;
-                var key = view.Key;
+                var key = node.Key;
+                var view = _logicalViews[key];
                 var descriptor = view.Descriptor;
-                var node = _tree[key];
-                view.AcquireContext(node.Value, descriptor, _exposedExecutionContext);
+                view.AcquireContext(node, descriptor, _exposedExecutionContext);
+                _revisionMap = _revisionMap.Add(key, node.Revision);
             }
         }
 
         ForestState IStateResolver.ResolveState()
         {
-            foreach (var kvp in _logicalViews)
+            var changedViews = new HashSet<string>(_logicalViews.KeyComparer);
+            foreach (var node in _tree.Reverse())
             {
-                kvp.Value.AbandonContext(_exposedExecutionContext);
+                var key = node.Key;
+                var view = _logicalViews[key];
+                view.AbandonContext(_exposedExecutionContext);
+                if (!_revisionMap.TryGetValue(key, out var revision) || revision < node.Revision)
+                {
+                    changedViews.Add(key);
+                }
             }
             _eventBus.Dispose();
 

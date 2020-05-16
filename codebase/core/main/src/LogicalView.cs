@@ -92,21 +92,8 @@ namespace Forest
 
         protected IForestEngine Engine => ExecutionContext;
 
-        public T Model
-        {
-            get { return (T) _state.Model; }
-            // set
-            // {
-            //     if (_executionContext != null)
-            //     {
-            //         var vs = _executionContext.GetViewState(_key);
-            //         _state = _executionContext.SetViewState(false, _key, vs.HasValue 
-            //             ? ViewState.UpdateModel(vs.Value, value) 
-            //             : ViewState.Create(value));
-            //     }
-            // }
-        }
-
+        public T Model => (T) _state.Model;
+        T IView<T>.Model => Model;
         object IView.Model => Model;
 
         void IRuntimeView.AcquireContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context)
