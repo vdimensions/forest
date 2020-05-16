@@ -31,24 +31,23 @@ namespace Forest
             return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.DisabledLinks);
         }
 
-        public static ViewState DisableLink(ViewState viewState, string link)
-        {
-            link.VerifyArgument(nameof(link)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands, viewState.DisabledLinks.Add(link));
-        }
-        public static ViewState EnableLink(ViewState viewState, string link)
-        {
-            link.VerifyArgument(nameof(link)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands, viewState.DisabledLinks.Remove(link));
-        }
+        // public static ViewState DisableLink(ViewState viewState, string link)
+        // {
+        //     link.VerifyArgument(nameof(link)).IsNotNullOrEmpty();
+        //     return new ViewState(viewState.Model, viewState.DisabledCommands, viewState.DisabledLinks.Add(link));
+        // }
+        // public static ViewState EnableLink(ViewState viewState, string link)
+        // {
+        //     link.VerifyArgument(nameof(link)).IsNotNullOrEmpty();
+        //     return new ViewState(viewState.Model, viewState.DisabledCommands, viewState.DisabledLinks.Remove(link));
+        // }
 
         public static readonly ViewState Empty;
 
         private readonly IImmutableSet<string> _disabledCommands;
         private readonly IImmutableSet<string> _disabledLinks;
 
-        private ViewState(object model) : this(model, ImmutableHashSet<string>.Empty, ImmutableHashSet<string>.Empty) { }
-        private ViewState(object model, IImmutableSet<string> disabledCommands, IImmutableSet<string> disabledLinks)
+        private ViewState(object model, IImmutableSet<string> disabledCommands = null, IImmutableSet<string> disabledLinks = null)
         {
             Model = model;
             _disabledCommands = disabledCommands;

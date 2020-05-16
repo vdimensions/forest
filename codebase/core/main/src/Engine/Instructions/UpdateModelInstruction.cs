@@ -13,23 +13,17 @@ namespace Forest.Engine.Instructions
         #endif
         private readonly object _model;
 
-        public UpdateModelInstruction(Tree.Node node, object model) : base(node)
+        public UpdateModelInstruction(string nodeKey, object model) : base(nodeKey)
         {
             _model = model;
         }
 
-        protected override bool IsEqualTo(ForestInstruction other)
+        protected override bool IsEqualTo(NodeStateModification other)
         {
-            return other is UpdateModelInstruction um && Node.Equals(um.Node) && Equals(Model, um.Model);
+            return other is UpdateModelInstruction um && base.IsEqualTo(um) && Equals(Model, um.Model);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(Node, Model);
-
-        public void Deconstruct(out Tree.Node node, out object model)
-        {
-            node = Node;
-            model = Model;
-        }
+        protected override int DoGetHashCode() => this.CalculateHashCode(NodeKey, Model);
 
         public object Model => _model;
     }

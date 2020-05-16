@@ -47,19 +47,17 @@ namespace Forest.StateManagement
             Guid stateID,
             NavigationInfo navigationInfo,
             Tree tree,
-            ImmutableDictionary<string, ViewState> viewStates, 
             ImmutableDictionary<string, IRuntimeView> logicalViews,
             ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
             _stateID = stateID;
             _navigationInfo = navigationInfo;
             _tree = tree;
-            _viewStates = viewStates;
 
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
-        public ForestState() : this(Guid.Empty, new NavigationInfo(), Tree.Root, ImmutableDictionary<string, ViewState>.Empty, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
+        public ForestState() : this(Guid.Empty, new NavigationInfo(), Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
         public NavigationInfo NavigationInfo => _navigationInfo;

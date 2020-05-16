@@ -13,25 +13,19 @@ namespace Forest.Engine.Instructions
         #endif
         private readonly string _region;
 
-        public ClearRegionInstruction(Tree.Node node, string region) : base(node)
+        public ClearRegionInstruction(string nodeKey, string region) : base(nodeKey)
         {
             _region = region;
         }
 
-        protected override bool IsEqualTo(ForestInstruction other)
+        protected override bool IsEqualTo(NodeStateModification other)
         {
             return other is ClearRegionInstruction sm
                 && StringComparer.Ordinal.Equals(Region, sm.Region)
-                && Node.Equals(sm.Node);
+                && base.IsEqualTo(other);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(Node, Region);
-
-        public void Deconstruct(out Tree.Node node, out string region)
-        {
-            node = Node;
-            region = Region;
-        }
+        protected override int DoGetHashCode() => this.CalculateHashCode(NodeKey, Region);
 
         public string Region => _region;
     }

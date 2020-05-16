@@ -53,39 +53,40 @@ namespace Forest.UI
 
         private ILinkModel CreateModel(ILinkDescriptor descriptor) => new LinkModel(descriptor.Name);
 
-        void IForestStateVisitor.BFS(Tree.Node treeNode, int index, ViewState viewState, IViewDescriptor descriptor)
+        void IForestStateVisitor.BFS(Tree.Node treeNode, int index, IViewDescriptor descriptor)
         {
+            var viewState = treeNode.ViewState;
             // go ahead top-to-bottom and collect the basic model data
-            var hash = treeNode.InstanceID;
+            var hash = treeNode.Key;
             if (_context.SecurityManager.HasAccess(descriptor))
             {
                 var commands = descriptor.Commands.Values
-                    .Where(cmd => !viewState.DisabledCommands.Contains(cmd.Name))
+                    .Where(cmd => !viewState.Value.DisabledCommands.Contains(cmd.Name))
                     .Where(_context.SecurityManager.HasAccess)
                     .Select(CreateModel)
                     .ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
                 var links = descriptor.Links.Values
-                    .Where(lnk => !viewState.DisabledLinks.Contains(lnk.Name))
+                    .Where(lnk => !viewState.Value.DisabledLinks.Contains(lnk.Name))
                     .Where(_context.SecurityManager.HasAccess)
                     .Select(CreateModel)
                     .ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
 
                 // TODO replace with revision comparison
-                var canSkipRenderCall = _modelMap.TryGetValue(hash, out var model) && Equals(model, viewState.Model);
+                var canSkipRenderCall = _modelMap.TryGetValue(hash, out var model) && Equals(model, viewState.Value.Model);
                 if (!canSkipRenderCall)
                 {
-                    _modelMap = _modelMap.Add(hash, viewState.Model);
+                    _modelMap = _modelMap.Add(hash, viewState.Value.Model);
                 }
-                var node = new DomNode(hash, index, descriptor.Name, treeNode.Region, viewState.Model, null, ImmutableDictionary<string, IEnumerable<DomNode>>.Empty, ImmutableDictionary.CreateRange(commands.Comparer, commands), ImmutableDictionary.CreateRange(links.Comparer, links));
+                var node = new DomNode(hash, index, descriptor.Name, treeNode.Region, viewState.Value.Model, null, ImmutableDictionary<string, IEnumerable<DomNode>>.Empty, ImmutableDictionary.CreateRange(commands.Comparer, commands), ImmutableDictionary.CreateRange(links.Comparer, links));
                 _nodeMap = _nodeMap.Add(hash, node);
                 _changeStateList = _changeStateList.Add(Tuple.Create(hash, canSkipRenderCall));
             }
         }
-        void IForestStateVisitor.DFS(Tree.Node treeNode, int index, ViewState viewState, IViewDescriptor descriptor)
+        void IForestStateVisitor.DFS(Tree.Node treeNode, int index, IViewDescriptor descriptor)
         {
             // go backwards bottom-to-top and properly update the hierarchy
-            var parentKey = treeNode.Parent.InstanceID;
-            if (_nodeMap.TryGetValue(parentKey, out var parent) && _nodeMap.TryGetValue(treeNode.InstanceID, out var node))
+            var parentKey = treeNode.ParentKey;
+            if (_nodeMap.TryGetValue(parentKey, out var parent) && _nodeMap.TryGetValue(treeNode.Key, out var node))
             {
                 var region = treeNode.Region;
                 var newRegionContents = parent.Regions.TryGetValue(region, out var nodes)

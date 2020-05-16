@@ -7,9 +7,9 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class EnableCommandInstruction : CommandStateInstruction, IEquatable<EnableCommandInstruction>
     {
-        public EnableCommandInstruction(Tree.Node node, string command) : base(node, command) { }
+        public EnableCommandInstruction(string nodeKey, string command) : base(nodeKey, command) { }
 
-        protected override bool IsEqualTo(ForestInstruction other) => other is EnableCommandInstruction && base.IsEqualTo(other);
+        protected override bool IsEqualTo(CommandStateInstruction other) => other is EnableCommandInstruction && base.IsEqualTo(other);
 
         bool IEquatable<EnableCommandInstruction>.Equals(EnableCommandInstruction other) => other != null && base.IsEqualTo(other);
     }

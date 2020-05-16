@@ -14,7 +14,7 @@ namespace Forest.Engine.Instructions
     public class ViewInstantiationException : ForestInstructionException
     {
         protected ViewInstantiationException(InstantiateViewInstruction faultyInstruction, string message, Exception inner) 
-            : base(faultyInstruction, string.Format("An error occurred while instantiating view ({0}). {1}", faultyInstruction.Node.ViewHandle, message), inner) { }
+            : base(faultyInstruction, string.Format("An error occurred while instantiating view ({0}). {1}", faultyInstruction.ViewHandle, message), inner) { }
         internal ViewInstantiationException(InstantiateViewInstruction faultyInstruction, Exception inner) 
             : this(faultyInstruction, string.Empty, inner) { }
         internal ViewInstantiationException(InstantiateViewInstruction faultyInstruction) 

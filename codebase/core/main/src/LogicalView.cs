@@ -11,7 +11,7 @@ namespace Forest
         private ViewState _state;
         private IForestExecutionContext _executionContext;
         private IViewDescriptor _descriptor;
-        private Tree.Node _node;
+        private string _key;
 
         private LogicalView(ViewState state)
         {
@@ -44,7 +44,7 @@ namespace Forest
             }
         }
 
-        public void Publish<TM>(TM message, params string[] topics) => ExecutionContext.ProcessInstructions(new SendMessageInstruction(message, topics, _node.InstanceID));
+        public void Publish<TM>(TM message, params string[] topics) => ExecutionContext.ProcessInstructions(new SendMessageInstruction(message, topics, _key));
 
         [Obsolete("Use `WithRegion` instead")]
         public IRegion FindRegion(string name)
@@ -66,15 +66,15 @@ namespace Forest
         //     return func.Invoke(new RegionImpl(this, regionName));
         // }
         
-        public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_node));
+        public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_key));
 
         public T UpdateModel(Func<T, T> updateFunc)
         {
             var newModel = updateFunc.Invoke(Model);
             if (_executionContext != null)
             {
-                var vs = _executionContext.GetViewState(_node);
-                _state = _executionContext.SetViewState(false, _node, vs.HasValue 
+                var vs = _executionContext.GetViewState(_key);
+                _state = _executionContext.SetViewState(false, _key, vs.HasValue 
                     ? ViewState.UpdateModel(vs.Value, newModel) 
                     : ViewState.Create(newModel));
             }
@@ -92,7 +92,20 @@ namespace Forest
 
         protected IForestEngine Engine => ExecutionContext;
 
-        public T Model => (T) _state.Model;
+        public T Model
+        {
+            get { return (T) _state.Model; }
+            // set
+            // {
+            //     if (_executionContext != null)
+            //     {
+            //         var vs = _executionContext.GetViewState(_key);
+            //         _state = _executionContext.SetViewState(false, _key, vs.HasValue 
+            //             ? ViewState.UpdateModel(vs.Value, value) 
+            //             : ViewState.Create(value));
+            //     }
+            // }
+        }
 
         object IView.Model => Model;
 
@@ -102,9 +115,9 @@ namespace Forest
             {
                 throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.ViewHandle));
             }
-            _node = node;
+            _key = node.Key;
             _descriptor = vd;
-            var vs = context.GetViewState(_node);
+            var vs = context.GetViewState(_key);
             if (vs.HasValue)
             {
                 _state = vs.Value;
@@ -112,7 +125,7 @@ namespace Forest
             else
             {
                 // TODO: How is this different than Resume(_state)
-                context.SetViewState(true, node, _state);
+                context.SetViewState(true, _key, _state);
             }
             (_executionContext = context).SubscribeEvents(this);
         }
@@ -124,7 +137,7 @@ namespace Forest
                 throw new InvalidOperationException("The provided context is not correct");
             }
             context.UnsubscribeEvents(this);
-            var vs = context.GetViewState(_node);
+            var vs = context.GetViewState(_key);
             if (vs.HasValue)
             {
                 _state = vs.Value;
@@ -134,7 +147,7 @@ namespace Forest
 
         void IRuntimeView.Resume(ViewState viewState)
         {
-            _state = ExecutionContext.SetViewState(true, _node, viewState);
+            _state = ExecutionContext.SetViewState(true, _key, viewState);
             Resume();
         }
 
@@ -153,7 +166,7 @@ namespace Forest
             }
         }
 
-        Tree.Node IRuntimeView.Node => _node;
+        string IRuntimeView.Key => _key;
         IViewDescriptor IRuntimeView.Descriptor => _descriptor;
         IForestExecutionContext IRuntimeView.Context => ExecutionContext;
 

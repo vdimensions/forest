@@ -57,9 +57,9 @@ namespace Forest.Engine
 
         void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg) => _slave.ExecuteCommand(command, instanceID, arg);
 
-        IEnumerable<IView> IForestExecutionContext.GetRegionContents(Tree.Node node, string region) => _slave.GetRegionContents(node, region);
+        IEnumerable<IView> IForestExecutionContext.GetRegionContents(string nodeKey, string region) => _slave.GetRegionContents(nodeKey, region);
 
-        ViewState? IForestExecutionContext.GetViewState(Tree.Node node) => _slave.GetViewState(node);
+        ViewState? IForestExecutionContext.GetViewState(string nodeKey) => _slave.GetViewState(nodeKey);
 
         void ITreeNavigator.Navigate(string template) => _slave.Navigate(template);
 
@@ -76,7 +76,7 @@ namespace Forest.Engine
 
         void IMessageDispatcher.SendMessage<T>(T message) => _slave.SendMessage(message);
 
-        ViewState IForestExecutionContext.SetViewState(bool silent, Tree.Node node, ViewState viewState) => _slave.SetViewState(silent, node, viewState);
+        ViewState IForestExecutionContext.SetViewState(bool silent, string nodeKey, ViewState viewState) => _slave.SetViewState(silent, nodeKey, viewState);
 
         void IForestExecutionContext.SubscribeEvents(IRuntimeView receiver) => _slave.SubscribeEvents(receiver);
 

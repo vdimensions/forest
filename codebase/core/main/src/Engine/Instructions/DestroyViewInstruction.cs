@@ -7,12 +7,12 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class DestroyViewInstruction : NodeStateModification
     {
-        public DestroyViewInstruction(Tree.Node node) : base(node) { }
+        public DestroyViewInstruction(string nodeKey) : base(nodeKey) { }
 
-        protected override bool IsEqualTo(ForestInstruction other) => other is DestroyViewInstruction dv && Node.Equals(dv.Node);
+        protected override bool IsEqualTo(NodeStateModification other) 
+            => other is DestroyViewInstruction dv  && base.IsEqualTo(dv);
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(Node);
+        protected override int DoGetHashCode() => this.CalculateHashCode(NodeKey);
 
-        public void Deconstruct(out Tree.Node node) => node = Node;
     }
 }

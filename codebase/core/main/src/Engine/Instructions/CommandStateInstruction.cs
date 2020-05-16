@@ -14,23 +14,24 @@ namespace Forest.Engine.Instructions
         #endif
         private readonly string _command;
 
-        internal CommandStateInstruction(Tree.Node node, string command) : base(node)
+        internal CommandStateInstruction(string nodeKey, string command) : base(nodeKey)
         {
             _command = command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
         }
 
-        protected override bool IsEqualTo(ForestInstruction other)
+        protected sealed override bool IsEqualTo(NodeStateModification other)
         {
-            return other is CommandStateInstruction csi && other.GetType() == GetType() && Node.Equals(csi.Node) && StringComparer.Ordinal.Equals(Command, csi.Command);
+            return other is CommandStateInstruction csi
+                && base.IsEqualTo(other)  
+                && IsEqualTo(csi);
+        }
+        protected virtual bool IsEqualTo(CommandStateInstruction other)
+        {
+            return other.GetType() == GetType() 
+                && StringComparer.Ordinal.Equals(Command, other.Command);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(GetType(), Node, Command);
-
-        public void Deconstruct(out Tree.Node node, out string command)
-        {
-            node = Node;
-            command = Command;
-        }
+        protected override int DoGetHashCode() => this.CalculateHashCode(GetType(), NodeKey, Command);
 
         public string Command => _command;
     }

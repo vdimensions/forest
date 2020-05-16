@@ -11,7 +11,7 @@ namespace Forest.Engine
         void Resume(ViewState viewState);
         void Destroy();
 
-        Tree.Node Node { get; }
+        string Key { get; }
         IViewDescriptor Descriptor { get; }
         IForestExecutionContext Context { get; }
     }

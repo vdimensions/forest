@@ -12,13 +12,23 @@ namespace Forest.Engine.Instructions
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
         #endif
-        private Tree.Node _node;
+        private string _nodeKey;
 
-        internal NodeStateModification(Tree.Node node) : base()
+        internal NodeStateModification(string nodeKey) : base()
         {
-            _node = node;
+            _nodeKey = nodeKey;
         }
 
-        public Tree.Node Node => _node;
+        protected sealed override bool IsEqualTo(ForestInstruction other)
+        {
+            return other is NodeStateModification otherModification && IsEqualTo(otherModification);
+        }
+
+        protected virtual bool IsEqualTo(NodeStateModification nodeStateModification)
+        {
+            return StringComparer.Ordinal.Equals(_nodeKey, nodeStateModification.NodeKey);
+        }
+
+        public string NodeKey => _nodeKey;
     }
 }

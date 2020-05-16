@@ -38,15 +38,15 @@ namespace Forest.Engine.Aspects
 
         void IForestExecutionContext.UnsubscribeEvents(IRuntimeView receiver) => _slaveEC.UnsubscribeEvents(receiver);
 
-        ViewState? IForestExecutionContext.GetViewState(Tree.Node node) => _slaveEC.GetViewState(node);
+        ViewState? IForestExecutionContext.GetViewState(string nodeKey) => _slaveEC.GetViewState(nodeKey);
 
-        ViewState IForestExecutionContext.SetViewState(bool silent, Tree.Node node, ViewState viewState) => _slaveEC.SetViewState(silent, node, viewState);
+        ViewState IForestExecutionContext.SetViewState(bool silent, string nodeKey, ViewState viewState) => _slaveEC.SetViewState(silent, nodeKey, viewState);
 
         void IForestExecutionContext.ProcessInstructions(params ForestInstruction[] instructions) => _slaveEC.ProcessInstructions(instructions);
 
         IView IForestExecutionContext.ActivateView(InstantiateViewInstruction instantiateViewInstruction) => _slaveEC.ActivateView(instantiateViewInstruction);
 
-        IEnumerable<IView> IForestExecutionContext.GetRegionContents(Tree.Node node, string region) => _slaveEC.GetRegionContents(node, region);
+        IEnumerable<IView> IForestExecutionContext.GetRegionContents(string nodeKey, string region) => _slaveEC.GetRegionContents(nodeKey, region);
 
         ForestState IStateResolver.ResolveState() => ((IStateResolver) _slaveEC).ResolveState();
     }

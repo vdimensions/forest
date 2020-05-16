@@ -8,15 +8,15 @@ namespace Forest.Templates
 {
     internal static class TemplateCompiler
     {
-        private static IEnumerable<ForestInstruction> CompileViews(Tree.Node node, IEnumerable<Template.ViewItem> items)
+        private static IEnumerable<ForestInstruction> CompileViews(InstantiateViewInstruction viewInstruction, IEnumerable<Template.ViewItem> items)
         {
-            yield return new InstantiateViewInstruction(node, null);
+            yield return viewInstruction;
             foreach (var viewItem in items)
             {
                 switch (viewItem)
                 {
                     case Template.ViewItem.Region r:
-                        foreach (var regionContentInstruction in CompileRegions(node, r.Name, r.Contents))
+                        foreach (var regionContentInstruction in CompileRegions(viewInstruction, r.Name, r.Contents))
                         {
                             yield return regionContentInstruction;
                         }
@@ -27,15 +27,15 @@ namespace Forest.Templates
             }
         }
         
-        private static IEnumerable<ForestInstruction> CompileRegions(Tree.Node parent, string regionName, IEnumerable<Template.RegionItem> items)
+        private static IEnumerable<ForestInstruction> CompileRegions(InstantiateViewInstruction parentViewInstruction, string regionName, IEnumerable<Template.RegionItem> items)
         {
             foreach (var regionItem in items)
             {
                 switch (regionItem)
                 {
                     case Template.RegionItem.View v:
-                        var node = Tree.Node.Create(regionName, v.Name, parent);
-                        foreach (var expandedViewInstruction in CompileViews(node, v.Contents))
+                        var i = new InstantiateViewInstruction(ViewHandle.FromName(v.Name), regionName, parentViewInstruction.NodeKey, null);
+                        foreach (var expandedViewInstruction in CompileViews(i, v.Contents))
                         {
                             yield return expandedViewInstruction;
                         }
@@ -51,9 +51,9 @@ namespace Forest.Templates
         public static IEnumerable<ForestInstruction> CompileTemplate(string templateName, Template.Definition template, object message)
         {
             var shell = Tree.Node.Shell;
-            var templateNode = Tree.Node.Create(shell.Region, ViewHandle.FromName(template.Name), shell);
-            yield return new ClearRegionInstruction(shell, shell.Region);
-            foreach (var instruction in CompileViews(templateNode, template.Contents))
+            yield return new ClearRegionInstruction(shell.Key, shell.Region);
+            var templateNodeInstruction = new InstantiateViewInstruction(ViewHandle.FromName(templateName), shell.Region, shell.Key, null); 
+            foreach (var instruction in CompileViews(templateNodeInstruction, template.Contents))
             {
                 yield return instruction;
             }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using Forest.Engine.Instructions;
 
 namespace Forest
 {
@@ -20,133 +20,192 @@ namespace Forest
     [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
     public sealed partial class Tree
     {
-        private static LinkedList<Tuple<Node, int>> Loop(Node p, ImmutableDictionary<Node, ImmutableList<Node>> map, LinkedList<Tuple<Node, int>> list, int i)
+        private static LinkedList<Tuple<Node, int>> Loop(Node p, ImmutableDictionary<string, ImmutableList<Node>> map, LinkedList<Tuple<Node, int>> list, int i)
         {
             while (true)
             {
-                if (!map.TryGetValue(p, out var children) || children.Count == 0)
+                if (!map.TryGetValue(p.Key, out var children) || children.Count == 0)
                 {
                     list.AddFirst(Tuple.Create(p, i));
                     return list;
                 }
 
                 var first = children[0];
-                var newMap = map.Remove(p).Add(p, children.RemoveAt(0));
+                var newMap = map.Remove(p.Key).Add(p.Key, children.RemoveAt(0));
                 list = Loop(first, newMap, list, i + 1);
             }
         }
 
-        private static ImmutableList<Node> GetChildren(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node)
+        private static ImmutableList<Node> GetChildren(
+            ImmutableDictionary<string, Node> nodes, 
+            ImmutableDictionary<string, ImmutableList<string>> hierarchy, 
+            string node)
         {
-            //TODO: check if `node` belongs to the tree
-            return hierarchy.TryGetValue(node, out var result) ? result : ImmutableList<Node>.Empty;
+            return hierarchy.TryGetValue(node ?? string.Empty, out var result) 
+                ? ImmutableList.Create(result.Select(k => nodes[k]).ToArray()) 
+                : ImmutableList<Node>.Empty;
         }
 
-        private static bool TryInsert(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, Node node, out ImmutableDictionary<Node, ImmutableList<Node>> result)
+        private static bool TryInsert(Tree tree, Node node, out Tree newTree)
         {
-            var parent = node.Parent;
-            if (hierarchy.TryGetValue(node, out _) || parent == null)
+            var newNodes = tree._nodes;
+            var newHierarchy = tree._hierarchy;
+            if (newNodes.TryGetValue(node.Key, out _) || !newNodes.TryGetValue(node.ParentKey, out var parent))
             {
-                result = ImmutableDictionary<Node, ImmutableList<Node>>.Empty;
+                newTree = tree;
                 return false;
             }
-            var newParent = parent.UpdateRevision();
-            var newNode = node.ChangeParent(newParent);
-            var list = hierarchy.TryGetValue(parent, out var l) ? l : ImmutableList<Node>.Empty;
-            result = hierarchy
-                .Remove(parent)
-                .Add(newParent, ImmutableList.Create(list.Select(n => n.ChangeParent(newParent)).ToArray()).Add(newNode))
-                .Add(newNode, ImmutableList<Node>.Empty)
-                ;
+            var parentKey = parent.Key;
+            newNodes = newNodes
+                .Remove(parentKey)
+                .Add(parentKey, parent.UpdateRevision())
+                .Add(node.Key, node);
+            var siblingsKeys = newHierarchy.TryGetValue(node.ParentKey, out var l) ? l : ImmutableList<string>.Empty;
+            newHierarchy = newHierarchy
+                .Remove(parentKey)
+                .Add(parentKey, siblingsKeys.Add(node.Key))
+                .Add(node.Key, ImmutableList<string>.Empty);
+            newTree = new Tree(newNodes, newHierarchy);
             return true;
         }
 
-        private static void DoRemove(
-            ImmutableDictionary<Node, ImmutableList<Node>> hierarchy, 
-            Node node, 
-            ICollection<Node> removedNodes, 
-            out ImmutableDictionary<Node, ImmutableList<Node>> result)
+        public static readonly Tree Root = new Tree();
+        
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly ImmutableDictionary<string, Node> _nodes;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        private readonly ImmutableDictionary<string, ImmutableList<string>> _hierarchy;
+
+        private Tree(
+            ImmutableDictionary<string, Node> nodes, 
+            ImmutableDictionary<string, ImmutableList<string>> hierarchy)
         {
-            result = hierarchy;
-            var nodesToRemove = new Stack<Node>();
-            nodesToRemove.Push(node);
+            _nodes = nodes;
+            _hierarchy = hierarchy;
+        }
+        internal Tree() : this(
+            ImmutableDictionary.Create<string, Node>(StringComparer.Ordinal).Add(Node.Shell.Key, Node.Shell),
+            ImmutableDictionary.Create<string, ImmutableList<string>>(StringComparer.Ordinal).Add(Node.Shell.Key, ImmutableList<string>.Empty)) { }
+
+        public IEnumerable<Node> Filter(Predicate<Node> filter, string parent = null)
+        {
+            return GetChildren(_nodes, _hierarchy, parent).Where(child => filter(child));
+        }
+
+        public Tree Insert(string key, ViewHandle viewHandle, string region, string ownerKey, object model, out Node node)
+        {
+            if (!TryFind(ownerKey, out var parent))
+            {
+                //TODO: throw new NodeNotFoundException(node);
+                throw new InvalidOperationException("Cannot find node!");
+            }
+            node = Node.Create(key, viewHandle, region, model, parent);
+            return TryInsert(this, node, out var result) ? result : this;
+        }
+
+        public Tree Remove(string key, out ICollection<Node> removedNodes)
+        {
+            removedNodes = new HashSet<Node>();
+            var newNodes = _nodes;
+            var newHierarchy = _hierarchy;
+            var keysToRemove = new Stack<string>();
+            keysToRemove.Push(key);
             do
             {
-                var currentNodeToBeRemoved = nodesToRemove.Peek();
-                var children = GetChildren(result, currentNodeToBeRemoved);
+                var currentKeyToBeRemoved = keysToRemove.Peek();
+                var currentNodeToBeRemoved = newNodes[currentKeyToBeRemoved];
+                var children = newHierarchy.TryGetValue(currentKeyToBeRemoved, out var c)
+                    ? c
+                    : ImmutableList<string>.Empty;
                 if (children.Count == 0)
                 {
-                    var siblings = ImmutableList<Node>.Empty;
-                    var parent = currentNodeToBeRemoved.Parent;
+                    var siblingKeys = ImmutableList<string>.Empty;
+                    var parentKey = currentNodeToBeRemoved.ParentKey;
                     // TODO: null check parent
-                    foreach (var childNode in result[parent])
+                    foreach (var siblingKey in newHierarchy[parentKey])
                     {
-                        if (!childNode.Equals(currentNodeToBeRemoved))
+                        if (!siblingKey.Equals(currentKeyToBeRemoved))
                         {
-                            siblings = siblings.Add(childNode);
+                            siblingKeys = siblingKeys.Add(siblingKey);
                         }
                     }
 
                     removedNodes.Add(currentNodeToBeRemoved);
-                    result = result
-                        .Remove(parent)
-                        // The current node is the last of the nodesToRemove stack, we will need to update parent node revision
-                        .Add(nodesToRemove.Count == -1 ? parent.UpdateRevision() : parent, siblings)
-                        .Remove(currentNodeToBeRemoved);
-                    nodesToRemove.Pop();
+                    newHierarchy = newHierarchy
+                        .Remove(parentKey)
+                        .Add(parentKey, siblingKeys)
+                        .Remove(currentKeyToBeRemoved);
+                    newNodes = newNodes.Remove(currentKeyToBeRemoved);
+                    if (keysToRemove.Count == 1)
+                    {
+                        var newParent = newNodes[parentKey].UpdateRevision();
+                        newNodes = newNodes.Remove(parentKey).Add(parentKey, newParent);
+                    }
+                    keysToRemove.Pop();
                 }
                 else
                 {
                     foreach (var child in children)
                     {
-                        nodesToRemove.Push(child);
+                        keysToRemove.Push(child);
                     }
                 }
             }
-            while (nodesToRemove.Count > 0);
+            while (keysToRemove.Count > 0);
+            
+            return removedNodes.Count == 0 ? this : new Tree(newNodes, newHierarchy);
         }
 
-        public static readonly Tree Root = new Tree();
-
-        private Tree(ImmutableDictionary<Node, ImmutableList<Node>> hierarchy)
+        public Tree SetViewState(string key, ViewState viewState)
         {
-            Hierarchy = hierarchy;
-        }
-        internal Tree() : this(ImmutableDictionary<Node, ImmutableList<Node>>.Empty.Add(Node.Shell, ImmutableList<Node>.Empty)) { }
-
-        public IEnumerable<Node> Filter(Predicate<Node> filter, Node parent = null)
-        {
-            return GetChildren(Hierarchy, parent ?? Node.Shell).Where(child => filter(child));
-        }
-
-        public Tree Insert(Node node) => TryInsert(Hierarchy, node, out var result) ? new Tree(result) : this;
-
-        public Tree Remove(Node node, out ICollection<Node> removedNodes)
-        {
-            removedNodes = new HashSet<Node>();
-            DoRemove(Hierarchy, node, removedNodes, out var result);
-            return removedNodes.Count == 0 ? this : new Tree(result);
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            foreach (var tuple in Loop(Node.Shell, Hierarchy, new LinkedList<Tuple<Node, int>>(), 0))
+            if (!_nodes.TryGetValue(key, out var targetNode))
             {
-                var line = string.Format(
-                    "{0}/{1} #{2} ({3})", 
-                    (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
-                    tuple.Item1.ViewHandle, 
-                    tuple.Item1.InstanceID,
-                    tuple.Item1.Revision);
-                sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
+                //TODO: throw new NodeNotFoundException(node);
+                throw new InvalidOperationException("Cannot find node!");
             }
-            return sb.ToString();
+            return new Tree(
+                _nodes.Remove(key).Add(key, targetNode.SetViewState(viewState)),
+                _hierarchy);
+        }
+        public Tree UpdateViewState(string key, Func<ViewState, ViewState> viewStateUpdateFn)
+        {
+            if (!_nodes.TryGetValue(key, out var targetNode))
+            {
+                //TODO: throw new NodeNotFoundException(node);
+                throw new InvalidOperationException("Cannot find node!");
+            }
+            return new Tree(
+                _nodes.Remove(key).Add(key, targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState ?? ViewState.Empty))),
+                _hierarchy);
         }
 
-        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-        private ImmutableDictionary<Node, ImmutableList<Node>> Hierarchy { get; }
+        public bool TryFind(string key, out Node node) => _nodes.TryGetValue(key, out node);
 
-        public IEnumerable<Node> this[Node node] => GetChildren(Hierarchy, node);
+        public IEnumerable<Node> GetChildren(string key)
+        {
+            return _hierarchy.TryGetValue(key, out var childrenKeys)
+                ? childrenKeys
+                    .Select(ck => _nodes.TryGetValue(ck, out var node) ? new Node?(node) : null)
+                    .Where(n => n.HasValue)
+                    .Select(n => n.Value)
+                : Enumerable.Empty<Node>();
+        }
+
+        public Node? this[string key] => TryFind(key, out var result) ? new Node?(result) : null;
+
+        // public override string ToString()
+        // {
+        //     var sb = new StringBuilder();
+        //     foreach (var tuple in Loop(Node.Shell, _hierarchy, new LinkedList<Tuple<Node, int>>(), 0))
+        //     {
+        //         var line = string.Format(
+        //             "{0}/{1} #{2}", 
+        //             (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
+        //             tuple.Item1.ViewHandle, 
+        //             tuple.Item1.InstanceID);
+        //         sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
+        //     }
+        //     return sb.ToString();
+        // }
     }
 }
