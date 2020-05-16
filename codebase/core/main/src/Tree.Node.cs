@@ -8,7 +8,7 @@ namespace Forest
     partial class Tree
     {
         /// <summary>
-        /// A class representing a single node inside a Forest <see cref="Tree"/>.
+        /// A struct representing a single node inside a Forest <see cref="Tree"/>.
         /// </summary>
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [Serializable]
