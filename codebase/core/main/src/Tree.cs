@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
-using Forest.Engine.Instructions;
+using System.Text;
 
 namespace Forest
 {
@@ -18,24 +18,8 @@ namespace Forest
     [Serializable]
     #endif
     [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
-    public sealed partial class Tree
+    public sealed partial class Tree : IEnumerable<Tree.Node>
     {
-        private static LinkedList<Tuple<Node, int>> Loop(Node p, ImmutableDictionary<string, ImmutableList<Node>> map, LinkedList<Tuple<Node, int>> list, int i)
-        {
-            while (true)
-            {
-                if (!map.TryGetValue(p.Key, out var children) || children.Count == 0)
-                {
-                    list.AddFirst(Tuple.Create(p, i));
-                    return list;
-                }
-
-                var first = children[0];
-                var newMap = map.Remove(p.Key).Add(p.Key, children.RemoveAt(0));
-                list = Loop(first, newMap, list, i + 1);
-            }
-        }
-
         private static ImmutableList<Node> GetChildren(
             ImmutableDictionary<string, Node> nodes, 
             ImmutableDictionary<string, ImmutableList<string>> hierarchy, 
@@ -190,22 +174,45 @@ namespace Forest
                     .Select(n => n.Value)
                 : Enumerable.Empty<Node>();
         }
+        
+        private IEnumerable<Tuple<Node, int>> Traverse(string key, int initialDepth = -1)
+        {
+            if (_hierarchy.TryGetValue(key, out var childrenKeys))
+            {
+                foreach (var childKey in childrenKeys)
+                {
+                    if (_nodes.TryGetValue(childKey, out var childNode))
+                    {
+                        var newDepth = 1 + initialDepth;
+                        yield return Tuple.Create(childNode, newDepth);
+                        foreach (var child in Traverse(childNode.Key, newDepth))
+                        {
+                            yield return child;
+                        }
+                    }
+                }
+            }
+        }
+        
+        public IEnumerator<Node> GetEnumerator() => Traverse(Node.Shell.Key).Select(x => x.Item1).GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public Node? this[string key] => TryFind(key, out var result) ? new Node?(result) : null;
 
-        // public override string ToString()
-        // {
-        //     var sb = new StringBuilder();
-        //     foreach (var tuple in Loop(Node.Shell, _hierarchy, new LinkedList<Tuple<Node, int>>(), 0))
-        //     {
-        //         var line = string.Format(
-        //             "{0}/{1} #{2}", 
-        //             (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
-        //             tuple.Item1.ViewHandle, 
-        //             tuple.Item1.InstanceID);
-        //         sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
-        //     }
-        //     return sb.ToString();
-        // }
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            foreach (var tuple in Traverse(Node.Shell.Key))
+            {
+                var line = string.Format(
+                    "{0}/{1} #{2}", 
+                    (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
+                    tuple.Item1.ViewHandle, 
+                    tuple.Item1.Key);
+                sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
+            }
+            return sb.ToString();
+        }
     }
 }

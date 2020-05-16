@@ -52,7 +52,7 @@ namespace Forest.Templates
         {
             var shell = Tree.Node.Shell;
             yield return new ClearRegionInstruction(shell.Key, shell.Region);
-            var templateNodeInstruction = new InstantiateViewInstruction(ViewHandle.FromName(templateName), shell.Region, shell.Key, null); 
+            var templateNodeInstruction = new InstantiateViewInstruction(ViewHandle.FromName(template.Name), shell.Region, shell.Key, null); 
             foreach (var instruction in CompileViews(templateNodeInstruction, template.Contents))
             {
                 yield return instruction;

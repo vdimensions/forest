@@ -72,7 +72,7 @@ namespace Forest
             //     var sb = Parent == null
             //         ? new StringBuilder() 
             //         : Parent.ToStringBuilder(false).Append(Region.Length == 0 ? "shell" : Region);
-            //     return (stopAtRegion ? sb : sb.AppendFormat("/{0} #{1}", ViewHandle, InstanceID)).Append('/');
+            //     return (stopAtRegion ? sb : sb.AppendFormat("/{0} #{1}", ViewHandle, Key)).Append('/');
             // }
 
             //public override string ToString() => ToStringBuilder(false).ToString();

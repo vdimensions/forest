@@ -17,7 +17,6 @@ namespace Forest.Engine
     {
         private static void TraverseState(IForestStateVisitor v, IList<Tree.Node> nodes, int idsCount, int siblingsCount, ForestState st)
         {
-            
             if (nodes.Count > 0)
             {
                 var head = nodes[0];
@@ -132,9 +131,8 @@ namespace Forest.Engine
                 var key = removedNode.Key;
                 if (newViews.TryGetValue(key, out var view))
                 {
-                    newViews = views.Remove(key);
+                    newViews = newViews.Remove(key);
                     view.Destroy();
-                    // todo: removedNode |> ViewStateChange.ViewDestroyed |> changeLog.Add
                 }
             }
         }
