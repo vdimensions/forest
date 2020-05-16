@@ -27,12 +27,6 @@ namespace Forest.Engine.Instructions
 
         protected override int DoGetHashCode() => this.CalculateHashCode(Node, Region);
 
-        public void Deconstruct(out Tree.Node node, out string region)
-        {
-            node = Node;
-            region = Region;
-        }
-
         public string Region => _region;
     }
 }

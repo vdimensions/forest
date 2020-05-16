@@ -118,8 +118,6 @@ namespace Forest.Engine
             var newPv = _physicalViewDomProcessor.PhysicalViews;
             var newState = new ForestState(GuidGenerator.NewID(), a, b, c, d, newPv);
             
-            Console.WriteLine("TREE STATE: \n{0}", newState.Tree);
-            
             return newState;
         }
 
