@@ -61,14 +61,14 @@ namespace Forest.Navigation
                 var upOneLevelNode = selected.Reverse().Skip(1).FirstOrDefault();
                 if (upOneLevelNode != null && _navigationTree.ToggleNode(upOneLevelNode, true, out var newTree))
                 {
-                    var entry1 = new NavigationHistoryEntry(upOneLevelNode);
+                    var e = new NavigationHistoryEntry(upOneLevelNode);
                     if (newTree.TryGetValue(upOneLevelNode, out var val))
                     {
-                        entry1.Message = val;
+                        e.Message = val;
                     }
                     return new State(
                         newTree,
-                        _history.Push(entry = entry1)
+                        _history.Push(entry = e)
                     );
                 }
                 entry = null;

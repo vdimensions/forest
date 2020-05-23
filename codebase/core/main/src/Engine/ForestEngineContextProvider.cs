@@ -90,6 +90,7 @@ namespace Forest.Engine
         }
         
         protected virtual IForestStateProvider GetForestStateProvider() => new DefaultForestStateProvider();
+        
         protected virtual IPhysicalViewRenderer GetPhysicalViewRenderer() => new NoOpPhysicalViewRenderer();
 
         protected virtual IForestEngineContext CreateContext(IForestContext context) => new ForestEngineContext(context, this);
@@ -97,6 +98,7 @@ namespace Forest.Engine
         internal IForestEngineContext GetContext(IForestContext context, IEnumerable<IViewDescriptor> systemViewDescriptors)
         {
             var engineContext = CreateContext(context);
+            // TODO: system view instantiation should not happen here
             foreach (var systemViewDescriptor in systemViewDescriptors)
             {
                 engineContext.Engine.RegisterSystemView(systemViewDescriptor.ViewType);

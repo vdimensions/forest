@@ -26,10 +26,9 @@ namespace Forest.Engine
             var aspects = context.Aspects.Reverse().ToArray();
             if (aspects.Length > 0)
             {
-                var aspect = aspects
-                    .Aggregate(
-                        new SlaveAspectExecutionContext(slave) as AbstractForestExecutionAspect,
-                        (former, x) => new ForestAspectExecutionContext(former, slave, x));
+                var aspect = aspects.Aggregate(
+                        new SlaveExecutionAspect(slave) as AbstractForestExecutionAspect,
+                        (former, x) => new ForestExecutionAspect(former, slave, x));
                 _slave = aspect;
             }
             else

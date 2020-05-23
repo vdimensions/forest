@@ -71,9 +71,10 @@ namespace Forest
             _nodes = nodes;
             _hierarchy = hierarchy;
         }
-        internal Tree() : this(
-            ImmutableDictionary.Create<string, Node>(StringComparer.Ordinal).Add(Node.Shell.Key, Node.Shell),
-            ImmutableDictionary.Create<string, ImmutableList<string>>(StringComparer.Ordinal).Add(Node.Shell.Key, ImmutableList<string>.Empty)) { }
+        private Tree(IEqualityComparer<string> keyComparer) : this(
+            ImmutableDictionary.Create<string, Node>(keyComparer).Add(Node.Shell.Key, Node.Shell),
+            ImmutableDictionary.Create<string, ImmutableList<string>>(keyComparer).Add(Node.Shell.Key, ImmutableList<string>.Empty)) { }
+        internal Tree() : this(StringComparer.Ordinal) { }
 
         public IEnumerable<Node> Filter(Predicate<Node> filter, string parent = null)
         {
@@ -112,7 +113,7 @@ namespace Forest
                     // TODO: null check parent
                     foreach (var siblingKey in newHierarchy[parentKey])
                     {
-                        if (!siblingKey.Equals(currentKeyToBeRemoved))
+                        if (!newHierarchy.KeyComparer.Equals(siblingKey, currentKeyToBeRemoved))
                         {
                             siblingKeys = siblingKeys.Add(siblingKey);
                         }

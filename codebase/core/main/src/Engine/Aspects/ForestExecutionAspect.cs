@@ -1,10 +1,10 @@
 ﻿namespace Forest.Engine.Aspects
 {
-    internal sealed class ForestAspectExecutionContext : AbstractForestExecutionAspect
+    internal sealed class ForestExecutionAspect : AbstractForestExecutionAspect
     {
         private readonly IForestExecutionAspect _nextAspect;
 
-        public ForestAspectExecutionContext(IForestExecutionContext chainEc, SlaveExecutionContext slaveEc, IForestExecutionAspect nextAspect) : base(chainEc, slaveEc)
+        public ForestExecutionAspect(IForestExecutionContext chainEc, SlaveExecutionContext slaveEc, IForestExecutionAspect nextAspect) : base(chainEc, slaveEc)
         {
             _nextAspect = nextAspect;
         }
