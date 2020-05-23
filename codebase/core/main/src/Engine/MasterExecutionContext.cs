@@ -10,17 +10,20 @@ namespace Forest.Engine
 {
     internal sealed class MasterExecutionContext : IForestExecutionContext
     {
-        private readonly IForestContext _context;
         private readonly IForestStateProvider _stateProvider;
-        internal IForestExecutionContext _slave;
+        private readonly IForestExecutionContext _slave;
 
-        internal MasterExecutionContext(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer, IForestEngine sourceEngine)
+        internal MasterExecutionContext(
+            IForestContext context, 
+            IForestStateProvider stateProvider, 
+            IPhysicalViewRenderer physicalViewRenderer, 
+            IForestEngine sourceEngine)
         {
             var initialState = stateProvider.LoadState();
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
-            var slave = new SlaveExecutionContext(_context = context, physicalViewDomProcessor, initialState, this);
+            var slave = new SlaveExecutionContext(context, physicalViewDomProcessor, initialState, this);
             _stateProvider = stateProvider;
-            var aspects = _context.Aspects.Reverse().ToArray();
+            var aspects = context.Aspects.Reverse().ToArray();
             if (aspects.Length > 0)
             {
                 var aspect = aspects

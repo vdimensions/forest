@@ -54,6 +54,9 @@ namespace Forest
             return true;
         }
 
+        /// <summary>
+        /// Gets a reference to an empty <see cref="Tree"/> instance.
+        /// </summary>
         public static readonly Tree Root = new Tree();
         
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -141,7 +144,9 @@ namespace Forest
             return removedNodes.Count == 0 ? this : new Tree(newNodes, newHierarchy);
         }
 
-        public Tree SetViewState(string key, ViewState viewState)
+        public bool TryFind(string key, out Node node) => _nodes.TryGetValue(key, out node);
+
+        internal Tree SetViewState(string key, ViewState viewState)
         {
             if (!_nodes.TryGetValue(key, out var targetNode))
             {
@@ -152,7 +157,8 @@ namespace Forest
                 _nodes.Remove(key).Add(key, targetNode.SetViewState(viewState)),
                 _hierarchy);
         }
-        public Tree UpdateViewState(string key, Func<ViewState, ViewState> viewStateUpdateFn)
+
+        internal Tree UpdateViewState(string key, Func<ViewState, ViewState> viewStateUpdateFn)
         {
             if (!_nodes.TryGetValue(key, out var targetNode))
             {
@@ -163,8 +169,6 @@ namespace Forest
                 _nodes.Remove(key).Add(key, targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState ?? ViewState.Empty))),
                 _hierarchy);
         }
-
-        public bool TryFind(string key, out Node node) => _nodes.TryGetValue(key, out node);
 
         public IEnumerable<Node> GetChildren(string key)
         {

@@ -53,7 +53,6 @@ namespace Forest.StateManagement
             _stateID = stateID;
             _navigationInfo = navigationInfo;
             _tree = tree;
-
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
@@ -62,7 +61,6 @@ namespace Forest.StateManagement
         internal Guid StateID => _stateID;
         public NavigationInfo NavigationInfo => _navigationInfo;
         internal Tree Tree => _tree;
-        internal ImmutableDictionary<string, ViewState> ViewStates => _viewStates;
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
         internal ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
     }

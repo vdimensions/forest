@@ -43,7 +43,7 @@ namespace Forest.Engine
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
         private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
-        private readonly IForestExecutionContext _exposedExecutionContext;
+        private readonly IForestExecutionContext _executionContextReference;
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
 
         private ImmutableDictionary<string, IRuntimeView> _logicalViews;
@@ -56,7 +56,7 @@ namespace Forest.Engine
                 IForestContext context, 
                 PhysicalViewDomProcessor physicalViewDomProcessor, 
                 ForestState initialState, 
-                IForestExecutionContext exposedExecutionContext)
+                IForestExecutionContext executionContextReference)
             : this(
                 context,
                 physicalViewDomProcessor,
@@ -64,8 +64,9 @@ namespace Forest.Engine
                 initialState.NavigationInfo,
                 initialState.Tree,
                 initialState.LogicalViews,
-                initialState.PhysicalViews, exposedExecutionContext) { }
-        internal SlaveExecutionContext(
+                initialState.PhysicalViews, 
+                executionContextReference) { }
+        private SlaveExecutionContext(
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus,
@@ -73,7 +74,7 @@ namespace Forest.Engine
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
                 ImmutableDictionary<string, IPhysicalView> physicalViews,
-                IForestExecutionContext exposedExecutionContext = null)
+                IForestExecutionContext executionContextReference = null)
         {
             _navigationInfo = navigationInfo;
             _tree = tree;
@@ -82,7 +83,7 @@ namespace Forest.Engine
             _eventBus = eventBus;
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
-            _exposedExecutionContext = exposedExecutionContext ?? this;
+            _executionContextReference = executionContextReference ?? this;
         }
 
         public void Init()
@@ -93,7 +94,7 @@ namespace Forest.Engine
                 var key = node.Key;
                 var view = _logicalViews[key];
                 var descriptor = view.Descriptor;
-                view.AcquireContext(node, descriptor, _exposedExecutionContext);
+                view.AttachContext(node, descriptor, _executionContextReference);
                 _revisionMap = _revisionMap.Add(key, node.Revision);
             }
         }
@@ -105,7 +106,7 @@ namespace Forest.Engine
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
-                view.AbandonContext(_exposedExecutionContext);
+                view.DetachContext(_executionContextReference);
                 if (!_revisionMap.TryGetValue(key, out var revision) || revision < node.Revision)
                 {
                     changedViews.Add(key);
@@ -119,11 +120,7 @@ namespace Forest.Engine
             _physicalViewDomProcessor.PhysicalViews = _physicalViews;
             Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
             var newPv = _physicalViewDomProcessor.PhysicalViews;
-            var newState = new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
-            
-            //Console.WriteLine("TREE STATE: \n{0}", newState.Tree.ToString());
-            
-            return newState;
+            return new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
         }
 
         private void Dispose()
@@ -190,7 +187,7 @@ namespace Forest.Engine
                     try
                     {
                         _tree = _tree.Insert(ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, ivi.Model, out var node);
-                        viewInstance.AcquireContext(node, viewDescriptor, _exposedExecutionContext);
+                        viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
                         _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
                         viewInstance.Load();
                     }
@@ -373,12 +370,6 @@ namespace Forest.Engine
         public ViewState SetViewState(bool silent, string nodeKey, ViewState viewState)
         {
             _tree = _tree.SetViewState(nodeKey, viewState);
-
-            //if (!silent)
-            //{
-            //    changeLog.Add(ViewStateChange.ViewStateUpdated(node, viewState));
-            //}
-
             return viewState;
         }
 

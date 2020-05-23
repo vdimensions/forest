@@ -38,7 +38,7 @@ namespace Forest
                 {
                     if (_executionContext != null)
                     {
-                        ((IRuntimeView) this).AbandonContext(_executionContext);
+                        ((IRuntimeView) this).DetachContext(_executionContext);
                     }
                 }
             }
@@ -59,12 +59,6 @@ namespace Forest
             action.VerifyArgument(nameof(action)).IsNotNull();
             action.Invoke(new RegionImpl(this, regionName));
         }
-        // public T WithRegion<T>(string regionName, Func<IRegion, T> func)
-        // {
-        //     regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
-        //     func.VerifyArgument(nameof(func)).IsNotNull();
-        //     return func.Invoke(new RegionImpl(this, regionName));
-        // }
         
         public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_key));
 
@@ -96,7 +90,7 @@ namespace Forest
         T IView<T>.Model => Model;
         object IView.Model => Model;
 
-        void IRuntimeView.AcquireContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context)
+        void IRuntimeView.AttachContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context)
         {
             if (_executionContext != null)
             {
@@ -117,7 +111,7 @@ namespace Forest
             (_executionContext = context).SubscribeEvents(this);
         }
 
-        void IRuntimeView.AbandonContext(IForestExecutionContext context)
+        void IRuntimeView.DetachContext(IForestExecutionContext context)
         {
             if (!ReferenceEquals(context, _executionContext))
             {
@@ -148,7 +142,7 @@ namespace Forest
             {
                 if (_executionContext != null)
                 {
-                    ((IRuntimeView) this).AbandonContext(_executionContext);
+                    ((IRuntimeView) this).DetachContext(_executionContext);
                 }
             }
         }

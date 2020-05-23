@@ -4,8 +4,8 @@ namespace Forest.Engine
 {
     internal interface IRuntimeView : IView
     {
-        void AcquireContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context);
-        void AbandonContext(IForestExecutionContext context);
+        void AttachContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context);
+        void DetachContext(IForestExecutionContext context);
 
         void Load();
         void Resume(ViewState viewState);
