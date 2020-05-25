@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Forest.Engine.Instructions;
 using Forest.Navigation;
-using Forest.Navigation.Messages;
 
 namespace Forest.Templates
 {
@@ -61,14 +60,14 @@ namespace Forest.Templates
             {
                 yield return new SendMessageInstruction(message, new string[0], null);
                 yield return new SendMessageInstruction(
-                    new NavigationHistoryEntry(templateName) { Message = message }, 
+                    new NavigationInfo(templateName, message), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
             else
             {
                 yield return new SendMessageInstruction(
-                    new NavigationHistoryEntry(templateName), 
+                    new NavigationInfo(templateName), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }

@@ -74,7 +74,7 @@ namespace Forest.Engine
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
                 ImmutableDictionary<string, IPhysicalView> physicalViews,
-                IForestExecutionContext executionContextReference = null)
+                IForestExecutionContext executionContextReference)
         {
             _navigationInfo = navigationInfo;
             _tree = tree;
@@ -118,8 +118,11 @@ namespace Forest.Engine
             var b = _tree;
             var c = _logicalViews;
             _physicalViewDomProcessor.PhysicalViews = _physicalViews;
-            Traverse(new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
+            Traverse(
+                new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), 
+                new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
             var newPv = _physicalViewDomProcessor.PhysicalViews;
+            _revisionMap = _revisionMap.Clear();
             return new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
         }
 

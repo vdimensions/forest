@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Runtime.Serialization;
 #endif
 using Forest.Engine;
+using Forest.Navigation;
 using Forest.UI;
 
 namespace Forest.StateManagement
@@ -56,7 +57,7 @@ namespace Forest.StateManagement
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
-        public ForestState() : this(Guid.Empty, new NavigationInfo(), Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
+        public ForestState() : this(Guid.Empty, NavigationInfo.Empty, Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
         public NavigationInfo NavigationInfo => _navigationInfo;

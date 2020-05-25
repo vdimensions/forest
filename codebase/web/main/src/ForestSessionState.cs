@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 

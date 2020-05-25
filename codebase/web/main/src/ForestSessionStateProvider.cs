@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Axle.Web.AspNetCore.Session;
 using Forest.ComponentModel;
+using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 using Microsoft.AspNetCore.Http;

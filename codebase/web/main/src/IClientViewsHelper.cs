@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 using Forest.ComponentModel;
-using Forest.StateManagement;
+using Forest.Navigation;
 using Forest.Web.AspNetCore.Dom;
 
 namespace Forest.Web.AspNetCore
