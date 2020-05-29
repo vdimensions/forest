@@ -12,6 +12,8 @@ namespace Forest
         IViewRegistry ViewRegistry { get; }
         ISecurityManager SecurityManager { get; }
         ITemplateProvider TemplateProvider { get; }
-        IEnumerable<IForestExecutionAspect> Aspects { get;}
+        IEnumerable<IForestMessageAdvice> MessageAdvices { get;}
+        IEnumerable<IForestCommandAdvice> CommandAdvices { get;}
+        IEnumerable<IForestNavigationAdvice> NavigationAdvices { get;}
     }
 }

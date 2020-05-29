@@ -37,6 +37,7 @@ namespace Forest.Web.AspNetCore
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
+        [Obsolete]
         internal NavigationInfo NavigationInfo => State.NavigationInfo;
         internal IImmutableDictionary<string, ViewNode> AllViews { get; }
         internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }

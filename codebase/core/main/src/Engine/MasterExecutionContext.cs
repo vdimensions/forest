@@ -23,18 +23,12 @@ namespace Forest.Engine
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
             var slave = new SlaveExecutionContext(context, physicalViewDomProcessor, initialState, this);
             _stateProvider = stateProvider;
-            var aspects = context.Aspects.Reverse().ToArray();
-            if (aspects.Length > 0)
-            {
-                var aspect = aspects.Aggregate(
-                        new SlaveExecutionAspect(slave) as AbstractForestExecutionAspect,
-                        (former, x) => new ForestExecutionAspect(former, slave, x));
-                _slave = aspect;
-            }
-            else
-            {
-                _slave = slave;
-            }
+            var commandAdvices = context.CommandAdvices.Reverse().ToArray();
+            var messageAdvices = context.MessageAdvices.Reverse().ToArray();
+            var navigationAdvices = context.NavigationAdvices.Reverse().ToArray();
+            _slave = commandAdvices.Length > 0 || messageAdvices.Length > 0 || navigationAdvices.Length > 0
+                ? new AdvisedForestExecutionContext(slave, commandAdvices, messageAdvices, navigationAdvices)
+                : (IForestExecutionContext) slave;
             slave.Init();
         }
 

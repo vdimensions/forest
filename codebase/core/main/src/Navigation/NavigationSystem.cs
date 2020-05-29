@@ -31,10 +31,7 @@ namespace Forest.Navigation
             {
                 if (_navigationTree.ToggleNode(entry.Template, true, out var tree))
                 {
-                    return new State(
-                        tree,
-                        _history.Push(entry)
-                    );
+                    return new State(tree, _history.Push(entry));
                 }
                 return this;
             }
@@ -64,10 +61,7 @@ namespace Forest.Navigation
                     var e = newTree.TryGetValue(upOneLevelNode, out var val) 
                         ? new NavigationInfo(upOneLevelNode, val) 
                         : new NavigationInfo(upOneLevelNode);
-                    return new State(
-                        newTree,
-                        _history.Push(entry = e)
-                    );
+                    return new State(newTree, _history.Push(entry = e));
                 }
                 entry = null;
                 return this;

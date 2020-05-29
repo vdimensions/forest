@@ -19,13 +19,15 @@ namespace Forest
     [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
     [Requires(typeof(NavigationModule))]
-    internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestExecutionAspect
+    internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestCommandAdvice, IForestMessageAdvice, IForestNavigationAdvice
     {
         private readonly ForestViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
         private readonly ISecurityManager _securityManager;
         private readonly ITemplateProvider _templateProvider;
-        private readonly ICollection<IForestExecutionAspect> _aspects;
+        private readonly ICollection<IForestCommandAdvice> _commandAdvices;
+        private readonly ICollection<IForestMessageAdvice> _messageAdvices;
+        private readonly ICollection<IForestNavigationAdvice> _navigationAdvices;
         private readonly ILogger _logger;
         private ForestEngineContextProvider _engineContextProvider;
         [Obsolete("Replace usages of direct module with interfaces")]
@@ -43,7 +45,9 @@ namespace Forest
             _viewFactory = new ContainerViewFactory(dependencyContainer.Parent ?? dependencyContainer, dependencyContainerFactory);
             _securityManager = dependencyContainer.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
             _templateProvider = templateProvider;
-            _aspects = new List<IForestExecutionAspect>();
+            _messageAdvices = new List<IForestMessageAdvice>();
+            _commandAdvices = new List<IForestCommandAdvice>();
+            _navigationAdvices = new List<IForestNavigationAdvice>();
             _logger = logger;
 
             _forestTemplatesModule = forestTemplatesModule;
@@ -63,7 +67,7 @@ namespace Forest
                 _forestTemplatesModule.RegisterAssemblySource(viewAssembly);
             }
 
-            _aspects.Add(this);
+            _messageAdvices.Add(this);
             exporter.Export(this).Export<IForestStateInspector>(new DefaultForestStateInspector());
         }
 
@@ -78,10 +82,18 @@ namespace Forest
         }
 
         [ModuleDependencyInitialized]
-        internal void DependencyInitialized(IForestExecutionAspect forestExecutionAspect) => _aspects.Add(forestExecutionAspect);
+        internal void DependencyInitialized(IForestCommandAdvice forestCommandAdvice) => _commandAdvices.Add(forestCommandAdvice);
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(IForestMessageAdvice forestMessageAdvice) => _messageAdvices.Add(forestMessageAdvice);
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(IForestNavigationAdvice forestNavigationAdvice) => _navigationAdvices.Add(forestNavigationAdvice);
 
         [ModuleDependencyTerminated]
-        internal void DependencyTerminated(IForestExecutionAspect forestExecutionAspect) => _aspects.Remove(forestExecutionAspect);
+        internal void DependencyTerminated(IForestCommandAdvice forestCommandAdvice) => _commandAdvices.Remove(forestCommandAdvice);
+        [ModuleDependencyTerminated]
+        internal void DependencyTerminated(IForestMessageAdvice forestMessageAdvice) => _messageAdvices.Remove(forestMessageAdvice);
+        [ModuleDependencyTerminated]
+        internal void DependencyTerminated(IForestNavigationAdvice forestNavigationAdvice) => _navigationAdvices.Remove(forestNavigationAdvice);
 
         internal ForestEngineContextProvider EngineContextProvider => _engineContextProvider;
 
@@ -149,30 +161,32 @@ namespace Forest
         IViewRegistry IForestContext.ViewRegistry => this;
         ISecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;
-        IEnumerable<IForestExecutionAspect> IForestContext.Aspects => _aspects;
+        IEnumerable<IForestCommandAdvice> IForestContext.CommandAdvices => _commandAdvices;
+        IEnumerable<IForestMessageAdvice> IForestContext.MessageAdvices => _messageAdvices;
+        IEnumerable<IForestNavigationAdvice> IForestContext.NavigationAdvices => _navigationAdvices;
 
-        void IForestExecutionAspect.ExecuteCommand(ExecuteCommandCutPoint cutPoint)
+        void IForestCommandAdvice.ExecuteCommand(IExecuteCommandPointcut pointcut)
         {
             var sw = Stopwatch.StartNew();
-            cutPoint.Proceed();
+            pointcut.Proceed();
             sw.Stop();
             _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
         }
 
-        void IForestExecutionAspect.Navigate(NavigateCutPoint cutPoint)
+        void IForestMessageAdvice.SendMessage(ISendMessagePointcut pointcut)
         {
             var sw = Stopwatch.StartNew();
-            cutPoint.Proceed();
-            sw.Stop();
-            _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
-        }
-
-        void IForestExecutionAspect.SendMessage(IForestExecutionCutPoint cutPoint)
-        {
-            var sw = Stopwatch.StartNew();
-            cutPoint.Proceed();
+            pointcut.Proceed();
             sw.Stop();
             _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+        }
+
+        void IForestNavigationAdvice.Navigate(INavigatePointcut pointcut)
+        {
+            var sw = Stopwatch.StartNew();
+            pointcut.Proceed();
+            sw.Stop();
+            _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
         }
 
         IViewRegistry IViewRegistry.Register(Type viewType)

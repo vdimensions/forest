@@ -60,6 +60,7 @@ namespace Forest.StateManagement
         public ForestState() : this(Guid.Empty, NavigationInfo.Empty, Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
+        [Obsolete]
         public NavigationInfo NavigationInfo => _navigationInfo;
         internal Tree Tree => _tree;
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
