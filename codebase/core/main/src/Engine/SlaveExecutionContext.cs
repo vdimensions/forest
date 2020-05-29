@@ -61,7 +61,6 @@ namespace Forest.Engine
                 context,
                 physicalViewDomProcessor,
                 new EventBus(), 
-                initialState.NavigationInfo,
                 initialState.Tree,
                 initialState.LogicalViews,
                 initialState.PhysicalViews, 
@@ -70,13 +69,11 @@ namespace Forest.Engine
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
                 IEventBus eventBus,
-                NavigationInfo navigationInfo,
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
                 ImmutableDictionary<string, IPhysicalView> physicalViews,
                 IForestExecutionContext executionContextReference)
         {
-            _navigationInfo = navigationInfo;
             _tree = tree;
             _context = context;
             _physicalViewDomProcessor = physicalViewDomProcessor;
@@ -114,16 +111,15 @@ namespace Forest.Engine
             }
             _eventBus.Dispose();
 
-            var a = _navigationInfo;
-            var b = _tree;
-            var c = _logicalViews;
+            var tree = _tree;
+            var logicalViews = _logicalViews;
             _physicalViewDomProcessor.PhysicalViews = _physicalViews;
             Traverse(
                 new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), 
-                new ForestState(GuidGenerator.NewID(), a, b, c, _physicalViewDomProcessor.PhysicalViews));
+                new ForestState(GuidGenerator.NewID(), tree, logicalViews, _physicalViewDomProcessor.PhysicalViews));
             var newPv = _physicalViewDomProcessor.PhysicalViews;
             _revisionMap = _revisionMap.Clear();
-            return new ForestState(GuidGenerator.NewID(), a, b, c, newPv);
+            return new ForestState(GuidGenerator.NewID(), tree, logicalViews, newPv);
         }
 
         private void Dispose()

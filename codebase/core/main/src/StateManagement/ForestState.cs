@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Runtime.Serialization;
 #endif
 using Forest.Engine;
-using Forest.Navigation;
 using Forest.UI;
 
 namespace Forest.StateManagement
@@ -19,11 +18,6 @@ namespace Forest.StateManagement
         #endif
         private readonly Guid _stateID;
 
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        [DataMember]
-        #endif
-        private readonly NavigationInfo _navigationInfo;
-        
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
@@ -46,22 +40,18 @@ namespace Forest.StateManagement
 
         internal ForestState(
             Guid stateID,
-            NavigationInfo navigationInfo,
             Tree tree,
             ImmutableDictionary<string, IRuntimeView> logicalViews,
             ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
             _stateID = stateID;
-            _navigationInfo = navigationInfo;
             _tree = tree;
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
-        public ForestState() : this(Guid.Empty, NavigationInfo.Empty, Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
+        public ForestState() : this(Guid.Empty, Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
-        [Obsolete]
-        public NavigationInfo NavigationInfo => _navigationInfo;
         internal Tree Tree => _tree;
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
         internal ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
