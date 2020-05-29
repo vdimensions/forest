@@ -38,14 +38,14 @@ namespace Forest.Web.AspNetCore.Mvc
             internal ForestResult(string path, ViewNode[] views, HttpStatusCode statusCode) : this(new ForestResponse(path, views), statusCode) { }
         }
         
-        private static string GetPath(NavigationInfo navigationInfo)
-        {
-            // TODO: add request parameter as well
-            return navigationInfo.Template;
-        }
-        
         private readonly IForestEngine _forest;
         private readonly IClientViewsHelper _clientViewsHelper;
+        
+        private string GetPath(NavigationInfo navigationInfo)
+        {
+            // TODO: convert message to path data
+            return navigationInfo.Template;
+        }
 
         internal ForestRequestExecutor(IForestEngine forest, IClientViewsHelper clientViewsHelper)
         {

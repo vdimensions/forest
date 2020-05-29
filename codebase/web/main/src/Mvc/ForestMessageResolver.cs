@@ -49,10 +49,10 @@ namespace Forest.Web.AspNetCore.Mvc
             _clientViewsHelper = clientViewsHelper;
         }
 
-        public async Task<object> Resolve(IReadOnlyDictionary<string, object> routeData, ModelResolutionContext next)
+        public async Task<object> Resolve(IMvcMetadata metadata, ModelResolutionContext next)
         {
-            var template = routeData.TryGetValue(ForestController.Template, out var tpl) ? tpl : null;
-            var path = routeData.TryGetValue(ForestController.Message, out var msg) ? msg : null;
+            var template = metadata.RouteData.TryGetValue(ForestController.Template, out var tpl) ? tpl : null;
+            var path = metadata.RouteData.TryGetValue(ForestController.Message, out var msg) ? msg : null;
             return null;
         }
     }

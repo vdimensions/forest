@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Axle.Web.AspNetCore.Mvc.ModelBinding;
 
 namespace Forest.Web.AspNetCore.Mvc
@@ -13,10 +12,10 @@ namespace Forest.Web.AspNetCore.Mvc
             _clientViewsHelper = clientViewsHelper;
         }
 
-        public async Task<object> Resolve(IReadOnlyDictionary<string, object> routeData, ModelResolutionContext next)
+        public async Task<object> Resolve(IMvcMetadata metadata, ModelResolutionContext next)
         {
-            var instanceId = routeData.TryGetValue(ForestController.InstanceId, out var iid) ? (string) iid : null;
-            var command = routeData.TryGetValue(ForestController.Command, out var cmd) ? (string) cmd : null;
+            var instanceId = metadata.RouteData.TryGetValue(ForestController.InstanceId, out var iid) ? (string) iid : null;
+            var command = metadata.RouteData.TryGetValue(ForestController.Command, out var cmd) ? (string) cmd : null;
             if (_clientViewsHelper.TryGetDescriptor(instanceId, out var descriptor) && descriptor.Commands.TryGetValue(command, out var cd))
             {
                 if (cd.ArgumentType == null || cd.ArgumentType == typeof(void))

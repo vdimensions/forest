@@ -1,4 +1,6 @@
-﻿namespace Forest.Engine.Aspects
+﻿using Forest.Navigation;
+
+namespace Forest.Engine.Aspects
 {
     internal sealed class IntermediateNavigatePointcut : INavigatePointcut
     {
@@ -19,7 +21,6 @@
 
         public void Proceed() => _advice.Navigate(_originalPointcut);
 
-        public string Target => _originalPointcut.Target;
-        public object Message => _originalPointcut.Message;
+        public NavigationInfo NavigationInfo => _originalPointcut.NavigationInfo;
     }
 }

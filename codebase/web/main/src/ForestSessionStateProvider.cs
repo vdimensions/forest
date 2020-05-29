@@ -46,6 +46,15 @@ namespace Forest.Web.AspNetCore
                 ForestSessionState.ReplaceUpdatedViews(s, updatedViews),
                 (oldState, newState) => newState);
         }
+        public void UpdateNavigationInfo(NavigationInfo navigationInfo)
+        {
+            var sessionId = _accessor.HttpContext.Session.Id;
+            var s = Current;
+            AddOrReplace(
+                sessionId,
+                ForestSessionState.ReplaceNavigationInfo(s, navigationInfo),
+                (oldState, newState) => newState);
+        }
 
         public IViewDescriptor GetDescriptor(string instanceId)
         {

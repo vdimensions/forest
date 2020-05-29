@@ -1,4 +1,6 @@
-﻿namespace Forest.Engine.Aspects
+﻿using Forest.Navigation;
+
+namespace Forest.Engine.Aspects
 {
     internal sealed class TerminalNavigatePointcut : INavigatePointcut
     {
@@ -10,23 +12,21 @@
         private TerminalNavigatePointcut(IForestExecutionContext context, string target, object message)
         {
             _context = context;
-            Target = target;
-            Message = message;
+            NavigationInfo = new NavigationInfo(target, message);
         }
 
         public void Proceed()
         {
-            if (Message == null)
+            if (NavigationInfo.Message == null)
             {
-                _context.Navigate(Target);
+                _context.Navigate(NavigationInfo.Template);
             }
             else
             {
-                _context.Navigate(Target, Message);
+                _context.Navigate(NavigationInfo.Template, NavigationInfo.Message);
             }
         }
 
-        public string Target { get; }
-        public object Message { get; }
+        public NavigationInfo NavigationInfo { get; }
     }
 }
