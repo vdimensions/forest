@@ -1,7 +1,6 @@
 ﻿using Axle.DependencyInjection;
 using Axle.Logging;
 using Axle.Modularity;
-using Axle.Web.AspNetCore.Mvc.ModelBinding;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.StateManagement;
@@ -19,6 +18,7 @@ namespace Forest.Web.AspNetCore
         private readonly IForestEngine _forestEngine;
         private readonly IViewRegistry _viewRegistry;
         private readonly ILogger _logger;
+        private readonly ForestMessageConverter _messageConverter;
 
         public ForestAspNetCoreModule(IForestEngine forestEngine, IViewRegistry viewRegistry, IHttpContextAccessor httpContextAccessor, IForestStateInspector stateInspector, ILogger logger)
         {
@@ -26,36 +26,13 @@ namespace Forest.Web.AspNetCore
             _viewRegistry = viewRegistry;
             _sessionStateProvider = new ForestSessionStateProvider(httpContextAccessor, stateInspector);
             _logger = logger;
+            _messageConverter = new ForestMessageConverter();
         }
 
         [ModuleInit]
         internal void Init(IDependencyExporter exporter)
         {
-            exporter.Export(new ForestRequestExecutor(_forestEngine, _sessionStateProvider));
-        }
-
-        public void RegisterTypes(IModelTypeRegistry registry)
-        {
-            foreach (var descriptor in _viewRegistry.Descriptors)
-            {
-                registry.Register(descriptor.ModelType);
-                foreach (var eventDescriptor in descriptor.Events)
-                {
-                    if (!string.IsNullOrEmpty(eventDescriptor.Topic))
-                    {
-                        continue;
-                    }
-                    registry.Register(eventDescriptor.MessageType);
-                }
-                foreach (var commandDescriptor in descriptor.Commands.Values)
-                {
-                    if (commandDescriptor.ArgumentType == null)
-                    {
-                        continue;
-                    }
-                    registry.Register(commandDescriptor.ArgumentType);
-                }
-            }
+            exporter.Export(new ForestRequestExecutor(_forestEngine, _sessionStateProvider, _messageConverter));
         }
 
         protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => new WebApiPhysicalViewRenderer(_sessionStateProvider);

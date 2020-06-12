@@ -40,17 +40,26 @@ namespace Forest.Web.AspNetCore.Mvc
         
         private readonly IForestEngine _forest;
         private readonly IClientViewsHelper _clientViewsHelper;
-        
-        private string GetPath(NavigationInfo navigationInfo)
-        {
-            // TODO: convert message to path data
-            return navigationInfo.Template;
-        }
+        private readonly ForestMessageConverter _messageConverter;
 
-        internal ForestRequestExecutor(IForestEngine forest, IClientViewsHelper clientViewsHelper)
+        internal ForestRequestExecutor(
+            IForestEngine forest, 
+            IClientViewsHelper clientViewsHelper, 
+            ForestMessageConverter messageConverter)
         {
             _forest = forest;
             _clientViewsHelper = clientViewsHelper;
+            _messageConverter = messageConverter;
+        }
+        
+        private string GetPath(NavigationInfo navigationInfo)
+        {
+            if (navigationInfo.Message != null)
+            {
+                var messageStr = _messageConverter.ConvertMessage(navigationInfo.Message);
+                return $"{navigationInfo.Template}/{messageStr}";
+            }
+            return navigationInfo.Template;
         }
 
         public ForestResult ExecuteCommand(string instanceId, string command, object arg)
