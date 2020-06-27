@@ -1,4 +1,4 @@
-﻿namespace Forest.UI
+﻿namespace Forest.Dom
 {
     public interface ICommandModel
     {

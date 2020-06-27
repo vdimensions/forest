@@ -31,7 +31,7 @@ namespace Forest
                 : ImmutableList<Node>.Empty;
         }
 
-        private static bool TryInsert(Tree tree, Node node, out Tree newTree)
+        private static bool TryInsert(TreeChangeScope scope, Tree tree, Node node, out Tree newTree)
         {
             var newNodes = tree._nodes;
             var newHierarchy = tree._hierarchy;
@@ -43,14 +43,14 @@ namespace Forest
             var parentKey = parent.Key;
             newNodes = newNodes
                 .Remove(parentKey)
-                .Add(parentKey, parent.UpdateRevision())
+                .Add(parentKey, scope.UpdateRevision(parent))
                 .Add(node.Key, node);
             var siblingsKeys = newHierarchy.TryGetValue(node.ParentKey, out var l) ? l : ImmutableList<string>.Empty;
             newHierarchy = newHierarchy
                 .Remove(parentKey)
                 .Add(parentKey, siblingsKeys.Add(node.Key))
                 .Add(node.Key, ImmutableList<string>.Empty);
-            newTree = new Tree(newNodes, newHierarchy);
+            newTree = new Tree(newNodes, newHierarchy, tree.Revision);
             return true;
         }
 
@@ -63,25 +63,29 @@ namespace Forest
         private readonly ImmutableDictionary<string, Node> _nodes;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ImmutableDictionary<string, ImmutableList<string>> _hierarchy;
+        private readonly uint _revision;
 
         private Tree(
             ImmutableDictionary<string, Node> nodes, 
-            ImmutableDictionary<string, ImmutableList<string>> hierarchy)
+            ImmutableDictionary<string, ImmutableList<string>> hierarchy,
+            uint revision)
         {
             _nodes = nodes;
             _hierarchy = hierarchy;
+            _revision = 0u;
         }
-        private Tree(IEqualityComparer<string> keyComparer) : this(
+        private Tree(IEqualityComparer<string> keyComparer, uint revision) : this(
             ImmutableDictionary.Create<string, Node>(keyComparer).Add(Node.Shell.Key, Node.Shell),
-            ImmutableDictionary.Create<string, ImmutableList<string>>(keyComparer).Add(Node.Shell.Key, ImmutableList<string>.Empty)) { }
-        internal Tree() : this(StringComparer.Ordinal) { }
+            ImmutableDictionary.Create<string, ImmutableList<string>>(keyComparer).Add(Node.Shell.Key, ImmutableList<string>.Empty),
+            revision) { }
+        internal Tree() : this(StringComparer.Ordinal, 0u) { }
 
         public IEnumerable<Node> Filter(Predicate<Node> filter, string parent = null)
         {
             return GetChildren(_nodes, _hierarchy, parent).Where(child => filter(child));
         }
 
-        public Tree Insert(string key, ViewHandle viewHandle, string region, string ownerKey, object model, out Node node)
+        public Tree Insert(TreeChangeScope scope, string key, ViewHandle viewHandle, string region, string ownerKey, object model, out Node node)
         {
             if (!TryFind(ownerKey, out var parent))
             {
@@ -89,10 +93,10 @@ namespace Forest
                 throw new InvalidOperationException("Cannot find node!");
             }
             node = Node.Create(key, viewHandle, region, model, parent);
-            return TryInsert(this, node, out var result) ? result : this;
+            return TryInsert(scope, this, node, out var result) ? result : this;
         }
 
-        public Tree Remove(string key, out ICollection<Node> removedNodes)
+        public Tree Remove(TreeChangeScope scope, string key, out ICollection<Node> removedNodes)
         {
             removedNodes = new HashSet<Node>();
             var newNodes = _nodes;
@@ -127,7 +131,7 @@ namespace Forest
                     newNodes = newNodes.Remove(currentKeyToBeRemoved);
                     if (keysToRemove.Count == 1)
                     {
-                        var newParent = newNodes[parentKey].UpdateRevision();
+                        var newParent = scope.UpdateRevision(newNodes[parentKey]);
                         newNodes = newNodes.Remove(parentKey).Add(parentKey, newParent);
                     }
                     keysToRemove.Pop();
@@ -142,12 +146,12 @@ namespace Forest
             }
             while (keysToRemove.Count > 0);
             
-            return removedNodes.Count == 0 ? this : new Tree(newNodes, newHierarchy);
+            return removedNodes.Count == 0 ? this : new Tree(newNodes, newHierarchy, _revision);
         }
 
         public bool TryFind(string key, out Node node) => _nodes.TryGetValue(key, out node);
 
-        internal Tree SetViewState(string key, ViewState viewState)
+        internal Tree SetViewState(TreeChangeScope scope, string key, ViewState viewState)
         {
             if (!_nodes.TryGetValue(key, out var targetNode))
             {
@@ -155,11 +159,12 @@ namespace Forest
                 throw new InvalidOperationException("Cannot find node!");
             }
             return new Tree(
-                _nodes.Remove(key).Add(key, targetNode.SetViewState(viewState)),
-                _hierarchy);
+                _nodes.Remove(key).Add(key, scope.UpdateRevision(targetNode.SetViewState(viewState))),
+                _hierarchy,
+                _revision);
         }
 
-        internal Tree UpdateViewState(string key, Func<ViewState, ViewState> viewStateUpdateFn)
+        internal Tree UpdateViewState(TreeChangeScope scope, string key, Func<ViewState, ViewState> viewStateUpdateFn)
         {
             if (!_nodes.TryGetValue(key, out var targetNode))
             {
@@ -167,8 +172,9 @@ namespace Forest
                 throw new InvalidOperationException("Cannot find node!");
             }
             return new Tree(
-                _nodes.Remove(key).Add(key, targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState ?? ViewState.Empty))),
-                _hierarchy);
+                _nodes.Remove(key).Add(key, scope.UpdateRevision(targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState ?? ViewState.Empty)))),
+                _hierarchy,
+                _revision);
         }
 
         public IEnumerable<Node> GetChildren(string key)
@@ -199,12 +205,15 @@ namespace Forest
                 }
             }
         }
+
+        internal Tree UpdateRevision()
+        {
+            return new Tree(_nodes, _hierarchy, 1u + _revision);
+        }
         
         public IEnumerator<Node> GetEnumerator() => Traverse(Node.Shell.Key).Select(x => x.Item1).GetEnumerator();
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        public Node? this[string key] => TryFind(key, out var result) ? new Node?(result) : null;
 
         public override string ToString()
         {
@@ -220,5 +229,9 @@ namespace Forest
             }
             return sb.ToString();
         }
+
+        public Node? this[string key] => TryFind(key, out var result) ? new Node?(result) : null;
+
+        public uint Revision => _revision;
     }
 }

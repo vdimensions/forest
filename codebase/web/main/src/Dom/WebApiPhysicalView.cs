@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using Forest.ComponentModel;
+using Forest.Dom;
 using Forest.Engine;
 using Forest.UI;
 
@@ -14,6 +14,12 @@ namespace Forest.Web.AspNetCore.Dom
         {
             _instanceId = instanceID;
             _sessionStateProvider = sessionStateProvider;
+            
+            var currentState = _sessionStateProvider.Current;
+            var allViews = currentState.AllViews.Remove(_instanceId).Add(_instanceId, Node);
+            var updatedViews = currentState.UpdatedViews.Remove(_instanceId).Add(_instanceId, Node);
+            _sessionStateProvider.UpdateAllViews(allViews);
+            _sessionStateProvider.UpdateUpdatedViews(updatedViews);
         }
 
         protected override void Dispose(bool disposing)
@@ -40,17 +46,6 @@ namespace Forest.Web.AspNetCore.Dom
                     ToolTip = x.Value.Tooltip
                 },
                 node.Commands.KeyComparer);
-            var links = node.Links.ToDictionary(
-                x => x.Key,
-                x => new LinkNode
-                {
-                    Name = x.Value.Name,
-                    //Href = x.Value.Target
-                    Description = x.Value.Description,
-                    DisplayName = x.Value.DisplayName,
-                    ToolTip = x.Value.Tooltip
-                },
-                node.Links.KeyComparer);
             var regions = node.Regions.ToDictionary(
                 x => x.Key,
                 x => x.Value.Select(n => n.InstanceID).ToArray(),
@@ -61,7 +56,6 @@ namespace Forest.Web.AspNetCore.Dom
                 Model = node.Model,
                 Name = node.Name,
                 Commands = commands,
-                Links = links,
                 Regions = regions
             };
 

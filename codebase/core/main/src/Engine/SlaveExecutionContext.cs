@@ -15,41 +15,14 @@ namespace Forest.Engine
 {
     internal sealed class SlaveExecutionContext : IForestExecutionContext, IStateResolver
     {
-        private static void TraverseState(IForestStateVisitor v, IList<Tree.Node> nodes, int idsCount, int siblingsCount, ForestState st)
-        {
-            if (nodes.Count > 0)
-            {
-                var head = nodes[0];
-                var ix = siblingsCount - idsCount;
-                var instanceID = head.Key;
-                var vs = st.LogicalViews[instanceID];
-                var descriptor = vs.Descriptor;
-                v.BFS(head, ix, descriptor);
-                TraverseState(v, nodes.Skip(1).ToArray(), idsCount-1, siblingsCount, st);
-                var children = st.Tree.GetChildren(head.Key).ToArray();
-                TraverseState(v, children, children.Length, children.Length, st);
-                v.DFS(head, ix, descriptor);
-            }
-        }
-        
-        private static void Traverse(IForestStateVisitor v, ForestState st)
-        {
-            var root = Tree.Node.Shell;
-            var ch = st.Tree.GetChildren(root.Key).ToArray();
-            TraverseState(v, ch, ch.Length, ch.Length, st);
-            v.Complete();
-        }
-        
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
-        private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
         private readonly IForestExecutionContext _executionContextReference;
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
+        private readonly TreeChangeScope _scope;
 
         private ImmutableDictionary<string, IRuntimeView> _logicalViews;
-        private ImmutableDictionary<string, uint> _revisionMap = ImmutableDictionary.Create<string, uint>(StringComparer.Ordinal);
         private Tree _tree;
-        private NavigationInfo _navigationInfo;
         private int _nestedCalls;
 
         internal SlaveExecutionContext(
@@ -63,7 +36,6 @@ namespace Forest.Engine
                 new EventBus(), 
                 initialState.Tree,
                 initialState.LogicalViews,
-                initialState.PhysicalViews, 
                 executionContextReference) { }
         private SlaveExecutionContext(
                 IForestContext context,
@@ -71,64 +43,63 @@ namespace Forest.Engine
                 IEventBus eventBus,
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
-                ImmutableDictionary<string, IPhysicalView> physicalViews,
                 IForestExecutionContext executionContextReference)
         {
-            _tree = tree;
+            _scope = new TreeChangeScope(_tree = tree);
             _context = context;
             _physicalViewDomProcessor = physicalViewDomProcessor;
             _eventBus = eventBus;
             _logicalViews = logicalViews;
-            _physicalViews = physicalViews;
             _executionContextReference = executionContextReference ?? this;
         }
 
         public void Init()
         {
-            _revisionMap = _revisionMap.Clear();
             foreach (var node in _tree.Reverse())
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
                 var descriptor = view.Descriptor;
                 view.AttachContext(node, descriptor, _executionContextReference);
-                _revisionMap = _revisionMap.Add(key, node.Revision);
             }
         }
 
         ForestState IStateResolver.ResolveState()
         {
-            var changedViews = new HashSet<string>(_logicalViews.KeyComparer);
+            _tree = _tree.UpdateRevision();
+            var changedViews = new HashSet<string>(_scope.ChangedViewKeys);
+            var changedNodes = new List<Tree.Node>();
             foreach (var node in _tree.Reverse())
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
                 view.DetachContext(_executionContextReference);
-                if (!_revisionMap.TryGetValue(key, out var revision) || revision < node.Revision)
+                if (changedViews.Contains(key))
                 {
-                    changedViews.Add(key);
+                    changedNodes.Add(node);
                 }
             }
             _eventBus.Dispose();
+            
+            Console.WriteLine("Max revision number {0}, total views that changed {1}", _scope.TargetRevision, changedViews.Count);
+            Console.WriteLine(_tree);
 
             var tree = _tree;
             var logicalViews = _logicalViews;
-            _physicalViewDomProcessor.PhysicalViews = _physicalViews;
-            Traverse(
-                new ForestDomRenderer(new[] { _physicalViewDomProcessor }, _context), 
-                new ForestState(GuidGenerator.NewID(), tree, logicalViews, _physicalViewDomProcessor.PhysicalViews));
-            var newPv = _physicalViewDomProcessor.PhysicalViews;
-            _revisionMap = _revisionMap.Clear();
-            return new ForestState(GuidGenerator.NewID(), tree, logicalViews, newPv);
+            var domProcessors = new[]{ _physicalViewDomProcessor };
+            _context.DomManager.ProcessDomNodes(_tree, (node) => changedViews.Contains(node.InstanceID), domProcessors);
+            var newPhysicalViews = _physicalViewDomProcessor.RenderViews();
+            return new ForestState(GuidGenerator.NewID(), tree, logicalViews, newPhysicalViews);
         }
 
         private void Dispose()
         {
+            (_scope as IDisposable).Dispose();
         }
 
-        private void RemoveNode(Tree tree, ImmutableDictionary<string, IRuntimeView> views, string nodeKey, out Tree newTree, out ImmutableDictionary<string, IRuntimeView> newViews)
+        private void RemoveNode(TreeChangeScope scope, Tree tree, ImmutableDictionary<string, IRuntimeView> views, string nodeKey, out Tree newTree, out ImmutableDictionary<string, IRuntimeView> newViews)
         {
-            newTree = tree.Remove(nodeKey, out var removedNodes);
+            newTree = tree.Remove(scope, nodeKey, out var removedNodes);
             newViews = views;
             foreach (var removedNode in removedNodes)
             {
@@ -141,7 +112,7 @@ namespace Forest.Engine
             }
         }
 
-        private void ProcessCommandStateInstruction(CommandStateInstruction csi)
+        private void ProcessCommandStateInstruction(TreeChangeScope scope, CommandStateInstruction csi)
         {
             var command = csi.Command;
             var instanceID = csi.NodeKey;
@@ -150,10 +121,10 @@ namespace Forest.Engine
                 switch (csi)
                 {
                     case DisableCommandInstruction _:
-                        _tree = _tree.UpdateViewState(node.Key, viewState => ViewState.DisableCommand(viewState, command));
+                        _tree = _tree.UpdateViewState(scope, node.Key, viewState => ViewState.DisableCommand(viewState, command));
                         break;
                     case EnableCommandInstruction _:
-                        _tree = _tree.UpdateViewState(node.Key, viewState => ViewState.EnableCommand(viewState, command));
+                        _tree = _tree.UpdateViewState(scope, node.Key, viewState => ViewState.EnableCommand(viewState, command));
                         break;
                     default:
                         throw new InstructionNotSupportedException(csi);
@@ -165,7 +136,7 @@ namespace Forest.Engine
             }
         }
 
-        private void ProcessNodeStateModification(NodeStateModification nsm)
+        private void ProcessNodeStateModification(TreeChangeScope scope, NodeStateModification nsm)
         {
             switch (nsm)
             {
@@ -185,14 +156,14 @@ namespace Forest.Engine
                         : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
                     try
                     {
-                        _tree = _tree.Insert(ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, ivi.Model, out var node);
+                        _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, ivi.Model, out var node);
                         viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
                         _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
                         viewInstance.Load();
                     }
                     catch
                     {
-                        RemoveNode(_tree, _logicalViews, ivi.NodeKey, out var nt, out var nv);
+                        RemoveNode(scope, _tree, _logicalViews, ivi.NodeKey, out var nt, out var nv);
                         _tree = nt;
                         _logicalViews = nv;
                         throw;
@@ -200,7 +171,7 @@ namespace Forest.Engine
                     break;
 
                 case DestroyViewInstruction dvi:
-                    RemoveNode(_tree, _logicalViews, dvi.NodeKey, out var newTree, out var newViews);
+                    RemoveNode(scope, _tree, _logicalViews, dvi.NodeKey, out var newTree, out var newViews);
                     _tree = newTree;
                     _logicalViews = newViews;
                     break;
@@ -211,7 +182,7 @@ namespace Forest.Engine
                     var v = _logicalViews;
                     foreach (var node in nodes)
                     {
-                        RemoveNode(t, v, node.Key, out var tmpTree, out var tmpViews);
+                        RemoveNode(scope, t, v, node.Key, out var tmpTree, out var tmpViews);
                         t = tmpTree;
                         v = tmpViews;
                     }
@@ -221,16 +192,15 @@ namespace Forest.Engine
 
                 case UpdateModelInstruction umi:
                     var instanceID = umi.NodeKey;
-                    _tree = _tree.UpdateViewState(instanceID, viewState => ViewState.UpdateModel(viewState, umi.Model));
+                    _tree = _tree.UpdateViewState(scope, instanceID, viewState => ViewState.UpdateModel(viewState, umi.Model));
                     break;
 
                 case CommandStateInstruction csi:
-                    ProcessCommandStateInstruction(csi);
+                    ProcessCommandStateInstruction(scope, csi);
                     break;
 
                 default:
                     throw new InstructionNotSupportedException(nsm);
-                
             }
         }
 
@@ -244,7 +214,7 @@ namespace Forest.Engine
                     switch (instruction)
                     {
                         case NodeStateModification nsm:
-                            ProcessNodeStateModification(nsm);
+                            ProcessNodeStateModification(_scope, nsm);
                             break;
 
                         case SendMessageInstruction smi:
@@ -307,7 +277,6 @@ namespace Forest.Engine
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
             ProcessInstructions(TemplateCompiler.CompileTemplate(template, templateDefinition, null).ToArray());
-            _navigationInfo = new NavigationInfo(template, null);
         }
         public void Navigate<T>(string template, T message)
         {
@@ -319,7 +288,6 @@ namespace Forest.Engine
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
             ProcessInstructions(TemplateCompiler.CompileTemplate(template, templateDefinition, message).ToArray());
-            _navigationInfo = new NavigationInfo(template, message);
         }
         public void NavigateBack()
         {
@@ -368,7 +336,7 @@ namespace Forest.Engine
 
         public ViewState SetViewState(bool silent, string nodeKey, ViewState viewState)
         {
-            _tree = _tree.SetViewState(nodeKey, viewState);
+            _tree = _tree.SetViewState(_scope, nodeKey, viewState);
             return viewState;
         }
 

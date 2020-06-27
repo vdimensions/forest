@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using Axle.Extensions.Object;
+using Forest.UI;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
-using Axle.Extensions.Object;
 
-namespace Forest.UI
+namespace Forest.Dom
 {
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
@@ -44,11 +45,6 @@ namespace Forest.UI
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
-        private readonly int _index;
-
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        [DataMember]
-        #endif
         private readonly string _name;
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -76,22 +72,15 @@ namespace Forest.UI
         #endif
         private readonly ImmutableDictionary<string, ICommandModel> _commands;
 
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        [DataMember]
-        #endif
-        private readonly ImmutableDictionary<string, ILinkModel> _links;
-
-        public DomNode(string instanceId, int index, string name, string region, object model, DomNode parent, ImmutableDictionary<string, IEnumerable<DomNode>> regions, ImmutableDictionary<string, ICommandModel> commands, ImmutableDictionary<string, ILinkModel> links)
+        internal DomNode(string instanceId, string name, string region, object model, DomNode parent, ImmutableDictionary<string, IEnumerable<DomNode>> regions, ImmutableDictionary<string, ICommandModel> commands)
         {
             _instanceID = instanceId;
-            _index = index;
             _name = name;
             _region = region;
             _model = model;
             _parent = parent;
             _regions = regions;
             _commands = commands;
-            _links = links;
         }
 
         private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer = null)
@@ -126,14 +115,12 @@ namespace Forest.UI
 
             var comparer = StringComparer.Ordinal;
             return comparer.Equals(_instanceID, other._instanceID)
-                && _index == other._index
                 && comparer.Equals(_name, other._name)
                 && comparer.Equals(_region, other._region)
                 && Equals(_model, other._model)
                 && Equals(_parent, other._parent)
                 && DictionaryEquals(_regions, other._regions, new DomNodesComparer())
-                && DictionaryEquals(_commands, other._commands)
-                && DictionaryEquals(_links, other._links);
+                && DictionaryEquals(_commands, other._commands);
         }
 
         public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is DomNode other && Equals(other);
@@ -143,26 +130,22 @@ namespace Forest.UI
             unchecked
             {
                 var hashCode = (_instanceID != null ? _instanceID.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ _index;
                 hashCode = (hashCode * 397) ^ (_name != null ? _name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_region != null ? _region.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_model != null ? _model.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_parent != null ? _parent.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_regions != null ? this.CalculateHashCode(_regions.ToArray()) : 0);
                 hashCode = (hashCode * 397) ^ (_commands != null ? this.CalculateHashCode(_commands.ToArray()) : 0);
-                hashCode = (hashCode * 397) ^ (_links != null ? this.CalculateHashCode(_links.ToArray()) : 0);
                 return hashCode;
             }
         }
 
         public string InstanceID => _instanceID;
-        public int Index => _index;
         public string Name => _name;
         public string Region => _region;
         public object Model => _model;
         public DomNode Parent => _parent;
         public ImmutableDictionary<string, IEnumerable<DomNode>> Regions => _regions;
         public ImmutableDictionary<string, ICommandModel> Commands => _commands;
-        public ImmutableDictionary<string, ILinkModel> Links => _links;
     }
 }

@@ -64,18 +64,8 @@ namespace Forest
 
             internal Node SetViewState(ViewState viewState)
             {
-                return new Node(ParentKey, Region, ViewHandle, Key, viewState, 1u + Revision);
+                return new Node(ParentKey, Region, ViewHandle, Key, viewState, Revision);
             }
-
-            // private StringBuilder ToStringBuilder(bool stopAtRegion)
-            // {
-            //     var sb = Parent == null
-            //         ? new StringBuilder() 
-            //         : Parent.ToStringBuilder(false).Append(Region.Length == 0 ? "shell" : Region);
-            //     return (stopAtRegion ? sb : sb.AppendFormat("/{0} #{1}", ViewHandle, Key)).Append('/');
-            // }
-
-            //public override string ToString() => ToStringBuilder(false).ToString();
 
             public string ParentKey => _parentKey ?? string.Empty;
 

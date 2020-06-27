@@ -1,4 +1,4 @@
-﻿namespace Forest.UI
+﻿namespace Forest.Dom
 {
     internal sealed class CommandModel : ICommandModel
     {

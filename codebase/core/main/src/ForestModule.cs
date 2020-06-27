@@ -6,12 +6,14 @@ using Axle.DependencyInjection;
 using Axle.Logging;
 using Axle.Modularity;
 using Forest.ComponentModel;
+using Forest.Dom;
 using Forest.Engine;
 using Forest.Engine.Aspects;
 using Forest.Navigation;
 using Forest.Security;
 using Forest.StateManagement;
 using Forest.Templates;
+using Forest.UI;
 
 namespace Forest
 {
@@ -25,6 +27,7 @@ namespace Forest
         private readonly IViewFactory _viewFactory;
         private readonly ISecurityManager _securityManager;
         private readonly ITemplateProvider _templateProvider;
+        private readonly IForestDomManager _domManager;
         private readonly ICollection<IForestCommandAdvice> _commandAdvices;
         private readonly ICollection<IForestMessageAdvice> _messageAdvices;
         private readonly ICollection<IForestNavigationAdvice> _navigationAdvices;
@@ -45,6 +48,7 @@ namespace Forest
             _viewFactory = new ContainerViewFactory(dependencyContainer.Parent ?? dependencyContainer, dependencyContainerFactory);
             _securityManager = dependencyContainer.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
             _templateProvider = templateProvider;
+            _domManager = new ForestDomManager(this);
             _messageAdvices = new List<IForestMessageAdvice>();
             _commandAdvices = new List<IForestCommandAdvice>();
             _navigationAdvices = new List<IForestNavigationAdvice>();
@@ -161,6 +165,7 @@ namespace Forest
         IViewRegistry IForestContext.ViewRegistry => this;
         ISecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;
+        IForestDomManager IForestContext.DomManager => _domManager;
         IEnumerable<IForestCommandAdvice> IForestContext.CommandAdvices => _commandAdvices;
         IEnumerable<IForestMessageAdvice> IForestContext.MessageAdvices => _messageAdvices;
         IEnumerable<IForestNavigationAdvice> IForestContext.NavigationAdvices => _navigationAdvices;

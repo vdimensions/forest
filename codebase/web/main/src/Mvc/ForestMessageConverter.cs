@@ -71,7 +71,7 @@ namespace Forest.Web.AspNetCore.Mvc
         public object ConvertPath(string path)
         {
             var converter = _converters.Values
-                .FirstOrDefault(x => new RegularExpression($"^({x.RegexPattern})$").IsMatch(path));
+                .SingleOrDefault(x => new RegularExpression($"^({x.RegexPattern})$").IsMatch(path));
             if (converter == null)
             {
                 throw new ConversionException(string.Format("Unable to find converter for path {0}", path));

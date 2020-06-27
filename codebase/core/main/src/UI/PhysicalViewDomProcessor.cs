@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Forest.Dom;
 using Forest.Engine;
 
 namespace Forest.UI
@@ -18,37 +19,31 @@ namespace Forest.UI
 
         private readonly IForestEngine _engine;
         private readonly IPhysicalViewRenderer _renderer;
+        private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
 
-        private PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, StringComparer stringComparer, ImmutableDictionary<string, IPhysicalView> physicalViews)
+        internal PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, ImmutableDictionary<string, IPhysicalView> physicalViews = null)
         {
             _engine = engine;
             _renderer = renderer;
-            PhysicalViews = physicalViews == null
+            _physicalViews = physicalViews == null
                 ? ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal)
                 : ImmutableDictionary.CreateRange(physicalViews.KeyComparer, physicalViews);
         }
-        internal PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, ImmutableDictionary<string, IPhysicalView> physicalViews = null)
-            : this(engine, renderer, StringComparer.Ordinal, physicalViews) { }
-        public PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer) 
-            : this(engine, renderer, null) { }
 
-        [Obsolete]
-        public ImmutableDictionary<string, IPhysicalView> PhysicalViews { get; internal set; }
-
-        DomNode IDomProcessor.ProcessNode(DomNode node)
+        DomNode IDomProcessor.ProcessNode(DomNode node, bool isNodeUpdated)
         {
             _nodesToPreserve = _nodesToPreserve.Add(node.InstanceID);
             _nodeStates = _nodeStates.Add(
                 Tuple.Create(
                     node, 
-                    PhysicalViews.TryGetValue(node.InstanceID, out _) ? NodeState.UpdatedNode : NodeState.NewNode));
+                    _physicalViews.TryGetValue(node.InstanceID, out _) ? NodeState.UpdatedNode : NodeState.NewNode));
             return node;
         }
 
-        void IDomProcessor.Complete(IEnumerable<DomNode> nodes)
+        public ImmutableDictionary<string, IPhysicalView> RenderViews()
         {
-            var physicalViews = new Dictionary<string, IPhysicalView>(PhysicalViews.KeyComparer);
-            foreach (var kvp in PhysicalViews)
+            var physicalViews = new Dictionary<string, IPhysicalView>(_physicalViews.KeyComparer);
+            foreach (var kvp in _physicalViews)
             {
                 if (_nodesToPreserve.Contains(kvp.Key))
                 {
@@ -103,7 +98,6 @@ namespace Forest.UI
                 }
             }
 
-            PhysicalViews = ImmutableDictionary.CreateRange(physicalViews.Comparer, physicalViews);
             _nodesToPreserve = _nodesToPreserve.Clear();
             _nodeStates = _nodeStates.Clear();
 
@@ -124,6 +118,8 @@ namespace Forest.UI
             {
                 x.Item1.Update(x.Item2);
             }
+            
+            return ImmutableDictionary.CreateRange(physicalViews.Comparer, physicalViews);
         }
     }
 }
