@@ -72,6 +72,8 @@ namespace Forest
             }
 
             _messageAdvices.Add(this);
+            _commandAdvices.Add(this);
+            _navigationAdvices.Add(this);
             exporter.Export(this).Export<IForestStateInspector>(new DefaultForestStateInspector());
         }
 
