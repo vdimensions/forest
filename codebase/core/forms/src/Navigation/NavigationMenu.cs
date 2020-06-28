@@ -41,7 +41,7 @@ namespace Forest.Forms.Navigation
                 {
                     itemsRegion.Clear();
                     var topLevel = tree.TopLevelNodes
-                            .Select(x => new NavigationNode { Key = x, Selected = tree.IsSelected(x) });
+                            .Select(x => new NavigationNode { Path = x, Selected = tree.IsSelected(x) });
                     foreach (var item in topLevel)
                     {
                         if (item.Selected)

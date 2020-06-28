@@ -7,31 +7,12 @@ namespace Forest.Web.AspNetCore.Dom
 {
     internal sealed class WebApiPhysicalView : AbstractPhysicalView
     {
-        private readonly string _instanceId;
-        private readonly ForestSessionStateProvider _sessionStateProvider;
-
-        public WebApiPhysicalView(IForestEngine engine, string instanceID, ForestSessionStateProvider sessionStateProvider) : base(engine, instanceID)
+        public WebApiPhysicalView(IForestEngine engine, string instanceID) : base(engine, instanceID)
         {
-            _instanceId = instanceID;
-            _sessionStateProvider = sessionStateProvider;
-            
-            var currentState = _sessionStateProvider.Current;
-            var allViews = currentState.AllViews.Remove(_instanceId).Add(_instanceId, Node);
-            var updatedViews = currentState.UpdatedViews.Remove(_instanceId).Add(_instanceId, Node);
-            _sessionStateProvider.UpdateAllViews(allViews);
-            _sessionStateProvider.UpdateUpdatedViews(updatedViews);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                var currentState = _sessionStateProvider.Current;
-                var allViews = currentState.AllViews.Remove(_instanceId);
-                var updatedViews = currentState.UpdatedViews.Remove(_instanceId);
-                _sessionStateProvider.UpdateAllViews(allViews);
-                _sessionStateProvider.UpdateUpdatedViews(updatedViews);
-            }
         }
 
         protected override void Refresh(DomNode node)
@@ -58,12 +39,6 @@ namespace Forest.Web.AspNetCore.Dom
                 Commands = commands,
                 Regions = regions
             };
-
-            var currentState = _sessionStateProvider.Current;
-            var allViews = currentState.AllViews.Remove(_instanceId).Add(_instanceId, Node);
-            var updatedViews = currentState.UpdatedViews.Remove(_instanceId).Add(_instanceId, Node);
-            _sessionStateProvider.UpdateAllViews(allViews);
-            _sessionStateProvider.UpdateUpdatedViews(updatedViews);
         }
 
         public ViewNode Node { get; internal set; }

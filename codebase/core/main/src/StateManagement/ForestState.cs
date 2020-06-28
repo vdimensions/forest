@@ -54,6 +54,6 @@ namespace Forest.StateManagement
         internal Guid StateID => _stateID;
         internal Tree Tree => _tree;
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
-        internal ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
+        public ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
     }
 }

@@ -20,7 +20,7 @@ namespace Forest.Forms.Navigation.Breadcrumbs
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void Navigate()
             {
-                Engine.Navigate(Model.Key);
+                Engine.Navigate(Model.Path);
             }
         }
     }

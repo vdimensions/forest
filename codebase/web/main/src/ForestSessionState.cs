@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
@@ -13,14 +15,6 @@ namespace Forest.Web.AspNetCore
         {
             return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationInfo, sessionState.AllViews, sessionState.UpdatedViews);
         }
-        public static ForestSessionState ReplaceAllViews(ForestSessionState sessionState, IImmutableDictionary<string, ViewNode> views)
-        {
-            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, sessionState.NavigationInfo, views, views);
-        }
-        public static ForestSessionState ReplaceUpdatedViews(ForestSessionState sessionState, IImmutableDictionary<string, ViewNode> views)
-        {
-            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, sessionState.NavigationInfo, sessionState.AllViews, views);
-        }
         public static ForestSessionState ReplaceNavigationInfo(ForestSessionState sessionState, NavigationInfo navigationInfo)
         {
             return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationInfo, sessionState.AllViews, sessionState.UpdatedViews);
@@ -33,6 +27,10 @@ namespace Forest.Web.AspNetCore
             IImmutableDictionary<string, ViewNode> allViews, 
             IImmutableDictionary<string, ViewNode> updatedViews)
         {
+            allViews = ImmutableDictionary.CreateRange(
+                state.PhysicalViews
+                    .Select(x => new KeyValuePair<string, ViewNode>(x.Key, ((WebApiPhysicalView) x.Value).Node)));
+            updatedViews = allViews;
             State = state;
             SyncRoot = syncRoot;
             NavigationInfo = navigationInfo;

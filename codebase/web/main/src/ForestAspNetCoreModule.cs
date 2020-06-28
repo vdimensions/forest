@@ -35,7 +35,7 @@ namespace Forest.Web.AspNetCore
             exporter.Export(new ForestRequestExecutor(_forestEngine, _sessionStateProvider, _messageConverter));
         }
 
-        protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => new WebApiPhysicalViewRenderer(_sessionStateProvider);
+        protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => new WebApiPhysicalViewRenderer();
         
         protected override IForestStateProvider GetForestStateProvider() => this;
     }

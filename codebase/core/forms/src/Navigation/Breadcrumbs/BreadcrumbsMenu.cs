@@ -21,7 +21,7 @@ namespace Forest.Forms.Navigation.Breadcrumbs
                 {
                     itemsRegion.Clear();
                     var selectedItems = tree.SelectedNodes
-                        .Select(x => new NavigationNode {Key = x, Selected = true})
+                        .Select(x => new NavigationNode {Path = x, Selected = true})
                         .ToArray();
                     if (selectedItems.Length == 0)
                     {

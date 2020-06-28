@@ -28,24 +28,7 @@ namespace Forest.Web.AspNetCore
                 ForestSessionState.ReplaceState(s, forestState),
                 (oldState, newState) => newState);
         }
-        public void UpdateAllViews(IImmutableDictionary<string, ViewNode> allViews)
-        {
-            var sessionId = _accessor.HttpContext.Session.Id;
-            var s = Current;
-            AddOrReplace(
-                sessionId,
-                ForestSessionState.ReplaceAllViews(s, allViews),
-                (oldState, newState) => newState);
-        }
-        public void UpdateUpdatedViews(IImmutableDictionary<string, ViewNode> updatedViews)
-        {
-            var sessionId = _accessor.HttpContext.Session.Id;
-            var s = Current;
-            AddOrReplace(
-                sessionId,
-                ForestSessionState.ReplaceUpdatedViews(s, updatedViews),
-                (oldState, newState) => newState);
-        }
+       
         public void UpdateNavigationInfo(NavigationInfo navigationInfo)
         {
             var sessionId = _accessor.HttpContext.Session.Id;
