@@ -30,7 +30,6 @@ namespace Forest.Engine.Aspects
             _navigationAdvices = navigationAdvices;
         }
 
-
         public void ExecuteCommand(IExecuteCommandPointcut pointcut) => pointcut.Proceed();
 
         public void SendMessage(ISendMessagePointcut pointcut) => pointcut.Proceed();
@@ -58,7 +57,10 @@ namespace Forest.Engine.Aspects
                 IntermediateNavigatePointcut.Create));
 
         void ITreeNavigator.NavigateBack() => _executionContext.NavigateBack();
+        void ITreeNavigator.NavigateBack(int offset) => _executionContext.NavigateBack(offset);
+        
         void ITreeNavigator.NavigateUp() => _executionContext.NavigateUp();
+        void ITreeNavigator.NavigateUp(int offset) => _executionContext.NavigateUp(offset);
 
         T IForestEngine.RegisterSystemView<T>() => ((IForestExecutionContext) _executionContext).RegisterSystemView<T>();
         IView IForestEngine.RegisterSystemView(Type viewType) => ((IForestExecutionContext) _executionContext).RegisterSystemView(viewType);

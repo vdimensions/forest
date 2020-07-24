@@ -36,15 +36,21 @@ namespace Forest.Navigation
                 return this;
             }
             
-            public State Pop(out NavigationInfo entry)
+            public State Pop(int offset, out NavigationInfo entry)
             {
-                if (_history.IsEmpty)
+                if (_history.IsEmpty || offset <= 0)
                 {
                     entry = null;
                     return this;
                 }
 
-                var h = _history.Pop(out entry);
+                ImmutableStack<NavigationInfo> h;
+                do
+                {
+                    h = _history.Pop(out entry);
+                } 
+                while (--offset > 0);
+                
                 if (_navigationTree.ToggleNode(entry.Template, true, out var tree))
                 {
                     return new State(tree, h);
@@ -52,15 +58,14 @@ namespace Forest.Navigation
                 return this;
             }
 
-            public State Up(out NavigationInfo entry)
+            public State Up(int offset, out NavigationInfo entry)
             {
                 var selected = _navigationTree.SelectedNodes;
-                var upOneLevelNode = selected.Reverse().Skip(1).FirstOrDefault();
+                var upOneLevelNode = selected.Reverse().Skip(offset).FirstOrDefault();
                 if (upOneLevelNode != null && _navigationTree.ToggleNode(upOneLevelNode, true, out var newTree))
                 {
-                    var e = newTree.TryGetValue(upOneLevelNode, out var val) 
-                        ? new NavigationInfo(upOneLevelNode, val) 
-                        : new NavigationInfo(upOneLevelNode);
+                    // TODO: find a way to restore the message value
+                    var e = new NavigationInfo(upOneLevelNode);
                     return new State(newTree, _history.Push(entry = e));
                 }
                 entry = null;
@@ -99,7 +104,7 @@ namespace Forest.Navigation
             internal void OnNavigateBack(NavigateBack message)
             {
                 NavigationInfo navigationHistoryEntry = null;
-                OnNavigationTreeChanged(UpdateModel(m => m.Pop(out navigationHistoryEntry)));
+                OnNavigationTreeChanged(UpdateModel(m => m.Pop(message.Offset, out navigationHistoryEntry)));
                 if (navigationHistoryEntry != null)
                 {
                     if (navigationHistoryEntry.Message != null)
@@ -118,7 +123,7 @@ namespace Forest.Navigation
             internal void OnNavigateUp(NavigateUp message)
             {
                 NavigationInfo navigationHistoryEntry = null;
-                OnNavigationTreeChanged(UpdateModel(m => m.Up(out navigationHistoryEntry)));
+                OnNavigationTreeChanged(UpdateModel(m => m.Up(message.Offset, out navigationHistoryEntry)));
                 if (navigationHistoryEntry != null)
                 {
                     if (navigationHistoryEntry.Message != null)

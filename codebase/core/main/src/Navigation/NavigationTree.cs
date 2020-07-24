@@ -38,24 +38,20 @@ namespace Forest.Navigation
         }
 
         private static readonly IEqualityComparer<string> Comparer = StringComparer.OrdinalIgnoreCase;
-        // TODO: make internal
         internal const string Root = "";
 
         public NavigationTree() 
             : this(
                 ImmutableDictionary.Create<string, IImmutableList<string>>(Comparer),
                 ImmutableDictionary.Create<string, string>(Comparer),
-                ImmutableDictionary.Create<string, object>(Comparer), 
                 ImmutableHashSet.Create(Comparer)) { }
         private NavigationTree(
             IImmutableDictionary<string, IImmutableList<string>> hierarchy, 
             IImmutableDictionary<string, string> inverseHierarchy, 
-            IImmutableDictionary<string, object> values, 
             ImmutableHashSet<string> state)
         {
             Hierarchy = hierarchy;
             InverseHierarchy = inverseHierarchy;
-            Values = values;
             State = state;
         }
 
@@ -66,7 +62,6 @@ namespace Forest.Navigation
             
             var inverseHierarchy = InverseHierarchy;
             var hierarchy = Hierarchy;
-            var messageData = Values;
             var selectedState = State;
             if (!Comparer.Equals(parent, Root) && !inverseHierarchy.ContainsKey(parent))
             {
@@ -92,14 +87,7 @@ namespace Forest.Navigation
             }
             hierarchy = hierarchy.Remove(existingParent).Add(existingParent, children);
 
-            messageData = messageData.Remove(current);
-            
-            if (message != null)
-            {
-                messageData = messageData.Add(current, message);
-            }
-            
-            return new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState);
+            return new NavigationTree(hierarchy, inverseHierarchy, selectedState);
         }
         
         public NavigationTree UnregisterNavigationNode(string node)
@@ -108,7 +96,6 @@ namespace Forest.Navigation
             
             var inverseHierarchy = InverseHierarchy;
             var hierarchy = Hierarchy;
-            var messageData = Values;
             var selectedState = State;
             
             if (inverseHierarchy.TryGetValue(node, out var parentNode) && hierarchy.TryGetValue(parentNode, out var siblings))
@@ -118,12 +105,11 @@ namespace Forest.Navigation
 
             foreach (var childToRemove in ExpandChildren(node, Hierarchy, new HashSet<string>(Comparer)))
             {
-                messageData = messageData.Remove(childToRemove);
                 hierarchy = hierarchy.Remove(childToRemove);
                 inverseHierarchy = inverseHierarchy.Remove(childToRemove);
             }
             
-            return new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState);
+            return new NavigationTree(hierarchy, inverseHierarchy, selectedState);
         }
 
         public bool ToggleNode(string node, bool selected, out NavigationTree tree)
@@ -143,7 +129,6 @@ namespace Forest.Navigation
             }
             
             var inverseHierarchy = InverseHierarchy;
-            var messageData = ImmutableDictionary<string, object>.Empty;
             var selectedState = State.Clear();
 
             if (selected)
@@ -152,14 +137,10 @@ namespace Forest.Navigation
                 foreach (var ancestor in ancestors)
                 {
                     selectedState = selectedState.Add(ancestor);
-                    if (Values.TryGetValue(ancestor, out var data))
-                    {
-                        messageData = messageData.Add(ancestor, data);
-                    }
                 }
             }
             
-            tree = new NavigationTree(hierarchy, inverseHierarchy, messageData, selectedState.Remove(Root));
+            tree = new NavigationTree(hierarchy, inverseHierarchy, selectedState.Remove(Root));
             return true;
         }
         
@@ -184,15 +165,11 @@ namespace Forest.Navigation
         public bool IsSelected(string node)
         {
             node.VerifyArgument(nameof(node)).IsNotNull();
-
             return SelectedNodes.Contains(node);
         }
 
-        public bool TryGetValue(string node, out object value) => Values.TryGetValue(node, out value);
-
         private IImmutableDictionary<string, IImmutableList<string>> Hierarchy { get; }
         private IImmutableDictionary<string, string> InverseHierarchy { get; }
-        private IImmutableDictionary<string, object> Values { get; }
         private ImmutableHashSet<string> State { get; }
 
         public IEnumerable<string> TopLevelNodes => GetChildren(Root);

@@ -138,11 +138,25 @@ namespace Forest
                 ctx.Engine.NavigateBack();
             }
         }
+        void ITreeNavigator.NavigateBack(int offset)
+        {
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            {
+                ctx.Engine.NavigateBack(offset);
+            }
+        }
         void ITreeNavigator.NavigateUp()
         {
             using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
                 ctx.Engine.NavigateUp();
+            }
+        }
+        void ITreeNavigator.NavigateUp(int offset)
+        {
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            {
+                ctx.Engine.NavigateUp(offset);
             }
         }
         void IMessageDispatcher.SendMessage<T>(T msg)

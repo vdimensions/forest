@@ -20,8 +20,9 @@ namespace Forest.Forms.Navigation.Breadcrumbs
                 WithRegion(Regions.Items, itemsRegion =>
                 {
                     itemsRegion.Clear();
-                    var selectedItems = tree.SelectedNodes
-                        .Select(x => new NavigationNode {Path = x, Selected = true})
+                    var nodes = tree.SelectedNodes.ToArray();
+                    var selectedItems = nodes
+                        .Select((x, i) => new NavigationNode { Path = x, Selected = true, Offset = nodes.Length - i - 1 })
                         .ToArray();
                     if (selectedItems.Length == 0)
                     {

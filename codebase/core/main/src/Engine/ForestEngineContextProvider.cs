@@ -64,12 +64,26 @@ namespace Forest.Engine
                     ctx.Engine.NavigateBack();
                 }
             }
+            void ITreeNavigator.NavigateBack(int offset)
+            {
+                using (var ctx = _provider.CreateContext(_context))
+                {
+                    ctx.Engine.NavigateBack(offset);
+                }
+            }
             
             void ITreeNavigator.NavigateUp()
             {
                 using (var ctx = _provider.CreateContext(_context))
                 {
                     ctx.Engine.NavigateUp();
+                }
+            }
+            void ITreeNavigator.NavigateUp(int offset)
+            {
+                using (var ctx = _provider.CreateContext(_context))
+                {
+                    ctx.Engine.NavigateUp(offset);
                 }
             }
     

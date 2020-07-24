@@ -297,13 +297,31 @@ namespace Forest.Engine
             }
             ProcessInstructions(new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null));
         }
+        public void NavigateBack(int offset)
+        {
+            ComparableVerifier.IsGreaterThan(Verifier.VerifyArgument(offset, nameof(offset)), 0);
+            if (_nestedCalls > 0)
+            {
+                _eventBus.ClearDeadLetters();
+            }
+            ProcessInstructions(new SendMessageInstruction(new NavigateBack(offset), new []{NavigationSystem.Messages.Topic}, null));
+        }
         public void NavigateUp()
         {
             if (_nestedCalls > 0)
             {
                 _eventBus.ClearDeadLetters();
             }
-            ProcessInstructions(new SendMessageInstruction(new NavigateUp(), new []{NavigationSystem.Messages.Topic}, null));
+            ProcessInstructions(new SendMessageInstruction(new NavigateUp(), new [] { NavigationSystem.Messages.Topic }, null));
+        }
+        public void NavigateUp(int offset)
+        {
+            ComparableVerifier.IsGreaterThan(Verifier.VerifyArgument(offset, nameof(offset)), 0);
+            if (_nestedCalls > 0)
+            {
+                _eventBus.ClearDeadLetters();
+            }
+            ProcessInstructions(new SendMessageInstruction(new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic }, null));
         }
 
         T IForestEngine.RegisterSystemView<T>()
