@@ -299,7 +299,7 @@ namespace Forest.Engine
         }
         public void NavigateBack(int offset)
         {
-            ComparableVerifier.IsGreaterThan(Verifier.VerifyArgument(offset, nameof(offset)), 0);
+            offset.VerifyArgument(nameof(offset)).IsGreaterThan(0);
             if (_nestedCalls > 0)
             {
                 _eventBus.ClearDeadLetters();
@@ -316,7 +316,7 @@ namespace Forest.Engine
         }
         public void NavigateUp(int offset)
         {
-            ComparableVerifier.IsGreaterThan(Verifier.VerifyArgument(offset, nameof(offset)), 0);
+            offset.VerifyArgument(nameof(offset)).IsGreaterThan(0);
             if (_nestedCalls > 0)
             {
                 _eventBus.ClearDeadLetters();

@@ -9,6 +9,7 @@
     <AssemblyName>Forest.Web.WebSharper</AssemblyName>
     <ProjectGuid>{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}</ProjectGuid>
     <OutputType>Library</OutputType>
+    <AxlePath>../../../../../axle</AxlePath>
     <!-- <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion> -->
     <Description>A library to integrate WebSharper with Forest.</Description>
   </PropertyGroup>
@@ -28,17 +29,16 @@
     <Compile Include="JSExports.fs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.FSharp" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Configuration" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Resources" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Web.AspNetCore" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Web.WebSharper" Version="$(AxleVersion)" />
-    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
-    <PackageReference Include="Forest.Web.AspNetCore" Version="$(PackageVersionRange)" />
-  </ItemGroup>
-
   <Import Project="../../../Forest.Common.props" />
+  <Import Project="../../../FSharp.Core.Packages.targets" />
+  <Import Project="../../../Reference.Forest.Core.targets" />
+  <Import Project="../../../Reference.Forest.Web.AspNetCore.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.FSharp.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Text.Documents.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Resources.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Configuration.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Configuration.Microsoft.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Application.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Web.AspNetCore.Mvc.targets" />
+  <Import Project="$(AxlePath)/codebase/Reference.Axle.Web.WebSharper.targets" />
 </Project>

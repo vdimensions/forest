@@ -1,10 +1,10 @@
 namespace Forest.Web.WebSharper
 
 open System.Collections.Generic
+open Forest.Dom
 open Microsoft.AspNetCore.Http
 open WebSharper.UI
 open Axle.Web.AspNetCore.Session
-open Forest
 open Forest.UI
 open Forest.Web.AspNetCore.Dom
 open Forest.StateManagement
@@ -27,15 +27,6 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
         result.ToolTip <- c.Tooltip
         result
 
-    static member toNode (c : ILinkModel) = 
-        let result = LinkNode()
-        result.Href <- c.Name
-        result.Name <- c.Name
-        result.DisplayName <- c.DisplayName
-        result.Description <- c.Description
-        result.ToolTip <- c.Tooltip
-        result
-
     static member domNode2Node (dn : DomNode) =
         { 
             Hash = dn.InstanceID
@@ -43,7 +34,6 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
             Model = dn.Model
             Regions = dn.Regions |> Seq.map(|KeyValue|) |> Seq.map (fun (k, v) -> k, v |> Seq.map (fun x -> x.InstanceID) |> Array.ofSeq ) |> Seq.toArray;
             Commands = dn.Commands |> Seq.map(|KeyValue|) |> Seq.map (fun (k, c) -> k, c |> RemotingPhysicalView.toNode) |> Seq.toArray;
-            Links = dn.Links |> Seq.map(|KeyValue|) |> Seq.map (fun (k, l) -> k, l |> RemotingPhysicalView.toNode) |> Seq.toArray;
         }
 
     override __.Refresh node = 

@@ -3,6 +3,7 @@
 open System
 open System.Collections.Generic
 open System.Collections.Concurrent
+open Axle.DependencyInjection
 open WebSharper.Sitelets
 open WebSharper.UI
 open WebSharper.UI.Html
@@ -56,7 +57,7 @@ and [<Sealed;Module;RequiresForestWebSharper;RequiresWebSharperSitelets;Requires
         this |> c.Configure
 
     [<ModuleInit>]
-    member internal this.Init(exp : ModuleExporter) =
+    member internal this.Init(exp : IDependencyExporter) =
         let dop a b =
             match this._documentOutlineProvider with
             | ValueSome d -> d.GetDocumentOutline a (Doc.Concat(b::afterRenderCallbacks))

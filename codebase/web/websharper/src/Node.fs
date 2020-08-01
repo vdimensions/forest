@@ -1,6 +1,5 @@
 ﻿namespace Forest.Web.WebSharper
 
-open Forest
 open Forest.Web.AspNetCore.Dom
 open WebSharper
 
@@ -12,7 +11,6 @@ type Node =
         Model: obj
         Regions: array<string*string array>
         Commands: array<string*CommandNode>
-        Links: array<string*LinkNode>
     }
 
 type [<Interface>] INodeStateProvider =
