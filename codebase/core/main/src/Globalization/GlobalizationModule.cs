@@ -53,7 +53,7 @@ namespace Forest.Globalization
             public IEqualityComparer<string> KeyComparer => StringComparer.Ordinal;
         }
         
-        private const string Bundle = "70938F73-29B6-4D19-ADD2-CB56D2373720";
+        private static string Bundle = Guid.NewGuid().ToString();
         
         private readonly IBinder _binder = new DefaultBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
 
