@@ -18,7 +18,11 @@ namespace Forest.Engine
             public ForestEngineContext(IForestContext context, ForestEngineContextProvider provider)
             {
                 _context = context;
-                _executionContext = new MasterExecutionContext(context, provider.GetForestStateProvider(), provider.GetPhysicalViewRenderer(), this);
+                _executionContext = new MasterExecutionContext(
+                    context, 
+                    provider.GetForestStateProvider(), 
+                    provider.GetPhysicalViewRenderer(), 
+                    this);
                 _provider = provider;
             }
 

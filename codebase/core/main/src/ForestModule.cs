@@ -9,11 +9,11 @@ using Forest.ComponentModel;
 using Forest.Dom;
 using Forest.Engine;
 using Forest.Engine.Aspects;
+using Forest.Globalization;
 using Forest.Navigation;
 using Forest.Security;
 using Forest.StateManagement;
 using Forest.Templates;
-using Forest.UI;
 
 namespace Forest
 {
@@ -21,7 +21,15 @@ namespace Forest
     [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
     [Requires(typeof(NavigationModule))]
-    internal sealed class ForestModule : IForestEngine, IViewRegistry, IViewFactory, IForestContext, IForestCommandAdvice, IForestMessageAdvice, IForestNavigationAdvice
+    [Requires(typeof(GlobalizationModule))]
+    internal sealed class ForestModule : 
+        IForestEngine, 
+        IViewRegistry, 
+        IViewFactory, 
+        IForestContext, 
+        IForestCommandAdvice, 
+        IForestMessageAdvice, 
+        IForestNavigationAdvice
     {
         private readonly ForestViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
@@ -35,12 +43,14 @@ namespace Forest
         private ForestEngineContextProvider _engineContextProvider;
         [Obsolete("Replace usages of direct module with interfaces")]
         private readonly ForestTemplatesModule _forestTemplatesModule;
+        private readonly GlobalizationModule _globalizationModule;
 
         public ForestModule(
                 ForestViewRegistry viewRegistry, 
                 IDependencyContext dependencyContainer, 
                 ITemplateProvider templateProvider,
                 IDependencyContainerFactory dependencyContainerFactory, 
+                GlobalizationModule globalizationModule,
                 ForestTemplatesModule forestTemplatesModule, 
                 ILogger logger) 
         {
@@ -52,6 +62,7 @@ namespace Forest
             _messageAdvices = new List<IForestMessageAdvice>();
             _commandAdvices = new List<IForestCommandAdvice>();
             _navigationAdvices = new List<IForestNavigationAdvice>();
+            _globalizationModule = globalizationModule;
             _logger = logger;
 
             _forestTemplatesModule = forestTemplatesModule;
@@ -182,6 +193,7 @@ namespace Forest
         ISecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;
         IForestDomManager IForestContext.DomManager => _domManager;
+        IDomProcessor IForestContext.GlobalizationDomProcessor => _globalizationModule;
         IEnumerable<IForestCommandAdvice> IForestContext.CommandAdvices => _commandAdvices;
         IEnumerable<IForestMessageAdvice> IForestContext.MessageAdvices => _messageAdvices;
         IEnumerable<IForestNavigationAdvice> IForestContext.NavigationAdvices => _navigationAdvices;

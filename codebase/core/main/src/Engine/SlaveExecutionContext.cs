@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Axle.Verification;
 using Forest.ComponentModel;
+using Forest.Dom;
 using Forest.Engine.Instructions;
 using Forest.Navigation;
 using Forest.Navigation.Messages;
@@ -19,6 +20,7 @@ namespace Forest.Engine
         private readonly IEventBus _eventBus;
         private readonly IForestExecutionContext _executionContextReference;
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
+        private readonly IDomProcessor _globalizationDomProcessor;
         private readonly TreeChangeScope _scope;
 
         private ImmutableDictionary<string, IRuntimeView> _logicalViews;
@@ -33,6 +35,7 @@ namespace Forest.Engine
             : this(
                 context,
                 physicalViewDomProcessor,
+                context.GlobalizationDomProcessor,
                 new EventBus(), 
                 initialState.Tree,
                 initialState.LogicalViews,
@@ -40,6 +43,7 @@ namespace Forest.Engine
         private SlaveExecutionContext(
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
+                IDomProcessor globalizationDomProcessor,
                 IEventBus eventBus,
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
@@ -48,6 +52,7 @@ namespace Forest.Engine
             _scope = new TreeChangeScope(_tree = tree);
             _context = context;
             _physicalViewDomProcessor = physicalViewDomProcessor;
+            _globalizationDomProcessor = globalizationDomProcessor;
             _eventBus = eventBus;
             _logicalViews = logicalViews;
             _executionContextReference = executionContextReference ?? this;
@@ -86,7 +91,7 @@ namespace Forest.Engine
 
             var tree = _tree;
             var logicalViews = _logicalViews;
-            var domProcessors = new[]{ _physicalViewDomProcessor };
+            var domProcessors = new[]{ _globalizationDomProcessor, _physicalViewDomProcessor };
             _context.DomManager.ProcessDomNodes(_tree, (node) => changedViews.Contains(node.InstanceID), domProcessors);
             var newPhysicalViews = _physicalViewDomProcessor.RenderViews();
             return new ForestState(GuidGenerator.NewID(), tree, logicalViews, newPhysicalViews);

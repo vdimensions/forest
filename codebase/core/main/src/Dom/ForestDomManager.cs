@@ -89,13 +89,19 @@ namespace Forest.Dom
         public void ProcessDomNodes(Tree tree, Predicate<DomNode> isChanged, IEnumerable<IDomProcessor> domProcessors)
         {
             var processors = domProcessors.ToArray();
+            var changedNodes = new Dictionary<string, DomNode>(StringComparer.Ordinal);
             foreach (var domNode in BuildDom(tree))
             {
                 var dn = domNode;
                 var isNodeChanged = isChanged(dn);
                 foreach (var domProcessor in processors)
                 {
+                    if (dn.Parent != null && changedNodes.TryGetValue(dn.Parent.InstanceID, out var updatedParent))
+                    {
+                        dn = new DomNode(dn.InstanceID, dn.Name, dn.Region, dn.Model, updatedParent, dn.Regions, dn.Commands);
+                    }
                     dn = domProcessor.ProcessNode(dn, isNodeChanged);
+                    changedNodes[dn.InstanceID] = dn;
                 }
             }
         }
