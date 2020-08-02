@@ -244,6 +244,16 @@ namespace Forest.Engine
                                 throw new CommandInstructionException(ici, ex);
                             }
                             break;
+                        
+                        case ApplyNavigationStateInstruction ansi:
+                            var targetView = _logicalViews.Values
+                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Descriptor.Name, ansi.NavigationState.Path));
+                            if (targetView != null && targetView is INavigationStateProvider nsp)
+                            {
+                                _eventBus.Publish(targetView, nsp, NavigationSystem.Messages.Topic);
+                            }
+                            break;
+                        
                         default:
                             throw new InstructionNotSupportedException(instruction);
                     }
@@ -268,26 +278,26 @@ namespace Forest.Engine
 
         public void UnsubscribeEvents(IRuntimeView receiver) => _eventBus.Unsubscribe(receiver);
 
-        public void Navigate(string template)
+        public void Navigate(string path)
         {
-            template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
+            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
             if (_nestedCalls > 0)
             {
                 _eventBus.ClearDeadLetters();
             }
-            var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
-            ProcessInstructions(TemplateCompiler.CompileTemplate(template, templateDefinition, null).ToArray());
+            var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
+            ProcessInstructions(TemplateCompiler.CompileTemplate(path, templateDefinition, null).ToArray());
         }
-        public void Navigate<T>(string template, T message)
+        public void Navigate<T>(string path, T state)
         {
-            template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
-            message.VerifyArgument(nameof(message)).IsNotNull();
+            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
+            state.VerifyArgument(nameof(state)).IsNotNull();
             if (_nestedCalls > 0)
             {
                 _eventBus.ClearDeadLetters();
             }
-            var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, template);
-            ProcessInstructions(TemplateCompiler.CompileTemplate(template, templateDefinition, message).ToArray());
+            var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
+            ProcessInstructions(TemplateCompiler.CompileTemplate(path, templateDefinition, state).ToArray());
         }
         public void NavigateBack()
         {

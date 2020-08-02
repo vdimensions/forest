@@ -18,10 +18,7 @@ namespace Forest.Forms.Navigation.Breadcrumbs
 
             [Command(Commands.Navigate)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            internal void Navigate()
-            {
-                Engine.NavigateUp(Model.Offset);
-            }
+            internal void Navigate() => Engine.NavigateUp(Model.Offset);
         }
     }
 }

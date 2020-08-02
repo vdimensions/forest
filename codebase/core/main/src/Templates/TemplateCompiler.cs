@@ -60,17 +60,18 @@ namespace Forest.Templates
             {
                 yield return new SendMessageInstruction(message, new string[0], null);
                 yield return new SendMessageInstruction(
-                    new NavigationInfo(templateName, message), 
+                    new NavigationState(templateName, message), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
             else
             {
                 yield return new SendMessageInstruction(
-                    new NavigationInfo(templateName), 
+                    new NavigationState(templateName), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
+            yield return new ApplyNavigationStateInstruction(new NavigationState(templateName, message));
         }
     }
 }

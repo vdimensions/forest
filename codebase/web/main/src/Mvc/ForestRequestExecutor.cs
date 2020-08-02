@@ -52,28 +52,28 @@ namespace Forest.Web.AspNetCore.Mvc
             _messageConverter = messageConverter;
         }
         
-        private string GetPath(NavigationInfo navigationInfo)
+        private string GetPath(NavigationState navigationState)
         {
-            if (navigationInfo.Message != null)
+            if (navigationState.Value != null)
             {
-                var messageStr = _messageConverter.ConvertMessage(navigationInfo.Message);
-                return $"{navigationInfo.Template}/{messageStr}";
+                var messageStr = _messageConverter.ConvertMessage(navigationState.Value);
+                return $"{navigationState.Path}/{messageStr}";
             }
-            return navigationInfo.Template;
+            return navigationState.Path;
         }
 
         public ForestResult ExecuteCommand(string instanceId, string command, object arg)
         {
             _forest.ExecuteCommand(command, instanceId, arg);
             //return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
-            return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
+            return new ForestResult(GetPath(_clientViewsHelper.NavigationState), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
         }
         
         public ActionResult Navigate(string template, string customPath = null)
         {
             _forest.Navigate(template);
             return new ForestResult(
-                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.NavigationInfo) : customPath, 
+                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.NavigationState) : customPath, 
                 _clientViewsHelper.AllViews.Values.ToArray(), 
                 HttpStatusCode.OK);
         }
@@ -82,7 +82,7 @@ namespace Forest.Web.AspNetCore.Mvc
         {
             _forest.Navigate(template, message);
             return new ForestResult(
-                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.NavigationInfo) : customPath, 
+                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.NavigationState) : customPath, 
                 _clientViewsHelper.AllViews.Values.ToArray(), 
                 HttpStatusCode.OK);
         }
@@ -91,7 +91,7 @@ namespace Forest.Web.AspNetCore.Mvc
         {
             if (_clientViewsHelper.AllViews.TryGetValue(instanceId, out var view))
             {
-                return new ForestResult(GetPath(_clientViewsHelper.NavigationInfo), new []{ view }, HttpStatusCode.PartialContent);
+                return new ForestResult(GetPath(_clientViewsHelper.NavigationState), new []{ view }, HttpStatusCode.PartialContent);
             }
             return new NotFoundResult();
         }

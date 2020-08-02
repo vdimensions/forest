@@ -7,6 +7,6 @@ namespace Forest.Engine.Aspects
     /// </summary>
     public interface INavigatePointcut : IForestExecutionPointcut
     {
-        NavigationInfo NavigationInfo { get; }
+        NavigationState NavigationState { get; }
     }
 }

@@ -29,13 +29,13 @@ namespace Forest.Web.AspNetCore
                 (oldState, newState) => newState);
         }
        
-        public void UpdateNavigationInfo(NavigationInfo navigationInfo)
+        public void UpdateNavigationState(NavigationState navigationState)
         {
             var sessionId = _accessor.HttpContext.Session.Id;
             var s = Current;
             AddOrReplace(
                 sessionId,
-                ForestSessionState.ReplaceNavigationInfo(s, navigationInfo),
+                ForestSessionState.ReplaceNavigationState(s, navigationState),
                 (oldState, newState) => newState);
         }
 
@@ -51,7 +51,7 @@ namespace Forest.Web.AspNetCore
             return _stateInspector.TryGetViewDescriptor(state, instanceId, out descriptor);
         }
 
-        public NavigationInfo NavigationInfo => Current.NavigationInfo;
+        public NavigationState NavigationState => Current.NavigationState;
         public IImmutableDictionary<string, ViewNode> AllViews => Current.AllViews;
         public IImmutableDictionary<string, ViewNode> UpdatedViews => Current.UpdatedViews;
     }

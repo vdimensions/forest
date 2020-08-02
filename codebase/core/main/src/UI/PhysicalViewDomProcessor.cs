@@ -84,17 +84,35 @@ namespace Forest.UI
                     else if (current != null && isNewView)
                     {
                         throw new InvalidOperationException(n.Parent != null
-                            ? string.Format("Did not expect physical view {0} #{1} to contain child {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID)
-                            : string.Format("Physical view {0} #{1} already exists", n.Name, n.InstanceID));
+                            ? string.Format(
+                                "Did not expect physical view {0} #{1} to contain child {2} #{3}", 
+                                n.Parent.Name, 
+                                n.Parent.InstanceID, 
+                                n.Name, 
+                                n.InstanceID)
+                            : string.Format(
+                                "Physical view {0} #{1} already exists", 
+                                n.Name, 
+                                n.InstanceID));
                     }
                     else if (current == null && !isNewView)
                     {
-                        throw new InvalidOperationException(string.Format("Could not locate physical view {0} #{1}", n.Name, n.InstanceID));
+                        throw new InvalidOperationException(
+                            string.Format(
+                                "Could not locate physical view {0} #{1}", 
+                                n.Name, 
+                                n.InstanceID));
                     }
                 }
                 else if (n.Parent != null && parent == null)
                 {
-                    throw new InvalidOperationException(string.Format("Could not locate physical view {0} #{1} that should be parent of {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID));
+                    throw new InvalidOperationException(
+                        string.Format(
+                            "Could not locate physical view {0} #{1} that should be parent of {2} #{3}", 
+                            n.Parent.Name, 
+                            n.Parent.InstanceID, 
+                            n.Name, 
+                            n.InstanceID));
                 }
             }
 

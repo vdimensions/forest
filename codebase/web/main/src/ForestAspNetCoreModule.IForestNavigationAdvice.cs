@@ -6,7 +6,7 @@ namespace Forest.Web.AspNetCore
     {
         public void Navigate(INavigatePointcut pointcut)
         {
-            _sessionStateProvider.UpdateNavigationInfo(pointcut.NavigationInfo);
+            _sessionStateProvider.UpdateNavigationState(pointcut.NavigationState);
             pointcut.Proceed();
         }
     }

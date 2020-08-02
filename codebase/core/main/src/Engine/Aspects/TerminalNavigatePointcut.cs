@@ -12,21 +12,21 @@ namespace Forest.Engine.Aspects
         private TerminalNavigatePointcut(IForestExecutionContext context, string target, object message)
         {
             _context = context;
-            NavigationInfo = new NavigationInfo(target, message);
+            NavigationState = new NavigationState(target, message);
         }
 
         public void Proceed()
         {
-            if (NavigationInfo.Message == null)
+            if (NavigationState.Value == null)
             {
-                _context.Navigate(NavigationInfo.Template);
+                _context.Navigate(NavigationState.Path);
             }
             else
             {
-                _context.Navigate(NavigationInfo.Template, NavigationInfo.Message);
+                _context.Navigate(NavigationState.Path, NavigationState.Value);
             }
         }
 
-        public NavigationInfo NavigationInfo { get; }
+        public NavigationState NavigationState { get; }
     }
 }

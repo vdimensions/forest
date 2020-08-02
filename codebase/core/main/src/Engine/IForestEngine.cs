@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Navigation;
 
 namespace Forest.Engine
 {

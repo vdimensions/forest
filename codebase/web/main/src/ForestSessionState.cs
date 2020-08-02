@@ -13,17 +13,17 @@ namespace Forest.Web.AspNetCore
     {
         public static ForestSessionState ReplaceState(ForestSessionState sessionState, ForestState forestState)
         {
-            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationInfo, sessionState.AllViews, sessionState.UpdatedViews);
+            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationState, sessionState.AllViews, sessionState.UpdatedViews);
         }
-        public static ForestSessionState ReplaceNavigationInfo(ForestSessionState sessionState, NavigationInfo navigationInfo)
+        public static ForestSessionState ReplaceNavigationState(ForestSessionState sessionState, NavigationState navigationState)
         {
-            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationInfo, sessionState.AllViews, sessionState.UpdatedViews);
+            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationState, sessionState.AllViews, sessionState.UpdatedViews);
         }
 
         private ForestSessionState(
             ForestState state, 
             object syncRoot, 
-            NavigationInfo navigationInfo,
+            NavigationState navigationState,
             IImmutableDictionary<string, ViewNode> allViews, 
             IImmutableDictionary<string, ViewNode> updatedViews)
         {
@@ -33,7 +33,7 @@ namespace Forest.Web.AspNetCore
             updatedViews = allViews;
             State = state;
             SyncRoot = syncRoot;
-            NavigationInfo = navigationInfo;
+            NavigationState = navigationState;
             AllViews = allViews;
             UpdatedViews = updatedViews;
         }
@@ -41,13 +41,13 @@ namespace Forest.Web.AspNetCore
             : this(
                 new ForestState(), 
                 new object(), 
-                NavigationInfo.Empty, 
+                NavigationState.Empty, 
                 ImmutableDictionary.Create<string, ViewNode>(StringComparer.Ordinal), 
                 ImmutableDictionary.Create<string, ViewNode>(StringComparer.Ordinal)) { }
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
-        internal NavigationInfo NavigationInfo { get; }
+        internal NavigationState NavigationState { get; }
         internal IImmutableDictionary<string, ViewNode> AllViews { get; }
         internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }

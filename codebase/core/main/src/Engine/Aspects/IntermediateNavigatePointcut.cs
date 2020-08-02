@@ -21,6 +21,6 @@ namespace Forest.Engine.Aspects
 
         public void Proceed() => _advice.Navigate(_originalPointcut);
 
-        public NavigationInfo NavigationInfo => _originalPointcut.NavigationInfo;
+        public NavigationState NavigationState => _originalPointcut.NavigationState;
     }
 }

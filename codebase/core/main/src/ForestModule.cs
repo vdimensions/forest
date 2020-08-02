@@ -117,18 +117,18 @@ namespace Forest
                 return ctx.Engine.RegisterSystemView(viewType);
             }
         }
-        void ITreeNavigator.Navigate(string tree)
+        void ITreeNavigator.Navigate(string path)
         {
             using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
-                ctx.Engine.Navigate(tree);
+                ctx.Engine.Navigate(path);
             }
         }
-        void ITreeNavigator.Navigate<T>(string tree, T message)
+        void ITreeNavigator.Navigate<T>(string path, T state)
         {
             using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
             {
-                ctx.Engine.Navigate(tree, message);
+                ctx.Engine.Navigate(path, state);
             }
         }
         void ITreeNavigator.NavigateBack()
