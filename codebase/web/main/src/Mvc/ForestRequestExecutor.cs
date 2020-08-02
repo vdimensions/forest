@@ -54,12 +54,12 @@ namespace Forest.Web.AspNetCore.Mvc
         
         private string GetPath(NavigationInfo navigationInfo)
         {
-            if (navigationInfo.Message != null)
+            if (navigationInfo.State != null)
             {
-                var messageStr = _messageConverter.ConvertMessage(navigationInfo.Message);
-                return $"{navigationInfo.Template}/{messageStr}";
+                var messageStr = _messageConverter.ConvertMessage(navigationInfo.State);
+                return $"{navigationInfo.Path}/{messageStr}";
             }
-            return navigationInfo.Template;
+            return navigationInfo.Path;
         }
 
         public ForestResult ExecuteCommand(string instanceId, string command, object arg)

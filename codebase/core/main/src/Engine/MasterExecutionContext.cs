@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Forest.Engine.Aspects;
 using Forest.Engine.Instructions;
+using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.UI;
 
@@ -57,9 +58,8 @@ namespace Forest.Engine
 
         ViewState? IForestExecutionContext.GetViewState(string nodeKey) => _slave.GetViewState(nodeKey);
 
-        void ITreeNavigator.Navigate(string template) => _slave.Navigate(template);
-
-        void ITreeNavigator.Navigate<T>(string template, T message) => _slave.Navigate(template, message);
+        void ITreeNavigator.Navigate(string path) => _slave.Navigate(path);
+        void ITreeNavigator.Navigate<T>(string path, T state) => _slave.Navigate(path, state);
 
         void ITreeNavigator.NavigateBack() => _slave.NavigateBack();
         void ITreeNavigator.NavigateBack(int offset) => _slave.NavigateBack(offset);

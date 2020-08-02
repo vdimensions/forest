@@ -17,13 +17,13 @@ namespace Forest.Engine.Aspects
 
         public void Proceed()
         {
-            if (NavigationInfo.Message == null)
+            if (NavigationInfo.State == null)
             {
-                _context.Navigate(NavigationInfo.Template);
+                _context.Navigate(NavigationInfo.Path);
             }
             else
             {
-                _context.Navigate(NavigationInfo.Template, NavigationInfo.Message);
+                _context.Navigate(NavigationInfo.Path, NavigationInfo.State);
             }
         }
 

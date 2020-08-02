@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -18,20 +19,28 @@ namespace Forest.Navigation
         {
             private readonly NavigationTree _navigationTree;
             private readonly ImmutableStack<NavigationInfo> _history;
+            private readonly ImmutableDictionary<string, NavigationInfo> _states;
 
             internal State(NavigationTree navigationTree) 
-                : this(navigationTree, ImmutableStack<NavigationInfo>.Empty) { }
-            private State(NavigationTree navigationTree, ImmutableStack<NavigationInfo> history)
+                : this(
+                    navigationTree, 
+                    ImmutableStack<NavigationInfo>.Empty, 
+                    ImmutableDictionary.Create<string, NavigationInfo>(StringComparer.Ordinal)) { }
+            private State(
+                NavigationTree navigationTree, 
+                ImmutableStack<NavigationInfo> history, 
+                ImmutableDictionary<string, NavigationInfo> states)
             {
                 _navigationTree = navigationTree;
                 _history = history;
+                _states = states;
             }
 
             public State Push(NavigationInfo entry)
             {
-                if (_navigationTree.ToggleNode(entry.Template, true, out var tree))
+                if (_navigationTree.ToggleNode(entry.Path, true, out var tree))
                 {
-                    return new State(tree, _history.Push(entry));
+                    return new State(tree, _history.Push(entry), _states);
                 }
                 return this;
             }
@@ -51,9 +60,9 @@ namespace Forest.Navigation
                 } 
                 while (--offset > 0);
                 
-                if (_navigationTree.ToggleNode(entry.Template, true, out var tree))
+                if (_navigationTree.ToggleNode(entry.Path, true, out var tree))
                 {
-                    return new State(tree, h);
+                    return new State(tree, h, ImmutableDictionary.Create<string, NavigationInfo>(_states.KeyComparer));
                 }
                 return this;
             }
@@ -64,12 +73,17 @@ namespace Forest.Navigation
                 var upOneLevelNode = selected.Reverse().Skip(offset).FirstOrDefault();
                 if (upOneLevelNode != null && _navigationTree.ToggleNode(upOneLevelNode, true, out var newTree))
                 {
-                    // TODO: find a way to restore the message value
-                    var e = new NavigationInfo(upOneLevelNode);
-                    return new State(newTree, _history.Push(entry = e));
+                    var e = _states.TryGetValue(upOneLevelNode, out var e1) ? e1 : new NavigationInfo(upOneLevelNode);
+                    return new State(newTree, _history.Push(entry = e), ImmutableDictionary.Create<string, NavigationInfo>(_states.KeyComparer));
                 }
                 entry = null;
                 return this;
+            }
+
+            public State SetState(NavigationInfo navigationInfo)
+            {
+                var newStates = _states.Remove(navigationInfo.Path).Add(navigationInfo.Path, navigationInfo);
+                return new State(_navigationTree, _history, newStates);
             }
 
             internal NavigationTree Tree => _navigationTree;
@@ -107,13 +121,13 @@ namespace Forest.Navigation
                 OnNavigationTreeChanged(UpdateModel(m => m.Pop(message.Offset, out navigationHistoryEntry)));
                 if (navigationHistoryEntry != null)
                 {
-                    if (navigationHistoryEntry.Message != null)
+                    if (navigationHistoryEntry.State != null)
                     {
-                        Engine.Navigate(navigationHistoryEntry.Template, navigationHistoryEntry.Message);
+                        Engine.Navigate(navigationHistoryEntry.Path, navigationHistoryEntry.State);
                     }
                     else
                     {
-                        Engine.Navigate(navigationHistoryEntry.Template);
+                        Engine.Navigate(navigationHistoryEntry.Path);
                     }
                 }
             }
@@ -126,13 +140,28 @@ namespace Forest.Navigation
                 OnNavigationTreeChanged(UpdateModel(m => m.Up(message.Offset, out navigationHistoryEntry)));
                 if (navigationHistoryEntry != null)
                 {
-                    if (navigationHistoryEntry.Message != null)
+                    if (navigationHistoryEntry.State != null)
                     {
-                        Engine.Navigate(navigationHistoryEntry.Template, navigationHistoryEntry.Message);
+                        Engine.Navigate(navigationHistoryEntry.Path, navigationHistoryEntry.State);
                     }
                     else
                     {
-                        Engine.Navigate(navigationHistoryEntry.Template);
+                        Engine.Navigate(navigationHistoryEntry.Path);
+                    }
+                }
+            }
+
+            [Subscription(Messages.Topic)]
+            [SuppressMessage("ReSharper", "UnusedMember.Global")]
+            internal void OnNavigationStateProviderLocated(INavigationStateProvider navigationStateProvider)
+            {
+                var nodes = Model.Tree.SelectedNodes;
+                foreach (var node in nodes)
+                {
+                    var state = navigationStateProvider.ApplyNavigationState(node);
+                    if (state != null)
+                    {
+                        UpdateModel(m => m.SetState(new NavigationInfo(node, state)));
                     }
                 }
             }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Forest.Engine.Instructions;
+using Forest.Navigation;
 using Forest.StateManagement;
 
 namespace Forest.Engine.Aspects
@@ -46,14 +47,14 @@ namespace Forest.Engine.Aspects
                 TerminalMessagePointCut<T>.Create(_executionContext, message),
                 IntermediateMessagePointcut.Create));
 
-        void ITreeNavigator.Navigate(string template) =>
+        void ITreeNavigator.Navigate(string path) =>
             Navigate(_navigationAdvices.Aggregate(
-                TerminalNavigatePointcut.Create(_executionContext, template, null),
+                TerminalNavigatePointcut.Create(_executionContext, path, null),
                 IntermediateNavigatePointcut.Create));
 
-        void ITreeNavigator.Navigate<T>(string template, T message) =>
+        void ITreeNavigator.Navigate<T>(string path, T state) =>
             Navigate(_navigationAdvices.Aggregate(
-                TerminalNavigatePointcut.Create(_executionContext, template, message),
+                TerminalNavigatePointcut.Create(_executionContext, path, state),
                 IntermediateNavigatePointcut.Create));
 
         void ITreeNavigator.NavigateBack() => _executionContext.NavigateBack();

@@ -71,6 +71,7 @@ namespace Forest.Templates
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
+            yield return new ApplyNavigationStateInstruction(new NavigationInfo(templateName, message));
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Forest.ComponentModel;
+using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.UI;
 
@@ -41,19 +42,19 @@ namespace Forest.Engine
                 }
             }
     
-            void ITreeNavigator.Navigate(string template)
+            void ITreeNavigator.Navigate(string path)
             {
                 using (var ctx = _provider.CreateContext(_context))
                 {
-                    ctx.Engine.Navigate(template);
+                    ctx.Engine.Navigate(path);
                 }
             }
     
-            void ITreeNavigator.Navigate<T>(string template, T message)
+            void ITreeNavigator.Navigate<T>(string path, T state)
             {
                 using (var ctx = _provider.CreateContext(_context))
                 {
-                    ctx.Engine.Navigate(template, message);
+                    ctx.Engine.Navigate(path, state);
                 }
             }
             
