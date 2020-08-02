@@ -25,10 +25,6 @@
     <Compile Remove="Http\ResponseHeader.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Http\" />
-  </ItemGroup>
-
   <Import Project="../../../Forest.Common.props" />
   <Import Project="../../../Reference.Forest.Core.targets" />
   <Import Project="$(AxlePath)/codebase/Reference.Axle.Text.Documents.targets" />
