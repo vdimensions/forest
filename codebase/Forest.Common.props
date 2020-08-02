@@ -50,7 +50,7 @@
   <!-- Configure VDimensions MSBuild Sdk -->
   <PropertyGroup>
     <!-- Enable local nuget feed for packages produced by this project -->
-    <EnabeLocalPackageRestore>true</EnabeLocalPackageRestore>
+    <EnableLocalPackageRestore>true</EnableLocalPackageRestore>
   </PropertyGroup>
 
   <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore')">
