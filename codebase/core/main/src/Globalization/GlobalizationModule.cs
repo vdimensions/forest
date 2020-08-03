@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using Axle.IO.Serialization;
 using Axle.Logging;
 using Axle.Modularity;
+using Axle.Reflection;
 using Axle.Resources;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
@@ -11,7 +16,6 @@ using Forest.Dom;
 
 namespace Forest.Globalization
 {
-    
     [Module]
     [RequiresResources]
     internal sealed class GlobalizationModule : IDomProcessor
@@ -35,7 +39,7 @@ namespace Forest.Globalization
 
             public IEnumerable<ITextDocumentNode> GetChildren(string name)
             {
-                var prefixOrKey = $"{_prefix}.{name}";
+                var prefixOrKey = _prefix.Length == 0 ? name : $"{_prefix}.{name}";
                 var resource = _resourceManager.Load<string>(_bundle, prefixOrKey, CultureInfo.CurrentUICulture);
                 if (!string.IsNullOrEmpty(resource))
                 {
@@ -43,7 +47,6 @@ namespace Forest.Globalization
                 }
                 else
                 {
-                    // TODO: `prefixOrKey` and `name` are not correctly inferred
                     yield return new ResourceDocumentRoot(_resourceManager, _bundle, prefixOrKey, name, this);
                 }
             }
@@ -52,8 +55,6 @@ namespace Forest.Globalization
             public string Key { get; }
             public IEqualityComparer<string> KeyComparer => StringComparer.Ordinal;
         }
-        
-        private static string Bundle = Guid.NewGuid().ToString();
         
         private readonly IBinder _binder = new DefaultBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
 
@@ -68,7 +69,57 @@ namespace Forest.Globalization
 
         private ITextDocumentRoot GetTextDocument(string viewName)
         {
-            return new ResourceDocumentRoot(_resourceManager, Bundle, viewName, string.Empty, null);
+            return new ResourceDocumentRoot(_resourceManager, viewName, string.Empty, string.Empty, null);
+        }
+
+        private static bool TryCloneObject(object obj, out object clone)
+        {
+            var stream = new MemoryStream();
+            try
+            {
+                var serializer = new BinarySerializer();
+                serializer.Serialize(obj, stream);
+                stream.Flush();
+                stream.Seek(0, SeekOrigin.Begin);
+                clone = serializer.Deserialize(stream, obj.GetType());
+                return true;
+            }
+            catch (SerializationException)
+            {
+                clone = null;
+                return false;
+            }
+            finally
+            {
+                stream.Close();
+            }
+        }
+
+        private bool TryLocalize(ITextDocumentRoot localizationSource, object obj, out object localizedObj)
+        {
+            localizedObj = null;
+            if (obj == null)
+            {
+                return false;
+            }
+
+            var isLocalizable = new TypeIntrospector(obj.GetType())
+                .GetAttributes<LocalizableAttribute>()
+                .Select(x => x.Attribute)
+                .Cast<LocalizableAttribute>()
+                .Any(x => x.IsLocalizable);
+            if (!isLocalizable)
+            {
+                return false;
+            }
+
+            if (!TryCloneObject(obj, out var clone))
+            {
+                return false;
+            }
+            
+            localizedObj = _binder.Bind(localizationSource, clone);
+            return true;
         }
 
         DomNode IDomProcessor.ProcessNode(DomNode node, bool isNodeUpdated)
@@ -85,19 +136,34 @@ namespace Forest.Globalization
                 return node;
             }
             
-            var modelTextDocument = new TextDocumentSubset(textDocument, "Model");
             var newCommands = node.Commands;
             var cmdKeys = newCommands.Keys;
             foreach (var commandName in cmdKeys)
             {
                 var cmd = newCommands[commandName];
-                newCommands
-                    .Remove(commandName)
-                    .Add(
+                if (TryLocalize(new TextDocumentSubset(textDocument, $"Commands.{commandName}"), cmd, out var cmdClone))
+                {
+                    newCommands = newCommands.Remove(commandName).Add(commandName, (ICommandModel) cmdClone);
+                }
+                else
+                {
+                    _logger.Warn(
+                        "Unable to create a cloned command object to use for localization: command '{0}' for view '{1}'.", 
                         commandName, 
-                        (ICommandModel) _binder.Bind(new TextDocumentSubset(textDocument, $"Commands.{commandName}"), cmd));
+                        node.Name);   
+                }
             }
-            var newModel =  node.Model == null ? null : _binder.Bind(modelTextDocument, node.Model);
+
+            if (!TryLocalize(new TextDocumentSubset(textDocument, "Model"), node.Model, out var newModel))
+            {
+                _logger.Warn(
+                    "Unable to create a cloned model object to use for localization: view '{0}'.", 
+                    node.Name);
+            }
+            if (ReferenceEquals(newModel, node.Model) && ReferenceEquals(newCommands, node.Commands))
+            {
+                return node;
+            }
             return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands);
         }
     }
