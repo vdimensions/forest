@@ -37,13 +37,14 @@ namespace Forest.Web.AspNetCore
             AllViews = allViews;
             UpdatedViews = updatedViews;
         }
-        internal ForestSessionState() 
+        private ForestSessionState(IEqualityComparer<string> stringComparer) 
             : this(
                 new ForestState(), 
                 new object(), 
                 NavigationState.Empty, 
-                ImmutableDictionary.Create<string, ViewNode>(StringComparer.Ordinal), 
-                ImmutableDictionary.Create<string, ViewNode>(StringComparer.Ordinal)) { }
+                ImmutableDictionary.Create<string, ViewNode>(stringComparer), 
+                ImmutableDictionary.Create<string, ViewNode>(stringComparer)) { }
+        internal ForestSessionState() : this(StringComparer.Ordinal) { }
 
         public ForestState State { get; }
         internal object SyncRoot { get; }

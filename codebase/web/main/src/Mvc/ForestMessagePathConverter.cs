@@ -85,7 +85,7 @@ namespace Forest.Web.AspNetCore.Mvc
         string RegexPattern { get; }
     }
     
-    internal class ForestMessagePathConverter : AbstractTwoWayConverter<object, string>, IForestMessagePathConverter
+    internal sealed class ForestMessagePathConverter : AbstractTwoWayConverter<object, string>, IForestMessagePathConverter
     {
         private struct PathFragment
         {
@@ -133,7 +133,7 @@ namespace Forest.Web.AspNetCore.Mvc
                                 var propConverter = converters.GetOrAdd(p.MemberType, t => new ForestMessagePathConverter(t, converters));
                                 var path = p.Name;
                                 var format = $"{path}/{{0}}";
-                                patternBuilder.Append('/').AppendFormat(format, $"{{{i}}}");//.Append($"\\/{path}(?:\\/([^\\/]+)|(?:({propConverter.Pattern})))");
+                                patternBuilder.Append('/').AppendFormat(format, $"{{{i}}}");
                                 regexBuilder.AppendFormat(format, propConverter.RegexPattern);
                                 return new PathFragment(path, p, propConverter, format);
                             })

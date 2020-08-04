@@ -5,7 +5,7 @@ using Forest.Web.AspNetCore.Dom;
 
 namespace Forest.Web.AspNetCore
 {
-    public interface IClientViewsHelper
+    internal interface IClientViewsHelper
     {
         IViewDescriptor GetDescriptor(string instanceId);
         bool TryGetDescriptor(string instanceId, out IViewDescriptor descriptor);
