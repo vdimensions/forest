@@ -20,14 +20,7 @@ namespace Forest.Globalization
         {
             return _reflectionObjectProvider
                 .GetMembers(instance)
-                .Where(
-                    x =>
-                    {
-                        return AttributeTargetMixin.GetAttributes<LocalizableAttribute>(x)
-                            .Select(a => a.Attribute)
-                            .Cast<LocalizableAttribute>()
-                            .Any(a => a.IsLocalizable);
-                    })
+                .Where(LocalizedAttribute.IsLocalized)
                 .ToArray();
         }
 

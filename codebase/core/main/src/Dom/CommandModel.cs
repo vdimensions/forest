@@ -1,13 +1,15 @@
 ﻿using System;
-using System.ComponentModel;
+using Forest.Globalization;
 
 namespace Forest.Dom
 {
+    [Localized]
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
-    #endif
-    [Localizable(true)]
+    internal sealed class CommandModel : ICommandModel, ICloneable
+    #else
     internal sealed class CommandModel : ICommandModel
+    #endif
     {
         public CommandModel(string name, string description, string displayName, string tooltip)
         {
@@ -19,12 +21,19 @@ namespace Forest.Dom
         public CommandModel(string name) : this(name, string.Empty, string.Empty, string.Empty) { }
         internal CommandModel() { }
 
+        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+        object ICloneable.Clone()
+        {
+            return new CommandModel(Name, Description, DisplayName, Tooltip);
+        }
+        #endif
+
         public string Name { get; }
-        [Localizable(true)]
+        [Localized]
         public string Description { get; set; }
-        [Localizable(true)]
+        [Localized]
         public string DisplayName { get; set; }
-        [Localizable(true)]
+        [Localized]
         public string Tooltip { get; set; }
     }
 }

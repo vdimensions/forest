@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,7 @@ using System.Runtime.Serialization;
 using Axle.IO.Serialization;
 using Axle.Logging;
 using Axle.Modularity;
-using Axle.Reflection;
+using Axle.References;
 using Axle.Resources;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
@@ -72,8 +71,21 @@ namespace Forest.Globalization
             return new ResourceDocumentRoot(_resourceManager, viewName, string.Empty, string.Empty, null);
         }
 
-        private static bool TryCloneObject(object obj, out object clone)
+        private bool TryCloneObject(object obj, out object clone)
         {
+            if (ShallowCopy.IsSafeFromSideEffects(obj.GetType()))
+            {
+                clone = ShallowCopy.Create(obj);
+                return true;
+            }
+
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            if (obj is ICloneable cloneable)
+            {
+                clone = cloneable.Clone();
+                return true;
+            }
+
             var stream = new MemoryStream();
             try
             {
@@ -91,8 +103,12 @@ namespace Forest.Globalization
             }
             finally
             {
-                stream.Close();
+                stream.Dispose();
             }
+            #endif
+
+            clone = null;
+            return false;
         }
 
         private bool TryLocalize(ITextDocumentRoot localizationSource, object obj, out object localizedObj)
@@ -103,12 +119,7 @@ namespace Forest.Globalization
                 return false;
             }
 
-            var isLocalizable = new TypeIntrospector(obj.GetType())
-                .GetAttributes<LocalizableAttribute>()
-                .Select(x => x.Attribute)
-                .Cast<LocalizableAttribute>()
-                .Any(x => x.IsLocalizable);
-            if (!isLocalizable)
+            if (!LocalizedAttribute.IsLocalized(obj.GetType()))
             {
                 return false;
             }
