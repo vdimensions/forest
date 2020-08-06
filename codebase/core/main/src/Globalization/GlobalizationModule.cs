@@ -105,10 +105,10 @@ namespace Forest.Globalization
             {
                 stream.Dispose();
             }
-            #endif
-
+            #else
             clone = null;
             return false;
+            #endif
         }
 
         private bool TryLocalize(ITextDocumentRoot localizationSource, object obj, out object localizedObj)

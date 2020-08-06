@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Linq;
 using Axle.Reflection;
 using Axle.Text.Documents.Binding;
@@ -17,12 +16,10 @@ namespace Forest.Globalization
         }
 
         IReadWriteMember[] IObjectProvider.GetMembers(object instance)
-        {
-            return _reflectionObjectProvider
+            => _reflectionObjectProvider
                 .GetMembers(instance)
                 .Where(LocalizedAttribute.IsLocalized)
                 .ToArray();
-        }
 
         object IObjectProvider.CreateInstance(Type type) 
             => _reflectionObjectProvider.CreateInstance(type);

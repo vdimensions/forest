@@ -27,10 +27,11 @@ namespace Forest.Globalization
         internal static bool IsLocalized(Type type)
         {
             var introspector = new TypeIntrospector(type);
-            var localizedMembers = introspector.GetMembers(ScanOptions.PublicInstance).Where(IsLocalized);
+            var localizedMembers = introspector
+                .GetMembers(ScanOptions.PublicInstance)
+                .Where(m => m is IReadWriteMember)
+                .Where(IsLocalized);
             return IsLocalized(introspector) || localizedMembers.Any();
         }
-
-        public LocalizedAttribute() { }
     }
 }
