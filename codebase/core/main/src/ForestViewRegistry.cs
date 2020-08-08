@@ -1,21 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
 using Axle.Modularity;
+using Axle.Resources;
 using Forest.ComponentModel;
-using Forest.Navigation;
 
 namespace Forest
 {
     [Module]
+    [RequiresResources]
     internal sealed class ForestViewRegistry
     {
-        private readonly IViewRegistry _viewRegistry = new ViewRegistry();
+        private readonly IViewRegistry _viewRegistry;
+
+        public ForestViewRegistry(ResourceManager resourceManager)
+        {
+            _viewRegistry = new ViewRegistry(resourceManager);
+        }
 
         [ModuleDependencyInitialized]
         internal void DependencyInitialized(IForestViewProvider viewProvider)
         {
             viewProvider.RegisterViews(_viewRegistry);
         }
+        
         [ModuleDependencyInitialized]
         internal void DependencyInitialized(_ForestViewProvider viewProvider)
         {

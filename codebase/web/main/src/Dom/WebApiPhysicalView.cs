@@ -24,7 +24,7 @@ namespace Forest.Web.AspNetCore.Dom
                     Name = x.Value.Name,
                     Description = x.Value.Description,
                     DisplayName = x.Value.DisplayName,
-                    ToolTip = x.Value.Tooltip
+                    Tooltip = x.Value.Tooltip
                 },
                 node.Commands.KeyComparer);
             var regions = node.Regions.ToDictionary(

@@ -5,16 +5,19 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Axle.Extensions.String;
 using Axle.Reflection;
 using Axle.Reflection.Extensions.Type;
+using Axle.Resources;
+using Axle.Resources.Bundling;
 using Axle.Verification;
 
 namespace Forest.ComponentModel
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public class ViewRegistry : IViewRegistry
+    internal class ViewRegistry : IViewRegistry
     {
-        private struct MethodAndAttributes<TAttribute> where TAttribute: Attribute
+        private readonly struct MethodAndAttributes<TAttribute> where TAttribute: Attribute
         {
             public MethodAndAttributes(IMethod method, IEnumerable<TAttribute> attributes)
             {
@@ -72,6 +75,12 @@ namespace Forest.ComponentModel
 
         private readonly ConcurrentDictionary<Type, IViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
+        private readonly ResourceManager _resourceManager;
+
+        public ViewRegistry(ResourceManager resourceManager)
+        {
+            _resourceManager = resourceManager;
+        }
 
         protected virtual ITypeIntrospector CreateIntrospector(Type viewType) => new TypeIntrospector(viewType);
         
@@ -98,9 +107,6 @@ namespace Forest.ComponentModel
                 .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<CommandAttribute>(x.Method, new []{y})))
                 .Select(x => new CommandDescriptor(x.Attributes.Single(), x.Method))
                 .ToDictionary(x => x.Name, x => x as ICommandDescriptor, strCmp);
-            var linkDescriptors = GetAttributes<LinkToAttribute>(introspector)
-                .Select(x => new LinkDescriptor(x))
-                .ToDictionary(x => x.Name, x => x as ILinkDescriptor, strCmp);
             var eventDescriptors = 
                 ConsolidateMethods(methods.Select(m => new MethodAndAttributes<SubscriptionAttribute>(m, GetAttributes<SubscriptionAttribute>(m))))
                 .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<SubscriptionAttribute>(x.Method, new[] { y })))
@@ -121,7 +127,6 @@ namespace Forest.ComponentModel
                 viewType, 
                 viewModelType, 
                 new ReadOnlyDictionary<string, ICommandDescriptor>(commandDescriptors), 
-                new ReadOnlyDictionary<string, ILinkDescriptor>(linkDescriptors),
                 eventDescriptors,
                 isSystemView,
                 isAnonymousView);
@@ -132,7 +137,35 @@ namespace Forest.ComponentModel
             var d = _descriptorsByType.GetOrAdd(viewType, CreateViewDescriptor);
             if (!d.IsAnonymousView)
             {
-                _namedDescriptors.TryAdd(d.Name, d.ViewType);
+                _namedDescriptors.TryAdd(d.Name, viewType);
+
+                var asm = viewType.Assembly;
+                
+                var asmName = asm.GetName().Name;
+                var ns = viewType.Namespace ?? string.Empty;
+                var pathPrefix = ns.TrimStart(asmName, StringComparison.OrdinalIgnoreCase).TrimStart('.');
+                var uriParser = new Axle.Conversion.Parsing.UriParser();
+                
+                var bundle = _resourceManager.Bundles.Configure(d.Name)
+                    .Register(asm)
+                    .Register(uriParser.Parse($"resx://{asmName}/{ns}.{d.Name}Resources"));
+                
+                if (ns.Length > pathPrefix.Length && pathPrefix.Length > 0)
+                {
+                    bundle
+                        .Register(asm, $"{pathPrefix}/{d.Name}.properties")
+                        .Register(asm, $"{pathPrefix}/{d.Name}.yaml")
+                        .Register(asm, $"{pathPrefix}/{d.Name}.yml")
+                        ;
+                }
+                else
+                {
+                    bundle
+                        .Register(asm, $"{d.Name}.properties")
+                        .Register(asm, $"{d.Name}.yaml")
+                        .Register(asm, $"{d.Name}.yml")
+                        ;
+                }
             }
             return this;
         }
