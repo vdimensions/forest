@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using Axle.Modularity;
 using Axle.Resources;
 using Forest.ComponentModel;
+using Forest.Configuration;
 
 namespace Forest
 {
     [Module]
     [RequiresResources]
+    [ModuleConfigSection(typeof(ForestViewRegistryConfig), "Forest.ViewRegistry")]
     internal sealed class ForestViewRegistry
     {
         private readonly IViewRegistry _viewRegistry;
 
-        public ForestViewRegistry(ResourceManager resourceManager)
+        public ForestViewRegistry(ResourceManager resourceManager) : this(resourceManager, new ForestViewRegistryConfig()) { }
+        public ForestViewRegistry(ResourceManager resourceManager, ForestViewRegistryConfig config)
         {
-            _viewRegistry = new ViewRegistry(resourceManager);
+            _viewRegistry = new ViewRegistry(resourceManager, config);
         }
 
         [ModuleDependencyInitialized]

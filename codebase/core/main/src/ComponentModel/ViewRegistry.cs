@@ -5,12 +5,12 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
-using Axle.Extensions.String;
 using Axle.Reflection;
 using Axle.Reflection.Extensions.Type;
 using Axle.Resources;
 using Axle.Resources.Bundling;
 using Axle.Verification;
+using Forest.Configuration;
 
 namespace Forest.ComponentModel
 {
@@ -76,10 +76,13 @@ namespace Forest.ComponentModel
         private readonly ConcurrentDictionary<Type, IViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
         private readonly ResourceManager _resourceManager;
+        private readonly ForestViewRegistryConfig _config;
+        
 
-        public ViewRegistry(ResourceManager resourceManager)
+        public ViewRegistry(ResourceManager resourceManager, ForestViewRegistryConfig config)
         {
             _resourceManager = resourceManager;
+            _config = config;
         }
 
         protected virtual ITypeIntrospector CreateIntrospector(Type viewType) => new TypeIntrospector(viewType);
@@ -134,36 +137,24 @@ namespace Forest.ComponentModel
 
         public IViewRegistry DoRegister(Type viewType)
         {
+            var uriParser = new Axle.Conversion.Parsing.UriParser();
+            #if NETSTANDARD || NET45_OR_NEWER
+            var asm = viewType.GetTypeInfo().Assembly;
+            #else
+            var asm = viewType.Assembly;
+            #endif
+            
             var d = _descriptorsByType.GetOrAdd(viewType, CreateViewDescriptor);
             if (!d.IsAnonymousView)
             {
                 _namedDescriptors.TryAdd(d.Name, viewType);
-
-                var asm = viewType.Assembly;
-                
-                var asmName = asm.GetName().Name;
-                var ns = viewType.Namespace ?? string.Empty;
-                var pathPrefix = ns.TrimStart(asmName, StringComparison.OrdinalIgnoreCase).TrimStart('.');
-                var uriParser = new Axle.Conversion.Parsing.UriParser();
-                
-                var bundle = _resourceManager.Bundles.Configure(d.Name)
-                    .Register(asm)
-                    .Register(uriParser.Parse($"resx://{asmName}/{ns}.{d.Name}Resources"));
-                
-                if (ns.Length > pathPrefix.Length && pathPrefix.Length > 0)
+                if (_config.AutoRegisterLocalizationBundles)
                 {
-                    bundle
-                        .Register(asm, $"{pathPrefix}/{d.Name}.properties")
-                        .Register(asm, $"{pathPrefix}/{d.Name}.yaml")
-                        .Register(asm, $"{pathPrefix}/{d.Name}.yml")
-                        ;
-                }
-                else
-                {
-                    bundle
-                        .Register(asm, $"{d.Name}.properties")
-                        .Register(asm, $"{d.Name}.yaml")
-                        .Register(asm, $"{d.Name}.yml")
+                    _resourceManager.Bundles.Configure(d.Name)
+                        .Register(uriParser.Parse($"resx://{asm.GetName().Name}/Resources/{d.Name}/"))
+                        .Register(asm, $"Resources.properties/{d.Name}/")
+                        .Register(asm, $"Resources.yaml/{d.Name}/")
+                        .Register(asm, $"Resources.yml/{d.Name}/")
                         ;
                 }
             }
