@@ -7,11 +7,11 @@ namespace Forest.UI
     {
         void Update(DomNode node);
 
-        void InvokeCommand(string commandName, object arg);
-
         void NavigateTo(string template);
         void NavigateTo<T>(string template, T message);
-
+        
+        IPhysicalViewCommandIndex Commands { get; }
+        
         string InstanceID { get; }
     }
 }
