@@ -18,16 +18,16 @@ namespace Forest.Forms.Controls
         /// </summary>
         /// <typeparam name="TItemView">The type of the repeater's items view.</typeparam>
         /// <typeparam name="TItemModel">The type of the repeater's items view model.</typeparam>
-        public class View<TItemView, TItemModel> : LogicalView where TItemView: IView<TItemModel>
+        public class View<TModel, TItemView, TItemModel> : LogicalView<TModel> where TItemView: IView<TItemModel>
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             private readonly string _itemsRegionName;
 
-            protected View(string itemsRegionName) : base()
+            protected View(TModel model, string itemsRegionName) : base(model)
             {
                 _itemsRegionName = itemsRegionName.VerifyArgument(nameof(itemsRegionName)).IsNotNullOrEmpty();
             }
-            public View() : this(Regions.Items) { }
+            public View(TModel model) : this(model, Regions.Items) { }
 
             protected void WithItemsRegion(Action<IRegion> action) => WithRegion(_itemsRegionName, action);
 
@@ -51,6 +51,13 @@ namespace Forest.Forms.Controls
                 AfterItemViewActivated(activatedItemView);
                 return activatedItemView;
             }
+        }
+
+        public class View<TItemView, TItemModel> : View<object, TItemView, TItemModel> 
+            where TItemView : IView<TItemModel>
+        {
+            protected View(string itemsRegionName) : base(null, itemsRegionName) { }
+            public View() : base(null) { }
         }
     }
 }
