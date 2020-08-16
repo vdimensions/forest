@@ -44,7 +44,7 @@ namespace Forest
             newNodes = newNodes
                 .Remove(parentKey)
                 .Add(parentKey, scope.UpdateRevision(parent))
-                .Add(node.Key, node);
+                .Add(node.Key, scope.UpdateRevision(node));
             var siblingsKeys = newHierarchy.TryGetValue(node.ParentKey, out var l) ? l : ImmutableList<string>.Empty;
             newHierarchy = newHierarchy
                 .Remove(parentKey)
@@ -92,8 +92,9 @@ namespace Forest
                 //TODO: throw new NodeNotFoundException(node);
                 throw new InvalidOperationException("Cannot find node!");
             }
-            node = Node.Create(key, viewHandle, region, model, parent);
-            return TryInsert(scope, this, node, out var result) ? result : this;
+            var tree = TryInsert(scope, this, Node.Create(key, viewHandle, region, model, parent), out var result) ? result : this;
+            node = tree[key].Value;
+            return tree;
         }
 
         public Tree Remove(TreeChangeScope scope, string key, out ICollection<Node> removedNodes)
