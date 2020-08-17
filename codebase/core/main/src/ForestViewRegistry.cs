@@ -1,36 +1,35 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Axle.Modularity;
 using Axle.Resources;
 using Forest.ComponentModel;
-using Forest.Configuration;
 
 namespace Forest
 {
     [Module]
     [RequiresResources]
-    [ModuleConfigSection(typeof(ForestViewRegistryConfig), "Forest.ViewRegistry")]
     internal sealed class ForestViewRegistry
     {
         private readonly IViewRegistry _viewRegistry;
+        private readonly ConcurrentBag<object> _listeners = new ConcurrentBag<object>();
 
-        public ForestViewRegistry(ResourceManager resourceManager) : this(resourceManager, new ForestViewRegistryConfig()) { }
-        public ForestViewRegistry(ResourceManager resourceManager, ForestViewRegistryConfig config)
+        public ForestViewRegistry()
         {
-            _viewRegistry = new ViewRegistry(resourceManager, config);
-        }
-
-        [ModuleDependencyInitialized]
-        internal void DependencyInitialized(IForestViewProvider viewProvider)
-        {
-            viewProvider.RegisterViews(_viewRegistry);
+            _viewRegistry = new ViewRegistry(_listeners);
         }
         
         [ModuleDependencyInitialized]
-        internal void DependencyInitialized(_ForestViewProvider viewProvider)
-        {
-            viewProvider.RegisterViews(_viewRegistry);
-        }
+        internal void DependencyInitialized(_ForestViewProvider viewProvider) => viewProvider.RegisterViews(_viewRegistry);
+
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(IForestViewProvider viewProvider) => viewProvider.RegisterViews(_viewRegistry);
+
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(_ForestViewRegistryListener viewRegistryListener) => _listeners.Add(viewRegistryListener);
+
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(IForestViewRegistryListener viewRegistryListener) => _listeners.Add(viewRegistryListener);
 
         public IViewDescriptor GetDescriptor(Type viewType) => _viewRegistry.GetDescriptor(viewType);
         public IViewDescriptor GetDescriptor(string viewName) => _viewRegistry.GetDescriptor(viewName);

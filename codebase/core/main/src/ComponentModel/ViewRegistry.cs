@@ -7,10 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Axle.Reflection;
 using Axle.Reflection.Extensions.Type;
-using Axle.Resources;
-using Axle.Resources.Bundling;
 using Axle.Verification;
-using Forest.Configuration;
 
 namespace Forest.ComponentModel
 {
@@ -75,14 +72,12 @@ namespace Forest.ComponentModel
 
         private readonly ConcurrentDictionary<Type, IViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
-        private readonly ResourceManager _resourceManager;
-        private readonly ForestViewRegistryConfig _config;
-        
+        private readonly IEnumerable<object> _listeners;
 
-        public ViewRegistry(ResourceManager resourceManager, ForestViewRegistryConfig config)
+
+        public ViewRegistry(IEnumerable<object> listeners)
         {
-            _resourceManager = resourceManager;
-            _config = config;
+            _listeners = listeners;
         }
 
         protected virtual ITypeIntrospector CreateIntrospector(Type viewType) => new TypeIntrospector(viewType);
@@ -137,29 +132,23 @@ namespace Forest.ComponentModel
 
         public IViewRegistry DoRegister(Type viewType)
         {
-            var uriParser = new Axle.Conversion.Parsing.UriParser();
-            #if NETSTANDARD || NET45_OR_NEWER
-            var asm = viewType.GetTypeInfo().Assembly;
-            #else
-            var asm = viewType.Assembly;
-            #endif
-            
             var d = _descriptorsByType.GetOrAdd(viewType, CreateViewDescriptor);
             if (!d.IsAnonymousView)
             {
                 _namedDescriptors.TryAdd(d.Name, viewType);
-                if (_config.AutoRegisterLocalizationBundles)
-                {
-                    _resourceManager.Bundles.Configure(d.Name)
-                        .Register(uriParser.Parse($"resx://{asm.GetName().Name}/Resources/{d.Name}/"))
-                        .Register(asm, $"Resources.properties/{d.Name}/")
-                        .Register(asm, $"Resources.yaml/{d.Name}/")
-                        .Register(asm, $"Resources.yml/{d.Name}/")
-                        ;
-                }
+            }
+
+            foreach (var listener in _listeners.OfType<_ForestViewRegistryListener>())
+            {
+                listener.OnViewRegistered(d);
+            }
+            foreach (var listener in _listeners.OfType<IForestViewRegistryListener>())
+            {
+                listener.OnViewRegistered(d);
             }
             return this;
         }
+
         public IViewRegistry Register(Type viewType) => DoRegister(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value);
         public IViewRegistry Register<T>() where T : IView => DoRegister(typeof(T));
 

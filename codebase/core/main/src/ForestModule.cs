@@ -21,7 +21,7 @@ namespace Forest
     [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
     [Requires(typeof(NavigationModule))]
-    [Requires(typeof(GlobalizationModule))]
+    [Requires(typeof(ForestGlobalizationModule))]
     internal sealed class ForestModule : 
         IForestEngine, 
         IViewRegistry, 
@@ -43,14 +43,14 @@ namespace Forest
         private ForestEngineContextProvider _engineContextProvider;
         [Obsolete("Replace usages of direct module with interfaces")]
         private readonly ForestTemplatesModule _forestTemplatesModule;
-        private readonly GlobalizationModule _globalizationModule;
+        private readonly ForestGlobalizationModule _forestGlobalizationModule;
 
         public ForestModule(
                 ForestViewRegistry viewRegistry, 
                 IDependencyContext dependencyContainer, 
                 ITemplateProvider templateProvider,
                 IDependencyContainerFactory dependencyContainerFactory, 
-                GlobalizationModule globalizationModule,
+                ForestGlobalizationModule globalizationModule,
                 ForestTemplatesModule forestTemplatesModule, 
                 ILogger logger) 
         {
@@ -62,7 +62,7 @@ namespace Forest
             _messageAdvices = new List<IForestMessageAdvice>();
             _commandAdvices = new List<IForestCommandAdvice>();
             _navigationAdvices = new List<IForestNavigationAdvice>();
-            _globalizationModule = globalizationModule;
+            _forestGlobalizationModule = globalizationModule;
             _logger = logger;
 
             _forestTemplatesModule = forestTemplatesModule;
@@ -71,16 +71,16 @@ namespace Forest
         [ModuleInit]
         internal void Init(IDependencyExporter exporter)
         {
-            foreach (var viewAssembly in _viewRegistry.Descriptors
-                #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-                .Select(x => x.ViewType.Assembly)
-                #else
-                .Select(x => System.Reflection.IntrospectionExtensions.GetTypeInfo(x.ViewType).Assembly)
-                #endif
-                .Distinct())
-            {
-                _forestTemplatesModule.RegisterAssemblySource(viewAssembly);
-            }
+            // foreach (var viewAssembly in _viewRegistry.Descriptors
+            //     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            //     .Select(x => x.ViewType.Assembly)
+            //     #else
+            //     .Select(x => System.Reflection.IntrospectionExtensions.GetTypeInfo(x.ViewType).Assembly)
+            //     #endif
+            //     .Distinct())
+            // {
+            //     _forestTemplatesModule.RegisterAssemblySource(viewAssembly);
+            // }
 
             _messageAdvices.Add(this);
             _commandAdvices.Add(this);
@@ -193,7 +193,7 @@ namespace Forest
         ISecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;
         IForestDomManager IForestContext.DomManager => _domManager;
-        IDomProcessor IForestContext.GlobalizationDomProcessor => _globalizationModule;
+        IDomProcessor IForestContext.GlobalizationDomProcessor => _forestGlobalizationModule;
         IEnumerable<IForestCommandAdvice> IForestContext.CommandAdvices => _commandAdvices;
         IEnumerable<IForestMessageAdvice> IForestContext.MessageAdvices => _messageAdvices;
         IEnumerable<IForestNavigationAdvice> IForestContext.NavigationAdvices => _navigationAdvices;
@@ -225,22 +225,22 @@ namespace Forest
         IViewRegistry IViewRegistry.Register(Type viewType)
         {
             _viewRegistry.Register(viewType);
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            _forestTemplatesModule.RegisterAssemblySource(viewType.Assembly);
-            #else
-            _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(viewType).Assembly);
-            #endif
+            // #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            // _forestTemplatesModule.RegisterAssemblySource(viewType.Assembly);
+            // #else
+            // _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(viewType).Assembly);
+            // #endif
             return this;
         }
 
         IViewRegistry IViewRegistry.Register<T>()
         {
             _viewRegistry.Register<T>();
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            _forestTemplatesModule.RegisterAssemblySource(typeof(T).Assembly);
-            #else
-            _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(T)).Assembly);
-            #endif
+            // #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            // _forestTemplatesModule.RegisterAssemblySource(typeof(T).Assembly);
+            // #else
+            // _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(T)).Assembly);
+            // #endif
             return this;
         }
 

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using Axle.DependencyInjection;
 using Axle.Modularity;
 using Axle.Resources;
 using Axle.Resources.Extraction;
 using Axle.Resources.Xml.Extraction;
+using Forest.ComponentModel;
 using Forest.Templates.Xml;
 
 namespace Forest.Templates
@@ -17,7 +17,8 @@ namespace Forest.Templates
         IForestTemplateMarshallerConfigurer, 
         IForestTemplateMarshallerRegistry,
         IForestTemplateExtractorRegistry,
-        ITemplateProvider
+        ITemplateProvider,
+        _ForestViewRegistryListener
     {
         internal const string BundleName = "Forest";
         
@@ -101,13 +102,6 @@ namespace Forest.Templates
             _resourceManager = resourceManager;
         }
         
-        public void RegisterAssemblySource(Assembly assembly)
-        {
-            var assemblyName = assembly.GetName().Name;
-            _assemblies.Add(assemblyName);
-            InitResourceManager();
-        }
-
         public IForestTemplateMarshallerRegistry Register(IForestTemplateMarshaller marshaller)
         {
             var marshallingExtractor = new ForestTemplateExtractor(marshaller);
@@ -150,6 +144,18 @@ namespace Forest.Templates
                 return result;
             }
             throw new ResourceNotFoundException(name, BundleName, CultureInfo.InvariantCulture);
+        }
+
+        public void OnViewRegistered(IViewDescriptor viewDescriptor)
+        {
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            var asm = viewDescriptor.ViewType.Assembly;
+            #else
+            var asm = System.Reflection.IntrospectionExtensions.GetTypeInfo(viewDescriptor.ViewType).Assembly;
+            #endif
+            var assemblyName = asm.GetName().Name;
+            _assemblies.Add(assemblyName);
+            InitResourceManager();
         }
     }
 }

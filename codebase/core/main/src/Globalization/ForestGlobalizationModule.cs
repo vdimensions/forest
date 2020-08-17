@@ -1,23 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
+#if NETSTANDARD || NET45_OR_NEWER
+using System.Reflection;
+#endif
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+using System.IO;
 using System.Runtime.Serialization;
 using Axle.IO.Serialization;
+#endif
 using Axle.Logging;
 using Axle.Modularity;
 using Axle.References;
 using Axle.Resources;
+using Axle.Resources.Bundling;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
+using Forest.ComponentModel;
 using Forest.Dom;
+using Forest.Globalization.Configuration;
 
 namespace Forest.Globalization
 {
     [Module]
     [RequiresResources]
-    internal sealed class GlobalizationModule : IDomProcessor
+    [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
+    internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener
     {
         private sealed class ResourceDocumentRoot : ITextDocumentRoot
         {
@@ -58,13 +67,17 @@ namespace Forest.Globalization
         private readonly IBinder _binder = new DefaultBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
 
         private readonly ResourceManager _resourceManager;
+        private readonly ForestGlobalizationConfig _config;
         private readonly ILogger _logger;
 
-        public GlobalizationModule(ResourceManager resourceManager, ILogger logger)
+        public ForestGlobalizationModule(ResourceManager resourceManager, ForestGlobalizationConfig config, ILogger logger)
         {
             _resourceManager = resourceManager;
+            _config = config;
             _logger = logger;
         }
+        public ForestGlobalizationModule(ResourceManager resourceManager, ILogger logger) 
+            : this(resourceManager, new ForestGlobalizationConfig(), logger) { }
 
         private ITextDocumentRoot GetTextDocument(string viewName)
         {
@@ -73,16 +86,15 @@ namespace Forest.Globalization
 
         private bool TryCloneObject(object obj, out object clone)
         {
-            if (ShallowCopy.IsSafeFromSideEffects(obj.GetType()))
-            {
-                clone = ShallowCopy.Create(obj);
-                return true;
-            }
-
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
             if (obj is ICloneable cloneable)
             {
                 clone = cloneable.Clone();
+                return true;
+            }
+            if (ShallowCopy.IsSafeFromSideEffects(obj.GetType()))
+            {
+                clone = ShallowCopy.Create(obj);
                 return true;
             }
 
@@ -106,6 +118,11 @@ namespace Forest.Globalization
                 stream.Dispose();
             }
             #else
+            if (ShallowCopy.IsSafeFromSideEffects(obj.GetType()))
+            {
+                clone = ShallowCopy.Create(obj);
+                return true;
+            }
             clone = null;
             return false;
             #endif
@@ -177,6 +194,27 @@ namespace Forest.Globalization
                 return node;
             }
             return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands);
+        }
+
+        public void OnViewRegistered(IViewDescriptor viewDescriptor)
+        {
+            var viewType = viewDescriptor.ViewType;
+            var uriParser = new Axle.Conversion.Parsing.UriParser();
+            #if NETSTANDARD || NET45_OR_NEWER
+            var asm = viewType.GetTypeInfo().Assembly;
+            #else
+            var asm = viewType.Assembly;
+            #endif
+            var viewBundle = _resourceManager.Bundles.Configure(viewDescriptor.Name);
+            if (_config.AutoRegisterLocalizationBundles)
+            {
+                viewBundle
+                    .Register(uriParser.Parse($"resx://{asm.GetName().Name}/Resources/{viewDescriptor.Name}/"))
+                    .Register(asm, $"Resources.properties/{viewDescriptor.Name}/")
+                    .Register(asm, $"Resources.yaml/{viewDescriptor.Name}/")
+                    .Register(asm, $"Resources.yml/{viewDescriptor.Name}/")
+                    ;
+            }
         }
     }
 }
