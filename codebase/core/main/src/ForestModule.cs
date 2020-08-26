@@ -40,10 +40,8 @@ namespace Forest
         private readonly ICollection<IForestMessageAdvice> _messageAdvices;
         private readonly ICollection<IForestNavigationAdvice> _navigationAdvices;
         private readonly ILogger _logger;
-        private ForestEngineContextProvider _engineContextProvider;
-        [Obsolete("Replace usages of direct module with interfaces")]
-        private readonly ForestTemplatesModule _forestTemplatesModule;
         private readonly ForestGlobalizationModule _forestGlobalizationModule;
+        private ForestEngineContextProvider _engineContextProvider;
 
         public ForestModule(
                 ForestViewRegistry viewRegistry, 
@@ -51,7 +49,6 @@ namespace Forest
                 ITemplateProvider templateProvider,
                 IDependencyContainerFactory dependencyContainerFactory, 
                 ForestGlobalizationModule globalizationModule,
-                ForestTemplatesModule forestTemplatesModule, 
                 ILogger logger) 
         {
             _viewRegistry = viewRegistry;
@@ -64,8 +61,6 @@ namespace Forest
             _navigationAdvices = new List<IForestNavigationAdvice>();
             _forestGlobalizationModule = globalizationModule;
             _logger = logger;
-
-            _forestTemplatesModule = forestTemplatesModule;
         }
 
         [ModuleInit]

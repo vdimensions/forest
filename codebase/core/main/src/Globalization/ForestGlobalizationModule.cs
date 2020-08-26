@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Axle.Caching;
 #if NETSTANDARD || NET45_OR_NEWER
 using System.Reflection;
 #endif
@@ -69,19 +70,35 @@ namespace Forest.Globalization
         private readonly ResourceManager _resourceManager;
         private readonly ForestGlobalizationConfig _config;
         private readonly ILogger _logger;
+        private readonly ICacheManager _cacheManager;
 
         public ForestGlobalizationModule(ResourceManager resourceManager, ForestGlobalizationConfig config, ILogger logger)
         {
             _resourceManager = resourceManager;
             _config = config;
             _logger = logger;
+            _cacheManager = new SimpleCacheManager();
         }
         public ForestGlobalizationModule(ResourceManager resourceManager, ILogger logger) 
             : this(resourceManager, new ForestGlobalizationConfig(), logger) { }
 
+        [ModuleTerminate]
+        internal void OnTerminate()
+        {
+            _cacheManager.Dispose();
+        }
+        
+
         private ITextDocumentRoot GetTextDocument(string viewName)
         {
             return new ResourceDocumentRoot(_resourceManager, viewName, string.Empty, string.Empty, null);
+        }
+
+        private bool IsSafeFromSideEffects(Type type)
+        {
+            return _cacheManager
+                .GetCache(nameof(IsSafeFromSideEffects))
+                .GetOrAdd(type, ShallowCopy.IsSafeFromSideEffects);
         }
 
         private bool TryCloneObject(object obj, out object clone)
@@ -92,7 +109,7 @@ namespace Forest.Globalization
                 clone = cloneable.Clone();
                 return true;
             }
-            if (ShallowCopy.IsSafeFromSideEffects(obj.GetType()))
+            if (IsSafeFromSideEffects(obj.GetType()))
             {
                 clone = ShallowCopy.Create(obj);
                 return true;
@@ -118,7 +135,7 @@ namespace Forest.Globalization
                 stream.Dispose();
             }
             #else
-            if (ShallowCopy.IsSafeFromSideEffects(obj.GetType()))
+            if (IsSafeFromSideEffects(obj.GetType()))
             {
                 clone = ShallowCopy.Create(obj);
                 return true;
