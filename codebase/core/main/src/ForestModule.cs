@@ -66,17 +66,6 @@ namespace Forest
         [ModuleInit]
         internal void Init(IDependencyExporter exporter)
         {
-            // foreach (var viewAssembly in _viewRegistry.Descriptors
-            //     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            //     .Select(x => x.ViewType.Assembly)
-            //     #else
-            //     .Select(x => System.Reflection.IntrospectionExtensions.GetTypeInfo(x.ViewType).Assembly)
-            //     #endif
-            //     .Distinct())
-            // {
-            //     _forestTemplatesModule.RegisterAssemblySource(viewAssembly);
-            // }
-
             _messageAdvices.Add(this);
             _commandAdvices.Add(this);
             _navigationAdvices.Add(this);
@@ -220,22 +209,12 @@ namespace Forest
         IViewRegistry IViewRegistry.Register(Type viewType)
         {
             _viewRegistry.Register(viewType);
-            // #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            // _forestTemplatesModule.RegisterAssemblySource(viewType.Assembly);
-            // #else
-            // _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(viewType).Assembly);
-            // #endif
             return this;
         }
 
         IViewRegistry IViewRegistry.Register<T>()
         {
             _viewRegistry.Register<T>();
-            // #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-            // _forestTemplatesModule.RegisterAssemblySource(typeof(T).Assembly);
-            // #else
-            // _forestTemplatesModule.RegisterAssemblySource(System.Reflection.IntrospectionExtensions.GetTypeInfo(typeof(T)).Assembly);
-            // #endif
             return this;
         }
 

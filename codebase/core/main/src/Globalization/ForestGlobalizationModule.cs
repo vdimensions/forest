@@ -65,7 +65,7 @@ namespace Forest.Globalization
             public IEqualityComparer<string> KeyComparer => StringComparer.Ordinal;
         }
         
-        private readonly IBinder _binder = new DefaultBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
+        private readonly IDocumentBinder _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
 
         private readonly ResourceManager _resourceManager;
         private readonly ForestGlobalizationConfig _config;

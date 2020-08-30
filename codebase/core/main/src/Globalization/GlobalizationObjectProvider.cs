@@ -24,7 +24,7 @@ namespace Forest.Globalization
         object IObjectProvider.CreateInstance(Type type) 
             => _reflectionObjectProvider.CreateInstance(type);
 
-        IBindingCollectionAdapter IObjectProvider.GetCollectionAdapter(Type type) 
+        IDocumentCollectionValueAdapter IObjectProvider.GetCollectionAdapter(Type type) 
             => _reflectionObjectProvider.GetCollectionAdapter(type);
     }
 }
