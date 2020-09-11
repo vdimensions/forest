@@ -29,16 +29,15 @@
     <Compile Include="JSExports.fs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Axle.FSharp" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Web.AspNetCore.Mvc" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Web.WebSharper" Version="$(AxleVersion)" />
+  </ItemGroup>
+
   <Import Project="../../../Forest.Common.props" />
   <Import Project="../../../FSharp.Core.Packages.targets" />
   <Import Project="../../../Reference.Forest.Core.targets" />
   <Import Project="../../../Reference.Forest.Web.AspNetCore.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.FSharp.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Text.Documents.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Resources.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Configuration.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Configuration.Microsoft.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Application.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Web.AspNetCore.Mvc.targets" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Web.WebSharper.targets" />
 </Project>

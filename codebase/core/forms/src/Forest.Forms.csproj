@@ -9,6 +9,10 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
+  </ItemGroup>
 
   <Import Project="../../../Forest.Common.props" />
   <Import Project="../../../Reference.Forest.Core.targets" />

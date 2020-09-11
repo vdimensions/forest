@@ -24,7 +24,7 @@ and [<NoComparison;NoEquality>] internal RemotingPhysicalView (engine, hash, all
         result.Name <- c.Name
         result.DisplayName <- c.DisplayName
         result.Description <- c.Description
-        result.ToolTip <- c.Tooltip
+        result.Tooltip <- c.Tooltip
         result
 
     static member domNode2Node (dn : DomNode) =

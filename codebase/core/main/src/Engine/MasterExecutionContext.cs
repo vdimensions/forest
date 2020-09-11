@@ -27,7 +27,7 @@ namespace Forest.Engine
             var commandAdvices = context.CommandAdvices.Reverse().ToArray();
             var messageAdvices = context.MessageAdvices.Reverse().ToArray();
             var navigationAdvices = context.NavigationAdvices.Reverse().ToArray();
-            _slave = commandAdvices.Length > 0 || messageAdvices.Length > 0 || navigationAdvices.Length > 0
+            _slave = (commandAdvices.Length + messageAdvices.Length + navigationAdvices.Length) > 0
                 ? new AdvisedForestExecutionContext(slave, commandAdvices, messageAdvices, navigationAdvices)
                 : (IForestExecutionContext) slave;
             slave.Init();

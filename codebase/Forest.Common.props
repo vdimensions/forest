@@ -44,6 +44,7 @@
   <!-- Packaging properties -->
   <PropertyGroup>
     <RestoreSources>https://api.nuget.org/v3/index.json;$(RestoreSources)</RestoreSources>
+    <RestoreSources>https://ci.appveyor.com/nuget/axle;$(RestoreSources)</RestoreSources>
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\..\..\..\dist</PackageOutputPath>
   </PropertyGroup>
 
@@ -55,10 +56,6 @@
 
   <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore')">
     <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore;$(RestoreSources)</RestoreSources>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\axle\dist\restore')">
-    <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\axle\dist\restore;$(RestoreSources)</RestoreSources>
   </PropertyGroup>
 
   <PropertyGroup>

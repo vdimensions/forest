@@ -11,13 +11,12 @@
     <ProjectGuid>{FCC571A9-59C1-42C3-A9C6-604259DAB431}</ProjectGuid>
     <OutputType>Library</OutputType>
     <Description>Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer</Description>
-    <AxlePath>../../../../../axle</AxlePath>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" Version="1.6.*" />
+    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
   </ItemGroup>
 
   <Import Project="../../../Forest.Common.props" />
-  <Import Project="$(AxlePath)/codebase/Reference.Axle.Application.targets" />
 </Project>

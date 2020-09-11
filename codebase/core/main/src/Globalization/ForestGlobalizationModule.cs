@@ -46,7 +46,7 @@ namespace Forest.Globalization
             
             public IEnumerable<ITextDocumentNode> GetChildren() => Enumerable.Empty<ITextDocumentNode>();
 
-            public IEnumerable<ITextDocumentNode> GetChildren(string name)
+            public IEnumerable<ITextDocumentNode> GetValues(string name)
             {
                 var prefixOrKey = _prefix.Length == 0 ? name : $"{_prefix}.{name}";
                 var resource = _resourceManager.Load<string>(_bundle, prefixOrKey, CultureInfo.CurrentUICulture);
