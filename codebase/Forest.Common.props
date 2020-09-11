@@ -67,6 +67,10 @@
     <EnableProjectMetadata>false</EnableProjectMetadata>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <AxleVersion>1.10.*</AxleVersion>
+  </PropertyGroup>
+
   <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\VDimensions.MSBuild.Sdk.targets" />
   <ItemGroup>
     <PackageReference Include="VDimensions.MSBuild.Sdk.Defaults" Version="0.2.*">
@@ -95,8 +99,6 @@
     <AssemblyCopyright>$(Copyright)</AssemblyCopyright>  
     <AssemblyTrademark>$(Trademark)</AssemblyTrademark>
     <AssemblyVersion>$(Version)</AssemblyVersion>
-    <AssemblyFileVersion Condition=" '$(AssemblyFileVersion)' == '' ">$(Version)</AssemblyFileVersion>
-    <AssemblyInformationalVersion Condition=" '$(AssemblyInformationalVersion)' == '' ">$(Version)</AssemblyInformationalVersion>
   </PropertyGroup>
 
   <!-- nuget package properties -->
@@ -109,10 +111,6 @@
     <PackageVersion Condition=" '$(PackageVersion)' == '' ">$(Version)</PackageVersion>
     <PackageTags Condition=" '$(PackageTags)' == '' ">$(AssemblyName)</PackageTags>
     <AllowedOutputExtensionsInPackageBuildOutputFolder Condition="'$(Configuration)' == 'Debug'">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <AxleVersion>1.10.*</AxleVersion>
   </PropertyGroup>
 
   <!-- Paket paths -->

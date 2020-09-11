@@ -14,6 +14,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Forest.Forms", "codebase\co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Forest.Web.AspNetCore", "codebase\web\main\src\Forest.Web.AspNetCore.csproj", "{0238180F-15FD-49DD-B045-9453FC0AA7C8}"
 EndProject
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Forest.Web.WebSharper", "codebase\web\websharper\src\Forest.Web.WebSharper.fsproj", "{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{0238180F-15FD-49DD-B045-9453FC0AA7C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0238180F-15FD-49DD-B045-9453FC0AA7C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0238180F-15FD-49DD-B045-9453FC0AA7C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
