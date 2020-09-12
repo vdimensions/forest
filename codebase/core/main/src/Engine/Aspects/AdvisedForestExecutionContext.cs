@@ -31,11 +31,11 @@ namespace Forest.Engine.Aspects
             _navigationAdvices = navigationAdvices;
         }
 
-        public void ExecuteCommand(IExecuteCommandPointcut pointcut) => pointcut.Proceed();
+        public bool ExecuteCommand(IExecuteCommandPointcut pointcut) => pointcut.Proceed();
 
-        public void SendMessage(ISendMessagePointcut pointcut) => pointcut.Proceed();
+        public bool SendMessage(ISendMessagePointcut pointcut) => pointcut.Proceed();
 
-        public void Navigate(INavigatePointcut pointcut) => pointcut.Proceed();
+        public bool Navigate(INavigatePointcut pointcut) => pointcut.Proceed();
 
         void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg) =>
             ExecuteCommand(_commandAdvices.Aggregate(

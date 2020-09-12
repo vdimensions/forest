@@ -2,6 +2,6 @@
 {
     public interface IForestCommandAdvice
     {
-        void ExecuteCommand(IExecuteCommandPointcut pointcut);
+        bool ExecuteCommand(IExecuteCommandPointcut pointcut);
     }
 }

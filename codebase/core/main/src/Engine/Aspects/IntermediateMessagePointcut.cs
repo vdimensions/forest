@@ -16,6 +16,6 @@
             _advice = advice;
         }
 
-        public void Proceed() => _advice.SendMessage(_originalPointcut);
+        public bool Proceed() => _advice.SendMessage(_originalPointcut);
     }
 }

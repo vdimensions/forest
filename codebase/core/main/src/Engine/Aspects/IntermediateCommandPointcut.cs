@@ -16,7 +16,7 @@
             _advice = advice;
         }
 
-        public void Proceed() => _advice.ExecuteCommand(_originalPointcut);
+        public bool Proceed() => _advice.ExecuteCommand(_originalPointcut);
 
         public string Command => _originalPointcut.Command;
     }

@@ -15,7 +15,11 @@
             _context = context;
         }
 
-        public void Proceed() => _context.ExecuteCommand(Command, InstanceID, Arg);
+        public bool Proceed()
+        {
+            _context.ExecuteCommand(Command, InstanceID, Arg);
+            return true;
+        }
 
         public string InstanceID { get; }
         public string Command { get; }

@@ -19,7 +19,7 @@ namespace Forest.Engine.Aspects
             _advice = advice;
         }
 
-        public void Proceed() => _advice.Navigate(_originalPointcut);
+        public bool Proceed() => _advice.Navigate(_originalPointcut);
 
         public NavigationState NavigationState => _originalPointcut.NavigationState;
     }

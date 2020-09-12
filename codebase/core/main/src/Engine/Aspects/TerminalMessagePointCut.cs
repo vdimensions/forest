@@ -13,7 +13,11 @@
             Message = message;
         }
 
-        public void Proceed() => _context.SendMessage(Message);
+        public bool Proceed()
+        {
+            _context.SendMessage(Message);
+            return true;
+        }
 
         public T Message { get; }
     }

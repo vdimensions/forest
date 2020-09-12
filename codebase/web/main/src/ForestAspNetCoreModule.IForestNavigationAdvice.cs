@@ -4,10 +4,14 @@ namespace Forest.Web.AspNetCore
 {
     partial class ForestAspNetCoreModule : IForestNavigationAdvice
     {
-        public void Navigate(INavigatePointcut pointcut)
+        public bool Navigate(INavigatePointcut pointcut)
         {
-            pointcut.Proceed();
-            _sessionStateProvider.UpdateNavigationState(pointcut.NavigationState);
+            if (pointcut.Proceed())
+            {
+                _sessionStateProvider.UpdateNavigationState(pointcut.NavigationState);
+                return true;
+            }
+            return false;
         }
     }
 }

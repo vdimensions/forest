@@ -2,6 +2,6 @@
 {
     public interface IForestMessageAdvice
     {
-        void SendMessage(ISendMessagePointcut pointcut);
+        bool SendMessage(ISendMessagePointcut pointcut);
     }
 }

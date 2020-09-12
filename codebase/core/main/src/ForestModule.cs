@@ -192,50 +192,55 @@ namespace Forest
         IEnumerable<IForestMessageAdvice> IForestContext.MessageAdvices => _messageAdvices;
         IEnumerable<IForestNavigationAdvice> IForestContext.NavigationAdvices => _navigationAdvices;
 
-        void IForestCommandAdvice.ExecuteCommand(IExecuteCommandPointcut pointcut)
+        bool IForestCommandAdvice.ExecuteCommand(IExecuteCommandPointcut pointcut)
         {
             try
             {
                 var sw = Stopwatch.StartNew();
-                pointcut.Proceed();
+                var result = pointcut.Proceed();
                 sw.Stop();
                 _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+                return result;
             }
             catch (ForestSecurityException securityException)
             {
                 _securityExceptionHandler.HandleSecurityException(securityException, pointcut.Command, this);
             }
-            
+            return false;
         }
 
-        void IForestMessageAdvice.SendMessage(ISendMessagePointcut pointcut)
+        bool IForestMessageAdvice.SendMessage(ISendMessagePointcut pointcut)
         {
             try
             {
                 var sw = Stopwatch.StartNew();
-                pointcut.Proceed();
+                var result = pointcut.Proceed();
                 sw.Stop();
                 _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+                return result;
             }
             catch (ForestSecurityException securityException)
             {
                 _securityExceptionHandler.HandleSecurityException(securityException, this);
             }
+            return false;
         }
 
-        void IForestNavigationAdvice.Navigate(INavigatePointcut pointcut)
+        bool IForestNavigationAdvice.Navigate(INavigatePointcut pointcut)
         {
             try
             {
                 var sw = Stopwatch.StartNew();
-                pointcut.Proceed();
+                var result = pointcut.Proceed();
                 sw.Stop();
                 _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+                return result;
             }
             catch (ForestSecurityException securityException)
             {
                 _securityExceptionHandler.HandleSecurityException(securityException, pointcut.NavigationState, this);
             }
+            return false;
         }
 
         internal IEnumerable<IForestViewDescriptor> SystemViewDescriptors => _viewRegistry.ViewDescriptors.Where(x => x.IsSystemView);

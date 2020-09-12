@@ -2,6 +2,6 @@
 {
     public interface IForestNavigationAdvice
     {
-        void Navigate(INavigatePointcut pointcut);
+        bool Navigate(INavigatePointcut pointcut);
     }
 }

@@ -15,7 +15,7 @@ namespace Forest.Engine.Aspects
             NavigationState = new NavigationState(target, message);
         }
 
-        public void Proceed()
+        public bool Proceed()
         {
             if (NavigationState.Value == null)
             {
@@ -25,6 +25,7 @@ namespace Forest.Engine.Aspects
             {
                 _context.Navigate(NavigationState.Path, NavigationState.Value);
             }
+            return true;
         }
 
         public NavigationState NavigationState { get; }
