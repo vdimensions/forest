@@ -44,7 +44,7 @@ namespace Forest.Engine.Aspects
 
         void IMessageDispatcher.SendMessage<T>(T message) =>
             SendMessage(_messageAdvices.Aggregate(
-                TerminalMessagePointCut<T>.Create(_executionContext, message),
+                TerminalMessagePointcut<T>.Create(_executionContext, message),
                 IntermediateMessagePointcut.Create));
 
         void ITreeNavigator.Navigate(string path) =>

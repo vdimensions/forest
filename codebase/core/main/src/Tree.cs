@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -50,7 +51,7 @@ namespace Forest
                 .Remove(parentKey)
                 .Add(parentKey, siblingsKeys.Add(node.Key))
                 .Add(node.Key, ImmutableList<string>.Empty);
-            newTree = new Tree(newNodes, newHierarchy, tree.Revision);
+            newTree = new Tree(newNodes, newHierarchy);
             return true;
         }
 
@@ -63,22 +64,18 @@ namespace Forest
         private readonly ImmutableDictionary<string, Node> _nodes;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly ImmutableDictionary<string, ImmutableList<string>> _hierarchy;
-        private readonly uint _revision;
 
         private Tree(
             ImmutableDictionary<string, Node> nodes, 
-            ImmutableDictionary<string, ImmutableList<string>> hierarchy,
-            uint revision)
+            ImmutableDictionary<string, ImmutableList<string>> hierarchy)
         {
             _nodes = nodes;
             _hierarchy = hierarchy;
-            _revision = 0u;
         }
-        private Tree(IEqualityComparer<string> keyComparer, uint revision) : this(
+        private Tree(IEqualityComparer<string> keyComparer) : this(
             ImmutableDictionary.Create<string, Node>(keyComparer).Add(Node.Shell.Key, Node.Shell),
-            ImmutableDictionary.Create<string, ImmutableList<string>>(keyComparer).Add(Node.Shell.Key, ImmutableList<string>.Empty),
-            revision) { }
-        internal Tree() : this(StringComparer.Ordinal, 0u) { }
+            ImmutableDictionary.Create<string, ImmutableList<string>>(keyComparer).Add(Node.Shell.Key, ImmutableList<string>.Empty)) { }
+        internal Tree() : this(StringComparer.Ordinal) { }
 
         public IEnumerable<Node> Filter(Predicate<Node> filter, string parent = null)
         {
@@ -147,7 +144,7 @@ namespace Forest
             }
             while (keysToRemove.Count > 0);
             
-            return removedNodes.Count == 0 ? this : new Tree(newNodes, newHierarchy, _revision);
+            return removedNodes.Count == 0 ? this : new Tree(newNodes, newHierarchy);
         }
 
         public bool TryFind(string key, out Node node) => _nodes.TryGetValue(key, out node);
@@ -161,8 +158,7 @@ namespace Forest
             }
             return new Tree(
                 _nodes.Remove(key).Add(key, scope.UpdateRevision(targetNode.SetViewState(viewState))),
-                _hierarchy,
-                _revision);
+                _hierarchy);
         }
 
         internal Tree UpdateViewState(TreeChangeScope scope, string key, Func<ViewState, ViewState> viewStateUpdateFn)
@@ -174,8 +170,7 @@ namespace Forest
             }
             return new Tree(
                 _nodes.Remove(key).Add(key, scope.UpdateRevision(targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState ?? ViewState.Empty)))),
-                _hierarchy,
-                _revision);
+                _hierarchy);
         }
 
         public IEnumerable<Node> GetChildren(string key)
@@ -188,6 +183,7 @@ namespace Forest
                 : Enumerable.Empty<Node>();
         }
         
+        [SuppressMessage("ReSharper", "CognitiveComplexity")]
         private IEnumerable<Tuple<Node, int>> Traverse(string key, int initialDepth = -1)
         {
             if (_hierarchy.TryGetValue(key, out var childrenKeys))
@@ -205,11 +201,6 @@ namespace Forest
                     }
                 }
             }
-        }
-
-        internal Tree UpdateRevision()
-        {
-            return new Tree(_nodes, _hierarchy, 1u + _revision);
         }
         
         public IEnumerator<Node> GetEnumerator() => Traverse(Node.Shell.Key).Select(x => x.Item1).GetEnumerator();
@@ -232,7 +223,5 @@ namespace Forest
         }
 
         public Node? this[string key] => TryFind(key, out var result) ? new Node?(result) : null;
-
-        public uint Revision => _revision;
     }
 }

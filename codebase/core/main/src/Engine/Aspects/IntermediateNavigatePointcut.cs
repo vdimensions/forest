@@ -8,7 +8,6 @@ namespace Forest.Engine.Aspects
         {
             return new IntermediateNavigatePointcut(originalPointcut, advice);
         }
-
         
         private readonly INavigatePointcut _originalPointcut;
         private readonly IForestNavigationAdvice _advice;

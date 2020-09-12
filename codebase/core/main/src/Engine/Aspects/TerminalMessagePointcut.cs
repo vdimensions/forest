@@ -1,13 +1,13 @@
 ﻿namespace Forest.Engine.Aspects
 {
-    internal sealed class TerminalMessagePointCut<T> : ISendMessagePointcut
+    internal sealed class TerminalMessagePointcut<T> : ISendMessagePointcut
     {
         public static ISendMessagePointcut Create(IForestExecutionContext executionContext, T message) 
-            => new TerminalMessagePointCut<T>(executionContext, message);
+            => new TerminalMessagePointcut<T>(executionContext, message);
 
         private readonly IForestExecutionContext _context;
 
-        private TerminalMessagePointCut(IForestExecutionContext context, T message)
+        private TerminalMessagePointcut(IForestExecutionContext context, T message)
         {
             _context = context;
             Message = message;

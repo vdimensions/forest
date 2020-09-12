@@ -106,7 +106,6 @@ namespace Forest.Engine
 
         ForestState IStateResolver.ResolveState()
         {
-            _tree = _tree.UpdateRevision();
             var changedViews = new HashSet<string>(_scope.ChangedViewKeys);
             var changedNodes = new List<Tree.Node>();
             foreach (var node in _tree.Reverse())
