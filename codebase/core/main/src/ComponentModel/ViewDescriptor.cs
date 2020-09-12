@@ -5,18 +5,18 @@ using Axle.Verification;
 
 namespace Forest.ComponentModel
 {
-    internal sealed class ViewDescriptor : IViewDescriptor
+    internal sealed class ForestViewDescriptor : IForestViewDescriptor
     {
         public static string GetAnonymousViewName(Type viewType)
         {
             viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>();
             return string.Format("[{1}]::{0}", viewType.FullName, viewType.GetTypeInfo().Assembly.GetName().Name);
         }
-        public ViewDescriptor(
+        public ForestViewDescriptor(
             string name, 
             Type viewType, 
             Type modelType, 
-            IReadOnlyDictionary<string, ICommandDescriptor> commands, 
+            IReadOnlyDictionary<string, IForestCommandDescriptor> commands, 
             IEnumerable<IEventDescriptor> events, 
             bool isSystemView, 
             bool isAnonymousView)
@@ -33,7 +33,7 @@ namespace Forest.ComponentModel
         public string Name { get; }
         public Type ViewType { get; }
         public Type ModelType { get; }
-        public IReadOnlyDictionary<string, ICommandDescriptor> Commands { get; }
+        public IReadOnlyDictionary<string, IForestCommandDescriptor> Commands { get; }
         public IEnumerable<IEventDescriptor> Events { get; }
         public bool IsSystemView { get; }
         public bool IsAnonymousView { get; }

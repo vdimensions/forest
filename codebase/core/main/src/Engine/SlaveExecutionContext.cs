@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Axle.Verification;
 using Forest.ComponentModel;
@@ -8,6 +9,7 @@ using Forest.Dom;
 using Forest.Engine.Instructions;
 using Forest.Navigation;
 using Forest.Navigation.Messages;
+using Forest.Security;
 using Forest.StateManagement;
 using Forest.Templates;
 using Forest.UI;
@@ -16,6 +18,39 @@ namespace Forest.Engine
 {
     internal sealed class SlaveExecutionContext : IForestExecutionContext, IStateResolver
     {
+        [SuppressMessage("ReSharper", "CognitiveComplexity")]
+        private static IList<ForestInstruction> VerifySecurityAccess(
+            IForestSecurityManager forestSecurityManager, 
+            IViewRegistry viewRegistry, 
+            ImmutableDictionary<string,IRuntimeView> logicalViews,
+            ForestInstruction[] instructions)
+        {
+            IList<ForestInstruction> failedInstructions = new List<ForestInstruction>();
+            foreach (var instruction in instructions)
+            {
+                switch (instruction)
+                {
+                    case InstantiateViewInstruction ivi:
+                        var descriptor = viewRegistry.GetDescriptor(ivi.ViewHandle);
+                        if (!forestSecurityManager.HasAccess(descriptor))
+                        {
+                            failedInstructions.Add(ivi);
+                        }
+                        break;
+                    case InvokeCommandInstruction ici:
+                        if (logicalViews.TryGetValue(ici.InstanceID, out var view) 
+                            && view.Descriptor.Commands.TryGetValue(ici.CommandName, out var commandDescriptor)
+                            && !forestSecurityManager.HasAccess(commandDescriptor))
+                        {
+                            failedInstructions.Add(ici);
+                        }
+                        break;
+                }
+            }
+
+            return failedInstructions.ToArray();
+        }
+        
         private readonly IForestContext _context;
         private readonly IEventBus _eventBus;
         private readonly IForestExecutionContext _executionContextReference;
@@ -86,7 +121,7 @@ namespace Forest.Engine
             }
             _eventBus.Dispose();
             
-            Console.WriteLine("Max revision number {0}, total views that changed {1}", _scope.TargetRevision, changedViews.Count);
+            Console.WriteLine("Max revision number {0}, total views that changed {1}", _scope.TargetRevision, changedNodes.Count);
             Console.WriteLine(_tree);
 
             var tree = _tree;
@@ -141,6 +176,7 @@ namespace Forest.Engine
             }
         }
 
+        [SuppressMessage("ReSharper", "CognitiveComplexity")]
         private void ProcessNodeStateModification(TreeChangeScope scope, NodeStateModification nsm)
         {
             switch (nsm)
@@ -164,7 +200,7 @@ namespace Forest.Engine
                         _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, ivi.Model, out var node);
                         viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
                         _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
-                        viewInstance.Load();
+                        viewInstance.Load(node.ViewState.GetValueOrDefault(ViewState.Empty));
                     }
                     catch
                     {
@@ -209,8 +245,10 @@ namespace Forest.Engine
             }
         }
 
-        public void ProcessInstructions(params ForestInstruction[] instructions)
+        [SuppressMessage("ReSharper", "CognitiveComplexity")]
+        public void ProcessInstructions(ForestInstruction[] instructions)
         {
+            ValidateInstructions1(instructions);
             _nestedCalls++;
             try
             {
@@ -272,6 +310,19 @@ namespace Forest.Engine
                 }
             }
         }
+        
+        private void ValidateInstructions1(ForestInstruction[] instructions)
+        {
+            var failedSecurityChecks = VerifySecurityAccess(
+                _context.SecurityManager,
+                _context.ViewRegistry,
+                _logicalViews,
+                instructions);
+            if (failedSecurityChecks.Count > 0)
+            {
+                throw new ForestSecurityException("Unable to perform the requested operation");
+            }
+        }
 
         public void SubscribeEvents(IRuntimeView receiver)
         {
@@ -291,7 +342,8 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
-            ProcessInstructions(TemplateCompiler.CompileTemplate(path, templateDefinition, null).ToArray());
+            var instructions = TemplateCompiler.CompileTemplate(path, templateDefinition, null).ToArray();
+            ProcessInstructions(instructions);
         }
         public void Navigate<T>(string path, T state)
         {
@@ -302,7 +354,8 @@ namespace Forest.Engine
                 _eventBus.ClearDeadLetters();
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
-            ProcessInstructions(TemplateCompiler.CompileTemplate(path, templateDefinition, state).ToArray());
+            var instructions = TemplateCompiler.CompileTemplate(path, templateDefinition, state).ToArray();
+            ProcessInstructions(instructions);
         }
         public void NavigateBack()
         {
@@ -310,7 +363,11 @@ namespace Forest.Engine
             {
                 _eventBus.ClearDeadLetters();
             }
-            ProcessInstructions(new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null));
+            var instructions = new ForestInstruction[]
+            {
+                new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null)
+            };
+            ProcessInstructions(instructions);
         }
         public void NavigateBack(int offset)
         {
@@ -319,7 +376,11 @@ namespace Forest.Engine
             {
                 _eventBus.ClearDeadLetters();
             }
-            ProcessInstructions(new SendMessageInstruction(new NavigateBack(offset), new []{NavigationSystem.Messages.Topic}, null));
+            var instructions = new ForestInstruction[]
+            {
+                new SendMessageInstruction(new NavigateBack(offset), new []{NavigationSystem.Messages.Topic}, null)
+            };
+            ProcessInstructions(instructions);
         }
         public void NavigateUp()
         {
@@ -327,7 +388,11 @@ namespace Forest.Engine
             {
                 _eventBus.ClearDeadLetters();
             }
-            ProcessInstructions(new SendMessageInstruction(new NavigateUp(), new [] { NavigationSystem.Messages.Topic }, null));
+            var instructions = new ForestInstruction[]
+            {
+                new SendMessageInstruction(new NavigateUp(), new [] { NavigationSystem.Messages.Topic }, null)
+            };
+            ProcessInstructions(instructions);
         }
         public void NavigateUp(int offset)
         {
@@ -336,14 +401,18 @@ namespace Forest.Engine
             {
                 _eventBus.ClearDeadLetters();
             }
-            ProcessInstructions(new SendMessageInstruction(new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic }, null));
+            var instructions = new ForestInstruction[]
+            {
+                new SendMessageInstruction(new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic }, null)
+            };
+            ProcessInstructions(instructions);
         }
 
         T IForestEngine.RegisterSystemView<T>()
         {
             var systemViewDescriptor =
-                _context.ViewRegistry.GetDescriptor(typeof(T)) ??
-                _context.ViewRegistry.Register<T>().GetDescriptor(typeof(T));
+                _context.ViewRegistry.Describe(typeof(T)) ??
+                _context.ViewRegistry.Register<T>().Describe(typeof(T));
             return _logicalViews.Values
                 .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
                 .Cast<T>()
@@ -356,8 +425,8 @@ namespace Forest.Engine
                 .IsNotNull()
                 .Is<ISystemView>();
             var systemViewDescriptor =
-                _context.ViewRegistry.GetDescriptor(viewType) ??
-                _context.ViewRegistry.Register(viewType).GetDescriptor(viewType);
+                _context.ViewRegistry.Describe(viewType) ??
+                _context.ViewRegistry.Register(viewType).Describe(viewType);
             return _logicalViews.Values
                 .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
                 .Cast<IView>()
@@ -375,7 +444,11 @@ namespace Forest.Engine
 
         public IView ActivateView(InstantiateViewInstruction instantiateViewInstruction)
         {
-            ProcessInstructions(instantiateViewInstruction);
+            var instructions = new ForestInstruction[]
+            {
+                instantiateViewInstruction
+            };
+            ProcessInstructions(instructions);
             return _logicalViews[instantiateViewInstruction.NodeKey];
         }
 
@@ -386,11 +459,23 @@ namespace Forest.Engine
                 .Select(x => _logicalViews[x.Key] as IView);
         }
 
-        void IMessageDispatcher.SendMessage<T>(T message) 
-            => ProcessInstructions(new SendMessageInstruction(message, new string[0], null));
+        void IMessageDispatcher.SendMessage<T>(T message)
+        {
+            var instructions = new ForestInstruction[]
+            {
+                new SendMessageInstruction(message, new string[0], null)
+            };
+            ProcessInstructions(instructions);
+        }
 
         void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg)
-            => ProcessInstructions(new InvokeCommandInstruction(instanceID, command, arg));
+        {
+            var instructions = new ForestInstruction[]
+            {
+                new InvokeCommandInstruction(instanceID, command, arg)
+            };
+            ProcessInstructions(instructions);
+        }
 
         void IDisposable.Dispose() => Dispose();
     }

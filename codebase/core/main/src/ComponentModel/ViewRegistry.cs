@@ -70,7 +70,7 @@ namespace Forest.ComponentModel
             }
         }
 
-        private readonly ConcurrentDictionary<Type, IViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IViewDescriptor>();
+        private readonly ConcurrentDictionary<Type, IForestViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IForestViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
         private readonly IEnumerable<object> _listeners;
 
@@ -94,7 +94,7 @@ namespace Forest.ComponentModel
             var overridingMethods = GetOverridingMethods(eligible.Select(x => x.Method.ReflectedMember).ToArray()).ToArray();
             return eligible.Where(x => !IsOverriden(x.Method.ReflectedMember, overridingMethods));
         }
-        private IViewDescriptor CreateViewDescriptor(Type viewType)
+        private IForestViewDescriptor CreateViewDescriptor(Type viewType)
         {
             var strCmp = StringComparer.Ordinal;
             var introspector = CreateIntrospector(viewType);
@@ -103,8 +103,8 @@ namespace Forest.ComponentModel
             var commandDescriptors = 
                 ConsolidateMethods(methods.Select(m => new MethodAndAttributes<CommandAttribute>(m, GetAttributes<CommandAttribute>(m))))
                 .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<CommandAttribute>(x.Method, new []{y})))
-                .Select(x => new CommandDescriptor(x.Attributes.Single(), x.Method))
-                .ToDictionary(x => x.Name, x => x as ICommandDescriptor, strCmp);
+                .Select(x => new ForestCommandDescriptor(x.Attributes.Single(), x.Method))
+                .ToDictionary(x => x.Name, x => x as IForestCommandDescriptor, strCmp);
             var eventDescriptors = 
                 ConsolidateMethods(methods.Select(m => new MethodAndAttributes<SubscriptionAttribute>(m, GetAttributes<SubscriptionAttribute>(m))))
                 .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<SubscriptionAttribute>(x.Method, new[] { y })))
@@ -112,7 +112,7 @@ namespace Forest.ComponentModel
                 .ToArray();
             var isSystemView = viewType.ExtendsOrImplements<ISystemView>();
             var isAnonymousView = viewAttribute == null;
-            var viewName = isAnonymousView ? ViewDescriptor.GetAnonymousViewName(viewType) : viewAttribute.Name;
+            var viewName = isAnonymousView ? ForestViewDescriptor.GetAnonymousViewName(viewType) : viewAttribute.Name;
             var viewModelType = viewType
                 .GetTypeInfo()
                 .GetInterfaces()
@@ -120,11 +120,11 @@ namespace Forest.ComponentModel
                 .Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IView<>))
                 .Select(interfaceType => interfaceType.GetGenericArguments()[0])
                 .SingleOrDefault() ?? typeof(void);
-            return new ViewDescriptor(
+            return new ForestViewDescriptor(
                 viewName, 
                 viewType, 
                 viewModelType, 
-                new ReadOnlyDictionary<string, ICommandDescriptor>(commandDescriptors), 
+                new ReadOnlyDictionary<string, IForestCommandDescriptor>(commandDescriptors), 
                 eventDescriptors,
                 isSystemView,
                 isAnonymousView);
@@ -152,16 +152,16 @@ namespace Forest.ComponentModel
         public IViewRegistry Register(Type viewType) => DoRegister(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value);
         public IViewRegistry Register<T>() where T : IView => DoRegister(typeof(T));
 
-        private IViewDescriptor DoGetDescriptor(Type viewType) => 
+        private IForestViewDescriptor DoGetDescriptor(Type viewType) => 
             _descriptorsByType.TryGetValue(viewType, out var result) ? result : null;
 
-        public IViewDescriptor GetDescriptor(Type viewType) => 
+        public IForestViewDescriptor Describe(Type viewType) => 
             DoGetDescriptor(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>());
 
-        public IViewDescriptor GetDescriptor(string viewName) =>
+        public IForestViewDescriptor Describe(string viewName) =>
             _namedDescriptors.TryGetValue(viewName.VerifyArgument(nameof(viewName)).IsNotNullOrEmpty().Value, out var viewType)
                 ? DoGetDescriptor(viewType) : null;
 
-        public IEnumerable<IViewDescriptor> Descriptors => _descriptorsByType.Values;
+        public IEnumerable<IForestViewDescriptor> ViewDescriptors => _descriptorsByType.Values;
     }
 }

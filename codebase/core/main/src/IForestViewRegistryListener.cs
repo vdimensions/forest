@@ -7,6 +7,6 @@ namespace Forest
     [ReportsTo(typeof(ForestModule))]
     public interface IForestViewRegistryListener
     {
-        void OnViewRegistered(IViewDescriptor viewDescriptor);
+        void OnViewRegistered(IForestViewDescriptor viewDescriptor);
     }
 }

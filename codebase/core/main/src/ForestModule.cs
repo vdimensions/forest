@@ -9,6 +9,7 @@ using Forest.ComponentModel;
 using Forest.Dom;
 using Forest.Engine;
 using Forest.Engine.Aspects;
+using Forest.Engine.Instructions;
 using Forest.Globalization;
 using Forest.Navigation;
 using Forest.Security;
@@ -22,18 +23,19 @@ namespace Forest
     [Requires(typeof(ForestTemplatesModule))]
     [Requires(typeof(NavigationModule))]
     [Requires(typeof(ForestGlobalizationModule))]
+    [Requires(typeof(ForestSecurityModule))]
     internal sealed class ForestModule : 
         IForestEngine, 
-        IViewRegistry, 
         IViewFactory, 
         IForestContext, 
         IForestCommandAdvice, 
         IForestMessageAdvice, 
         IForestNavigationAdvice
     {
-        private readonly ForestViewRegistry _viewRegistry;
+        private readonly IViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
-        private readonly ISecurityManager _securityManager;
+        private readonly IForestSecurityManager _securityManager;
+        private readonly IForestSecurityExceptionHandler _securityExceptionHandler;
         private readonly ITemplateProvider _templateProvider;
         private readonly IForestDomManager _domManager;
         private readonly ICollection<IForestCommandAdvice> _commandAdvices;
@@ -44,16 +46,19 @@ namespace Forest
         private ForestEngineContextProvider _engineContextProvider;
 
         public ForestModule(
-                ForestViewRegistry viewRegistry, 
+                IViewRegistry viewRegistry, 
                 IDependencyContext dependencyContainer, 
                 ITemplateProvider templateProvider,
+                IForestSecurityManager securityManager,
+                IForestSecurityExceptionHandler securityExceptionHandler,
                 IDependencyContainerFactory dependencyContainerFactory, 
                 ForestGlobalizationModule globalizationModule,
                 ILogger logger) 
         {
             _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(dependencyContainer.Parent ?? dependencyContainer, dependencyContainerFactory);
-            _securityManager = dependencyContainer.TryResolve<ISecurityManager>(out var sm) ? sm : new NoOpSecurityManager();
+            _securityManager = securityManager;
+            _securityExceptionHandler = securityExceptionHandler;
             _templateProvider = templateProvider;
             _domManager = new ForestDomManager(this);
             _messageAdvices = new List<IForestMessageAdvice>();
@@ -69,7 +74,12 @@ namespace Forest
             _messageAdvices.Add(this);
             _commandAdvices.Add(this);
             _navigationAdvices.Add(this);
-            exporter.Export(this).Export<IForestStateInspector>(new DefaultForestStateInspector());
+            exporter
+                .Export(this)
+                .Export(_viewRegistry)
+                .Export(_securityExceptionHandler)
+                .Export<IForestStateInspector>(new DefaultForestStateInspector())
+                ;
         }
 
         [ModuleDependencyInitialized]
@@ -100,81 +110,81 @@ namespace Forest
 
         T IForestEngine.RegisterSystemView<T>()
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 return ctx.Engine.RegisterSystemView<T>();
             }
         }
         IView IForestEngine.RegisterSystemView(Type viewType)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 return ctx.Engine.RegisterSystemView(viewType);
             }
         }
         void ITreeNavigator.Navigate(string path)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.Navigate(path);
             }
         }
         void ITreeNavigator.Navigate<T>(string path, T state)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.Navigate(path, state);
             }
         }
         void ITreeNavigator.NavigateBack()
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.NavigateBack();
             }
         }
         void ITreeNavigator.NavigateBack(int offset)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.NavigateBack(offset);
             }
         }
         void ITreeNavigator.NavigateUp()
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.NavigateUp();
             }
         }
         void ITreeNavigator.NavigateUp(int offset)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.NavigateUp(offset);
             }
         }
         void IMessageDispatcher.SendMessage<T>(T msg)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.SendMessage(msg);
             }
         }
         void ICommandDispatcher.ExecuteCommand(string command, string target, object arg)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViews))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
                 ctx.Engine.ExecuteCommand(command, target, arg);
             }
         }
 
-        IView IViewFactory.Resolve(IViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
-        IView IViewFactory.Resolve(IViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
+        IView IViewFactory.Resolve(IForestViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
+        IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
         
         IViewFactory IForestContext.ViewFactory => this;
-        IViewRegistry IForestContext.ViewRegistry => this;
-        ISecurityManager IForestContext.SecurityManager => _securityManager;
+        IViewRegistry IForestContext.ViewRegistry => _viewRegistry;
+        IForestSecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;
         IForestDomManager IForestContext.DomManager => _domManager;
         IDomProcessor IForestContext.GlobalizationDomProcessor => _forestGlobalizationModule;
@@ -184,44 +194,50 @@ namespace Forest
 
         void IForestCommandAdvice.ExecuteCommand(IExecuteCommandPointcut pointcut)
         {
-            var sw = Stopwatch.StartNew();
-            pointcut.Proceed();
-            sw.Stop();
-            _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                pointcut.Proceed();
+                sw.Stop();
+                _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+            }
+            catch (ForestSecurityException securityException)
+            {
+                _securityExceptionHandler.HandleSecurityException(securityException, pointcut.Command, this);
+            }
+            
         }
 
         void IForestMessageAdvice.SendMessage(ISendMessagePointcut pointcut)
         {
-            var sw = Stopwatch.StartNew();
-            pointcut.Proceed();
-            sw.Stop();
-            _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                pointcut.Proceed();
+                sw.Stop();
+                _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+            }
+            catch (ForestSecurityException securityException)
+            {
+                _securityExceptionHandler.HandleSecurityException(securityException, this);
+            }
         }
 
         void IForestNavigationAdvice.Navigate(INavigatePointcut pointcut)
         {
-            var sw = Stopwatch.StartNew();
-            pointcut.Proceed();
-            sw.Stop();
-            _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+            try
+            {
+                var sw = Stopwatch.StartNew();
+                pointcut.Proceed();
+                sw.Stop();
+                _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+            }
+            catch (ForestSecurityException securityException)
+            {
+                _securityExceptionHandler.HandleSecurityException(securityException, pointcut.NavigationState, this);
+            }
         }
 
-        IViewRegistry IViewRegistry.Register(Type viewType)
-        {
-            _viewRegistry.Register(viewType);
-            return this;
-        }
-
-        IViewRegistry IViewRegistry.Register<T>()
-        {
-            _viewRegistry.Register<T>();
-            return this;
-        }
-
-        IViewDescriptor IViewRegistry.GetDescriptor(Type viewType) => _viewRegistry.GetDescriptor(viewType);
-        IViewDescriptor IViewRegistry.GetDescriptor(string viewName) => _viewRegistry.GetDescriptor(viewName);
-        IEnumerable<IViewDescriptor> IViewRegistry.Descriptors => _viewRegistry.Descriptors;
-
-        internal IEnumerable<IViewDescriptor> SystemViews => _viewRegistry.Descriptors.Where(x => x.IsSystemView);
+        internal IEnumerable<IForestViewDescriptor> SystemViewDescriptors => _viewRegistry.ViewDescriptors.Where(x => x.IsSystemView);
     }
 }

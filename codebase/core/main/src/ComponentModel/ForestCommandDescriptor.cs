@@ -5,12 +5,12 @@ using Axle.Verification;
 
 namespace Forest.ComponentModel
 {
-    internal sealed class CommandDescriptor : AttributeDescriptor<CommandAttribute>, ICommandDescriptor
+    internal sealed class ForestCommandDescriptor : AttributeDescriptor<CommandAttribute>, IForestCommandDescriptor
     {
         private readonly IMethod _commandMethod;
         private readonly IParameter _parameter;
 
-        public CommandDescriptor(CommandAttribute attribute, IMethod commandMethod) : base(attribute)
+        public ForestCommandDescriptor(CommandAttribute attribute, IMethod commandMethod) : base(attribute)
         {
             _parameter = (_commandMethod = commandMethod.VerifyArgument(nameof(commandMethod)).IsNotNull().Value).GetParameters().SingleOrDefault();
         }

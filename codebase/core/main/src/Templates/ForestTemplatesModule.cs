@@ -146,7 +146,7 @@ namespace Forest.Templates
             throw new ResourceNotFoundException(name, BundleName, CultureInfo.InvariantCulture);
         }
 
-        public void OnViewRegistered(IViewDescriptor viewDescriptor)
+        public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
         {
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
             var asm = viewDescriptor.ViewType.Assembly;

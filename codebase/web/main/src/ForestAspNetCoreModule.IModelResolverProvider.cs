@@ -21,7 +21,7 @@ namespace Forest.Web.AspNetCore
         
         void IModelResolverProvider.RegisterTypes(IModelTypeRegistry registry)
         {
-            foreach (var viewDescriptor in _viewRegistry.Descriptors)
+            foreach (var viewDescriptor in _viewRegistry.ViewDescriptors)
             {
                 registry.Register(viewDescriptor.ModelType);
                 foreach (var eventDescriptor in viewDescriptor.Events)

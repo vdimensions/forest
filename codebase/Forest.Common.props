@@ -37,8 +37,8 @@
   <!-- Common props -->
   <PropertyGroup>
     <AppDesignerFolder Condition=" '$(AppDesignerFolder)' == '' ">Properties</AppDesignerFolder>
-    <DocumentationFile Condition=" '$(DocumentationFile)' == '' ">$(BaseOutputPath)\$(AssemblyName).xml</DocumentationFile>
     <GenerateAssemblyInfo Condition=" '$(GenerateAssemblyInfo)' == '' ">true</GenerateAssemblyInfo>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
   
   <!-- Packaging properties -->
@@ -48,14 +48,14 @@
     <PackageOutputPath>$(MSBuildProjectDirectory)\..\..\..\..\dist</PackageOutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore')">
+    <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore;$(RestoreSources)</RestoreSources>
+  </PropertyGroup>
+
   <!-- Configure VDimensions MSBuild Sdk -->
   <PropertyGroup>
     <!-- Enable local nuget feed for packages produced by this project -->
     <EnableLocalPackageRestore>true</EnableLocalPackageRestore>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore')">
-    <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore;$(RestoreSources)</RestoreSources>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -69,15 +69,16 @@
 
   <PropertyGroup>
     <AxleVersion>1.10.*</AxleVersion>
+    <VDimensionsMSBuildSdkVersion>0.2.*</VDimensionsMSBuildSdkVersion>
   </PropertyGroup>
 
   <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\VDimensions.MSBuild.Sdk.targets" />
   <ItemGroup>
-    <PackageReference Include="VDimensions.MSBuild.Sdk.Defaults" Version="0.2.*">
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Defaults" Version="$(VDimensionsMSBuildSdkVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="VDimensions.MSBuild.Sdk.Multitargeting" Version="0.2.*">
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Multitargeting" Version="$(VDimensionsMSBuildSdkVersion)">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
@@ -111,10 +112,5 @@
     <PackageVersion Condition=" '$(PackageVersion)' == '' ">$(Version)</PackageVersion>
     <PackageTags Condition=" '$(PackageTags)' == '' ">$(AssemblyName)</PackageTags>
     <AllowedOutputExtensionsInPackageBuildOutputFolder Condition="'$(Configuration)' == 'Debug'">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-  </PropertyGroup>
-
-  <!-- Paket paths -->
-  <PropertyGroup>
-    <PaketExePath>$(MSBuildProjectDirectory)\..\..\..\.paket\paket.exe</PaketExePath>
   </PropertyGroup>
 </Project>

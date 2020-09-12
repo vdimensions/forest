@@ -213,7 +213,7 @@ namespace Forest.Globalization
             return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands);
         }
 
-        public void OnViewRegistered(IViewDescriptor viewDescriptor)
+        public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
         {
             var viewType = viewDescriptor.ViewType;
             var uriParser = new Axle.Conversion.Parsing.UriParser();

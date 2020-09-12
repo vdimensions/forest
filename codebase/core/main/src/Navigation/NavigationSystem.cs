@@ -92,8 +92,15 @@ namespace Forest.Navigation
         [View(Name)]
         public sealed class View : LogicalView<State>, ISystemView
         {
-            internal View(INavigationManager navigationManager) 
-                : base(new State(navigationManager.NavigationTree)) { }
+            private readonly INavigationManager _navigationManager;
+
+            internal View(INavigationManager navigationManager)
+                : base(new State(navigationManager.NavigationTree))
+            {
+                _navigationManager = navigationManager;
+            }
+
+            protected override State CreateModel() => new State(_navigationManager.NavigationTree);
 
             public override void Load()
             {

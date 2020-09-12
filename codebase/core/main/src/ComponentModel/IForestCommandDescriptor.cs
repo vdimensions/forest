@@ -2,7 +2,7 @@
 
 namespace Forest.ComponentModel
 {
-    public interface ICommandDescriptor
+    public interface IForestCommandDescriptor
     {
         void Invoke(IView sender, object arg);
         string Name { get; }

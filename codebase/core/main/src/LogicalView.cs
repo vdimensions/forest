@@ -10,7 +10,7 @@ namespace Forest
     {
         private ViewState _state;
         private IForestExecutionContext _executionContext;
-        private IViewDescriptor _descriptor;
+        private IForestViewDescriptor _descriptor;
         private string _key;
 
         private LogicalView(ViewState state)
@@ -81,6 +81,8 @@ namespace Forest
 
         public virtual void Load() { }
         public virtual void Resume() { }
+        
+        protected virtual T CreateModel() => default(T);
 
         internal IForestExecutionContext ExecutionContext => _executionContext ?? throw new InvalidOperationException("No execution context is available.");
 
@@ -90,7 +92,7 @@ namespace Forest
         T IView<T>.Model => Model;
         object IView.Model => Model;
 
-        void IRuntimeView.AttachContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context)
+        void IRuntimeView.AttachContext(Tree.Node node, IForestViewDescriptor vd, IForestExecutionContext context)
         {
             if (_executionContext != null)
             {
@@ -126,6 +128,12 @@ namespace Forest
             _executionContext = null;
         }
 
+        void IRuntimeView.Load(ViewState viewState)
+        {
+            //_state = ExecutionContext.SetViewState(true, _key, viewState);
+            Load();
+        }
+        
         void IRuntimeView.Resume(ViewState viewState)
         {
             _state = ExecutionContext.SetViewState(true, _key, viewState);
@@ -147,8 +155,10 @@ namespace Forest
             }
         }
 
+        object IRuntimeView.CreateModel() => CreateModel();
+
         string IRuntimeView.Key => _key;
-        IViewDescriptor IRuntimeView.Descriptor => _descriptor;
+        IForestViewDescriptor IRuntimeView.Descriptor => _descriptor;
         IForestExecutionContext IRuntimeView.Context => ExecutionContext;
 
         void IDisposable.Dispose() => DoDispose(true);

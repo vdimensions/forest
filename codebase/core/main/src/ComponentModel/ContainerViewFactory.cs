@@ -14,7 +14,7 @@ namespace Forest.ComponentModel
             _dependencyContainerFactory = dependencyContainerFactory.VerifyArgument(nameof(dependencyContainerFactory)).IsNotNull().Value;
         }
 
-        private IView DoResolve(IViewDescriptor descriptor, object model)
+        private IView DoResolve(IForestViewDescriptor descriptor, object model)
         {
             using (var tmpContainer = _dependencyContainerFactory.CreateContainer(_dependencyContext))
             {
@@ -30,14 +30,14 @@ namespace Forest.ComponentModel
             }
         }
 
-        IView IViewFactory.Resolve(IViewDescriptor descriptor, object model)
+        IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object model)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
             model.VerifyArgument(nameof(model)).IsNotNull().IsOfType(descriptor.ModelType);
             return DoResolve(descriptor, model);
         }
 
-        IView IViewFactory.Resolve(IViewDescriptor descriptor)
+        IView IViewFactory.Resolve(IForestViewDescriptor descriptor)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
             return DoResolve(descriptor, null);

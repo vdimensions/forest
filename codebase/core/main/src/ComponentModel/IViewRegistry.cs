@@ -7,9 +7,9 @@ namespace Forest.ComponentModel
     {
         IViewRegistry Register(Type viewType);
         IViewRegistry Register<T>() where T: IView;
-        IViewDescriptor GetDescriptor(Type viewType);
-        IViewDescriptor GetDescriptor(string viewName);
+        IForestViewDescriptor Describe(Type viewType);
+        IForestViewDescriptor Describe(string viewName);
 
-        IEnumerable<IViewDescriptor> Descriptors { get; }
+        IEnumerable<IForestViewDescriptor> ViewDescriptors { get; }
     }
 }

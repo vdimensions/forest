@@ -6,7 +6,7 @@ namespace Forest.ComponentModel
     /// <summary>
     /// An interface for describing forest logical views.
     /// </summary>
-    public interface IViewDescriptor
+    public interface IForestViewDescriptor
     {
         /// <summary>
         /// Gets the name of the described <see cref="LogicalView">logical view</see>. 
@@ -24,10 +24,10 @@ namespace Forest.ComponentModel
         Type ModelType { get; }
         
         /// <summary>
-        /// A dictionary containing the <see cref="ICommandDescriptor">command descriptors</see> describing the
+        /// A dictionary containing the <see cref="IForestCommandDescriptor">command descriptors</see> describing the
         /// commands defined by the represented <see cref="LogicalView">logical view</see>.
         /// </summary>
-        IReadOnlyDictionary<string, ICommandDescriptor> Commands { get; }
+        IReadOnlyDictionary<string, IForestCommandDescriptor> Commands { get; }
         
         /// <summary>
         /// Gets a collection of <see cref="IEventDescriptor">event descriptors</see> representing the event

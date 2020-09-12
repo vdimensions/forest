@@ -75,7 +75,8 @@ namespace Forest
             public string Region => _region ?? string.Empty;
 
             /// <summary>
-            /// Gets a <see cref="ViewHandle"/> that can be used to obtain the <see cref="IViewDescriptor">view descriptor</see>
+            /// Gets a <see cref="ViewHandle"/> that can be used to obtain the 
+            /// <see cref="IForestViewDescriptor">view descriptor</see>
             /// </summary>
             public ViewHandle ViewHandle => _viewHandle ?? ViewHandle.FromName(string.Empty);
 

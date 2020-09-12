@@ -8,7 +8,7 @@ namespace Forest.Dom
 {
     internal sealed class ForestDomManager : IForestDomManager
     {
-        private static ICommandModel CreateModel(ICommandDescriptor descriptor) => new CommandModel(descriptor.Name);
+        private static ICommandModel CreateModel(IForestCommandDescriptor descriptor) => new CommandModel(descriptor.Name);
 
         private readonly IForestContext _context;
 

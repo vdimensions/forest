@@ -114,7 +114,7 @@ namespace Forest.Engine
 
         protected virtual IForestEngineContext CreateContext(IForestContext context) => new ForestEngineContext(context, this);
 
-        internal IForestEngineContext GetContext(IForestContext context, IEnumerable<IViewDescriptor> systemViewDescriptors)
+        internal IForestEngineContext GetContext(IForestContext context, IEnumerable<IForestViewDescriptor> systemViewDescriptors)
         {
             var engineContext = CreateContext(context);
             // TODO: system view instantiation should not happen here

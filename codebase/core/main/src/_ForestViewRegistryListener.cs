@@ -6,6 +6,6 @@ namespace Forest
     [Requires(typeof(ForestViewRegistry))]
     internal interface _ForestViewRegistryListener
     {
-        void OnViewRegistered(IViewDescriptor viewDescriptor);
+        void OnViewRegistered(IForestViewDescriptor viewDescriptor);
     }
 }

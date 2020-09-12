@@ -11,7 +11,7 @@ namespace Forest
     {
         IViewFactory ViewFactory { get; }
         IViewRegistry ViewRegistry { get; }
-        ISecurityManager SecurityManager { get; }
+        IForestSecurityManager SecurityManager { get; }
         ITemplateProvider TemplateProvider { get; }
         IForestDomManager DomManager { get; }
         IDomProcessor GlobalizationDomProcessor { get; }

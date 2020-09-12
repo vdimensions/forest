@@ -2,7 +2,7 @@
 {
     public interface IViewFactory
     {
-        IView Resolve(IViewDescriptor descriptor);
-        IView Resolve(IViewDescriptor descriptor, object model);
+        IView Resolve(IForestViewDescriptor descriptor);
+        IView Resolve(IForestViewDescriptor descriptor, object model);
     }
 }
