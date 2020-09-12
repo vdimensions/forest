@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
+using Axle.Extensions.String;
 using Axle.Verification;
 
 namespace Forest.ComponentModel
@@ -10,7 +10,7 @@ namespace Forest.ComponentModel
         public static string GetAnonymousViewName(Type viewType)
         {
             viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>();
-            return string.Format("[{1}]::{0}", viewType.FullName, viewType.GetTypeInfo().Assembly.GetName().Name);
+            return viewType.FullName.TrimEnd("+View", StringComparison.Ordinal);
         }
         public ForestViewDescriptor(
             string name, 

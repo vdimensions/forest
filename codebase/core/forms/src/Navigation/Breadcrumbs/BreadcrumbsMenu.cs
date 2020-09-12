@@ -1,10 +1,24 @@
 ﻿using System.Linq;
+using Axle.Modularity;
+using Forest.ComponentModel;
 using Forest.Navigation;
 
 namespace Forest.Forms.Navigation.Breadcrumbs
 {
     public static class BreadcrumbsMenu
     {
+        [Module]
+        internal sealed class Module : IForestViewProvider
+        {
+            void IForestViewProvider.RegisterViews(IViewRegistry registry)
+            {
+                registry
+                    .Register<View>()
+                    .Register<BreadcrumbsMenuItem.View>()
+                    .Register<BreadcrumbsMenuNavigableItem.View>();
+            }
+        }
+        
         private const string Name = "BreadcrumbsMenu";
 
         private static class Regions

@@ -3,12 +3,25 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Axle.Modularity;
 using Axle.Verification;
+using Forest.ComponentModel;
 
 namespace Forest.Forms.Controls
 {
     public static class TabStrip
     {
+        [Module]
+        internal sealed class Module : IForestViewProvider
+        {
+            public void RegisterViews(IViewRegistry registry)
+            {
+                registry
+                    .Register<Tab.View>()
+                    .Register<View>();
+            }
+        }
+        
         public static class Regions
         {
             public const string TabList = "TabList";

@@ -10,23 +10,18 @@ namespace Forest.Forms.Controls.Dialogs
             public const string Ok = "OK";
             public const string Cancel = "Cancel";
         }
+        
         public sealed class View : DialogFrame.View
         {
-            internal View() : base() { }
+            internal View() { }
             
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Ok)]
-            internal void Ok()
-            {
-                (view as IOkCancelDialogView)?.OnOk();
-            }
+            internal void Ok() => (view as IOkCancelDialogView)?.OnOk();
 
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Cancel)]
-            internal void Cancel()
-            {
-                (view as IOkCancelDialogView)?.OnCancel();
-            }
+            internal void Cancel() => (view as IOkCancelDialogView)?.OnCancel();
         }
     }
 }

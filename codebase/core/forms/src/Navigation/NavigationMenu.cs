@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Axle.Modularity;
+using Forest.ComponentModel;
 using Forest.Navigation;
 using Forest.Navigation.Messages;
 
@@ -7,6 +9,18 @@ namespace Forest.Forms.Navigation
 {
     public static partial class NavigationMenu
     {
+        [Module]
+        internal sealed class Module : IForestViewProvider
+        {
+            void IForestViewProvider.RegisterViews(IViewRegistry registry)
+            {
+                registry
+                    .Register<View>()
+                    .Register<Item.View>()
+                    .Register<NavigableItem.View>();
+            }
+        }
+        
         private const string Name = "NavigationMenu";
 
         private static class Regions

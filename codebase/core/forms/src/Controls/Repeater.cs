@@ -53,6 +53,11 @@ namespace Forest.Forms.Controls
             }
         }
 
+        /// <summary>
+        /// An abstract class to serve as a base for views which will hold a number of identical repeating child views.
+        /// </summary>
+        /// <typeparam name="TItemView">The type of the repeater's items view.</typeparam>
+        /// <typeparam name="TItemModel">The type of the repeater's items view model.</typeparam>
         public class View<TItemView, TItemModel> : View<object, TItemView, TItemModel> 
             where TItemView : IView<TItemModel>
         {
