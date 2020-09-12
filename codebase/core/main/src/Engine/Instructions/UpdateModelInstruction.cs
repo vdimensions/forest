@@ -6,7 +6,7 @@ namespace Forest.Engine.Instructions
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class UpdateModelInstruction : NodeStateModification
+    public sealed class UpdateModelInstruction : TreeModification
     {
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
@@ -18,7 +18,7 @@ namespace Forest.Engine.Instructions
             _model = model;
         }
 
-        protected override bool IsEqualTo(NodeStateModification other)
+        protected override bool IsEqualTo(TreeModification other)
         {
             return other is UpdateModelInstruction um && base.IsEqualTo(um) && Equals(Model, um.Model);
         }

@@ -55,7 +55,11 @@ namespace Forest.Web.AspNetCore.Mvc
 
         public void RegisterMessageType(Type type)
         {
+            #if NETSTANDARD2_1_OR_NEWER
+            _converters.GetOrAdd(type, (t, converters) => new ForestMessagePathConverter(t, converters), _converters);
+            #else
             _converters.GetOrAdd(type, t => new ForestMessagePathConverter(t, _converters));
+            #endif
         }
 
         public string ConvertMessage(object source)

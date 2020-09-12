@@ -7,7 +7,7 @@ namespace Forest.Engine.Instructions
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public abstract class CommandStateInstruction : NodeStateModification
+    public abstract class CommandStateInstruction : TreeModification
     {
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
@@ -19,7 +19,7 @@ namespace Forest.Engine.Instructions
             _command = command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
         }
 
-        protected sealed override bool IsEqualTo(NodeStateModification other)
+        protected sealed override bool IsEqualTo(TreeModification other)
         {
             return other is CommandStateInstruction csi
                 && base.IsEqualTo(other)  

@@ -6,7 +6,7 @@ namespace Forest.Engine.Instructions
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class ClearRegionInstruction : NodeStateModification
+    public sealed class ClearRegionInstruction : TreeModification
     {
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
@@ -18,7 +18,7 @@ namespace Forest.Engine.Instructions
             _region = region;
         }
 
-        protected override bool IsEqualTo(NodeStateModification other)
+        protected override bool IsEqualTo(TreeModification other)
         {
             return other is ClearRegionInstruction sm
                 && StringComparer.Ordinal.Equals(Region, sm.Region)

@@ -39,13 +39,7 @@ namespace Forest.Web.AspNetCore
                 (oldState, newState) => newState);
         }
 
-        public IForestViewDescriptor GetDescriptor(string instanceId)
-        {
-            var state = Current.State;
-            return _stateInspector.GetViewDescriptor(state, instanceId);
-        }
-
-        public bool TryGetDescriptor(string instanceId, out IForestViewDescriptor descriptor)
+        public bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor)
         {
             var state = Current.State;
             return _stateInspector.TryGetViewDescriptor(state, instanceId, out descriptor);

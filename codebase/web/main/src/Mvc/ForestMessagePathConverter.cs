@@ -130,7 +130,11 @@ namespace Forest.Web.AspNetCore.Mvc
                         .Select(
                             (p, i) =>
                             {
+                                #if NETSTANDARD2_1_OR_NEWER
+                                var propConverter = converters.GetOrAdd(p.MemberType, (t, c) => new ForestMessagePathConverter(t, c), converters);
+                                #else
                                 var propConverter = converters.GetOrAdd(p.MemberType, t => new ForestMessagePathConverter(t, converters));
+                                #endif
                                 var path = p.Name;
                                 var format = $"{path}/{{0}}";
                                 patternBuilder.Append('/').AppendFormat(format, $"{{{i}}}");

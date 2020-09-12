@@ -7,26 +7,26 @@ namespace Forest.Engine.Instructions
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public abstract class NodeStateModification : ForestInstruction
+    public abstract class TreeModification : ForestInstruction
     {
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
         #endif
         private string _nodeKey;
 
-        internal NodeStateModification(string nodeKey) : base()
+        internal TreeModification(string nodeKey) : base()
         {
             _nodeKey = nodeKey;
         }
 
         protected sealed override bool IsEqualTo(ForestInstruction other)
         {
-            return other is NodeStateModification otherModification && IsEqualTo(otherModification);
+            return other is TreeModification otherModification && IsEqualTo(otherModification);
         }
 
-        protected virtual bool IsEqualTo(NodeStateModification nodeStateModification)
+        protected virtual bool IsEqualTo(TreeModification treeModification)
         {
-            return StringComparer.Ordinal.Equals(_nodeKey, nodeStateModification.NodeKey);
+            return StringComparer.Ordinal.Equals(_nodeKey, treeModification.NodeKey);
         }
 
         public string NodeKey => _nodeKey;

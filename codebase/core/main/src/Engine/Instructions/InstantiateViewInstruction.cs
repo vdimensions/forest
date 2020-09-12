@@ -6,7 +6,7 @@ namespace Forest.Engine.Instructions
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class InstantiateViewInstruction : NodeStateModification
+    public sealed class InstantiateViewInstruction : TreeModification
     {
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [System.Runtime.Serialization.DataMember]
@@ -33,7 +33,7 @@ namespace Forest.Engine.Instructions
             _owner = owner;
         }
 
-        protected override bool IsEqualTo(NodeStateModification other)
+        protected override bool IsEqualTo(TreeModification other)
         {
             return other is InstantiateViewInstruction ivi 
                 && base.IsEqualTo(other) 

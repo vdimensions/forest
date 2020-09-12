@@ -16,7 +16,9 @@ namespace Forest.Web.AspNetCore.Mvc
         {
             var instanceId = metadata.RouteData.TryGetValue(ForestController.InstanceId, out var iid) ? (string) iid : null;
             var command = metadata.RouteData.TryGetValue(ForestController.Command, out var cmd) ? (string) cmd : null;
-            if (_clientViewsHelper.TryGetDescriptor(instanceId, out var descriptor) && descriptor.Commands.TryGetValue(command, out var cd))
+            if (command != null 
+                && _clientViewsHelper.TryGetViewDescriptor(instanceId, out var descriptor) 
+                && descriptor.Commands.TryGetValue(command, out var cd))
             {
                 if (cd.ArgumentType == null || cd.ArgumentType == typeof(void))
                 {

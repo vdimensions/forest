@@ -7,8 +7,7 @@ namespace Forest.Web.AspNetCore
 {
     internal interface IClientViewsHelper
     {
-        IForestViewDescriptor GetDescriptor(string instanceId);
-        bool TryGetDescriptor(string instanceId, out IForestViewDescriptor descriptor);
+        bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor);
 
         NavigationState NavigationState { get; }
         IImmutableDictionary<string, ViewNode> AllViews { get; }

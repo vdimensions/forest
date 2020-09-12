@@ -12,11 +12,11 @@ namespace Forest.Web.AspNetCore.Mvc
             _messageConverter = messageConverter;
         }
 
-        public async Task<object> Resolve(IMvcMetadata metadata, ModelResolutionContext next)
+        public Task<object> Resolve(IMvcMetadata metadata, ModelResolutionContext next)
         {
             var path = metadata.RouteData.TryGetValue(ForestController.Message, out var msg) ? msg.ToString() : null;
             var message = path == null ? null : _messageConverter.ConvertPath(path);
-            return new ForestDynamicArg(message);
+            return Task.FromResult<object>(new ForestDynamicArg(message));
         }
     }
 }

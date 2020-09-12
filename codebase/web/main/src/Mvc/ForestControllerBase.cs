@@ -10,6 +10,5 @@ namespace Forest.Web.AspNetCore.Mvc
         }
 
         protected ForestRequestExecutor ForestRequestExecutor { get; }
-        
     }
 }

@@ -31,7 +31,7 @@ namespace Forest.Engine
                 switch (instruction)
                 {
                     case InstantiateViewInstruction ivi:
-                        var descriptor = viewRegistry.GetDescriptor(ivi.ViewHandle);
+                        var descriptor = viewRegistry.Describe(ivi.ViewHandle);
                         if (!forestSecurityManager.HasAccess(descriptor))
                         {
                             failedInstructions.Add(ivi);
@@ -177,12 +177,12 @@ namespace Forest.Engine
         }
 
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
-        private void ProcessNodeStateModification(TreeChangeScope scope, NodeStateModification nsm)
+        private void ProcessTreeModification(TreeChangeScope scope, TreeModification nsm)
         {
             switch (nsm)
             {
                 case InstantiateViewInstruction ivi:
-                    var viewDescriptor = _context.ViewRegistry.GetDescriptor(ivi.ViewHandle);
+                    var viewDescriptor = _context.ViewRegistry.Describe(ivi.ViewHandle);
                     if (viewDescriptor == null)
                     {
                         throw new NoViewDescriptorException(ivi);
@@ -256,8 +256,8 @@ namespace Forest.Engine
                 {
                     switch (instruction)
                     {
-                        case NodeStateModification nsm:
-                            ProcessNodeStateModification(_scope, nsm);
+                        case TreeModification nsm:
+                            ProcessTreeModification(_scope, nsm);
                             break;
 
                         case SendMessageInstruction smi:
