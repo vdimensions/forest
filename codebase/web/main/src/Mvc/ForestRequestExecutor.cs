@@ -65,8 +65,7 @@ namespace Forest.Web.AspNetCore.Mvc
         public ForestResult ExecuteCommand(string instanceId, string command, object arg)
         {
             _forest.ExecuteCommand(command, instanceId, arg);
-            //return new ForestResult(GetPath(_clientViewsHelper.NavigationState), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
-            return new ForestResult(GetPath(_clientViewsHelper.NavigationState), _clientViewsHelper.AllViews.Values.ToArray(), HttpStatusCode.OK);
+            return new ForestResult(GetPath(_clientViewsHelper.NavigationState), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
         }
         
         public ActionResult Navigate(string template, string customPath = null)

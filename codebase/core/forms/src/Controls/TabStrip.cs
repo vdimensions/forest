@@ -107,12 +107,12 @@ namespace Forest.Forms.Controls
             }
         }
 
-        public class View : Repeater.View<Tab.View, Tab.Model>
+        public class View : Repeater.View<object, Tab.View, Tab.Model>
         {
             private readonly Guid _guid;
             private readonly IEqualityComparer<string> _tabIdComparer;
 
-            protected View() : base(Regions.TabList)
+            protected View() : base(null, Regions.TabList)
             {
                 _guid = Guid.NewGuid();
                 _tabIdComparer = StringComparer.Ordinal;

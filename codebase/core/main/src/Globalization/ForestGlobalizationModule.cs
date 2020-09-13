@@ -88,7 +88,6 @@ namespace Forest.Globalization
             _cacheManager.Dispose();
         }
         
-
         private ITextDocumentRoot GetTextDocument(string viewName)
         {
             return new ResourceDocumentRoot(_resourceManager, viewName, string.Empty, string.Empty, null);
@@ -109,12 +108,13 @@ namespace Forest.Globalization
                 clone = cloneable.Clone();
                 return true;
             }
+            #endif
             if (IsSafeFromSideEffects(obj.GetType()))
             {
                 clone = ShallowCopy.Create(obj);
                 return true;
             }
-
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
             var stream = new MemoryStream();
             try
             {
@@ -135,11 +135,6 @@ namespace Forest.Globalization
                 stream.Dispose();
             }
             #else
-            if (IsSafeFromSideEffects(obj.GetType()))
-            {
-                clone = ShallowCopy.Create(obj);
-                return true;
-            }
             clone = null;
             return false;
             #endif
@@ -210,7 +205,7 @@ namespace Forest.Globalization
             {
                 return node;
             }
-            return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands);
+            return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands, node.Revision);
         }
 
         public void OnViewRegistered(IForestViewDescriptor viewDescriptor)

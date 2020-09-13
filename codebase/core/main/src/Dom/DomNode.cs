@@ -72,7 +72,20 @@ namespace Forest.Dom
         #endif
         private readonly ImmutableDictionary<string, ICommandModel> _commands;
 
-        internal DomNode(string instanceId, string name, string region, object model, DomNode parent, ImmutableDictionary<string, IEnumerable<DomNode>> regions, ImmutableDictionary<string, ICommandModel> commands)
+        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+        [DataMember]
+        #endif
+        private readonly uint _revision;
+
+        internal DomNode(
+                string instanceId, 
+                string name, 
+                string region, 
+                object model, 
+                DomNode parent, 
+                ImmutableDictionary<string, IEnumerable<DomNode>> regions, 
+                ImmutableDictionary<string, ICommandModel> commands,
+                uint revision)
         {
             _instanceID = instanceId;
             _name = name;
@@ -81,6 +94,7 @@ namespace Forest.Dom
             _parent = parent;
             _regions = regions;
             _commands = commands;
+            _revision = revision;
         }
 
         private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer = null)
@@ -129,7 +143,7 @@ namespace Forest.Dom
         {
             unchecked
             {
-                var hashCode = (_instanceID != null ? _instanceID.GetHashCode() : 0);
+                var hashCode = _instanceID != null ? _instanceID.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (_name != null ? _name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_region != null ? _region.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_model != null ? _model.GetHashCode() : 0);
@@ -147,5 +161,6 @@ namespace Forest.Dom
         public DomNode Parent => _parent;
         public ImmutableDictionary<string, IEnumerable<DomNode>> Regions => _regions;
         public ImmutableDictionary<string, ICommandModel> Commands => _commands;
+        public uint Revision => _revision;
     }
 }

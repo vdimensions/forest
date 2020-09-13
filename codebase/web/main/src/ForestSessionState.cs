@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
+using Axle.Collections.Generic.Extensions.KeyValuePair;
 using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
@@ -13,11 +13,21 @@ namespace Forest.Web.AspNetCore
     {
         public static ForestSessionState ReplaceState(ForestSessionState sessionState, ForestState forestState)
         {
-            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationState, sessionState.AllViews, sessionState.UpdatedViews);
+            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationState, StringComparer.Ordinal);
         }
         public static ForestSessionState ReplaceNavigationState(ForestSessionState sessionState, NavigationState navigationState)
         {
             return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationState, sessionState.AllViews, sessionState.UpdatedViews);
+        }
+
+        private static ViewNode CreateEmptyViewNode(ViewNode node)
+        {
+            return new ViewNode
+            {
+                ID = node.ID,
+                Regions = new Dictionary<string, string[]>(),
+                Commands = new Dictionary<string, CommandNode>()
+            };
         }
 
         private ForestSessionState(
@@ -27,16 +37,46 @@ namespace Forest.Web.AspNetCore
             IImmutableDictionary<string, ViewNode> allViews, 
             IImmutableDictionary<string, ViewNode> updatedViews)
         {
-            allViews = ImmutableDictionary.CreateRange(
-                state.PhysicalViews
-                    .Select(x => new KeyValuePair<string, ViewNode>(x.Key, ((WebApiPhysicalView) x.Value).Node)));
-            updatedViews = allViews;
             State = state;
             SyncRoot = syncRoot;
             NavigationState = navigationState;
+
+            if (allViews.Count == 0)
+            {
+                var comparer = state.PhysicalViews.KeyComparer;
+                var allPairs = new List<KeyValuePair<string, WebApiPhysicalView>>();
+                var allViewsRange = new List<KeyValuePair<string, ViewNode>>();
+                var updatedViewsRange = new List<KeyValuePair<string, ViewNode>>();
+                var maxRevision = 0u;
+                foreach (var pair in state.PhysicalViews)
+                {
+                    var viewPair = pair.MapValue(v => (WebApiPhysicalView) v);
+                    var nodePair = viewPair.MapValue(v => v.Node);
+                    maxRevision = Math.Max(maxRevision, viewPair.Value.Revision);
+                    allViewsRange.Add(nodePair);
+                    allPairs.Add(viewPair);
+                }
+                allViews = ImmutableDictionary.CreateRange(comparer, allViewsRange);
+                foreach (var pair in allPairs)
+                {
+                    updatedViewsRange.Add(pair.MapValue(x => x.Revision == maxRevision ? x.Node : CreateEmptyViewNode(x.Node)));
+                }
+                updatedViews = ImmutableDictionary.CreateRange(comparer, updatedViewsRange);
+            }
             AllViews = allViews;
             UpdatedViews = updatedViews;
         }
+        private ForestSessionState(
+                ForestState state, 
+                object syncRoot, 
+                NavigationState navigationState,
+                IEqualityComparer<string> stringComparer) 
+            : this(
+                state, 
+                syncRoot, 
+                navigationState, 
+                ImmutableDictionary.Create<string, ViewNode>(stringComparer), 
+                ImmutableDictionary.Create<string, ViewNode>(stringComparer)) { }
         private ForestSessionState(IEqualityComparer<string> stringComparer) 
             : this(
                 new ForestState(), 

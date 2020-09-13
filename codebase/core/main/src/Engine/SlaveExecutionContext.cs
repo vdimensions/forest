@@ -124,11 +124,10 @@ namespace Forest.Engine
             Console.WriteLine(_tree);
 
             var tree = _tree;
-            var logicalViews = _logicalViews;
             var domProcessors = new[]{ _globalizationDomProcessor, _physicalViewDomProcessor };
             _context.DomManager.ProcessDomNodes(_tree, (node) => changedViews.Contains(node.InstanceID), domProcessors);
             var newPhysicalViews = _physicalViewDomProcessor.RenderViews();
-            return new ForestState(GuidGenerator.NewID(), tree, logicalViews, newPhysicalViews);
+            return new ForestState(GuidGenerator.NewID(), tree, _logicalViews, newPhysicalViews);
         }
 
         private void Dispose()

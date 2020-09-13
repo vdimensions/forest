@@ -33,14 +33,16 @@ namespace Forest.Web.AspNetCore.Dom
                 node.Regions.KeyComparer);
             Node = new ViewNode
             {
-                InstanceId = node.InstanceID,
+                ID = node.InstanceID,
                 Model = node.Model,
                 Name = node.Name,
                 Commands = commands,
                 Regions = regions
             };
+            Revision = node.Revision;
         }
 
         public ViewNode Node { get; internal set; }
+        public uint Revision { get; private set; }
     }
 }
