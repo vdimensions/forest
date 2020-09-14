@@ -27,11 +27,10 @@ namespace Forest.Globalization
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
     internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener
     {
-        private readonly IDocumentBinder _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
-
         private readonly ResourceManager _resourceManager;
         private readonly ForestGlobalizationConfig _config;
         private readonly ILogger _logger;
+        private readonly IDocumentBinder _binder;
         private readonly ICacheManager _cacheManager;
 
         public ForestGlobalizationModule(ResourceManager resourceManager, ForestGlobalizationConfig config, ILogger logger)
@@ -39,6 +38,7 @@ namespace Forest.Globalization
             _resourceManager = resourceManager;
             _config = config;
             _logger = logger;
+            _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
             _cacheManager = new SimpleCacheManager();
         }
         public ForestGlobalizationModule(ResourceManager resourceManager, ILogger logger) 
@@ -50,16 +50,18 @@ namespace Forest.Globalization
             _cacheManager.Dispose();
         }
         
-        private ITextDocumentRoot GetTextDocument(string viewName)
-        {
-            return new ResourceDocumentRoot(_resourceManager, viewName);
-        }
-
         private bool IsSafeFromSideEffects(Type type)
         {
             return _cacheManager
                 .GetCache(nameof(IsSafeFromSideEffects))
                 .GetOrAdd(type, ShallowCopy.IsSafeFromSideEffects);
+        }
+
+        private bool IsLocalized(Type type)
+        {
+            return _cacheManager
+                .GetCache(nameof(LocalizedAttribute.IsLocalized))
+                .GetOrAdd(type, LocalizedAttribute.IsLocalized);
         }
 
         private bool TryCloneObject(object obj, out object clone)
@@ -110,7 +112,7 @@ namespace Forest.Globalization
                 return false;
             }
 
-            if (!LocalizedAttribute.IsLocalized(obj.GetType()))
+            if (!IsLocalized(obj.GetType()))
             {
                 return false;
             }
@@ -131,13 +133,7 @@ namespace Forest.Globalization
                 return node;
             }
             
-            var textDocument = GetTextDocument(node.Name);
-            if (textDocument == null)
-            {
-                _logger.Warn("Could not locate localization bundle for view '{0}'", node.Name);
-                return node;
-            }
-            
+            var textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
             var newCommands = node.Commands;
             var cmdKeys = newCommands.Keys;
             foreach (var commandName in cmdKeys)
