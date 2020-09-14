@@ -30,11 +30,11 @@ namespace Forest.Templates
             }
         }
 
-        public override bool TryResolve(Type targetType, out object result)
+        public override bool TryResolve(Type type, out object result)
         {
-            if (targetType != typeof(Template))
+            if (type != typeof(Template))
             {
-                return base.TryResolve(targetType, out result);
+                return base.TryResolve(type, out result);
             }
             result = Value;
             return true;

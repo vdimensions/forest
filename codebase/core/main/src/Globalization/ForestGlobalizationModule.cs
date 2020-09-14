@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using Axle.Caching;
 #if NETSTANDARD || NET45_OR_NEWER
 using System.Reflection;
@@ -15,6 +12,7 @@ using Axle.Logging;
 using Axle.Modularity;
 using Axle.References;
 using Axle.Resources;
+using Axle.Resources.Binding;
 using Axle.Resources.Bundling;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
@@ -29,42 +27,6 @@ namespace Forest.Globalization
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
     internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener
     {
-        private sealed class ResourceDocumentRoot : ITextDocumentRoot
-        {
-            private readonly ResourceManager _resourceManager;
-            private readonly string _bundle;
-            private readonly string _prefix;
-
-            public ResourceDocumentRoot(ResourceManager resourceManager, string bundle, string prefix, string key, ITextDocumentObject parent)
-            {
-                _resourceManager = resourceManager;
-                _bundle = bundle;
-                _prefix = prefix;
-                Key = key;
-                Parent = parent;
-            }
-            
-            public IEnumerable<ITextDocumentNode> GetChildren() => Enumerable.Empty<ITextDocumentNode>();
-
-            public IEnumerable<ITextDocumentNode> GetValues(string name)
-            {
-                var prefixOrKey = _prefix.Length == 0 ? name : $"{_prefix}.{name}";
-                var resource = _resourceManager.Load<string>(_bundle, prefixOrKey, CultureInfo.CurrentUICulture);
-                if (!string.IsNullOrEmpty(resource))
-                {
-                    yield return new TextDocumentValue(name, this, resource);
-                }
-                else
-                {
-                    yield return new ResourceDocumentRoot(_resourceManager, _bundle, prefixOrKey, name, this);
-                }
-            }
-
-            public ITextDocumentObject Parent { get; }
-            public string Key { get; }
-            public IEqualityComparer<string> KeyComparer => StringComparer.Ordinal;
-        }
-        
         private readonly IDocumentBinder _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
 
         private readonly ResourceManager _resourceManager;
@@ -90,7 +52,7 @@ namespace Forest.Globalization
         
         private ITextDocumentRoot GetTextDocument(string viewName)
         {
-            return new ResourceDocumentRoot(_resourceManager, viewName, string.Empty, string.Empty, null);
+            return new ResourceDocumentRoot(_resourceManager, viewName);
         }
 
         private bool IsSafeFromSideEffects(Type type)
