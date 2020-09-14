@@ -107,7 +107,6 @@
     <ContentTargetFolders>content</ContentTargetFolders>
     <PackageLicense>$(License)</PackageLicense>
     <PackageLicenseExpression>$(PackageLicense)</PackageLicenseExpression>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/vdimensions/forest/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl></PackageProjectUrl>
     <PackageIconUri></PackageIconUri>
     <PackageVersion Condition=" '$(PackageVersion)' == '' ">$(Version)</PackageVersion>
