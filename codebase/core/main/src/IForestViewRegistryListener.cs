@@ -4,7 +4,7 @@ using Forest.ComponentModel;
 namespace Forest
 {
     [Requires(typeof(ForestViewRegistry))]
-    [ReportsTo(typeof(ForestModule))]
+    [ProvidesFor(typeof(ForestModule))]
     public interface IForestViewRegistryListener
     {
         void OnViewRegistered(IForestViewDescriptor viewDescriptor);

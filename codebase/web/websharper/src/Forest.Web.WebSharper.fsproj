@@ -38,6 +38,6 @@
 
   <Import Project="../../../Forest.Common.props" />
   <Import Project="../../../FSharp.Core.Packages.targets" />
-  <Import Project="../../../Reference.Forest.Core.targets" />
-  <Import Project="../../../Reference.Forest.Web.AspNetCore.targets" />
+  <Import Project="../../../../ref/Reference.Forest.Core.targets" />
+  <Import Project="../../../../ref/Reference.Forest.Web.AspNetCore.targets" />
 </Project>
