@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using Axle.Caching;
+using Axle.Globalization;
 #if NETSTANDARD || NET45_OR_NEWER
 using System.Reflection;
 #endif
@@ -27,6 +29,24 @@ namespace Forest.Globalization
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
     internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener
     {
+        private static CultureScope CreateCultureScope(string cultureName, ILogger logger)
+        {
+            if (string.IsNullOrEmpty(cultureName))
+            {
+                return null;
+            }
+            var defaultLocale = CultureInfo.CurrentUICulture;
+            try
+            {
+                return CultureScope.Create(cultureName);
+            }
+            catch (Exception e)
+            {
+                logger.Warn($"An error occurred while trying to create CultureInfo object from language code '{cultureName}'. The default system locale '{defaultLocale}' will be used instead.");
+                return null;
+            }
+        }
+        
         private readonly ResourceManager _resourceManager;
         private readonly ForestGlobalizationConfig _config;
         private readonly ILogger _logger;
@@ -132,38 +152,46 @@ namespace Forest.Globalization
             {
                 return node;
             }
-            
-            var textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
-            var newCommands = node.Commands;
-            var cmdKeys = newCommands.Keys;
-            foreach (var commandName in cmdKeys)
+
+            var scope = CreateCultureScope(_config.DisplayLanguage, _logger);
+            try
             {
-                var cmd = newCommands[commandName];
-                if (TryLocalize(new TextDocumentSubset(textDocument, $"Commands.{commandName}"), cmd, out var cmdClone))
+                var textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
+                var newCommands = node.Commands;
+                var cmdKeys = newCommands.Keys;
+                foreach (var commandName in cmdKeys)
                 {
-                    newCommands = newCommands.Remove(commandName).Add(commandName, (ICommandModel) cmdClone);
+                    var cmd = newCommands[commandName];
+                    if (TryLocalize(new TextDocumentSubset(textDocument, $"Commands.{commandName}"), cmd, out var cmdClone))
+                    {
+                        newCommands = newCommands.Remove(commandName).Add(commandName, (ICommandModel) cmdClone);
+                    }
+                    else
+                    {
+                        _logger.Warn(
+                            "Unable to create a cloned command object to use for localization: command '{0}' for view '{1}'.", 
+                            commandName, 
+                            node.Name);   
+                    }
                 }
-                else
+
+                if (!TryLocalize(new TextDocumentSubset(textDocument, "Model"), node.Model, out var newModel))
                 {
                     _logger.Warn(
-                        "Unable to create a cloned command object to use for localization: command '{0}' for view '{1}'.", 
-                        commandName, 
-                        node.Name);   
+                        "Unable to create a cloned model object to use for localization: view '{0}'.", 
+                        node.Name);
+                    newModel = node.Model;
                 }
+                if (ReferenceEquals(newModel, node.Model) && ReferenceEquals(newCommands, node.Commands))
+                {
+                    return node;
+                }
+                return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands, node.Revision);
             }
-
-            if (!TryLocalize(new TextDocumentSubset(textDocument, "Model"), node.Model, out var newModel))
+            finally
             {
-                _logger.Warn(
-                    "Unable to create a cloned model object to use for localization: view '{0}'.", 
-                    node.Name);
-                newModel = node.Model;
+                scope?.Dispose();
             }
-            if (ReferenceEquals(newModel, node.Model) && ReferenceEquals(newCommands, node.Commands))
-            {
-                return node;
-            }
-            return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands, node.Revision);
         }
 
         public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
