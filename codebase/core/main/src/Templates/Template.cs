@@ -28,7 +28,7 @@ namespace Forest.Templates
             }
         }
 
-        private static IEnumerable<ViewItem> ProcessPlaceholders(IDictionary<string, ICollection<RegionItem>> placeholderData, IEnumerable<ViewItem> current)
+        private static IEnumerable<ViewItem> ProcessPlaceholders(ITemplateProvider provider, IDictionary<string, ICollection<RegionItem>> placeholderData, IEnumerable<ViewItem> current)
         {
             if (placeholderData.Count == 0)
             {
@@ -43,8 +43,11 @@ namespace Forest.Templates
                     case ViewItem.ClearInstruction _:
                         result.Clear();
                         break;
-                    case ViewItem.InlinedTemplate _:
-                        result.Add(vc);
+                    case ViewItem.InlinedTemplate inlinedTemplate:
+                        foreach (var vcc in LoadTemplate(provider, inlinedTemplate.Template).Contents)
+                        {
+                            result.Add(vcc);
+                        }
                         break;
                     case ViewItem.Region region:
                         var newRegionContents = new List<RegionItem>();
@@ -67,7 +70,7 @@ namespace Forest.Templates
                                     }
                                     break;
                                 case RegionItem.View view:
-                                    var newViewContents = ProcessPlaceholders(placeholderData, view.Contents);
+                                    var newViewContents = ProcessPlaceholders(provider, placeholderData, view.Contents);
                                     newRegionContents.Add(new RegionItem.View(view.Name, newViewContents));
                                     break;
                                 case RegionItem.TemplateReference _:
@@ -170,6 +173,7 @@ namespace Forest.Templates
                 var newContents = InlineTemplates(
                     provider, 
                     ProcessPlaceholders(
+                        provider,
                         placeholderMap, 
                         ExpandTemplates(provider, res.Contents)));
 

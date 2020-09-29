@@ -9,7 +9,7 @@ namespace Forest.Web.AspNetCore
     {
         bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor);
 
-        NavigationState NavigationState { get; }
+        NavigationTarget NavigationTarget { get; }
         IImmutableDictionary<string, ViewNode> AllViews { get; }
         IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }

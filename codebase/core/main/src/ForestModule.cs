@@ -238,7 +238,7 @@ namespace Forest
             }
             catch (ForestSecurityException securityException)
             {
-                _securityExceptionHandler.HandleSecurityException(securityException, pointcut.NavigationState, this);
+                _securityExceptionHandler.HandleSecurityException(securityException, pointcut.NavigationTarget, this);
             }
             return false;
         }

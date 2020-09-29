@@ -8,7 +8,7 @@ namespace Forest.Web.AspNetCore
         {
             if (pointcut.Proceed())
             {
-                _sessionStateProvider.UpdateNavigationState(pointcut.NavigationState);
+                _sessionStateProvider.UpdateNavigationState(pointcut.NavigationTarget);
                 return true;
             }
             return false;

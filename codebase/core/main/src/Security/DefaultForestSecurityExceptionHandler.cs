@@ -6,7 +6,7 @@ namespace Forest.Security
 {
     internal sealed class DefaultForestSecurityExceptionHandler : IForestSecurityExceptionHandler
     {
-        void IForestSecurityExceptionHandler.HandleSecurityException(ForestSecurityException securityException, NavigationState navigationState, IForestEngine forestEngine)
+        void IForestSecurityExceptionHandler.HandleSecurityException(ForestSecurityException securityException, NavigationTarget navigationTarget, IForestEngine forestEngine)
             => HandleSecurityException(securityException, forestEngine);
 
         void IForestSecurityExceptionHandler.HandleSecurityException(ForestSecurityException securityException, string command, IForestEngine forestEngine)

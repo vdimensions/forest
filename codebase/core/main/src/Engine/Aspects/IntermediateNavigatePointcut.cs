@@ -20,6 +20,6 @@ namespace Forest.Engine.Aspects
 
         public bool Proceed() => _advice.Navigate(_originalPointcut);
 
-        public NavigationState NavigationState => _originalPointcut.NavigationState;
+        public NavigationTarget NavigationTarget => _originalPointcut.NavigationTarget;
     }
 }

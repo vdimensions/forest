@@ -18,25 +18,25 @@ namespace Forest.Navigation
         public sealed class State
         {
             private readonly NavigationTree _navigationTree;
-            private readonly ImmutableStack<NavigationState> _history;
-            private readonly ImmutableDictionary<string, NavigationState> _states;
+            private readonly ImmutableStack<NavigationTarget> _history;
+            private readonly ImmutableDictionary<string, NavigationTarget> _states;
 
             internal State(NavigationTree navigationTree) 
                 : this(
                     navigationTree, 
-                    ImmutableStack<NavigationState>.Empty, 
-                    ImmutableDictionary.Create<string, NavigationState>(StringComparer.Ordinal)) { }
+                    ImmutableStack<NavigationTarget>.Empty, 
+                    ImmutableDictionary.Create<string, NavigationTarget>(StringComparer.Ordinal)) { }
             private State(
                 NavigationTree navigationTree, 
-                ImmutableStack<NavigationState> history, 
-                ImmutableDictionary<string, NavigationState> states)
+                ImmutableStack<NavigationTarget> history, 
+                ImmutableDictionary<string, NavigationTarget> states)
             {
                 _navigationTree = navigationTree;
                 _history = history;
                 _states = states;
             }
 
-            public State Push(NavigationState entry)
+            public State Push(NavigationTarget entry)
             {
                 if (_navigationTree.ToggleNode(entry.Path, true, out var tree))
                 {
@@ -45,7 +45,7 @@ namespace Forest.Navigation
                 return this;
             }
             
-            public State Pop(int offset, out NavigationState entry)
+            public State Pop(int offset, out NavigationTarget entry)
             {
                 if (_history.IsEmpty || offset <= 0)
                 {
@@ -53,7 +53,7 @@ namespace Forest.Navigation
                     return this;
                 }
 
-                ImmutableStack<NavigationState> h;
+                ImmutableStack<NavigationTarget> h;
                 do
                 {
                     h = _history.Pop(out entry);
@@ -62,27 +62,27 @@ namespace Forest.Navigation
                 
                 if (_navigationTree.ToggleNode(entry.Path, true, out var tree))
                 {
-                    return new State(tree, h, ImmutableDictionary.Create<string, NavigationState>(_states.KeyComparer));
+                    return new State(tree, h, ImmutableDictionary.Create<string, NavigationTarget>(_states.KeyComparer));
                 }
                 return this;
             }
 
-            public State Up(int offset, out NavigationState entry)
+            public State Up(int offset, out NavigationTarget entry)
             {
                 var selected = _navigationTree.SelectedNodes;
                 var upOneLevelNode = selected.Reverse().Skip(offset).FirstOrDefault();
                 if (upOneLevelNode != null && _navigationTree.ToggleNode(upOneLevelNode, true, out var newTree))
                 {
-                    var e = _states.TryGetValue(upOneLevelNode, out var e1) ? e1 : new NavigationState(upOneLevelNode);
-                    return new State(newTree, _history.Push(entry = e), ImmutableDictionary.Create<string, NavigationState>(_states.KeyComparer));
+                    var e = _states.TryGetValue(upOneLevelNode, out var e1) ? e1 : new NavigationTarget(upOneLevelNode);
+                    return new State(newTree, _history.Push(entry = e), ImmutableDictionary.Create<string, NavigationTarget>(_states.KeyComparer));
                 }
                 entry = null;
                 return this;
             }
 
-            public State SetState(NavigationState navigationState)
+            public State SetState(NavigationTarget navigationTarget)
             {
-                var newStates = _states.Remove(navigationState.Path).Add(navigationState.Path, navigationState);
+                var newStates = _states.Remove(navigationTarget.Path).Add(navigationTarget.Path, navigationTarget);
                 return new State(_navigationTree, _history, newStates);
             }
 
@@ -115,7 +115,7 @@ namespace Forest.Navigation
 
             [Subscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            internal void OnSelectionChanged(NavigationState navigationHistoryEntry)
+            internal void OnSelectionChanged(NavigationTarget navigationHistoryEntry)
             {
                 OnNavigationTreeChanged(UpdateModel(m => m.Push(navigationHistoryEntry)));
             }
@@ -124,7 +124,7 @@ namespace Forest.Navigation
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigateBack(NavigateBack message)
             {
-                NavigationState navigationHistoryEntry = null;
+                NavigationTarget navigationHistoryEntry = null;
                 OnNavigationTreeChanged(UpdateModel(m => m.Pop(message.Offset, out navigationHistoryEntry)));
                 if (navigationHistoryEntry != null)
                 {
@@ -143,7 +143,7 @@ namespace Forest.Navigation
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigateUp(NavigateUp message)
             {
-                NavigationState navigationHistoryEntry = null;
+                NavigationTarget navigationHistoryEntry = null;
                 OnNavigationTreeChanged(UpdateModel(m => m.Up(message.Offset, out navigationHistoryEntry)));
                 if (navigationHistoryEntry != null)
                 {
@@ -168,7 +168,7 @@ namespace Forest.Navigation
                     var state = navigationStateProvider.ApplyNavigationState(node);
                     if (state != null)
                     {
-                        UpdateModel(m => m.SetState(new NavigationState(node, state)));
+                        UpdateModel(m => m.SetState(new NavigationTarget(node, state)));
                     }
                 }
             }

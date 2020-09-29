@@ -10,9 +10,9 @@ namespace Forest.Navigation
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class NavigationState : IEquatable<NavigationState>
+    public sealed class NavigationTarget : IEquatable<NavigationTarget>
     {
-        public static readonly NavigationState Empty = new NavigationState();
+        public static readonly NavigationTarget Empty = new NavigationTarget();
         
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
@@ -26,21 +26,21 @@ namespace Forest.Navigation
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly object _value;
 
-        internal NavigationState(string path, object value)
+        internal NavigationTarget(string path, object value)
         {
             _path = path;
             _value = value;
         }
-        internal NavigationState(string path) : this(path, null) { }
-        private NavigationState() : this(string.Empty) { }
+        internal NavigationTarget(string path) : this(path, null) { }
+        private NavigationTarget() : this(string.Empty) { }
 
-        bool IEquatable<NavigationState>.Equals(NavigationState other)
+        bool IEquatable<NavigationTarget>.Equals(NavigationTarget other)
         {
             var cmp = StringComparer.Ordinal;
             return other != null && cmp.Equals(Path, other.Path) && Equals(Value, other.Value);
         }
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is NavigationState ni && Equals(ni);
+        public override bool Equals(object obj) => obj is NavigationTarget ni && Equals(ni);
 
         /// <inheritdoc />
         public override int GetHashCode() => this.CalculateHashCode(StringComparer.Ordinal.GetHashCode(Path), Value);

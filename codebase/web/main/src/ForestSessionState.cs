@@ -13,11 +13,11 @@ namespace Forest.Web.AspNetCore
     {
         public static ForestSessionState ReplaceState(ForestSessionState sessionState, ForestState forestState)
         {
-            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationState, StringComparer.Ordinal);
+            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationTarget, StringComparer.Ordinal);
         }
-        public static ForestSessionState ReplaceNavigationState(ForestSessionState sessionState, NavigationState navigationState)
+        public static ForestSessionState ReplaceNavigationState(ForestSessionState sessionState, NavigationTarget navigationTarget)
         {
-            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationState, sessionState.AllViews, sessionState.UpdatedViews);
+            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationTarget, sessionState.AllViews, sessionState.UpdatedViews);
         }
 
         private static ViewNode CreateEmptyViewNode(ViewNode node)
@@ -33,13 +33,13 @@ namespace Forest.Web.AspNetCore
         private ForestSessionState(
             ForestState state, 
             object syncRoot, 
-            NavigationState navigationState,
+            NavigationTarget navigationTarget,
             IImmutableDictionary<string, ViewNode> allViews, 
             IImmutableDictionary<string, ViewNode> updatedViews)
         {
             State = state;
             SyncRoot = syncRoot;
-            NavigationState = navigationState;
+            NavigationTarget = navigationTarget;
 
             if (allViews.Count == 0)
             {
@@ -69,26 +69,26 @@ namespace Forest.Web.AspNetCore
         private ForestSessionState(
                 ForestState state, 
                 object syncRoot, 
-                NavigationState navigationState,
+                NavigationTarget navigationTarget,
                 IEqualityComparer<string> stringComparer) 
             : this(
                 state, 
                 syncRoot, 
-                navigationState, 
+                navigationTarget, 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer), 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer)) { }
         private ForestSessionState(IEqualityComparer<string> stringComparer) 
             : this(
                 new ForestState(), 
                 new object(), 
-                NavigationState.Empty, 
+                NavigationTarget.Empty, 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer), 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer)) { }
         internal ForestSessionState() : this(StringComparer.Ordinal) { }
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
-        internal NavigationState NavigationState { get; }
+        internal NavigationTarget NavigationTarget { get; }
         internal IImmutableDictionary<string, ViewNode> AllViews { get; }
         internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }

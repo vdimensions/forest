@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Axle.Reflection.Extensions.Type;
 using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Dom;
@@ -175,12 +176,32 @@ namespace Forest.Engine
         }
 
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
-        private void ProcessTreeModification(TreeChangeScope scope, TreeModification nsm)
+        private void ProcessTreeModification(
+            TreeChangeScope scope, 
+            TreeModification nsm, 
+            string requestedTemplateName,
+            IEnumerable<ForestInstruction> failedSecurityChecks)
         {
             switch (nsm)
             {
                 case InstantiateViewInstruction ivi:
                     var viewDescriptor = _context.ViewRegistry.Describe(ivi.ViewHandle);
+                    if (failedSecurityChecks
+                        .OfType<InstantiateViewInstruction>()
+                        .Any(x => viewDescriptor.Equals(_context.ViewRegistry.Describe(x.ViewHandle))))
+                    {
+                        if (StringComparer.Ordinal.Equals(requestedTemplateName, viewDescriptor.Name)
+                            || typeof(INavigationStateProvider).IsAssignableFrom(viewDescriptor.ViewType))
+                        {
+                            // If the view is INavigationStateProvider, this means it
+                            // is the view that represents the navigation template.
+                            // We must prevent the entire rendering and throw exception.
+                            throw new ForestSecurityException("Unable to perform the requested operation");
+                        }
+                        // views without display access will not be rendered
+                        break;
+                    }
+                    
                     if (viewDescriptor == null)
                     {
                         throw new NoViewDescriptorException(ivi);
@@ -243,10 +264,16 @@ namespace Forest.Engine
             }
         }
 
+        public void ProcessInstructions(ForestInstruction[] instructions) => ProcessInstructions(null, instructions);
+
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
-        public void ProcessInstructions(ForestInstruction[] instructions)
+        private void ProcessInstructions(string template, ForestInstruction[] instructions)
         {
-            ValidateInstructions1(instructions);
+            var instructionsFailedSecurityChecks = VerifySecurityAccess(
+                _context.SecurityManager,
+                _context.ViewRegistry,
+                _logicalViews,
+                instructions);
             _nestedCalls++;
             try
             {
@@ -255,7 +282,7 @@ namespace Forest.Engine
                     switch (instruction)
                     {
                         case TreeModification nsm:
-                            ProcessTreeModification(_scope, nsm);
+                            ProcessTreeModification(_scope, nsm, template, instructionsFailedSecurityChecks);
                             break;
 
                         case SendMessageInstruction smi:
@@ -267,6 +294,20 @@ namespace Forest.Engine
                             break;
 
                         case InvokeCommandInstruction ici:
+                            if (instructionsFailedSecurityChecks
+                                .OfType<InvokeCommandInstruction>()
+                                .Any(
+                                    x =>
+                                    {
+                                        var comparer = StringComparer.Ordinal;
+                                        return comparer.Equals(x.InstanceID, ici.InstanceID)
+                                               && comparer.Equals(x.CommandName, ici.CommandName);
+                                    }))
+                            {
+                                // The particular view or command are indicated to be with restricted access
+                                throw new ForestSecurityException("Unable to perform the requested operation");
+                            }
+                            
                             if (!_logicalViews.TryGetValue(ici.InstanceID, out var view))
                             {
                                 throw new CommandSourceNotFoundException(ici);
@@ -288,7 +329,7 @@ namespace Forest.Engine
                         
                         case ApplyNavigationStateInstruction ansi:
                             var targetView = _logicalViews.Values
-                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Descriptor.Name, ansi.NavigationState.Path));
+                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Descriptor.Name, ansi.NavigationTarget.Path));
                             if (targetView != null && targetView is INavigationStateProvider nsp)
                             {
                                 _eventBus.Publish(targetView, nsp, NavigationSystem.Messages.Topic);
@@ -306,19 +347,6 @@ namespace Forest.Engine
                 {
                     _eventBus.ProcessMessages();
                 }
-            }
-        }
-        
-        private void ValidateInstructions1(ForestInstruction[] instructions)
-        {
-            var failedSecurityChecks = VerifySecurityAccess(
-                _context.SecurityManager,
-                _context.ViewRegistry,
-                _logicalViews,
-                instructions);
-            if (failedSecurityChecks.Count > 0)
-            {
-                throw new ForestSecurityException("Unable to perform the requested operation");
             }
         }
 
@@ -341,7 +369,7 @@ namespace Forest.Engine
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
             var instructions = TemplateCompiler.CompileTemplate(path, templateDefinition, null).ToArray();
-            ProcessInstructions(instructions);
+            ProcessInstructions(path, instructions);
         }
         public void Navigate<T>(string path, T state)
         {
@@ -353,7 +381,7 @@ namespace Forest.Engine
             }
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
             var instructions = TemplateCompiler.CompileTemplate(path, templateDefinition, state).ToArray();
-            ProcessInstructions(instructions);
+            ProcessInstructions(path, instructions);
         }
         public void NavigateBack()
         {
