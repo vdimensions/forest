@@ -63,7 +63,7 @@ namespace Forest.Templates
         {
             _bundles.Clear();
             var resourceManager = new DefaultResourceManager();
-            var uriParser = new Axle.Conversion.Parsing.UriParser();
+            var uriParser = new Axle.Text.Parsing.UriParser();
             foreach (var marshallingExtractor in _marshallingExtractors)
             {
                 var bundleNames = ForestBundleNames.Select(

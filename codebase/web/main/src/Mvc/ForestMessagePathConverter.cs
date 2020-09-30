@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using Axle.Conversion;
-using Axle.Conversion.Parsing;
+using Axle.Text.Parsing;
 using Axle.Extensions.String;
 using Axle.Reflection;
 using Axle.Text.Formatting.Extensions;
@@ -60,7 +60,7 @@ namespace Forest.Web.AspNetCore.Mvc
         bool ITwoWayConverter<object, string>.TryConvertBack(string source, out object target) 
             => TryConvertBack(source, out target, out _);
 
-        IConverter<string, object> ITwoWayConverter<object, string>.Invert() => new ReverseConverter<string, object>(this);
+        ITwoWayConverter<string, object> ITwoWayConverter<object, string>.Invert() => new ReverseConverter<string, object>(this);
 
         public bool TryConvertBack(string path, out object result, out string remainder)
         {

@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using Axle.Conversion;
-using Axle.Conversion.Parsing;
+using Axle.Text.Parsing;
 using Axle.Text.Expressions.Regular;
 
 namespace Forest.Web.AspNetCore.Mvc
@@ -34,7 +34,7 @@ namespace Forest.Web.AspNetCore.Mvc
             RegisterSimpleStructConverter(new TimeSpanParser());
             RegisterSimpleConverter(new IdentityConverter<string>());
             RegisterSimpleClassConverter(new VersionParser());
-            RegisterSimpleClassConverter(new Axle.Conversion.Parsing.UriParser());
+            RegisterSimpleClassConverter(new Axle.Text.Parsing.UriParser());
             RegisterSimpleClassConverter(new TypeParser());
             RegisterSimpleClassConverter(new AssemblyParser());
         }

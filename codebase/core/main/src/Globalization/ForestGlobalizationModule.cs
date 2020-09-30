@@ -197,7 +197,7 @@ namespace Forest.Globalization
         public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
         {
             var viewType = viewDescriptor.ViewType;
-            var uriParser = new Axle.Conversion.Parsing.UriParser();
+            var uriParser = new Axle.Text.Parsing.UriParser();
             #if NETSTANDARD || NET45_OR_NEWER
             var asm = viewType.GetTypeInfo().Assembly;
             #else
