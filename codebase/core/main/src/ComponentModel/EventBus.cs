@@ -14,7 +14,7 @@ namespace Forest.ComponentModel
     {
         internal sealed class SubscriptionHandlerSet : HashSet<ISubscriptionHandler>
         {
-            public SubscriptionHandlerSet() : base(new AdaptiveEqualityComparer<ISubscriptionHandler, IView>(sh => sh.Receiver, new ReferenceEqualityComparer<IView>())) { }
+            public SubscriptionHandlerSet() : base(new LensingEqualityComparer<ISubscriptionHandler, IView>(sh => sh.Receiver, new ReferenceEqualityComparer<IView>())) { }
         }
 
         [StructLayout(LayoutKind.Sequential)]
