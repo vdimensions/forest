@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Forest.Navigation;
 
 
 namespace Forest.Forms.Controls.Dialogs
@@ -12,12 +13,14 @@ namespace Forest.Forms.Controls.Dialogs
         public sealed class View : DialogFrame.View
         {
             internal View() : base() { }
+            
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Confirm)]
-            internal void Confirm()
+            internal Location Confirm()
             {
-                (view as IConfirmationDialogView)?.OnConfirm();
+                var result = (view as IConfirmationDialogView)?.OnConfirm();
                 Close();
+                return result;
             }
         }
     }

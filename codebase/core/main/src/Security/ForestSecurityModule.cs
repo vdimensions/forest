@@ -32,9 +32,9 @@ namespace Forest.Security
 
         void IForestSecurityExceptionHandler.HandleSecurityException(
                 ForestSecurityException securityException, 
-                NavigationTarget navigationTarget,
+                Location location,
                 IForestEngine forestEngine) 
-            => _securityExceptionHandler.HandleSecurityException(securityException, navigationTarget, forestEngine);
+            => _securityExceptionHandler.HandleSecurityException(securityException, location, forestEngine);
 
         void IForestSecurityExceptionHandler.HandleSecurityException(
                 ForestSecurityException securityException, 

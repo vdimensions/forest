@@ -8,19 +8,19 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class ApplyNavigationStateInstruction : ForestInstruction
     {
-        public ApplyNavigationStateInstruction(NavigationTarget navigationTarget)
+        public ApplyNavigationStateInstruction(Location location)
         {
-            NavigationTarget = navigationTarget;
+            Location = location;
         }
 
         protected override bool IsEqualTo(ForestInstruction other) 
-            => other is ApplyNavigationStateInstruction ansi && Equals(ansi.NavigationTarget, NavigationTarget);
+            => other is ApplyNavigationStateInstruction ansi && Equals(ansi.Location, Location);
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(NavigationTarget);
+        protected override int DoGetHashCode() => this.CalculateHashCode(Location);
 
-        public void Deconstruct(out NavigationTarget navigationTarget) => navigationTarget = NavigationTarget;
+        public void Deconstruct(out Location location) => location = Location;
 
-        public NavigationTarget NavigationTarget { get; }
+        public Location Location { get; }
         
     }
 }

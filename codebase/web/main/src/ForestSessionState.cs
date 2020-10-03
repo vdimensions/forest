@@ -13,11 +13,7 @@ namespace Forest.Web.AspNetCore
     {
         public static ForestSessionState ReplaceState(ForestSessionState sessionState, ForestState forestState)
         {
-            return new ForestSessionState(forestState, sessionState.SyncRoot, sessionState.NavigationTarget, StringComparer.Ordinal);
-        }
-        public static ForestSessionState ReplaceNavigationState(ForestSessionState sessionState, NavigationTarget navigationTarget)
-        {
-            return new ForestSessionState(sessionState.State, sessionState.SyncRoot, navigationTarget, sessionState.AllViews, sessionState.UpdatedViews);
+            return new ForestSessionState(forestState, sessionState.SyncRoot, StringComparer.Ordinal);
         }
 
         private static ViewNode CreateEmptyViewNode(ViewNode node)
@@ -33,13 +29,11 @@ namespace Forest.Web.AspNetCore
         private ForestSessionState(
             ForestState state, 
             object syncRoot, 
-            NavigationTarget navigationTarget,
             IImmutableDictionary<string, ViewNode> allViews, 
             IImmutableDictionary<string, ViewNode> updatedViews)
         {
             State = state;
             SyncRoot = syncRoot;
-            NavigationTarget = navigationTarget;
 
             if (allViews.Count == 0)
             {
@@ -69,26 +63,24 @@ namespace Forest.Web.AspNetCore
         private ForestSessionState(
                 ForestState state, 
                 object syncRoot, 
-                NavigationTarget navigationTarget,
                 IEqualityComparer<string> stringComparer) 
             : this(
                 state, 
                 syncRoot, 
-                navigationTarget, 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer), 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer)) { }
         private ForestSessionState(IEqualityComparer<string> stringComparer) 
             : this(
                 new ForestState(), 
                 new object(), 
-                NavigationTarget.Empty, 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer), 
                 ImmutableDictionary.Create<string, ViewNode>(stringComparer)) { }
         internal ForestSessionState() : this(StringComparer.Ordinal) { }
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
-        internal NavigationTarget NavigationTarget { get; }
+        [Obsolete("Use State.Location instead")]
+        internal Location Location => State.Location;
         internal IImmutableDictionary<string, ViewNode> AllViews { get; }
         internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }

@@ -1,8 +1,10 @@
+using Forest.Navigation;
+
 namespace Forest.Forms.Controls.Dialogs
 {
     public interface IOkCancelDialogView : IDialogView
     { 
-        void OnOk();
-        void OnCancel();
+        Location OnOk();
+        Location OnCancel();
     }
 }

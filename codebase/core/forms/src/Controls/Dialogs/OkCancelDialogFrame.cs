@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Forest.Navigation;
 
 
 namespace Forest.Forms.Controls.Dialogs
@@ -17,11 +18,11 @@ namespace Forest.Forms.Controls.Dialogs
             
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Ok)]
-            internal void Ok() => (view as IOkCancelDialogView)?.OnOk();
+            internal Location Ok() => (view as IOkCancelDialogView)?.OnOk();
 
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Cancel)]
-            internal void Cancel() => (view as IOkCancelDialogView)?.OnCancel();
+            internal Location Cancel() => (view as IOkCancelDialogView)?.OnCancel();
         }
     }
 }

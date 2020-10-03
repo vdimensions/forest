@@ -1,7 +1,9 @@
+using Forest.Navigation;
+
 namespace Forest.Forms.Controls.Dialogs
 {
     public interface IConfirmationDialogView : IDialogView
     {
-        void OnConfirm();
+        Location OnConfirm();
     }
 }

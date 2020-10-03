@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Forest.Navigation;
 
 namespace Forest.Forms.Controls.Dialogs
 {
@@ -33,10 +34,11 @@ namespace Forest.Forms.Controls.Dialogs
 
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             [Command(Commands.Close)]
-            internal void CloseCommand()
+            internal Location CloseCommand()
             {
-                (view as IDialogView)?.OnClose();
+                var result = (view as IDialogView)?.OnClose();
                 Close();
+                return result;
             }
         }
     }

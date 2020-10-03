@@ -4,30 +4,30 @@ namespace Forest.Engine.Aspects
 {
     internal sealed class TerminalNavigatePointcut : INavigatePointcut
     {
-        public static INavigatePointcut Create(IForestExecutionContext context, string target, object message)
-            => new TerminalNavigatePointcut(context, target, message);
+        public static INavigatePointcut Create(IForestExecutionContext context, Location location)
+            => new TerminalNavigatePointcut(context, location);
         
         private readonly IForestExecutionContext _context;
 
-        private TerminalNavigatePointcut(IForestExecutionContext context, string target, object message)
+        private TerminalNavigatePointcut(IForestExecutionContext context, Location location)
         {
             _context = context;
-            NavigationTarget = new NavigationTarget(target, message);
+            Location = location;
         }
 
         public bool Proceed()
         {
-            if (NavigationTarget.Value == null)
+            if (Location.Value == null)
             {
-                _context.Navigate(NavigationTarget.Path);
+                _context.Navigate(Location.Path);
             }
             else
             {
-                _context.Navigate(NavigationTarget.Path, NavigationTarget.Value);
+                _context.Navigate(Location.Path, Location.Value);
             }
             return true;
         }
 
-        public NavigationTarget NavigationTarget { get; }
+        public Location Location { get; }
     }
 }

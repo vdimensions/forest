@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Axle.Extensions.Object;
+using Axle.Verification;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
@@ -10,10 +11,24 @@ namespace Forest.Navigation
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class NavigationTarget : IEquatable<NavigationTarget>
+    public sealed class Location : IEquatable<Location>
     {
-        public static readonly NavigationTarget Empty = new NavigationTarget();
+        public static readonly Location Empty = new Location();
         
+        
+        public static Location Create(string path, object state)
+        {
+            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
+            state.VerifyArgument(nameof(state)).IsNotNull();
+            return new Location(path, state);
+        }
+        
+        public static Location FromPath(string path)
+        {
+            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
+            return new Location(path);
+        }
+
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
@@ -26,21 +41,21 @@ namespace Forest.Navigation
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly object _value;
 
-        internal NavigationTarget(string path, object value)
+        internal Location(string path, object value)
         {
             _path = path;
             _value = value;
         }
-        internal NavigationTarget(string path) : this(path, null) { }
-        private NavigationTarget() : this(string.Empty) { }
+        internal Location(string path) : this(path, null) { }
+        private Location() : this(string.Empty) { }
 
-        bool IEquatable<NavigationTarget>.Equals(NavigationTarget other)
+        bool IEquatable<Location>.Equals(Location other)
         {
             var cmp = StringComparer.Ordinal;
             return other != null && cmp.Equals(Path, other.Path) && Equals(Value, other.Value);
         }
         /// <inheritdoc />
-        public override bool Equals(object obj) => obj is NavigationTarget ni && Equals(ni);
+        public override bool Equals(object obj) => obj is Location ni && Equals(ni);
 
         /// <inheritdoc />
         public override int GetHashCode() => this.CalculateHashCode(StringComparer.Ordinal.GetHashCode(Path), Value);

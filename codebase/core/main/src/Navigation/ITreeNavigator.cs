@@ -2,8 +2,7 @@
 {
     public interface ITreeNavigator
     {
-        void Navigate(string path);
-        void Navigate<T>(string path, T state);
+        void Navigate(Location location);
         
         void NavigateBack();
         void NavigateBack(int offset);

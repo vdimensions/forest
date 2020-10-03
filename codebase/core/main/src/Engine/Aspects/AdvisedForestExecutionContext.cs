@@ -46,15 +46,10 @@ namespace Forest.Engine.Aspects
             SendMessage(_messageAdvices.Aggregate(
                 TerminalMessagePointcut<T>.Create(_executionContext, message),
                 IntermediateMessagePointcut.Create));
-
-        void ITreeNavigator.Navigate(string path) =>
+        
+        void ITreeNavigator.Navigate(Location location) =>
             Navigate(_navigationAdvices.Aggregate(
-                TerminalNavigatePointcut.Create(_executionContext, path, null),
-                IntermediateNavigatePointcut.Create));
-
-        void ITreeNavigator.Navigate<T>(string path, T state) =>
-            Navigate(_navigationAdvices.Aggregate(
-                TerminalNavigatePointcut.Create(_executionContext, path, state),
+                TerminalNavigatePointcut.Create(_executionContext, location),
                 IntermediateNavigatePointcut.Create));
 
         void ITreeNavigator.NavigateBack() => _executionContext.NavigateBack();

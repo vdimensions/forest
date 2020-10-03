@@ -8,8 +8,8 @@ namespace Forest.Engine.Aspects
     public interface INavigatePointcut : IForestExecutionPointcut
     {
         /// <summary>
-        /// A <see cref="NavigationTarget"/> instance representing the navigation operation that was intercepted.
+        /// A <see cref="Location"/> instance representing the navigation operation that was intercepted.
         /// </summary>
-        NavigationTarget NavigationTarget { get; }
+        Location Location { get; }
     }
 }

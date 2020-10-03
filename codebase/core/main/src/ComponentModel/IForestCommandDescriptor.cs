@@ -1,10 +1,11 @@
 ﻿using System;
+using Forest.Navigation;
 
 namespace Forest.ComponentModel
 {
     public interface IForestCommandDescriptor
     {
-        void Invoke(IView sender, object arg);
+        Location Invoke(IView sender, object arg);
         string Name { get; }
         Type ArgumentType { get; }
     }

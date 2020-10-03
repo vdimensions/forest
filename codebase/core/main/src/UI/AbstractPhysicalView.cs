@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Axle.Verification;
 using Forest.Dom;
+using Forest.Navigation;
 using Forest.Engine;
 
 namespace Forest.UI

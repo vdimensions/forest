@@ -62,6 +62,7 @@ namespace Forest.Engine
         private ImmutableDictionary<string, IRuntimeView> _logicalViews;
         private Tree _tree;
         private int _nestedCalls;
+        private Location _location;
 
         internal SlaveExecutionContext(
                 IForestContext context, 
@@ -75,7 +76,8 @@ namespace Forest.Engine
                 new EventBus(), 
                 initialState.Tree,
                 initialState.LogicalViews,
-                executionContextReference) { }
+                executionContextReference,
+                initialState.Location) { }
         private SlaveExecutionContext(
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
@@ -83,7 +85,8 @@ namespace Forest.Engine
                 IEventBus eventBus,
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
-                IForestExecutionContext executionContextReference)
+                IForestExecutionContext executionContextReference,
+                Location location)
         {
             _scope = new TreeChangeScope(_tree = tree);
             _context = context;
@@ -92,6 +95,7 @@ namespace Forest.Engine
             _eventBus = eventBus;
             _logicalViews = logicalViews;
             _executionContextReference = executionContextReference ?? this;
+            _location = location;
         }
 
         public void Init()
@@ -128,7 +132,7 @@ namespace Forest.Engine
             var domProcessors = new[]{ _globalizationDomProcessor, _physicalViewDomProcessor };
             _context.DomManager.ProcessDomNodes(_tree, (node) => changedViews.Contains(node.InstanceID), domProcessors);
             var newPhysicalViews = _physicalViewDomProcessor.RenderViews();
-            return new ForestState(GuidGenerator.NewID(), tree, _logicalViews, newPhysicalViews);
+            return new ForestState(GuidGenerator.NewID(), _location, tree, _logicalViews, newPhysicalViews);
         }
 
         private void Dispose()
@@ -267,7 +271,7 @@ namespace Forest.Engine
         public void ProcessInstructions(ForestInstruction[] instructions) => ProcessInstructions(null, instructions);
 
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
-        private void ProcessInstructions(string template, ForestInstruction[] instructions)
+        private void ProcessInstructions(string template, params ForestInstruction[] instructions)
         {
             var instructionsFailedSecurityChecks = VerifySecurityAccess(
                 _context.SecurityManager,
@@ -275,6 +279,7 @@ namespace Forest.Engine
                 _logicalViews,
                 instructions);
             _nestedCalls++;
+            Location lastResult = null; 
             try
             {
                 foreach (var instruction in instructions)
@@ -301,7 +306,7 @@ namespace Forest.Engine
                                     {
                                         var comparer = StringComparer.Ordinal;
                                         return comparer.Equals(x.InstanceID, ici.InstanceID)
-                                               && comparer.Equals(x.CommandName, ici.CommandName);
+                                            && comparer.Equals(x.CommandName, ici.CommandName);
                                     }))
                             {
                                 // The particular view or command are indicated to be with restricted access
@@ -319,7 +324,11 @@ namespace Forest.Engine
 
                             try
                             {
-                                cmd.Invoke(view, ici.CommandArg);
+                                var navigationResult = cmd.Invoke(view, ici.CommandArg);
+                                if (navigationResult != null && !string.IsNullOrEmpty(navigationResult.Path))
+                                {
+                                    Navigate(navigationResult);
+                                }
                             }
                             catch (CommandInvocationException ex)
                             {
@@ -329,7 +338,7 @@ namespace Forest.Engine
                         
                         case ApplyNavigationStateInstruction ansi:
                             var targetView = _logicalViews.Values
-                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Descriptor.Name, ansi.NavigationTarget.Path));
+                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Descriptor.Name, ansi.Location.Path));
                             if (targetView != null && targetView is INavigationStateProvider nsp)
                             {
                                 _eventBus.Publish(targetView, nsp, NavigationSystem.Messages.Topic);
@@ -359,22 +368,11 @@ namespace Forest.Engine
         }
 
         public void UnsubscribeEvents(IRuntimeView receiver) => _eventBus.Unsubscribe(receiver);
-
-        public void Navigate(string path)
+        
+        public void Navigate(Location location)
         {
-            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
-            if (_nestedCalls > 0)
-            {
-                _eventBus.ClearDeadLetters();
-            }
-            var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
-            var instructions = TemplateCompiler.CompileTemplate(path, templateDefinition, null).ToArray();
-            ProcessInstructions(path, instructions);
-        }
-        public void Navigate<T>(string path, T state)
-        {
-            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
-            state.VerifyArgument(nameof(state)).IsNotNull();
+            var path = location.Path;
+            var state = location.Value;
             if (_nestedCalls > 0)
             {
                 _eventBus.ClearDeadLetters();
@@ -382,6 +380,19 @@ namespace Forest.Engine
             var templateDefinition = Template.LoadTemplate(_context.TemplateProvider, path);
             var instructions = TemplateCompiler.CompileTemplate(path, templateDefinition, state).ToArray();
             ProcessInstructions(path, instructions);
+            _location = location;
+        }
+
+        public void Navigate(string path)
+        {
+            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
+            Navigate(new Location(path));
+        }
+        public void Navigate<T>(string path, T state)
+        {
+            path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
+            state.VerifyArgument(nameof(state)).IsNotNull();
+            Navigate(new Location(path, state));
         }
         public void NavigateBack()
         {

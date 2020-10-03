@@ -2,6 +2,7 @@
 using System.Linq;
 using Axle.Reflection;
 using Axle.Verification;
+using Forest.Navigation;
 
 namespace Forest.ComponentModel
 {
@@ -15,17 +16,28 @@ namespace Forest.ComponentModel
             _parameter = (_commandMethod = commandMethod.VerifyArgument(nameof(commandMethod)).IsNotNull().Value).GetParameters().SingleOrDefault();
         }
 
-        public void Invoke(IView sender, object arg)
+        public Location Invoke(IView sender, object arg)
         {
             try
             {
+                object navResult;
                 if (_parameter != null)
                 {
-                    _commandMethod.Invoke(sender, arg ?? _parameter.DefaultValue);
+                    navResult = _commandMethod.Invoke(sender, arg ?? _parameter.DefaultValue);
                 }
                 else
                 {
-                    _commandMethod.Invoke(sender);
+                    navResult = _commandMethod.Invoke(sender) as Location;
+                }
+
+                switch (navResult)
+                {
+                    case string path:
+                        return Location.FromPath(path);
+                    case Location navigationTarget:
+                        return navigationTarget;
+                    default:
+                        return null;
                 }
             }
             catch (Exception e)

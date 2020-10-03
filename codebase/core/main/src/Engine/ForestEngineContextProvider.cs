@@ -45,23 +45,15 @@ namespace Forest.Engine
                     ctx.Engine.ExecuteCommand(command, instanceID, arg);
                 }
             }
-    
-            void ITreeNavigator.Navigate(string path)
-            {
-                using (var ctx = _provider.CreateContext(_context))
-                {
-                    ctx.Engine.Navigate(path);
-                }
-            }
-    
-            void ITreeNavigator.Navigate<T>(string path, T state)
-            {
-                using (var ctx = _provider.CreateContext(_context))
-                {
-                    ctx.Engine.Navigate(path, state);
-                }
-            }
             
+            void ITreeNavigator.Navigate(Location location)
+            {
+                using (var ctx = _provider.CreateContext(_context))
+                {
+                    ctx.Engine.Navigate(location);
+                }
+            }
+    
             void ITreeNavigator.NavigateBack()
             {
                 using (var ctx = _provider.CreateContext(_context))

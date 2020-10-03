@@ -122,18 +122,11 @@ namespace Forest
                 return ctx.Engine.RegisterSystemView(viewType);
             }
         }
-        void ITreeNavigator.Navigate(string path)
+        void ITreeNavigator.Navigate(Location location)
         {
             using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
             {
-                ctx.Engine.Navigate(path);
-            }
-        }
-        void ITreeNavigator.Navigate<T>(string path, T state)
-        {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
-            {
-                ctx.Engine.Navigate(path, state);
+                ctx.Engine.Navigate(location);
             }
         }
         void ITreeNavigator.NavigateBack()
@@ -238,7 +231,7 @@ namespace Forest
             }
             catch (ForestSecurityException securityException)
             {
-                _securityExceptionHandler.HandleSecurityException(securityException, pointcut.NavigationTarget, this);
+                _securityExceptionHandler.HandleSecurityException(securityException, pointcut.Location, this);
             }
             return false;
         }
