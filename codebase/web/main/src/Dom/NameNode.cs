@@ -3,7 +3,7 @@
 namespace Forest.Web.AspNetCore.Dom
 {
     [Serializable]
-    public abstract class NameNode
+    internal abstract class NameNode
     {
         public string Name { get; internal set; }
     }

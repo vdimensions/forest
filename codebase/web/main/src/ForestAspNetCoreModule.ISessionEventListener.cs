@@ -18,7 +18,7 @@ namespace Forest.Web.AspNetCore
         {
             if (_sessionStateProvider.TryRemove(sessionId, out _))
             {
-                _logger.Trace("Deleted forest session state for session {0}", sessionId);
+                _logger.Info("Deleted forest session state for session {0}", sessionId);
             }
         }
     }

@@ -192,7 +192,7 @@ namespace Forest
                 var sw = Stopwatch.StartNew();
                 var result = pointcut.Proceed();
                 sw.Stop();
-                _logger.Trace("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+                _logger.Info("Forest ExecuteCommand operation took {0}ms", sw.ElapsedMilliseconds.ToString());
                 return result;
             }
             catch (ForestSecurityException securityException)
@@ -209,7 +209,7 @@ namespace Forest
                 var sw = Stopwatch.StartNew();
                 var result = pointcut.Proceed();
                 sw.Stop();
-                _logger.Trace("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+                _logger.Info("Forest SendMessage operation took {0}ms", sw.ElapsedMilliseconds.ToString());
                 return result;
             }
             catch (ForestSecurityException securityException)
@@ -226,7 +226,7 @@ namespace Forest
                 var sw = Stopwatch.StartNew();
                 var result = pointcut.Proceed();
                 sw.Stop();
-                _logger.Trace("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
+                _logger.Info("Forest Navigate operation took {0}ms", sw.ElapsedMilliseconds.ToString());
                 return result;
             }
             catch (ForestSecurityException securityException)
