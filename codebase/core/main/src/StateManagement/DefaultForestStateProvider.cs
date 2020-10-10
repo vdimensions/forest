@@ -6,8 +6,8 @@
 
         ForestState IForestStateProvider.LoadState() => _st = _st ?? new ForestState();
 
-        void IForestStateProvider.CommitState(ForestState state) => _st = state;
+        void IForestStateProvider.BeginStateUpdate(ForestState state) => _st = state;
 
-        void IForestStateProvider.RollbackState() {}
+        void IForestStateProvider.EndStateUpdate() { }
     }
 }

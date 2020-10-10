@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Axle.Reflection.Extensions.Type;
 using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Dom;
@@ -513,7 +512,7 @@ namespace Forest.Engine
             };
             ProcessInstructions(instructions);
         }
-
+        
         void IDisposable.Dispose() => Dispose();
     }
 }

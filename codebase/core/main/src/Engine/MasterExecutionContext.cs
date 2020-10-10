@@ -13,6 +13,9 @@ namespace Forest.Engine
     {
         private readonly IForestStateProvider _stateProvider;
         private readonly IForestExecutionContext _slave;
+        private readonly IForestContext _context;
+
+        private bool _discardState = false;
 
         internal MasterExecutionContext(
             IForestContext context, 
@@ -20,18 +23,20 @@ namespace Forest.Engine
             IPhysicalViewRenderer physicalViewRenderer, 
             IForestEngine sourceEngine)
         {
+            _context = context;
             var initialState = stateProvider.LoadState();
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
             var slave = new SlaveExecutionContext(context, physicalViewDomProcessor, initialState, this);
             _stateProvider = stateProvider;
-            var commandAdvices = context.CommandAdvices.Reverse().ToArray();
-            var messageAdvices = context.MessageAdvices.Reverse().ToArray();
-            var navigationAdvices = context.NavigationAdvices.Reverse().ToArray();
-            _slave = (commandAdvices.Length + messageAdvices.Length + navigationAdvices.Length) > 0
-                ? new AdvisedForestExecutionContext(slave, commandAdvices, messageAdvices, navigationAdvices)
-                : (IForestExecutionContext) slave;
+            _slave = slave;
             slave.Init();
         }
+
+        private bool ExecuteCommand(IExecuteCommandPointcut pointcut) => pointcut.Proceed();
+
+        private bool SendMessage(ISendMessagePointcut pointcut) => pointcut.Proceed();
+
+        private bool Navigate(INavigatePointcut pointcut) => pointcut.Proceed();
 
         IView IForestExecutionContext.ActivateView(InstantiateViewInstruction instantiateViewInstruction) => _slave.ActivateView(instantiateViewInstruction);
 
@@ -39,11 +44,18 @@ namespace Forest.Engine
         {
             try
             {
-                _stateProvider.CommitState(((IStateResolver) _slave).ResolveState());
+                if (!_discardState)
+                {
+                    _stateProvider.BeginStateUpdate(((IStateResolver) _slave).ResolveState());
+                }
+                else
+                {
+                    _stateProvider.EndStateUpdate();
+                }
             }
             catch
             {
-                _stateProvider.RollbackState();
+                _stateProvider.EndStateUpdate();
                 throw;
             }
             finally
@@ -52,13 +64,39 @@ namespace Forest.Engine
             }
         }
 
-        void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg) => _slave.ExecuteCommand(command, instanceID, arg);
-
         IEnumerable<IView> IForestExecutionContext.GetRegionContents(string nodeKey, string region) => _slave.GetRegionContents(nodeKey, region);
 
         ViewState? IForestExecutionContext.GetViewState(string nodeKey) => _slave.GetViewState(nodeKey);
 
-        void ITreeNavigator.Navigate(Location location) => _slave.Navigate(location);
+        void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg)
+        {
+            if (!ExecuteCommand(_context.CommandAdvices.Reverse().Aggregate(
+                TerminalCommandPointcut.Create(_slave, instanceID, command, arg),
+                IntermediateCommandPointcut.Create)))
+            {
+                _discardState = true;
+            }
+        }
+        
+        void IMessageDispatcher.SendMessage<T>(T message)
+        {
+            if (!SendMessage(_context.MessageAdvices.Reverse().Aggregate(
+                TerminalMessagePointcut<T>.Create(_slave, message),
+                IntermediateMessagePointcut.Create)))
+            {
+                _discardState = true;
+            }
+        }
+        
+        void ITreeNavigator.Navigate(Location location)
+        {
+            if (!Navigate(_context.NavigationAdvices.Reverse().Aggregate(
+                TerminalNavigatePointcut.Create(_slave, location),
+                IntermediateNavigatePointcut.Create)))
+            {
+                _discardState = true;
+            }
+        }
 
         void ITreeNavigator.NavigateBack() => _slave.NavigateBack();
         void ITreeNavigator.NavigateBack(int offset) => _slave.NavigateBack(offset);
@@ -70,8 +108,6 @@ namespace Forest.Engine
 
         T IForestEngine.RegisterSystemView<T>() => _slave.RegisterSystemView<T>();
         IView IForestEngine.RegisterSystemView(Type viewType) => _slave.RegisterSystemView(viewType);
-
-        void IMessageDispatcher.SendMessage<T>(T message) => _slave.SendMessage(message);
 
         ViewState IForestExecutionContext.SetViewState(bool silent, string nodeKey, ViewState viewState) => _slave.SetViewState(silent, nodeKey, viewState);
 

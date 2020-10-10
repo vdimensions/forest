@@ -12,7 +12,7 @@ namespace Forest.Web.AspNetCore
             return state.State;
         }
 
-        void IForestStateProvider.CommitState(ForestState state)
+        void IForestStateProvider.BeginStateUpdate(ForestState state)
         {
             var s = _sessionStateProvider.Current;
             try
@@ -25,7 +25,7 @@ namespace Forest.Web.AspNetCore
             }
         }
 
-        void IForestStateProvider.RollbackState()
+        void IForestStateProvider.EndStateUpdate()
         {
             var s = _sessionStateProvider.Current;
             Monitor.Exit(s.SyncRoot);

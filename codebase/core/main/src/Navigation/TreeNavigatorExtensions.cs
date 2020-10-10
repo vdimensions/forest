@@ -2,6 +2,9 @@
 
 namespace Forest.Navigation
 {
+    /// <summary>
+    /// A static class to contain extension methods for the <see cref="ITreeNavigator"/> interface. 
+    /// </summary>
     public static class TreeNavigatorExtensions
     {
         public static void Navigate(this ITreeNavigator navigator, string path)
