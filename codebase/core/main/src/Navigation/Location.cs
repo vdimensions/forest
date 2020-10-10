@@ -22,12 +22,13 @@ namespace Forest.Navigation
             state.VerifyArgument(nameof(state)).IsNotNull();
             return new Location(path, state);
         }
-        
-        public static Location FromPath(string path)
+        public static Location Create(string path)
         {
             path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
             return new Location(path);
         }
+        [Obsolete("Use `Create` method overload instead")]
+        public static Location FromPath(string path) => Create(path);
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]

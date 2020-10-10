@@ -4,7 +4,7 @@ using Forest.Navigation;
 
 namespace Forest.Forms.Controls.Dialogs
 {
-    public static class DialogFrame
+    public class DialogFrame : LogicalView<DialogOptions>, IDialogFrame
     {
         public static class Commands
         {
@@ -15,31 +15,28 @@ namespace Forest.Forms.Controls.Dialogs
             public const string Content = "Content";
         }
 
-        public abstract class View : LogicalView<DialogOptions>, IDialogFrame
+        protected IView view;
+
+        protected DialogFrame(DialogOptions options) : base(options) { }
+        protected DialogFrame() : base(DialogOptions.Default) { }
+
+        public sealed override void Load()
         {
-            protected IView view;
+            base.Load();
+        }
 
-            protected View(DialogOptions options) : base(options) { }
-            protected View() : base(DialogOptions.Default) { }
+        void IDialogFrame.InitInternalView(Type viewType, object model) 
+        {
+            WithRegion(Regions.Content, content => view = content.ActivateView(viewType, model));
+        }
 
-            public sealed override void Load()
-            {
-                base.Load();
-            }
-
-            void IDialogFrame.InitInternalView(Type viewType, object model) 
-            {
-                WithRegion(Regions.Content, content => view = content.ActivateView(viewType, model));
-            }
-
-            [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            [Command(Commands.Close)]
-            internal Location CloseCommand()
-            {
-                var result = (view as IDialogView)?.OnClose();
-                Close();
-                return result;
-            }
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        [Command(Commands.Close)]
+        internal Location CloseCommand()
+        {
+            var result = (view as IDialogView)?.OnClose();
+            Close();
+            return result;
         }
     }
 }

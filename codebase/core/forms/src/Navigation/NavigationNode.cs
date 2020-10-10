@@ -1,16 +1,19 @@
-﻿namespace Forest.Forms.Navigation
+﻿using Forest.Globalization;
+
+namespace Forest.Forms.Navigation
 {
     public class NavigationNode
     {
+        // TODO
+        //public Location Location { get; set; }
+        //[Obsolete]
         public string Path { get; set; }
         
         public bool Selected { get; set; }
         
         public int Offset { get; set; }
         
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        [System.ComponentModel.Localizable(true)]
-        #endif
+        [Localized]
         public string Title { get; set; }
     }
 }

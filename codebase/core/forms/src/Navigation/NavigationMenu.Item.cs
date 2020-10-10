@@ -32,10 +32,7 @@ namespace Forest.Forms.Navigation
 
                 [Command(Commands.Navigate)]
                 [SuppressMessage("ReSharper", "UnusedMember.Global")]
-                internal void Navigate()
-                {
-                    Engine.Navigate(Model.Path);
-                }
+                internal Location Navigate() => Location.Create(Model.Path);
             }
         }
     }

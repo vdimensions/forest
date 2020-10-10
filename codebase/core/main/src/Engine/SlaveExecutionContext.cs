@@ -278,7 +278,6 @@ namespace Forest.Engine
                 _logicalViews,
                 instructions);
             _nestedCalls++;
-            Location lastResult = null; 
             try
             {
                 foreach (var instruction in instructions)
@@ -326,7 +325,7 @@ namespace Forest.Engine
                                 var navigationResult = cmd.Invoke(view, ici.CommandArg);
                                 if (navigationResult != null && !string.IsNullOrEmpty(navigationResult.Path))
                                 {
-                                    Navigate(navigationResult);
+                                    _executionContextReference.Navigate(navigationResult);
                                 }
                             }
                             catch (CommandInvocationException ex)

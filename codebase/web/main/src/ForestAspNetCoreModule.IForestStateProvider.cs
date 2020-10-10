@@ -7,20 +7,19 @@ namespace Forest.Web.AspNetCore
     {
         ForestState IForestStateProvider.BeginUsingState()
         {
-            var state = _sessionStateProvider.Current;
+            var state = _sessionStateProvider.Value;
             Monitor.Enter(state.SyncRoot);
             return state.State;
         }
 
         void IForestStateProvider.UpdateState(ForestState state)
         {
-            var s = _sessionStateProvider.Current;
             _sessionStateProvider.UpdateState(state);
         }
 
         void IForestStateProvider.EndUsingState()
         {
-            var s = _sessionStateProvider.Current;
+            var s = _sessionStateProvider.Value;
             Monitor.Exit(s.SyncRoot);
         }
     }

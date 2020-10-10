@@ -33,7 +33,7 @@ namespace Forest.ComponentModel
                 switch (navResult)
                 {
                     case string path:
-                        return Location.FromPath(path);
+                        return Location.Create(path);
                     case Location navigationTarget:
                         return navigationTarget;
                     default:

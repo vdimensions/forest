@@ -10,13 +10,12 @@ namespace Forest.Web.AspNetCore
         
         void ISessionEventListener.OnSessionStart(ISession session)
         {
-            var sessionId = session.Id;
-            _sessionStateProvider.AddOrReplace(sessionId, new ForestSessionState(), (a, b) => b);
+            _sessionStateProvider.CompareReplace(new ForestSessionState(), (a, b) => b);
         }
 
         void ISessionEventListener.OnSessionEnd(string sessionId)
         {
-            if (_sessionStateProvider.TryRemove(sessionId, out _))
+            if (_sessionStateProvider.TryRemove(out _))
             {
                 _logger.Info("Deleted forest session state for session {0}", sessionId);
             }

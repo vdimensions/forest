@@ -1,10 +1,7 @@
 namespace Forest.Forms.Controls.Dialogs
 {
-    public static class ModalDialogFrame
+    public class ModalDialogFrame : DialogFrame 
     {
-        public sealed class View : DialogFrame.View 
-        { 
-            internal View() : base() { }
-        }
+        internal ModalDialogFrame() : base() { }
     }
 }

@@ -4,7 +4,7 @@ using Forest.Navigation;
 
 namespace Forest.Forms.Controls.Dialogs
 {
-    public static class OkCancelDialogFrame
+    public class OkCancelDialogFrame : DialogFrame
     {
         public static class Commands
         {
@@ -12,17 +12,14 @@ namespace Forest.Forms.Controls.Dialogs
             public const string Cancel = "Cancel";
         }
         
-        public sealed class View : DialogFrame.View
-        {
-            internal View() { }
+        internal OkCancelDialogFrame() { }
             
-            [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            [Command(Commands.Ok)]
-            internal Location Ok() => (view as IOkCancelDialogView)?.OnOk();
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        [Command(Commands.Ok)]
+        internal Location Ok() => (view as IOkCancelDialogView)?.OnOk();
 
-            [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            [Command(Commands.Cancel)]
-            internal Location Cancel() => (view as IOkCancelDialogView)?.OnCancel();
-        }
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        [Command(Commands.Cancel)]
+        internal Location Cancel() => (view as IOkCancelDialogView)?.OnCancel();
     }
 }

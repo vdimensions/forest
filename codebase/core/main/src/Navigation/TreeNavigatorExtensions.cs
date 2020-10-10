@@ -11,7 +11,7 @@ namespace Forest.Navigation
         {
             navigator.VerifyArgument(nameof(navigator)).IsNotNull();
             path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
-            navigator.Navigate(Location.FromPath(path));
+            navigator.Navigate(Location.Create(path));
         }
 
         public static void Navigate<T>(this ITreeNavigator navigator, string path, T state)

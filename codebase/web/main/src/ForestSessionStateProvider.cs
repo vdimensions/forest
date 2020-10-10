@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace Forest.Web.AspNetCore
 {
-    internal sealed class ForestSessionStateProvider : SessionScoped<ForestSessionState>, IClientViewsHelper
+    internal sealed class ForestSessionStateProvider : SessionReference<ForestSessionState>, IClientViewsHelper
     {
         private readonly IHttpContextAccessor _accessor;
         private readonly IForestStateInspector _stateInspector;
@@ -22,21 +22,18 @@ namespace Forest.Web.AspNetCore
         public void UpdateState(ForestState forestState)
         {
             var sessionId = _accessor.HttpContext.Session.Id;
-            var s = Current;
-            AddOrReplace(
-                sessionId,
-                ForestSessionState.ReplaceState(s, forestState),
-                (oldState, newState) => newState);
+            var s = Value;
+            CompareReplace(ForestSessionState.ReplaceState(s, forestState), (oldState, newState) => newState);
         }
        
         public bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor)
         {
-            var state = Current.State;
+            var state = Value.State;
             return _stateInspector.TryGetViewDescriptor(state, instanceId, out descriptor);
         }
 
-        public Location Location => Current.Location;
-        public IImmutableDictionary<string, ViewNode> AllViews => Current.AllViews;
-        public IImmutableDictionary<string, ViewNode> UpdatedViews => Current.UpdatedViews;
+        public Location Location => Value.State.Location;
+        public IImmutableDictionary<string, ViewNode> AllViews => Value.AllViews;
+        public IImmutableDictionary<string, ViewNode> UpdatedViews => Value.UpdatedViews;
     }
 }

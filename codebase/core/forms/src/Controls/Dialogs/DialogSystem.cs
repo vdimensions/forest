@@ -16,9 +16,9 @@ namespace Forest.Forms.Controls.Dialogs
             {
                 registry
                     .Register<View>()
-                    .Register<ModalDialogFrame.View>()
-                    .Register<OkCancelDialogFrame.View>()
-                    .Register<ConfirmationDialogFrame.View>();
+                    .Register<ModalDialogFrame>()
+                    .Register<OkCancelDialogFrame>()
+                    .Register<ConfirmationDialogFrame>();
             }
         }
         
@@ -78,7 +78,7 @@ namespace Forest.Forms.Controls.Dialogs
             [Serializable]
             #endif
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            public sealed class Modal<TView, TModel> : DialogMessage<ModalDialogFrame.View, TView, TModel>
+            public sealed class Modal<TView, TModel> : DialogMessage<ModalDialogFrame, TView, TModel>
                 where TView : IView<TModel>
             {
                 public Modal(TModel model, DialogOptions dialogOptions) : base(model, dialogOptions) { }
@@ -88,7 +88,7 @@ namespace Forest.Forms.Controls.Dialogs
             [Serializable]
             #endif
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            public sealed class ConfirmationDialog<TView, TModel> : DialogMessage<ConfirmationDialogFrame.View, TView, TModel>
+            public sealed class ConfirmationDialog<TView, TModel> : DialogMessage<ConfirmationDialogFrame, TView, TModel>
                 where TView : IView<TModel>, IConfirmationDialogView
             {
                 public ConfirmationDialog(TModel model, DialogOptions dialogOptions) : base(model, dialogOptions) { }
@@ -98,7 +98,7 @@ namespace Forest.Forms.Controls.Dialogs
             [Serializable]
             #endif
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            public sealed class OkCancelDialog<TView, TModel> : DialogMessage<OkCancelDialogFrame.View, TView, TModel>
+            public sealed class OkCancelDialog<TView, TModel> : DialogMessage<OkCancelDialogFrame, TView, TModel>
                 where TView : IView<TModel>, IOkCancelDialogView
             {
                 public OkCancelDialog(TModel model, DialogOptions dialogOptions) : base(model, dialogOptions) { }

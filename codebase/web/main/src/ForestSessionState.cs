@@ -79,8 +79,6 @@ namespace Forest.Web.AspNetCore
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
-        [Obsolete("Use State.Location instead")]
-        internal Location Location => State.Location;
         internal IImmutableDictionary<string, ViewNode> AllViews { get; }
         internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }
