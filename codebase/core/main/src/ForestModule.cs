@@ -157,13 +157,7 @@ namespace Forest
                 ctx.Engine.NavigateUp(offset);
             }
         }
-        void IMessageDispatcher.SendMessage<T>(T msg)
-        {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
-            {
-                ctx.Engine.SendMessage(msg);
-            }
-        }
+        
         void ICommandDispatcher.ExecuteCommand(string command, string target, object arg)
         {
             using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
@@ -172,6 +166,13 @@ namespace Forest
             }
         }
 
+        void IMessageDispatcher.SendMessage<T>(T msg)
+        {
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            {
+                ctx.Engine.SendMessage(msg);
+            }
+        }
         IView IViewFactory.Resolve(IForestViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
         IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
         

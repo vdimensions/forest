@@ -5,27 +5,20 @@ namespace Forest.Web.AspNetCore
 {
     partial class ForestAspNetCoreModule : IForestStateProvider
     {
-        ForestState IForestStateProvider.LoadState()
+        ForestState IForestStateProvider.BeginUsingState()
         {
             var state = _sessionStateProvider.Current;
             Monitor.Enter(state.SyncRoot);
             return state.State;
         }
 
-        void IForestStateProvider.BeginStateUpdate(ForestState state)
+        void IForestStateProvider.UpdateState(ForestState state)
         {
             var s = _sessionStateProvider.Current;
-            try
-            {
-                _sessionStateProvider.UpdateState(state);
-            }
-            finally
-            {
-                Monitor.Exit(s.SyncRoot);
-            }
+            _sessionStateProvider.UpdateState(state);
         }
 
-        void IForestStateProvider.EndStateUpdate()
+        void IForestStateProvider.EndUsingState()
         {
             var s = _sessionStateProvider.Current;
             Monitor.Exit(s.SyncRoot);

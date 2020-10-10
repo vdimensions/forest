@@ -15,7 +15,7 @@ namespace Forest.Engine
         private readonly IForestExecutionContext _slave;
         private readonly IForestContext _context;
 
-        private bool _discardState = false;
+        private bool _discardState;
 
         internal MasterExecutionContext(
             IForestContext context, 
@@ -24,7 +24,7 @@ namespace Forest.Engine
             IForestEngine sourceEngine)
         {
             _context = context;
-            var initialState = stateProvider.LoadState();
+            var initialState = stateProvider.BeginUsingState();
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
             var slave = new SlaveExecutionContext(context, physicalViewDomProcessor, initialState, this);
             _stateProvider = stateProvider;
@@ -46,20 +46,12 @@ namespace Forest.Engine
             {
                 if (!_discardState)
                 {
-                    _stateProvider.BeginStateUpdate(((IStateResolver) _slave).ResolveState());
+                    _stateProvider.UpdateState(((IStateResolver) _slave).ResolveState());
                 }
-                else
-                {
-                    _stateProvider.EndStateUpdate();
-                }
-            }
-            catch
-            {
-                _stateProvider.EndStateUpdate();
-                throw;
             }
             finally
             {
+                _stateProvider.EndUsingState();
                 _slave?.Dispose();
             }
         }
@@ -87,7 +79,7 @@ namespace Forest.Engine
                 _discardState = true;
             }
         }
-        
+
         void ITreeNavigator.Navigate(Location location)
         {
             if (!Navigate(_context.NavigationAdvices.Reverse().Aggregate(

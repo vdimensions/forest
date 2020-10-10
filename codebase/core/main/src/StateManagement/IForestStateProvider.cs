@@ -2,8 +2,8 @@
 {
     public interface IForestStateProvider
     {
-        ForestState LoadState();
-        void BeginStateUpdate(ForestState state);
-        void EndStateUpdate();
+        ForestState BeginUsingState();
+        void UpdateState(ForestState state);
+        void EndUsingState();
     }
 }

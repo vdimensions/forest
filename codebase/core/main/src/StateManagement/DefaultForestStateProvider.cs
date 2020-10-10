@@ -4,10 +4,10 @@
     {
         private ForestState _st;
 
-        ForestState IForestStateProvider.LoadState() => _st = _st ?? new ForestState();
+        ForestState IForestStateProvider.BeginUsingState() => _st = _st ?? new ForestState();
 
-        void IForestStateProvider.BeginStateUpdate(ForestState state) => _st = state;
+        void IForestStateProvider.UpdateState(ForestState state) => _st = state;
 
-        void IForestStateProvider.EndStateUpdate() { }
+        void IForestStateProvider.EndUsingState() { }
     }
 }
