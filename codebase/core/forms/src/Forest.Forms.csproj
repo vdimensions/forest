@@ -14,6 +14,5 @@
     <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
   </ItemGroup>
 
-  <Import Project="../../../Forest.Common.props" />
   <Import Project="../../../../ref/Reference.Forest.Core.targets" />
 </Project>

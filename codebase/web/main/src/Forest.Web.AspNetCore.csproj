@@ -28,10 +28,5 @@
     <PackageReference Include="Axle.Web.AspNetCore.Mvc" Version="$(AxleVersion)" />
   </ItemGroup>
 
-  <Import Project="../../../Forest.Common.props" />
   <Import Project="../../../../ref/Reference.Forest.Core.targets" />
-  <!-- <Import Project="$(AxlePath)/ref/Reference.Axle.Text.Documents.targets" /> -->
-  <!-- <Import Project="$(AxlePath)/ref/Reference.Axle.Configuration.Microsoft.targets" /> -->
-  <!-- <Import Project="$(AxlePath)/ref/Reference.Axle.Application.targets" /> -->
-  <!-- <Import Project="$(AxlePath)/ref/Reference.Axle.Web.AspNetCore.Mvc.targets" /> -->
 </Project>
