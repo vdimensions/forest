@@ -1,6 +1,7 @@
 ﻿using Axle.DependencyInjection;
 using Axle.Logging;
 using Axle.Modularity;
+using Axle.Web.AspNetCore.Session;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.StateManagement;
@@ -20,11 +21,11 @@ namespace Forest.Web.AspNetCore
         private readonly ILogger _logger;
         private readonly ForestMessageConverter _messageConverter;
 
-        public ForestAspNetCoreModule(IForestEngine forestEngine, IViewRegistry viewRegistry, IHttpContextAccessor httpContextAccessor, IForestStateInspector stateInspector, ILogger logger)
+        public ForestAspNetCoreModule(IForestEngine forestEngine, IViewRegistry viewRegistry, ISessionReferenceProvider sessionReferenceProvider, IForestStateInspector stateInspector, ILogger logger)
         {
             _forestEngine = forestEngine;
             _viewRegistry = viewRegistry;
-            _sessionStateProvider = new ForestSessionStateProvider(httpContextAccessor, stateInspector);
+            _sessionStateProvider = new ForestSessionStateProvider(sessionReferenceProvider, stateInspector);
             _logger = logger;
             _messageConverter = new ForestMessageConverter();
         }

@@ -15,10 +15,7 @@ namespace Forest.Web.AspNetCore
 
         void ISessionEventListener.OnSessionEnd(string sessionId)
         {
-            if (_sessionStateProvider.TryRemove(out _))
-            {
-                _logger.Info("Deleted forest session state for session {0}", sessionId);
-            }
+            _logger.Info("Deleted forest session state for session {0}", sessionId);
         }
     }
 }
