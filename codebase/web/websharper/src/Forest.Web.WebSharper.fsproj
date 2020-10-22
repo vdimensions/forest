@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Name>Forest.Web.WebSharper</Name>
+    <AssemblyName>Forest.Web.WebSharper</AssemblyName>
+    <ProjectGuid>{B3D50628-4D5D-4719-9B3C-11E2B2DAF9B6}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AxlePath>../../../../../axle</AxlePath>
+    <!-- <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion> -->
+    <Description>A library to integrate WebSharper with Forest.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.netstandard2.0.fs" />
+    <Compile Include="Node.fs" />
+    <Compile Include="Remoting.fs" />
+    <Compile Include="RemotingPhysicalViewRenderer.fs" />
+    <Compile Include="ForestWebSharperModule.fs" />
+    <Compile Include="UI\Client.fs" />
+    <Compile Include="Sitelets\PhysicalViewRegistry.fs" />
+    <Compile Include="Sitelets\IDocumentOutlineBuilder.fs" />
+    <Compile Include="Sitelets\ForestEndPoint.fs" />
+    <Compile Include="Sitelets\ForestSitelet.fs" />
+    <Compile Include="Sitelets\ForestSiteletModule.fs" />
+    <Compile Include="JSExports.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Axle.FSharp" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Web.AspNetCore.Mvc" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Web.WebSharper" Version="$(AxleVersion)" />
+  </ItemGroup>
+
+  <Import Project="../../../FSharp.Core.Packages.targets" />
+  <Import Project="../../../../ref/Reference.Forest.Core.targets" />
+  <Import Project="../../../../ref/Reference.Forest.Web.AspNetCore.targets" />
+</Project>
