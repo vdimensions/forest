@@ -1,13 +1,11 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-
-using Axle;
+using Axle.Application;
 using Axle.Verification;
-
 
 namespace Forest.Forms
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    public static class AxleApplicationExtensions
+    public static class ApplicationBuilderExtensions
     {
         public static IApplicationBuilder UseForestForms(this IApplicationBuilder builder)
         {
