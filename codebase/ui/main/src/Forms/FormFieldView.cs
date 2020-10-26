@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using Forest.ComponentModel;
 using Forest.UI.Forms.Input;
 
 namespace Forest.UI.Forms
@@ -8,6 +10,14 @@ namespace Forest.UI.Forms
           IFormFieldView
         where TInput: IFormInputView<TValue>
     {
+        
+        [ViewRegistryCallback]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal static void RegisterViews(IViewRegistry viewRegistry)
+        {
+            viewRegistry.Register<TInput>();
+        }
+        
         private static class Regions
         {
             public const string Input = "Input";

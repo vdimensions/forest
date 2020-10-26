@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Forest.ComponentModel;
 using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms.Input.Select
@@ -10,6 +12,13 @@ namespace Forest.UI.Forms.Input.Select
           ISupportsAssignFormField
         where TItemView : IView<TItemModel>
     {
+        [ViewRegistryCallback]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal static void RegisterViews(IViewRegistry viewRegistry)
+        {
+            viewRegistry.Register<SelectOptionView<TItemView, TItemModel>>().Register<TItemView>();
+        }
+        
         public SelectView(IEqualityComparer<TItemModel> itemComparer) : base(null, itemComparer) { }
         public SelectView() : base(null) { }
         

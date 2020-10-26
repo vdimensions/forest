@@ -27,7 +27,7 @@ namespace Forest.UI.Forms
             Action<IValidationRuleBuilder> buildValidationRules = null)
         {
             name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
-            inputViewType.VerifyArgument(nameof(inputViewType)).IsNotNull().IsOfType<IFormInputView>();
+            inputViewType.VerifyArgument(nameof(inputViewType)).IsNotNull().Is<IFormInputView>();
             inputValueType.VerifyArgument(nameof(inputValueType)).IsNotNull();
             
             var validationRulesBuilder = new ValidationRuleBuilder(_region);

@@ -133,6 +133,7 @@ namespace Forest.ComponentModel
         public IViewRegistry DoRegister(Type viewType)
         {
             var d = _descriptorsByType.GetOrAdd(viewType, CreateViewDescriptor);
+            ViewRegistryCallbackAttribute.Invoke(this, viewType);
             if (!d.IsAnonymousView)
             {
                 _namedDescriptors.TryAdd(d.Name, viewType);
