@@ -10,7 +10,6 @@ namespace Forest.UI.Forms
           IFormFieldView
         where TInput: IFormInputView<TValue>
     {
-        
         [ViewRegistryCallback]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IViewRegistry viewRegistry)

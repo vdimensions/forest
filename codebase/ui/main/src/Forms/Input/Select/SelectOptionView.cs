@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Forest.ComponentModel;
 
 namespace Forest.UI.Forms.Input.Select
 {
@@ -7,6 +8,13 @@ namespace Forest.UI.Forms.Input.Select
     public sealed class SelectOptionView<TView, TModel> : LogicalView<SelectOption<TModel>> where TView : IView<TModel>
     {
         private const string Name = "SelectOption";
+        
+        [ViewRegistryCallback]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal static void RegisterViews(IViewRegistry viewRegistry)
+        {
+            viewRegistry.Register<TView>();
+        }
         
         private static class Regions
         {

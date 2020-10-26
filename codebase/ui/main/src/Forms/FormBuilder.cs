@@ -37,7 +37,7 @@ namespace Forest.UI.Forms
                 _fields.Remove(name).Add(
                     name, 
                     Tuple.Create(
-                        new FormField(name, validationRulesBuilder.ValidationStates), 
+                        new FormField(name, validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
                         inputViewType,
                         inputValueType)));
         }
@@ -48,7 +48,7 @@ namespace Forest.UI.Forms
             return AddField(name, typeof(TFormInputView), typeof(TValue), buildValidationRules);
         }
 
-        public IEnumerable<IFormInputView> Build()
+        private IEnumerable<IFormInputView> DoBuild()
         {
             _region.Clear();
             var introspector = new TypeIntrospector(typeof(FormFieldView<,>));
@@ -60,8 +60,10 @@ namespace Forest.UI.Forms
                 var viewType = introspector.GetGenericTypeDefinition().MakeGenericType(inputViewType, inputValueType)
                     .Introspect()
                     .IntrospectedType;
-                yield return (IFormInputView) _region.ActivateView(viewType, field);
+                yield return ((IFormFieldView) _region.ActivateView(viewType, field)).FormInputView;
             }
         }
+
+        public IEnumerable<IFormInputView> Build() => DoBuild().ToImmutableArray();
     }
 }

@@ -16,7 +16,7 @@ namespace Forest.UI.Forms.Input.Select
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IViewRegistry viewRegistry)
         {
-            viewRegistry.Register<SelectOptionView<TItemView, TItemModel>>().Register<TItemView>();
+            viewRegistry.Register<SelectOptionView<TItemView, TItemModel>>();
         }
         
         public MultiSelectView(IEqualityComparer<TItemModel> itemComparer) : base(null, itemComparer) { }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using Axle.Verification;
 
 namespace Forest.UI.Forms.Validation
@@ -7,8 +8,8 @@ namespace Forest.UI.Forms.Validation
     {
         private readonly IRegion _region;
 
-        public ValidationRuleBuilder(IRegion region) : this(region, ImmutableDictionary<ValidationRule, ValidationState>.Empty) { }
-        private ValidationRuleBuilder(IRegion region, ImmutableDictionary<ValidationRule, ValidationState> validationStates)
+        public ValidationRuleBuilder(IRegion region) : this(region, new Dictionary<ValidationRule, ValidationState>()) { }
+        private ValidationRuleBuilder(IRegion region, IDictionary<ValidationRule, ValidationState> validationStates)
         {
             _region = region;
             ValidationStates = validationStates;
@@ -18,50 +19,44 @@ namespace Forest.UI.Forms.Validation
         {
             field.VerifyArgument(nameof(field)).IsNotEmpty();
             var rule = new CompareValidationState(ValidationRule.Compare, new FormFieldReference(_region, field));
-            return new ValidationRuleBuilder(
-                _region,
-                ValidationStates.Remove(rule.Rule).Add(rule.Rule, rule));
+            ValidationStates[rule.Rule] = rule;
+            return this;
         }
         
         public IValidationRuleBuilder MaxLength(int constraint)
         {
             var rule = new ConstrainedValidationState<int>(ValidationRule.MaxLength, constraint);
-            return new ValidationRuleBuilder(
-                _region,
-                ValidationStates.Remove(rule.Rule).Add(rule.Rule, rule));
+            ValidationStates[rule.Rule] = rule;
+            return this;
         }
 
         public IValidationRuleBuilder MaxValue<T>(T constraint)
         {
             var rule = new ConstrainedValidationState<T>(ValidationRule.MaxValue, constraint);
-            return new ValidationRuleBuilder(
-                _region,
-                ValidationStates.Remove(rule.Rule).Add(rule.Rule, rule));
+            ValidationStates[rule.Rule] = rule;
+            return this;
         }
 
         public IValidationRuleBuilder MinValue<T>(T constraint)
         {
             var rule = new ConstrainedValidationState<T>(ValidationRule.MinValue, constraint);
-            return new ValidationRuleBuilder(
-                _region,
-                ValidationStates.Remove(rule.Rule).Add(rule.Rule, rule));
+            ValidationStates[rule.Rule] = rule;
+            return this;
         }
 
         public IValidationRuleBuilder MinLength(int constraint)
         {
             var rule = new ConstrainedValidationState<int>(ValidationRule.MinLength, constraint);
-            return new ValidationRuleBuilder(
-                _region,
-                ValidationStates.Remove(rule.Rule).Add(rule.Rule, rule));
+            ValidationStates[rule.Rule] = rule;
+            return this;
         }
 
         public IValidationRuleBuilder Required()
         {
             var rule = new ValidationState(ValidationRule.Required);
-            return new ValidationRuleBuilder(
-                _region,
-                ValidationStates.Remove(rule.Rule).Add(rule.Rule, rule));
+            ValidationStates[rule.Rule] = rule;
+            return this;
         }
-        internal ImmutableDictionary<ValidationRule, ValidationState> ValidationStates { get; }
+        internal IDictionary<ValidationRule, ValidationState> ValidationStates { get; }
     }
 }
