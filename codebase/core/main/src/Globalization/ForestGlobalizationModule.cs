@@ -27,7 +27,7 @@ namespace Forest.Globalization
     [Module]
     [RequiresResources]
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
-    internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener
+    internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener, IDisposable
     {
         private static CultureScope CreateCultureScope(string cultureName, ILogger logger)
         {
@@ -64,8 +64,7 @@ namespace Forest.Globalization
         public ForestGlobalizationModule(ResourceManager resourceManager, ILogger logger) 
             : this(resourceManager, new ForestGlobalizationConfig(), logger) { }
 
-        [ModuleTerminate]
-        internal void OnTerminate()
+        void IDisposable.Dispose()
         {
             _cacheManager.Dispose();
         }

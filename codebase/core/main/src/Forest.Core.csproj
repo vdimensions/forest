@@ -18,4 +18,31 @@
     <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
     <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Navigation\NavigationModule.INavigationManager.cs">
+      <DependentUpon>NavigationModule.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\Template.Content.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\Template.Definition.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\Template.Mastered.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\Template.RegionItem.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\Template.ViewItem.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\TemplateCompiler.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Templates\TemplateReader.cs">
+      <DependentUpon>Template.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
 </Project>

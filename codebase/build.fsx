@@ -20,7 +20,7 @@ let dir = Shell.pwd()
 
 let projectLocations = [
     "core/main"
-    "core/forms"
+    "ui/main"
     "web/main"
 ]
 
