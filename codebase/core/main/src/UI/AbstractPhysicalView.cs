@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Axle.Verification;
 using Forest.Dom;
-using Forest.Navigation;
 using Forest.Engine;
 
 namespace Forest.UI
@@ -13,29 +12,29 @@ namespace Forest.UI
     {
         private sealed class PhysicalViewCommand : IPhysicalViewCommand
         {
-            private readonly string _instanceId;
+            private readonly string _key;
             private readonly ICommandDispatcher _dispatcher;
             
             public PhysicalViewCommand(
-                    string instanceId, 
+                    string key, 
                     ICommandDispatcher dispatcher, 
                     ICommandModel commandModel) 
                 : this(
-                    instanceId, 
+                    key, 
                     dispatcher, 
                     commandModel.Name, 
                     commandModel.DisplayName, 
                     commandModel.Tooltip, 
                     commandModel.Description) { }
             private PhysicalViewCommand(
-                    string instanceId, 
+                    string key, 
                     ICommandDispatcher dispatcher, 
                     string name, 
                     string displayName, 
                     string tooltip, 
                     string description)
             {
-                _instanceId = instanceId;
+                _key = key;
                 _dispatcher = dispatcher;
                 Name = name;
                 DisplayName = displayName;
@@ -43,7 +42,7 @@ namespace Forest.UI
                 Description = description;
             }
 
-            public void Invoke(object arg) => _dispatcher.ExecuteCommand(Name, _instanceId, arg);
+            public void Invoke(object arg) => _dispatcher.ExecuteCommand(Name, _key, arg);
 
             public string Name { get; }
             public string DisplayName { get; }
@@ -67,19 +66,19 @@ namespace Forest.UI
         }
         
         private readonly IForestEngine _engine;
-        private readonly string _instanceID;
+        private readonly string _key;
 
         private DomNode _node;
         private ImmutableDictionary<string, IPhysicalViewCommand> _commands;
         private IPhysicalViewCommandIndex _commandIndex;
 
-        protected AbstractPhysicalView(IForestEngine engine, string instanceID)
+        protected AbstractPhysicalView(IForestEngine engine, string key)
         {
             engine.VerifyArgument(nameof(engine)).IsNotNull();
-            instanceID.VerifyArgument(nameof(instanceID)).IsNotNullOrEmpty();
+            key.VerifyArgument(nameof(key)).IsNotNullOrEmpty();
 
             _engine = engine;
-            _instanceID = instanceID;
+            _key = key;
             _commands = ImmutableDictionary.Create<string, IPhysicalViewCommand>(StringComparer.Ordinal);
             _commandIndex = new PhysicalViewCommandIndex(_commands);
         }
@@ -96,19 +95,6 @@ namespace Forest.UI
 
         protected abstract void Refresh(DomNode node);
 
-        public void NavigateTo(string template)
-        {
-            template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
-
-            _engine.Navigate(template);
-        }
-        public void NavigateTo<T>(string template, T arg)
-        {
-            template.VerifyArgument(nameof(template)).IsNotNullOrEmpty();
-            arg.VerifyArgument(nameof(arg)).IsNotNull();
-
-            _engine.Navigate(template, arg);
-        }
 
         void IPhysicalView.Update(DomNode node)
         {
@@ -124,7 +110,7 @@ namespace Forest.UI
             {
                 cmd = cmd.Add(
                     commandModel.Name, 
-                    new PhysicalViewCommand(_instanceID, _engine, commandModel));
+                    new PhysicalViewCommand(_key, _engine, commandModel));
             }
             _commandIndex = new PhysicalViewCommandIndex(_commands = cmd);
             
@@ -136,6 +122,6 @@ namespace Forest.UI
 
         public IPhysicalViewCommandIndex Commands => _commandIndex;
 
-        string IPhysicalView.InstanceID => _instanceID;
+        string IPhysicalView.Key => _key;
     }
 }

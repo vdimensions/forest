@@ -5,9 +5,9 @@ namespace Forest.Engine.Instructions
 {
     public sealed class InvokeCommandInstruction : ForestInstruction
     {
-        public InvokeCommandInstruction(string instanceID, string commandName, object commandArg)
+        public InvokeCommandInstruction(string key, string commandName, object commandArg)
         {
-            InstanceID = instanceID;
+            Key = key;
             CommandName = commandName;
             CommandArg = commandArg;
         }
@@ -16,14 +16,14 @@ namespace Forest.Engine.Instructions
         {
             var cmp = StringComparer.Ordinal;
             return other is InvokeCommandInstruction ic
-                && cmp.Equals(InstanceID, ic.InstanceID)
+                && cmp.Equals(Key, ic.Key)
                 && cmp.Equals(CommandName, ic.CommandName)
                 && Equals(CommandArg, ic.CommandArg);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(InstanceID, CommandName, CommandArg);
+        protected override int DoGetHashCode() => this.CalculateHashCode(Key, CommandName, CommandArg);
 
-        public string InstanceID { get; }
+        public string Key { get; }
         public string CommandName { get; }
         public object CommandArg { get; }
     }

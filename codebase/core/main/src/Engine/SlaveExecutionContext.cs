@@ -38,7 +38,7 @@ namespace Forest.Engine
                         }
                         break;
                     case InvokeCommandInstruction ici:
-                        if (logicalViews.TryGetValue(ici.InstanceID, out var view) 
+                        if (logicalViews.TryGetValue(ici.Key, out var view) 
                             && view.Descriptor.Commands.TryGetValue(ici.CommandName, out var commandDescriptor)
                             && !forestSecurityManager.HasAccess(commandDescriptor))
                         {
@@ -303,7 +303,7 @@ namespace Forest.Engine
                                     x =>
                                     {
                                         var comparer = StringComparer.Ordinal;
-                                        return comparer.Equals(x.InstanceID, ici.InstanceID)
+                                        return comparer.Equals(x.Key, ici.Key)
                                             && comparer.Equals(x.CommandName, ici.CommandName);
                                     }))
                             {
@@ -311,7 +311,7 @@ namespace Forest.Engine
                                 throw new ForestSecurityException("Unable to perform the requested operation");
                             }
                             
-                            if (!_logicalViews.TryGetValue(ici.InstanceID, out var view))
+                            if (!_logicalViews.TryGetValue(ici.Key, out var view))
                             {
                                 throw new CommandSourceNotFoundException(ici);
                             }
@@ -503,11 +503,11 @@ namespace Forest.Engine
             ProcessInstructions(instructions);
         }
 
-        void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg)
+        void ICommandDispatcher.ExecuteCommand(string command, string key, object arg)
         {
             var instructions = new ForestInstruction[]
             {
-                new InvokeCommandInstruction(instanceID, command, arg)
+                new InvokeCommandInstruction(key, command, arg)
             };
             ProcessInstructions(instructions);
         }
