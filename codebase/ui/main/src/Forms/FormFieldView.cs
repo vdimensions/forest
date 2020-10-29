@@ -5,11 +5,14 @@ using Forest.UI.Forms.Input;
 
 namespace Forest.UI.Forms
 {
+    [View(Name)]
     public class FormFieldView<TInput, TValue> 
         : LogicalView<FormField>,
           IFormFieldView
         where TInput: IFormInputView<TValue>
     {
+        private const string Name = "FormField";
+        
         [ViewRegistryCallback]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IViewRegistry viewRegistry)
