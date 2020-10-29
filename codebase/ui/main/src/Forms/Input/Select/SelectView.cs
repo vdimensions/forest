@@ -8,8 +8,7 @@ namespace Forest.UI.Forms.Input.Select
 {
     public class SelectView<TItemView, TItemModel> 
         : AbstractSelectView<object, TItemView, TItemModel>,
-          IFormInputView<TItemModel>,
-          ISupportsAssignFormField
+          IFormInputView<TItemModel>
         where TItemView : IView<TItemModel>
     {
         [ViewRegistryCallback]
@@ -79,8 +78,5 @@ namespace Forest.UI.Forms.Input.Select
         /// <inheritdoc />
         public TItemModel Value { get; private set; }
         object IFormInputView.Value => Value;
-
-        /// <inheritdoc cref="IFormInputView{TValue}.Field" />
-        public FormField Field { get; set; }
     }
 }

@@ -7,9 +7,11 @@ namespace Forest.UI.Forms.Input.Select
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public abstract class AbstractSelectView<TSelectModel, TItemView, TItemModel> 
-        : Repeater<TSelectModel, SelectOptionView<TItemView, TItemModel>, SelectOption<TItemModel>>
+        : Repeater<TSelectModel, SelectOptionView<TItemView, TItemModel>, SelectOption<TItemModel>>,
+          ISupportsAssignFormField
         where TItemView : IView<TItemModel>
     {
+        private FormField _field;
         private IEnumerable<SelectOptionView<TItemView, TItemModel>> _optionViews;
         private readonly IEqualityComparer<TItemModel> _itemComparer;
 
@@ -43,5 +45,9 @@ namespace Forest.UI.Forms.Input.Select
         }
 
         protected IEqualityComparer<TItemModel> ItemComparer => _itemComparer;
+        
+        /// <inheritdoc cref="IFormInputView{TValue}.Field" />
+        public FormField Field => _field;
+        FormField ISupportsAssignFormField.Field { set => _field = value; }
     }
 }
