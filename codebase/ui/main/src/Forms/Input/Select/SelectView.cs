@@ -6,11 +6,14 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms.Input.Select
 {
+    [View(Name)]
     public class SelectView<TItemView, TItemModel> 
         : AbstractSelectView<object, TItemView, TItemModel>,
           IFormInputView<TItemModel>
         where TItemView : IView<TItemModel>
     {
+        private const string Name = "Select";
+        
         [ViewRegistryCallback]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IViewRegistry viewRegistry)

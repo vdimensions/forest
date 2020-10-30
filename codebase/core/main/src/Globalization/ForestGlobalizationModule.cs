@@ -155,7 +155,11 @@ namespace Forest.Globalization
             var scope = CreateCultureScope(_config.DisplayLanguage, _logger);
             try
             {
-                var textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
+                ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
+                if (!string.IsNullOrEmpty(node.GlobalizationKey))
+                {
+                    textDocument = new TextDocumentSubset(textDocument, node.GlobalizationKey);
+                }
                 var newCommands = node.Commands;
                 var cmdKeys = newCommands.Keys;
                 foreach (var commandName in cmdKeys)
@@ -176,16 +180,28 @@ namespace Forest.Globalization
 
                 if (!TryLocalize(new TextDocumentSubset(textDocument, "Model"), node.Model, out var newModel))
                 {
-                    _logger.Warn(
-                        "Unable to create a cloned model object to use for localization: view '{0}'.", 
-                        node.Name);
+                    if (node.Model != null)
+                    {
+                        _logger.Warn(
+                            "Unable to create a cloned model object to use for localization: view '{0}'.", 
+                            node.Name);
+                    }
                     newModel = node.Model;
                 }
                 if (ReferenceEquals(newModel, node.Model) && ReferenceEquals(newCommands, node.Commands))
                 {
                     return node;
                 }
-                return new DomNode(node.InstanceID, node.Name, node.Region, newModel, node.Parent, node.Regions, newCommands, node.Revision);
+                return new DomNode(
+                    node.InstanceID, 
+                    node.Name, 
+                    node.Region, 
+                    newModel, 
+                    node.Parent, 
+                    node.Regions, 
+                    newCommands, 
+                    node.GlobalizationKey, 
+                    node.Revision);
             }
             finally
             {

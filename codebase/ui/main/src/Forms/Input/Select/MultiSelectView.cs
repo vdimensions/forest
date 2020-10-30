@@ -6,11 +6,14 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms.Input.Select
 {
+    [View(Name)]
     public class MultiSelectView<TItemView, TItemModel> 
         : AbstractSelectView<object, TItemView, TItemModel>, 
           IFormInputView<TItemModel[]>
         where TItemView : IView<TItemModel>
     {
+        private const string Name = "MultiSelect";
+        
         [ViewRegistryCallback]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IViewRegistry viewRegistry)

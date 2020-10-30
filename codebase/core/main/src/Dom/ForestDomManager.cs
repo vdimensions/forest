@@ -39,6 +39,7 @@ namespace Forest.Dom
                     nodeMap.TryGetValue(node.ParentKey, out var parent) ? parent : null, 
                     ImmutableDictionary<string, IEnumerable<DomNode>>.Empty, 
                     ImmutableDictionary.CreateRange(commands.Comparer, commands),
+                    viewState.GlobalizationKey,
                     node.Revision
                 );
                 nodeMap[node.Key] = domNode;
@@ -69,6 +70,7 @@ namespace Forest.Dom
                         parentDomNode.Parent, 
                         newRegions, 
                         parentDomNode.Commands,
+                        parentDomNode.GlobalizationKey,
                         parentDomNode.Revision);
                     var newNode = new DomNode(
                         domNode.InstanceID, 
@@ -78,6 +80,7 @@ namespace Forest.Dom
                         newParent, 
                         domNode.Regions, 
                         domNode.Commands,
+                        domNode.GlobalizationKey,
                         domNode.Revision);
                     nodeMap[parentDomNode.InstanceID] = newParent;
                     nodeMap[domNode.InstanceID] = newNode;
@@ -101,7 +104,7 @@ namespace Forest.Dom
                 {
                     if (dn.Parent != null && changedNodes.TryGetValue(dn.Parent.InstanceID, out var updatedParent))
                     {
-                        dn = new DomNode(dn.InstanceID, dn.Name, dn.Region, dn.Model, updatedParent, dn.Regions, dn.Commands, dn.Revision);
+                        dn = new DomNode(dn.InstanceID, dn.Name, dn.Region, dn.Model, updatedParent, dn.Regions, dn.Commands, dn.GlobalizationKey, dn.Revision);
                     }
                     dn = domProcessor.ProcessNode(dn, isNodeChanged);
                     changedNodes[dn.InstanceID] = dn;

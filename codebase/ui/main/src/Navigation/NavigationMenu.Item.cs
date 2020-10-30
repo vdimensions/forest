@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Forest.Globalization;
 using Forest.Navigation;
 
 namespace Forest.UI.Navigation
@@ -10,8 +11,27 @@ namespace Forest.UI.Navigation
             private const string Name = "NavigationMenuItem";
 
             [View(Name)]
-            internal class View : LogicalView<NavigationNode>
+            internal class View : LogicalView<NavigationNode>, ISupportsCustomGlobalizationKey<NavigationNode>
             {
+                private string ObtainGlobalizationKey(NavigationNode model)
+                {
+                    return $"{Name}.{model.Path.Replace("/", ".")}";
+                }
+
+                string ISupportsCustomGlobalizationKey<NavigationNode>.ObtainGlobalizationKey(NavigationNode model)
+                {
+                    return ObtainGlobalizationKey(model);
+                }
+
+                string ISupportsCustomGlobalizationKey.ObtainGlobalizationKey(object model)
+                {
+                    if (model is NavigationNode navigationNode)
+                    {
+                        return ObtainGlobalizationKey(navigationNode);
+                    }
+                    return null;
+                }
+                
                 protected View(NavigationNode model) : base(model) { }
             }
         }

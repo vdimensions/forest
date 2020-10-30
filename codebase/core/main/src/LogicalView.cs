@@ -3,6 +3,7 @@ using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.Engine.Instructions;
+using Forest.Globalization;
 
 namespace Forest
 {
@@ -17,7 +18,7 @@ namespace Forest
         {
             _state = state;
         }
-        protected LogicalView(T model) : this(ReferenceEquals(model, null) ? ViewState.Empty : ViewState.Create(model)) { }
+        protected LogicalView(T model) : this(ReferenceEquals(model, null) ? ViewState.Empty : ViewState.Create(model, null)) { }
         ~LogicalView() => DoDispose(false);
 
         protected virtual void Dispose(bool disposing) { }
@@ -103,7 +104,19 @@ namespace Forest
             var vs = context.GetViewState(_key);
             if (vs.HasValue)
             {
-                _state = vs.Value;
+                if (string.IsNullOrEmpty(vs.Value.GlobalizationKey) &&
+                    this is ISupportsCustomGlobalizationKey supportsCustomGlobalizationKey)
+                {
+                    var key = supportsCustomGlobalizationKey.ObtainGlobalizationKey(vs.Value.Model);
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        context.SetViewState(true, _key, _state = ViewState.AssignGlobalizationKey(vs.Value, key));
+                    }
+                }
+                else
+                {
+                    _state = vs.Value;
+                }
             }
             else
             {

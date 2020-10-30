@@ -2,6 +2,7 @@
 
 namespace Forest.UI.Navigation
 {
+    [Localized]
     public class NavigationNode
     {
         // TODO
