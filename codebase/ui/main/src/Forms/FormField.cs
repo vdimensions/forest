@@ -19,7 +19,13 @@ namespace Forest.UI.Forms
 
         object ICloneable.Clone()
         {
-            return new FormField(Name, Validation);
+            return new FormField(
+                Name, 
+                // TODO:
+                // We make the validation dictionary mutable on purpose here, otherwise globalization may fail
+                // A workaround must be thought of, for instance a new IGlboalizationCloenable<T> interface which produces
+                // mutable clones for globalization purposes only.
+                new Dictionary<ValidationRule, ValidationState>(Validation));
         }
 
         /// <summary>

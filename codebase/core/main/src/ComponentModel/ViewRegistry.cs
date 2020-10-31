@@ -26,6 +26,27 @@ namespace Forest.ComponentModel
             public IEnumerable<TAttribute> Attributes { get; }
         }
 
+        private class ForestViewRegistryListenerWrapper : IForestViewRegistryListener
+        {
+            private readonly Action<IForestViewDescriptor> _registerCallback;
+            private readonly HashSet<string> _doubleCallProtection = new HashSet<string>(StringComparer.Ordinal);
+
+            private ForestViewRegistryListenerWrapper(Action<IForestViewDescriptor> registerCallback)
+            {
+                _registerCallback = registerCallback;
+            }
+            public ForestViewRegistryListenerWrapper(IForestViewRegistryListener listener) : this(listener.OnViewRegistered) { }
+            public ForestViewRegistryListenerWrapper(_ForestViewRegistryListener listener) : this(listener.OnViewRegistered) { }
+
+            public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
+            {
+                if (_doubleCallProtection.Add(viewDescriptor.Name))
+                {
+                    _registerCallback(viewDescriptor);
+                }
+            }
+        }
+
         private const ScanOptions ScanOpts = ScanOptions.PublicInstance|ScanOptions.NonPublic;
 
         private static IEnumerable<TAttribute> GetAttributes<TAttribute>(IAttributeTarget attributeTarget)
@@ -72,13 +93,7 @@ namespace Forest.ComponentModel
 
         private readonly ConcurrentDictionary<Type, IForestViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IForestViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
-        private readonly IEnumerable<object> _listeners;
-
-
-        public ViewRegistry(IEnumerable<object> listeners)
-        {
-            _listeners = listeners;
-        }
+        private readonly ConcurrentBag<ForestViewRegistryListenerWrapper> _viewRegistryListeners = new ConcurrentBag<ForestViewRegistryListenerWrapper>();
 
         protected virtual ITypeIntrospector CreateIntrospector(Type viewType) => new TypeIntrospector(viewType);
         
@@ -132,21 +147,24 @@ namespace Forest.ComponentModel
 
         public IForestViewRegistry DoRegister(Type viewType)
         {
-            var d = _descriptorsByType.GetOrAdd(viewType, CreateViewDescriptor);
-            ViewRegistryCallbackAttribute.Invoke(this, viewType);
-            if (!d.IsAnonymousView)
-            {
-                _namedDescriptors.TryAdd(d.Name, viewType);
-            }
+            _descriptorsByType.AddOrUpdate(
+                viewType,
+                (type) =>
+                {
+                    var d = CreateViewDescriptor(type);
+                    ViewRegistryCallbackAttribute.Invoke(this, type);
+                    if (!d.IsAnonymousView)
+                    {
+                        _namedDescriptors.TryAdd(d.Name, type);
+                    }
 
-            foreach (var listener in _listeners.OfType<_ForestViewRegistryListener>())
-            {
-                listener.OnViewRegistered(d);
-            }
-            foreach (var listener in _listeners.OfType<IForestViewRegistryListener>())
-            {
-                listener.OnViewRegistered(d);
-            }
+                    foreach (var listener in _viewRegistryListeners)
+                    {
+                        listener.OnViewRegistered(d);
+                    }
+                    return d;
+                },
+                (_, existing) => existing);
             return this;
         }
 
@@ -162,6 +180,25 @@ namespace Forest.ComponentModel
         public IForestViewDescriptor Describe(string viewName) =>
             _namedDescriptors.TryGetValue(viewName.VerifyArgument(nameof(viewName)).IsNotNullOrEmpty().Value, out var viewType)
                 ? DoGetDescriptor(viewType) : null;
+
+        public void AddListener(_ForestViewRegistryListener listener)
+        {
+            var w = new ForestViewRegistryListenerWrapper(listener);
+            _viewRegistryListeners.Add(w);
+            foreach (var viewDescriptor in _descriptorsByType.Values)
+            {
+                w.OnViewRegistered(viewDescriptor);
+            }
+        }
+        public void AddListener(IForestViewRegistryListener listener)
+        {
+            var w = new ForestViewRegistryListenerWrapper(listener);
+            _viewRegistryListeners.Add(w);
+            foreach (var viewDescriptor in _descriptorsByType.Values)
+            {
+                w.OnViewRegistered(viewDescriptor);
+            }
+        }
 
         public IEnumerable<IForestViewDescriptor> ViewDescriptors => _descriptorsByType.Values;
     }
