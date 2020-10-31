@@ -12,7 +12,7 @@ namespace Forest.UI.Dialogs
         [Module]
         internal sealed  class Module : IForestViewProvider
         {
-            public void RegisterViews(IViewRegistry registry)
+            public void RegisterViews(IForestViewRegistry registry)
             {
                 registry
                     .Register<View>()

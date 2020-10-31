@@ -17,11 +17,11 @@ namespace Forest.Web.AspNetCore
     internal sealed partial class ForestAspNetCoreModule : ForestEngineContextProvider
     {
         private readonly IForestEngine _forestEngine;
-        private readonly IViewRegistry _viewRegistry;
+        private readonly IForestViewRegistry _viewRegistry;
         private readonly ILogger _logger;
         private readonly ForestMessageConverter _messageConverter;
 
-        public ForestAspNetCoreModule(IForestEngine forestEngine, IViewRegistry viewRegistry, ISessionReferenceProvider sessionReferenceProvider, IForestStateInspector stateInspector, ILogger logger)
+        public ForestAspNetCoreModule(IForestEngine forestEngine, IForestViewRegistry viewRegistry, ISessionReferenceProvider sessionReferenceProvider, IForestStateInspector stateInspector, ILogger logger)
         {
             _forestEngine = forestEngine;
             _viewRegistry = viewRegistry;

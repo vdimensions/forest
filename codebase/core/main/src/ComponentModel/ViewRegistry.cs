@@ -12,7 +12,7 @@ using Axle.Verification;
 namespace Forest.ComponentModel
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    internal class ViewRegistry : IViewRegistry
+    internal class ViewRegistry : IForestViewRegistry
     {
         private readonly struct MethodAndAttributes<TAttribute> where TAttribute: Attribute
         {
@@ -130,7 +130,7 @@ namespace Forest.ComponentModel
                 isAnonymousView);
         }
 
-        public IViewRegistry DoRegister(Type viewType)
+        public IForestViewRegistry DoRegister(Type viewType)
         {
             var d = _descriptorsByType.GetOrAdd(viewType, CreateViewDescriptor);
             ViewRegistryCallbackAttribute.Invoke(this, viewType);
@@ -150,8 +150,8 @@ namespace Forest.ComponentModel
             return this;
         }
 
-        public IViewRegistry Register(Type viewType) => DoRegister(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value);
-        public IViewRegistry Register<T>() where T : IView => DoRegister(typeof(T));
+        public IForestViewRegistry Register(Type viewType) => DoRegister(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value);
+        public IForestViewRegistry Register<T>() where T : IView => DoRegister(typeof(T));
 
         private IForestViewDescriptor DoGetDescriptor(Type viewType) => 
             _descriptorsByType.TryGetValue(viewType, out var result) ? result : null;

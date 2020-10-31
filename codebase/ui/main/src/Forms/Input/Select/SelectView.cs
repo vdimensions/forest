@@ -16,7 +16,7 @@ namespace Forest.UI.Forms.Input.Select
         
         [ViewRegistryCallback]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal static void RegisterViews(IViewRegistry viewRegistry)
+        internal static void RegisterViews(IForestViewRegistry viewRegistry)
         {
             viewRegistry.Register<SelectOptionView<TItemView, TItemModel>>();
         }

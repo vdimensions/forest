@@ -15,7 +15,7 @@ namespace Forest.UI.Forms
         
         [ViewRegistryCallback]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal static void RegisterViews(IViewRegistry viewRegistry)
+        internal static void RegisterViews(IForestViewRegistry viewRegistry)
         {
             viewRegistry.Register<TInput>();
         }

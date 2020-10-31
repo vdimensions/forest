@@ -6,6 +6,6 @@ namespace Forest
     [Requires(typeof(ForestViewRegistry))]
     internal interface _ForestViewProvider
     {
-        void RegisterViews(IViewRegistry registry);
+        void RegisterViews(IForestViewRegistry registry);
     }
 }

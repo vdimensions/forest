@@ -32,7 +32,7 @@ namespace Forest
         IForestMessageAdvice, 
         IForestNavigationAdvice
     {
-        private readonly IViewRegistry _viewRegistry;
+        private readonly IForestViewRegistry _viewRegistry;
         private readonly IViewFactory _viewFactory;
         private readonly IForestSecurityManager _securityManager;
         private readonly IForestSecurityExceptionHandler _securityExceptionHandler;
@@ -46,7 +46,7 @@ namespace Forest
         private ForestEngineContextProvider _engineContextProvider;
 
         public ForestModule(
-                IViewRegistry viewRegistry, 
+                IForestViewRegistry viewRegistry, 
                 IDependencyContext dependencyContainer, 
                 ITemplateProvider templateProvider,
                 IForestSecurityManager securityManager,
@@ -177,7 +177,7 @@ namespace Forest
         IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
         
         IViewFactory IForestContext.ViewFactory => this;
-        IViewRegistry IForestContext.ViewRegistry => _viewRegistry;
+        IForestViewRegistry IForestContext.ViewRegistry => _viewRegistry;
         IForestSecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;
         IForestDomManager IForestContext.DomManager => _domManager;

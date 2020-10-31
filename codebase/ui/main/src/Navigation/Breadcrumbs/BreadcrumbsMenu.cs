@@ -10,7 +10,7 @@ namespace Forest.UI.Navigation.Breadcrumbs
         [Module]
         internal sealed class Module : IForestViewProvider
         {
-            void IForestViewProvider.RegisterViews(IViewRegistry registry)
+            void IForestViewProvider.RegisterViews(IForestViewRegistry registry)
             {
                 registry
                     .Register<View>()

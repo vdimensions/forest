@@ -9,9 +9,9 @@ namespace Forest
 {
     [Module]
     [RequiresResources]
-    internal sealed class ForestViewRegistry : IViewRegistry
+    internal sealed class ForestViewRegistry : IForestViewRegistry
     {
-        private readonly IViewRegistry _viewRegistry;
+        private readonly IForestViewRegistry _viewRegistry;
         private readonly ConcurrentBag<object> _listeners = new ConcurrentBag<object>();
 
         public ForestViewRegistry()
@@ -34,8 +34,8 @@ namespace Forest
         public IForestViewDescriptor Describe(Type viewType) => _viewRegistry.Describe(viewType);
         public IForestViewDescriptor Describe(string viewName) => _viewRegistry.Describe(viewName);
 
-        public IViewRegistry Register<T>() where T: IView => _viewRegistry.Register<T>();
-        public IViewRegistry Register(Type viewType) => _viewRegistry.Register(viewType);
+        public IForestViewRegistry Register<T>() where T: IView => _viewRegistry.Register<T>();
+        public IForestViewRegistry Register(Type viewType) => _viewRegistry.Register(viewType);
 
         public IEnumerable<IForestViewDescriptor> ViewDescriptors => _viewRegistry.ViewDescriptors;
     }

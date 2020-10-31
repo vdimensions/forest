@@ -4,10 +4,11 @@ namespace Forest.UI.Forms
 {
     public static class FormsRegionExtensions
     {
-        public static IFormBuilder DefineForm(this IRegion region)
+        public static IFormBuilder DefineForm(this IRegion region, string formName)
         {
             region.VerifyArgument(nameof(region)).IsNotNull();
-            return new FormBuilder(region);
+            formName.VerifyArgument(nameof(formName)).IsNotNullOrEmpty();
+            return new FormBuilder(region, formName);
         }
     }
 }

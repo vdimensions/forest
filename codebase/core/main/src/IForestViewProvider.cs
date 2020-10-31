@@ -7,6 +7,6 @@ namespace Forest
     [ProvidesFor(typeof(ForestModule))]
     public interface IForestViewProvider
     {
-        void RegisterViews(IViewRegistry registry);
+        void RegisterViews(IForestViewRegistry registry);
     }
 }

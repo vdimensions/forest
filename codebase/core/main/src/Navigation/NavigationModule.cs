@@ -20,7 +20,7 @@ namespace Forest.Navigation
         internal void DependencyInitialized(INavigationTreeConfigurer navigationTreeConfigurer) 
             => navigationTreeConfigurer.Configure(this);
 
-        void _ForestViewProvider.RegisterViews(IViewRegistry registry) 
+        void _ForestViewProvider.RegisterViews(IForestViewRegistry registry) 
             => registry.Register<NavigationSystem.View>();
     }
 }

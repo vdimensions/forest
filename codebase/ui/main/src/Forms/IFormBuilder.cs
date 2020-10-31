@@ -16,6 +16,6 @@ namespace Forest.UI.Forms
             string name,
             Action<IValidationRuleBuilder> buildValidationRules = null) where TFormInputView : IFormInputView<TValue>;
 
-        IEnumerable<IFormInputView> Build();
+        IDictionary<string, IFormInputView> Build();
     }
 }

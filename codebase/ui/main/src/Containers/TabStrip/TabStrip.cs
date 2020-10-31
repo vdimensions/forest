@@ -6,7 +6,7 @@ namespace Forest.UI.Containers.TabStrip
     [Module]
     internal sealed class TabStripModule : IForestViewProvider
     {
-        public void RegisterViews(IViewRegistry registry)
+        public void RegisterViews(IForestViewRegistry registry)
         {
             registry
                 .Register<TabView>()

@@ -5,7 +5,7 @@ namespace Forest.ComponentModel
 {
     public static class ViewRegistryExtensions
     {
-        public static IForestViewDescriptor Describe(this IViewRegistry registry, ViewHandle viewHandle)
+        public static IForestViewDescriptor Describe(this IForestViewRegistry registry, ViewHandle viewHandle)
         {
             Verifier.IsNotNull(Verifier.VerifyArgument(registry, nameof(registry)));
             switch (viewHandle)

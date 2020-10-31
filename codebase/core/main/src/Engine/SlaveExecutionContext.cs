@@ -21,7 +21,7 @@ namespace Forest.Engine
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
         private static IList<ForestInstruction> VerifySecurityAccess(
             IForestSecurityManager forestSecurityManager, 
-            IViewRegistry viewRegistry, 
+            IForestViewRegistry viewRegistry, 
             ImmutableDictionary<string,IRuntimeView> logicalViews,
             ForestInstruction[] instructions)
         {

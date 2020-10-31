@@ -8,7 +8,7 @@ namespace Forest
     [AttributeUsage(AttributeTargets.Method)]
     public sealed class ViewRegistryCallbackAttribute : Attribute
     {
-        internal static void Invoke(IViewRegistry viewRegistry, Type viewType)
+        internal static void Invoke(IForestViewRegistry viewRegistry, Type viewType)
         {
             new TypeIntrospector(viewType)
                 .GetMethods(ScanOptions.Static | ScanOptions.Public | ScanOptions.NonPublic)

@@ -1,16 +1,25 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Forest.Globalization;
 using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
+    /// <summary>
+    /// The model for a <see cref="FormFieldView{TInput,TValue}"/>.
+    /// </summary>
     [Localized]
-    public sealed class FormField
+    public sealed class FormField : ICloneable
     {
         internal FormField(string name, IDictionary<ValidationRule, ValidationState> validation)
         {
             Name = name;
             Validation = validation;
+        }
+
+        object ICloneable.Clone()
+        {
+            return new FormField(Name, Validation);
         }
 
         /// <summary>

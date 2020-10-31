@@ -6,7 +6,7 @@ namespace Forest.UI.Forms
 {
     public static class ViewRegistryExtensions
     {
-        public static IViewRegistry RegisterFormField<TInput, TValue>(this IViewRegistry registry)
+        public static IForestViewRegistry RegisterFormField<TInput, TValue>(this IForestViewRegistry registry)
             where TInput: IFormInputView<TValue>
         {
             registry.VerifyArgument(nameof(registry)).IsNotNull();

@@ -11,12 +11,14 @@ namespace Forest.UI.Forms
     internal sealed class FormBuilder : IFormBuilder
     {
         private readonly IRegion _region;
+        private readonly string _formName;
         private readonly ImmutableDictionary<string, Tuple<FormField, Type, Type>> _fields;
 
-        internal FormBuilder(IRegion region) : this(region, ImmutableDictionary<string, Tuple<FormField, Type, Type>>.Empty) { }
-        private FormBuilder(IRegion region, ImmutableDictionary<string, Tuple<FormField, Type, Type>> fields)
+        internal FormBuilder(IRegion region, string formName) : this(region, formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>>.Empty) { }
+        private FormBuilder(IRegion region, string formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>> fields)
         {
             _region = region;
+            _formName = formName;
             _fields = fields;
         }
 
@@ -34,10 +36,11 @@ namespace Forest.UI.Forms
             buildValidationRules?.Invoke(validationRulesBuilder);
             return new FormBuilder(
                 _region, 
+                _formName,
                 _fields.Remove(name).Add(
                     name, 
                     Tuple.Create(
-                        new FormField(name, validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
+                        new FormField($"{_formName}.{name}", validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
                         inputViewType,
                         inputValueType)));
         }
@@ -48,22 +51,24 @@ namespace Forest.UI.Forms
             return AddField(name, typeof(TFormInputView), typeof(TValue), buildValidationRules);
         }
 
-        private IEnumerable<IFormInputView> DoBuild()
+        private IEnumerable<KeyValuePair<string, IFormInputView>> DoBuild()
         {
             _region.Clear();
             var introspector = new TypeIntrospector(typeof(FormFieldView<,>));
-            foreach (var formFieldData in _fields.Values)
+            foreach (var kvp in _fields)
             {
+                var name = kvp.Key;
+                var formFieldData = kvp.Value;
                 var field = formFieldData.Item1;
                 var inputViewType = formFieldData.Item2;
                 var inputValueType = formFieldData.Item3;
                 var viewType = introspector.GetGenericTypeDefinition().MakeGenericType(inputViewType, inputValueType)
                     .Introspect()
                     .IntrospectedType;
-                yield return ((IFormFieldView) _region.ActivateView(viewType, field)).FormInputView;
+                yield return new KeyValuePair<string, IFormInputView>(name, ((IFormFieldView) _region.ActivateView(viewType, field)).FormInputView);
             }
         }
 
-        public IEnumerable<IFormInputView> Build() => DoBuild().ToImmutableArray();
+        public IDictionary<string, IFormInputView> Build() => DoBuild().ToImmutableDictionary();
     }
 }
