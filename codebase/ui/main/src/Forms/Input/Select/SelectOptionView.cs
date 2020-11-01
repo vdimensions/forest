@@ -7,6 +7,7 @@ namespace Forest.UI.Forms.Input.Select
     [View(Name)]
     public sealed class SelectOptionView<TView, TModel> : LogicalView<SelectOption<TModel>> where TView : IView<TModel>
     {
+        private TView _contentView;
         private const string Name = "SelectOption";
         
         [ViewRegistryCallback]
@@ -33,7 +34,7 @@ namespace Forest.UI.Forms.Input.Select
         {
             WithRegion(
                 Regions.Content,
-                itemRegion => ContentView = itemRegion.Clear().ActivateView<TView, TModel>(Model.Value));
+                itemRegion => _contentView = itemRegion.Clear().ActivateView<TView, TModel>(Model.Value));
         }
 
         [Command(Commands.Toggle)]
@@ -51,7 +52,7 @@ namespace Forest.UI.Forms.Input.Select
         }
 
         internal event Action<SelectOptionView<TView, TModel>> Toggled;
-        
-        internal TView ContentView { get; private set; }
+
+        internal TView ContentView => _contentView;
     }
 }
