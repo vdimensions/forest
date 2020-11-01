@@ -3,8 +3,11 @@ using Forest.Navigation;
 
 namespace Forest.UI.Dialogs
 {
+    [View(Name)]
     public class OkCancelDialogFrame : DialogFrame<IOkCancelDialogView>
     {
+        private const string Name = "OkCancelDialogFrame";
+        
         public static class Commands
         {
             public const string Ok = "OK";

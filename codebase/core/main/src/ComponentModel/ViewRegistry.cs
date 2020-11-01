@@ -26,7 +26,7 @@ namespace Forest.ComponentModel
             public IEnumerable<TAttribute> Attributes { get; }
         }
 
-        private class ForestViewRegistryListenerWrapper : IForestViewRegistryListener
+        private sealed class ForestViewRegistryListenerWrapper : IForestViewRegistryListener
         {
             private readonly Action<IForestViewDescriptor> _registerCallback;
             private readonly HashSet<string> _doubleCallProtection = new HashSet<string>(StringComparer.Ordinal);
@@ -61,13 +61,12 @@ namespace Forest.ComponentModel
             {
                 return false;
             }
-            var baseMethods =
-                overrideMethods
-                    .Select(m => Tuple.Create(m.GetBaseDefinition(), m))
-                    .Where(t => t.Item1.DeclaringType != t.Item2.DeclaringType)
-                    .Select(t => t.Item1)
-                    .Distinct()
-                    .ToArray();
+            var baseMethods = overrideMethods
+                .Select(m => Tuple.Create(m.GetBaseDefinition(), m))
+                .Where(t => t.Item1.DeclaringType != t.Item2.DeclaringType)
+                .Select(t => t.Item1)
+                .Distinct()
+                .ToArray();
             return baseMethods.Contains(method) || IsOverriden(method, baseMethods);
         }
 
@@ -145,7 +144,7 @@ namespace Forest.ComponentModel
                 isAnonymousView);
         }
 
-        public IForestViewRegistry DoRegister(Type viewType)
+        private IForestViewRegistry DoRegister(Type viewType)
         {
             _descriptorsByType.AddOrUpdate(
                 viewType,
@@ -157,7 +156,6 @@ namespace Forest.ComponentModel
                     {
                         _namedDescriptors.TryAdd(d.Name, type);
                     }
-
                     foreach (var listener in _viewRegistryListeners)
                     {
                         listener.OnViewRegistered(d);

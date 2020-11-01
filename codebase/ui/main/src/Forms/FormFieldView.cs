@@ -3,6 +3,7 @@ using System.Linq;
 using Forest.ComponentModel;
 using Forest.Globalization;
 using Forest.UI.Forms.Input;
+using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
@@ -17,7 +18,7 @@ namespace Forest.UI.Forms
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IForestViewRegistry viewRegistry)
         {
-            viewRegistry.Register<TInput>();
+            viewRegistry.Register<TInput>().Register<ValidationMessageView>();
         }
         
         private static class Regions
@@ -54,7 +55,7 @@ namespace Forest.UI.Forms
                 {
                     continue;
                 }
-                region.ActivateView<FormFieldValidationMessage, string>(validationState.Message);
+                region.ActivateView<ValidationMessageView, string>(validationState.Message);
             }
         }
         

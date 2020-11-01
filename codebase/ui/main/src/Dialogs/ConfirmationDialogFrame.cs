@@ -3,8 +3,11 @@ using Forest.Navigation;
 
 namespace Forest.UI.Dialogs
 {
+    [View(Name)]
     public class ConfirmationDialogFrame : DialogFrame<IConfirmationDialogView>
     {
+        private const string Name = "ConfirmationDialogFrame";
+        
         public static class Commands
         {
             public const string Confirm = "Confirm";

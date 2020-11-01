@@ -9,7 +9,7 @@ namespace Forest.UI.Containers.TabStrip
 {
     public class TabStripView : Repeater<object, TabView, Tab>
     {
-        public static class Regions
+        private static class Regions
         {
             public const string TabList = "TabList";
             public const string Content = "Content";
@@ -23,7 +23,7 @@ namespace Forest.UI.Containers.TabStrip
         private readonly Guid _guid;
         private readonly IEqualityComparer<string> _tabIdComparer;
 
-        protected TabStripView() : base(null, Regions.TabList)
+        internal TabStripView() : base(null, Regions.TabList)
         {
             _guid = Guid.NewGuid();
             _tabIdComparer = StringComparer.Ordinal;
