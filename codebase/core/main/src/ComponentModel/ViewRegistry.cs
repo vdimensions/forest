@@ -152,7 +152,7 @@ namespace Forest.ComponentModel
                 {
                     var d = CreateViewDescriptor(type);
                     ViewRegistryCallbackAttribute.Invoke(this, type);
-                    if (!d.IsAnonymousView)
+                    if (!d.IsAnonymousView && !type.IsGenericType)
                     {
                         _namedDescriptors.TryAdd(d.Name, type);
                     }
