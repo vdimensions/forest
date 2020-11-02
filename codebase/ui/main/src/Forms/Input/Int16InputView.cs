@@ -1,6 +1,6 @@
 ﻿namespace Forest.UI.Forms.Input
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class Int16InputView : FormInputView<short>
     {
         private const string Name = "Int16Input";

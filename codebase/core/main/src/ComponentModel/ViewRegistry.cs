@@ -141,7 +141,8 @@ namespace Forest.ComponentModel
                 new ReadOnlyDictionary<string, IForestCommandDescriptor>(commandDescriptors), 
                 eventDescriptors,
                 isSystemView,
-                isAnonymousView);
+                isAnonymousView,
+                viewAttribute.TreatNameAsTypeAlias);
         }
 
         private IForestViewRegistry DoRegister(Type viewType)
@@ -152,7 +153,7 @@ namespace Forest.ComponentModel
                 {
                     var d = CreateViewDescriptor(type);
                     ViewRegistryCallbackAttribute.Invoke(this, type);
-                    if (!d.IsAnonymousView && !type.IsGenericType)
+                    if (!d.IsAnonymousView && d.TreatNameAsTypeAlias)
                     {
                         _namedDescriptors.TryAdd(d.Name, type);
                     }

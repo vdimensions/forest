@@ -1,6 +1,6 @@
 ﻿namespace Forest.UI.Forms.Input
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class DoubleInputView : FormInputView<double>
     {
         private const string Name = "DoubleInput";

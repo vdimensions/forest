@@ -4,7 +4,7 @@ using Forest.ComponentModel;
 
 namespace Forest.UI.Forms.Input.Select
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class SelectOptionView<TView, TModel> : LogicalView<SelectOption<TModel>> where TView : IView<TModel>
     {
         private TView _contentView;

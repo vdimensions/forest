@@ -19,7 +19,8 @@ namespace Forest.ComponentModel
             IReadOnlyDictionary<string, IForestCommandDescriptor> commands, 
             IEnumerable<IEventDescriptor> events, 
             bool isSystemView, 
-            bool isAnonymousView)
+            bool isAnonymousView,
+            bool useNameAsTypeAlias)
         {
             Name = name;
             ViewType = viewType;
@@ -28,6 +29,7 @@ namespace Forest.ComponentModel
             Events = events;
             IsSystemView = isSystemView;
             IsAnonymousView = isAnonymousView;
+            TreatNameAsTypeAlias = useNameAsTypeAlias;
         }
 
         public string Name { get; }
@@ -37,5 +39,6 @@ namespace Forest.ComponentModel
         public IEnumerable<IEventDescriptor> Events { get; }
         public bool IsSystemView { get; }
         public bool IsAnonymousView { get; }
+        public bool TreatNameAsTypeAlias { get; }
     }
 }

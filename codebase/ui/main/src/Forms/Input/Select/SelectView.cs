@@ -6,7 +6,7 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms.Input.Select
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public class SelectView<TItemView, TItemModel> 
         : AbstractSelectView<object, TItemView, TItemModel>,
           IFormInputView<TItemModel>

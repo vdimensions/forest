@@ -57,7 +57,7 @@ namespace Forest.UI.Common
     /// </summary>
     /// <typeparam name="TItemView">The type of the repeater's items view.</typeparam>
     /// <typeparam name="TItemModel">The type of the repeater's items view model.</typeparam>
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class Repeater<TItemView, TItemModel> : Repeater<object, TItemView, TItemModel> where TItemView : IView<TItemModel>
     {
         public const string Name = "Repeater";

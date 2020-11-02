@@ -1,6 +1,6 @@
 ﻿namespace Forest.UI.Forms.Input
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class SingleInputView : FormInputView<float>
     {
         private const string Name = "SingleInput";

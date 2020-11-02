@@ -7,7 +7,7 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public class FormFieldView<TInput, TValue> 
         : LogicalView<FormField>,
           IFormFieldView, ISupportsCustomGlobalizationKey<FormField> where TInput: IFormInputView<TValue>

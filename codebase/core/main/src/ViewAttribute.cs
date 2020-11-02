@@ -12,5 +12,12 @@ namespace Forest
         }
 
         public string Name { get; }
+        
+        /// <summary>
+        /// Gets or sets a value that indicates whether the view <see cref="Name">name</see>
+        /// can be used to uniquely describe the target view.
+        /// This essentially enables view composition in xml templates.
+        /// </summary>
+        public bool TreatNameAsTypeAlias { get; set; } = true;
     }
 }

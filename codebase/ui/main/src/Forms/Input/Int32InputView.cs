@@ -1,6 +1,6 @@
 ﻿namespace Forest.UI.Forms.Input
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class Int32InputView : FormInputView<int>
     {
         private const string Name = "Int32Input";

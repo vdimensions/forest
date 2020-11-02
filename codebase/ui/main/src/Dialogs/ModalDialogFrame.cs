@@ -1,6 +1,6 @@
 namespace Forest.UI.Dialogs
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public class ModalDialogFrame : DialogFrame<IDialogView>
     {
         private const string Name = "ModalDialogFrame";

@@ -47,5 +47,12 @@ namespace Forest.ComponentModel
         /// <see cref="LogicalView">logical view</see> is an anonymous view.
         /// </summary>
         bool IsAnonymousView { get; }
+
+        /// <summary>
+        /// Gets or sets a value that indicates whether the view <see cref="Name">name</see>
+        /// can be used to uniquely describe the target view.
+        /// This essentially enables view composition in xml templates.
+        /// </summary>
+        bool TreatNameAsTypeAlias { get; }
     }
 }

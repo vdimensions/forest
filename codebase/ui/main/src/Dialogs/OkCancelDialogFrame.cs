@@ -3,7 +3,7 @@ using Forest.Navigation;
 
 namespace Forest.UI.Dialogs
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public class OkCancelDialogFrame : DialogFrame<IOkCancelDialogView>
     {
         private const string Name = "OkCancelDialogFrame";

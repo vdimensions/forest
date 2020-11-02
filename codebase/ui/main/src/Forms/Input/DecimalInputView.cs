@@ -1,6 +1,6 @@
 ﻿namespace Forest.UI.Forms.Input
 {
-    [View(Name)]
+    [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class DecimalInputView : FormInputView<decimal>
     {
         private const string Name = "DecimalInput";
