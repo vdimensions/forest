@@ -12,6 +12,7 @@ namespace Forest.UI.Forms.Input.Select
           IFormInputView<TItemModel[]>
         where TItemView : IView<TItemModel>
     {
+        private TItemModel[] _value = new TItemModel[0];
         private const string Name = "MultiSelect";
         
         [ViewRegistryCallback]
@@ -53,7 +54,7 @@ namespace Forest.UI.Forms.Input.Select
                     selectedItems.Add(optionView.Model.Value);
                 }
             }
-            ValueChanged?.Invoke(Value = selectedItems.ToArray(), Validate(Value));
+            ValueChanged?.Invoke(_value = selectedItems.ToArray(), Validate(Value));
         }
 
         /// <inheritdoc />
@@ -90,7 +91,7 @@ namespace Forest.UI.Forms.Input.Select
         public event FormInputValueChanged<TItemModel[]> ValueChanged;
 
         /// <inheritdoc />
-        public TItemModel[] Value { get; private set; } = new TItemModel[0];
+        public TItemModel[] Value => _value;
         object IFormInputView.Value => Value;
     }
 }

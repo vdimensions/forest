@@ -12,6 +12,7 @@ namespace Forest.UI.Forms.Input.Select
           IFormInputView<TItemModel>
         where TItemView : IView<TItemModel>
     {
+        private TItemModel _value;
         private const string Name = "Select";
         
         [ViewRegistryCallback]
@@ -47,8 +48,7 @@ namespace Forest.UI.Forms.Input.Select
             SelectOptionView<TItemView, TItemModel> toggledSelectOptionView, 
             IEqualityComparer<TItemModel> itemComparer)
         {
-            var value = toggledSelectOptionView.Model.Value;
-            Value = value;
+            var value = _value = toggledSelectOptionView.Model.Value;
             if (toggledSelectOptionView.Model.Selected)
             {
                 //
@@ -79,7 +79,7 @@ namespace Forest.UI.Forms.Input.Select
         public event FormInputValueChanged<TItemModel> ValueChanged;
 
         /// <inheritdoc />
-        public TItemModel Value { get; private set; }
-        object IFormInputView.Value => Value;
+        public TItemModel Value => _value;
+        object IFormInputView.Value => _value;
     }
 }

@@ -142,7 +142,7 @@ namespace Forest.ComponentModel
                 eventDescriptors,
                 isSystemView,
                 isAnonymousView,
-                viewAttribute.TreatNameAsTypeAlias);
+                (viewAttribute?.TreatNameAsTypeAlias).GetValueOrDefault(false));
         }
 
         private IForestViewRegistry DoRegister(Type viewType)
