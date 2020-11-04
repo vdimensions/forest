@@ -10,7 +10,7 @@ namespace Forest.UI.Forms.Input.Select
     public class SelectView<TItemView, TItemModel> 
         : AbstractSelectView<object, TItemView, TItemModel>,
           IFormInputView<TItemModel>
-        where TItemView : IView<TItemModel>
+        where TItemView : AbstractSelectOptionView<TItemModel>
     {
         private TItemModel _value;
         private const string Name = "Select";
@@ -19,7 +19,7 @@ namespace Forest.UI.Forms.Input.Select
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IForestViewRegistry viewRegistry)
         {
-            viewRegistry.Register<SelectOptionView<TItemView, TItemModel>>();
+            viewRegistry.Register<TItemView>();
         }
         
         public SelectView(IEqualityComparer<TItemModel> itemComparer) : base(null, itemComparer) { }
@@ -44,8 +44,8 @@ namespace Forest.UI.Forms.Input.Select
 
         /// <inheritdoc />
         protected sealed override void HandleSelectionChanged(
-            IEnumerable<SelectOptionView<TItemView, TItemModel>> allOptionViews, 
-            SelectOptionView<TItemView, TItemModel> toggledSelectOptionView, 
+            IEnumerable<TItemView> allOptionViews, 
+            TItemView toggledSelectOptionView, 
             IEqualityComparer<TItemModel> itemComparer)
         {
             var value = _value = toggledSelectOptionView.Model.Value;
@@ -61,7 +61,7 @@ namespace Forest.UI.Forms.Input.Select
                 var isTheCurrentItem = itemComparer.Equals(optionView.Model.Value, toggledSelectOptionView.Model.Value);
                 optionView.UpdateModel(m => new SelectOption<TItemModel>(m.Value, isTheCurrentItem));
             }
-            ValueChanged?.Invoke(toggledSelectOptionView.ContentView.Model, Validate(value));
+            ValueChanged?.Invoke(toggledSelectOptionView.Model.Value, Validate(value));
         }
 
         /// <inheritdoc />

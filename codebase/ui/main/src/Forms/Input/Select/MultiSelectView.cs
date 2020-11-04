@@ -10,7 +10,7 @@ namespace Forest.UI.Forms.Input.Select
     public class MultiSelectView<TItemView, TItemModel> 
         : AbstractSelectView<object, TItemView, TItemModel>, 
           IFormInputView<TItemModel[]>
-        where TItemView : IView<TItemModel>
+        where TItemView : AbstractSelectOptionView<TItemModel>
     {
         private TItemModel[] _value = new TItemModel[0];
         private const string Name = "MultiSelect";
@@ -19,7 +19,7 @@ namespace Forest.UI.Forms.Input.Select
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IForestViewRegistry viewRegistry)
         {
-            viewRegistry.Register<SelectOptionView<TItemView, TItemModel>>();
+            viewRegistry.Register<SelectOptionView<TItemModel>>();
         }
         
         public MultiSelectView(IEqualityComparer<TItemModel> itemComparer) : base(null, itemComparer) { }
@@ -36,8 +36,8 @@ namespace Forest.UI.Forms.Input.Select
 
         /// <inheritdoc />
         protected sealed override void HandleSelectionChanged(
-            IEnumerable<SelectOptionView<TItemView, TItemModel>> allOptionViews, 
-            SelectOptionView<TItemView, TItemModel> toggledSelectOptionView, 
+            IEnumerable<TItemView> allOptionViews, 
+            TItemView toggledSelectOptionView, 
             IEqualityComparer<TItemModel> itemComparer)
         {
             var selectedItems = new List<TItemModel>();

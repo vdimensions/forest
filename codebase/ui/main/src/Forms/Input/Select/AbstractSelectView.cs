@@ -7,12 +7,12 @@ namespace Forest.UI.Forms.Input.Select
 {
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public abstract class AbstractSelectView<TSelectModel, TItemView, TItemModel> 
-        : Repeater<TSelectModel, SelectOptionView<TItemView, TItemModel>, SelectOption<TItemModel>>,
+        : Repeater<TSelectModel, TItemView, SelectOption<TItemModel>>,
           ISupportsAssignFormField
-        where TItemView : IView<TItemModel>
+        where TItemView : AbstractSelectOptionView<TItemModel>
     {
         private FormField _field;
-        private IEnumerable<SelectOptionView<TItemView, TItemModel>> _optionViews;
+        private IEnumerable<TItemView> _optionViews;
         private readonly IEqualityComparer<TItemModel> _itemComparer;
 
         protected AbstractSelectView(TSelectModel model, IEqualityComparer<TItemModel> itemComparer) : base(model)
@@ -29,17 +29,18 @@ namespace Forest.UI.Forms.Input.Select
             foreach (var view in _optionViews)
             {
                 view.Toggled += Toggled;
-                result.AddLast(view.ContentView);
+                result.AddLast(view);
             }
             return result;
         }
 
         protected abstract void HandleSelectionChanged(
-            IEnumerable<SelectOptionView<TItemView, TItemModel>> allOptionViews,
-            SelectOptionView<TItemView, TItemModel> toggledSelectOptionView,
+            IEnumerable<TItemView> allOptionViews,
+            TItemView toggledSelectOptionView,
             IEqualityComparer<TItemModel> itemComparer);
 
-        private void Toggled(SelectOptionView<TItemView, TItemModel> selectedSelectOptionView)
+        private void Toggled(AbstractSelectOptionView<TItemModel> selectedSelectOptionView) => Toggled((TItemView) selectedSelectOptionView);
+        private void Toggled(TItemView selectedSelectOptionView)
         {
             HandleSelectionChanged(_optionViews, selectedSelectOptionView, _itemComparer);
         }
