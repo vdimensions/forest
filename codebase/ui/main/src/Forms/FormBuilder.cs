@@ -13,13 +13,16 @@ namespace Forest.UI.Forms
         private readonly IRegion _region;
         private readonly string _formName;
         private readonly ImmutableDictionary<string, Tuple<FormField, Type, Type>> _fields;
+        private readonly ImmutableList<string> _fieldNames;
 
-        internal FormBuilder(IRegion region, string formName) : this(region, formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>>.Empty) { }
-        private FormBuilder(IRegion region, string formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>> fields)
+        internal FormBuilder(IRegion region, string formName) 
+            : this(region, formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>>.Empty, ImmutableList<string>.Empty) { }
+        private FormBuilder(IRegion region, string formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>> fields, ImmutableList<string> fieldNames)
         {
             _region = region;
             _formName = formName;
             _fields = fields;
+            _fieldNames = fieldNames;
         }
 
         public IFormBuilder AddField(
@@ -42,7 +45,8 @@ namespace Forest.UI.Forms
                     Tuple.Create(
                         new FormField($"{_formName}.{name}", validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
                         inputViewType,
-                        inputValueType)));
+                        inputValueType)),
+                _fieldNames.Remove(name).Add(name));
         }
 
         public IFormBuilder AddField<TFormInputView, TValue>(string name, Action<IValidationRuleBuilder> buildValidationRules = null) 
@@ -55,10 +59,9 @@ namespace Forest.UI.Forms
         {
             _region.Clear();
             var introspector = new TypeIntrospector(typeof(FormFieldView<,>));
-            foreach (var kvp in _fields)
+            foreach (var name in _fieldNames)
             {
-                var name = kvp.Key;
-                var formFieldData = kvp.Value;
+                var formFieldData = _fields[name];
                 var field = formFieldData.Item1;
                 var inputViewType = formFieldData.Item2;
                 var inputValueType = formFieldData.Item3;
