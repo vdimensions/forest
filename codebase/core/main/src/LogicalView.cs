@@ -3,7 +3,6 @@ using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.Engine.Instructions;
-using Forest.Globalization;
 
 namespace Forest
 {
@@ -104,13 +103,12 @@ namespace Forest
             var vs = context.GetViewState(_key);
             if (vs.HasValue)
             {
-                if (string.IsNullOrEmpty(vs.Value.GlobalizationKey) &&
-                    this is ISupportsCustomGlobalizationKey supportsCustomGlobalizationKey)
+                if (string.IsNullOrEmpty(vs.Value.ResourceBundle))
                 {
-                    var key = supportsCustomGlobalizationKey.ObtainGlobalizationKey(vs.Value.Model);
+                    var key = ResourceBundle;
                     if (!string.IsNullOrEmpty(key))
                     {
-                        context.SetViewState(true, _key, _state = ViewState.AssignGlobalizationKey(vs.Value, key));
+                        context.SetViewState(true, _key, _state = ViewState.AssignResourceBundle(vs.Value, key));
                     }
                 }
                 else
@@ -175,6 +173,11 @@ namespace Forest
         IForestExecutionContext IRuntimeView.Context => ExecutionContext;
 
         void IDisposable.Dispose() => DoDispose(true);
+
+        protected virtual string ResourceBundle => _descriptor?.Name;
+
+        string IView.ResourceBundle => ResourceBundle;
+
     }
 
     public abstract class LogicalView : LogicalView<object>

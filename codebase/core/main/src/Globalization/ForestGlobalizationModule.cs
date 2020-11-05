@@ -86,6 +86,11 @@ namespace Forest.Globalization
 
         private bool TryCloneObject(object obj, out object clone)
         {
+            if (obj is IGlobalizationCloneable globalizationCloneable)
+            {
+                clone = globalizationCloneable.Clone();
+                return true;
+            }
             #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
             if (obj is ICloneable cloneable)
             {
@@ -183,9 +188,7 @@ namespace Forest.Globalization
                 {
                     if (node.Model != null)
                     {
-                        _logger.Warn(
-                            "Unable to create a cloned model object to use for localization: view '{0}'.", 
-                            node.Name);
+                        _logger.Warn("Unable to clone the view model to use for localization: view '{0}'.",  node.Name);
                     }
                     newModel = node.Model;
                 }

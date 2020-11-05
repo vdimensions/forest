@@ -14,6 +14,8 @@ namespace Forest
         void Close();
     
         object Model { get; }
+
+        string ResourceBundle { get; }
     }
     
     public interface IView<T> : IView

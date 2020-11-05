@@ -39,7 +39,7 @@ namespace Forest.Dom
                     nodeMap.TryGetValue(node.ParentKey, out var parent) ? parent : null, 
                     ImmutableDictionary<string, IEnumerable<DomNode>>.Empty, 
                     ImmutableDictionary.CreateRange(commands.Comparer, commands),
-                    viewState.GlobalizationKey,
+                    viewState.ResourceBundle,
                     node.Revision
                 );
                 nodeMap[node.Key] = domNode;

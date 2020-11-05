@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Forest.ComponentModel;
-using Forest.Globalization;
 using Forest.UI.Forms.Input;
 using Forest.UI.Forms.Validation;
 
@@ -10,7 +9,8 @@ namespace Forest.UI.Forms
     [View(Name, TreatNameAsTypeAlias = false)]
     public class FormFieldView<TInput, TValue> 
         : LogicalView<FormField>,
-          IFormFieldView, ISupportsCustomGlobalizationKey<FormField> where TInput: IFormInputView<TValue>
+          IFormFieldView
+        where TInput: IFormInputView<TValue>
     {
         private const string Name = "FormField";
         
@@ -59,24 +59,7 @@ namespace Forest.UI.Forms
             }
         }
         
-        private string ObtainGlobalizationKey(FormField model)
-        {
-            return $"{Name}.{model.Name}";
-        }
-
-        string ISupportsCustomGlobalizationKey<FormField>.ObtainGlobalizationKey(FormField model)
-        {
-            return ObtainGlobalizationKey(model);
-        }
-
-        string ISupportsCustomGlobalizationKey.ObtainGlobalizationKey(object model)
-        {
-            if (model is FormField navigationNode)
-            {
-                return ObtainGlobalizationKey(navigationNode);
-            }
-            return null;
-        }
+        protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Name}" : null;
 
         IFormInputView IFormFieldView.FormInputView
         {

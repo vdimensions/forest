@@ -18,34 +18,34 @@ namespace Forest
         public static ViewState UpdateModel(ViewState viewState, object model)
         {
             model.VerifyArgument(nameof(model)).IsNotNull();
-            return new ViewState(model, viewState.DisabledCommands, viewState.GlobalizationKey);
+            return new ViewState(model, viewState.DisabledCommands, viewState.ResourceBundle);
         }
 
         public static ViewState DisableCommand(ViewState viewState, string command)
         {
             command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands.Add(command), viewState.GlobalizationKey);
+            return new ViewState(viewState.Model, viewState.DisabledCommands.Add(command), viewState.ResourceBundle);
         }
         public static ViewState EnableCommand(ViewState viewState, string command)
         {
             command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.GlobalizationKey);
+            return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.ResourceBundle);
         }
 
-        public static ViewState AssignGlobalizationKey(ViewState viewState, string globalizationKey)
+        public static ViewState AssignResourceBundle(ViewState viewState, string ressssourceBundle)
         {
-            return new ViewState(viewState.Model, viewState.DisabledCommands, globalizationKey);
+            return new ViewState(viewState.Model, viewState.DisabledCommands, ressssourceBundle);
         }
 
         public static readonly ViewState Empty;
 
         private readonly IImmutableSet<string> _disabledCommands;
 
-        private ViewState(object model, IImmutableSet<string> disabledCommands = null, string globalizationKey = null)
+        private ViewState(object model, IImmutableSet<string> disabledCommands = null, string resourceBundle = null)
         {
             Model = model;
             _disabledCommands = disabledCommands;
-            GlobalizationKey = globalizationKey;
+            ResourceBundle = resourceBundle;
         }
 
         public bool Equals(ViewState other)
@@ -67,6 +67,6 @@ namespace Forest
 
         public object Model { get; }
         public IImmutableSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create<string>(StringComparer.Ordinal);
-        public string GlobalizationKey { get; }
+        public string ResourceBundle { get; }
     }
 }
