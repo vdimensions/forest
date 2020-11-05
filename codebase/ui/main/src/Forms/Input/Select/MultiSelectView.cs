@@ -31,7 +31,9 @@ namespace Forest.UI.Forms.Input.Select
             {
                 return Enumerable.Empty<TItemView>();
             }
-            return PopulateAndSelect(items, selectedItems);
+            var result = PopulateAndSelect(items, selectedItems);
+            _value = result.Select(x => x.Model).Where(x => x.Selected).Select(x => x.Value).ToArray();
+            return result;
         }
 
         /// <inheritdoc />
