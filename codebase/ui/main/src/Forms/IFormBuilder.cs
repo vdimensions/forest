@@ -11,9 +11,11 @@ namespace Forest.UI.Forms
             string name, 
             Type inputViewType, 
             Type inputValueType, 
+            object defaultValue = null,
             Action<IValidationRuleBuilder> buildValidationRules = null);
         IFormBuilder AddField<TFormInputView, TValue>(
             string name,
+            TValue defaultValue = default(TValue),
             Action<IValidationRuleBuilder> buildValidationRules = null) where TFormInputView : IFormInputView<TValue>;
 
         IDictionary<string, IFormInputView> Build();

@@ -35,7 +35,17 @@ namespace Forest.UI.Forms.Input
 
         /// <inheritdoc />
         public FormField Field => _field;
-        FormField ISupportsAssignFormField.Field { set => _field = value; }
+        FormField ISupportsAssignFormField.Field
+        {
+            set
+            {
+                _field = value;
+                if (_field.DefaultValue is TValue defaultValue)
+                {
+                    _value = defaultValue;
+                }
+            }
+        }
 
         /// <inheritdoc />
         public TValue Value => _value;

@@ -11,12 +11,12 @@ namespace Forest.UI.Forms
         {
             registry
                 .RegisterFormField<TextInputView, string>()
-                .RegisterFormField<Int16InputView, short>()
-                .RegisterFormField<Int32InputView, int>()
-                .RegisterFormField<Int64InputView, long>()
-                .RegisterFormField<SingleInputView, float>()
-                .RegisterFormField<DoubleInputView, double>()
-                .RegisterFormField<DecimalInputView, decimal>()
+                .RegisterFormField<Int16InputView, short>().RegisterFormField<NullableInt16InputView, short?>()
+                .RegisterFormField<Int32InputView, int>().RegisterFormField<NullableInt32InputView, int?>()
+                .RegisterFormField<Int64InputView, long>().RegisterFormField<NullableInt64InputView, long?>()
+                .RegisterFormField<SingleInputView, float>().RegisterFormField<NullableSingleInputView, float?>()
+                .RegisterFormField<DoubleInputView, double>().RegisterFormField<NullableDoubleInputView, double?>()
+                .RegisterFormField<DecimalInputView, decimal>().RegisterFormField<NullableDecimalInputView, decimal?>()
                 ;
         }
     }

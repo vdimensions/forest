@@ -11,9 +11,10 @@ namespace Forest.UI.Forms
     [Localized]
     public sealed class FormField : ICloneable
     {
-        internal FormField(string name, IDictionary<ValidationRule, ValidationState> validation)
+        internal FormField(string name, object defaultValue, IDictionary<ValidationRule, ValidationState> validation)
         {
             Name = name;
+            DefaultValue = defaultValue;
             Validation = validation;
         }
 
@@ -21,6 +22,7 @@ namespace Forest.UI.Forms
         {
             return new FormField(
                 Name, 
+                DefaultValue,
                 // TODO:
                 // We make the validation dictionary mutable on purpose here, otherwise globalization may fail
                 // A workaround must be thought of, for instance a new IGlboalizationCloenable<T> interface which produces
@@ -38,6 +40,11 @@ namespace Forest.UI.Forms
         /// Gets the name of the current form field.
         /// </summary>
         public string Name { get; }
+        
+        /// <summary>
+        /// Gets the default value for the form field, in case specified.
+        /// </summary>
+        public object DefaultValue { get; }
         
         /// <summary>
         /// Gets the validation rules associated with the current form field.

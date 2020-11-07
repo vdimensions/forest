@@ -29,6 +29,7 @@ namespace Forest.UI.Forms
             string name, 
             Type inputViewType, 
             Type inputValueType,
+            object defaultValue,
             Action<IValidationRuleBuilder> buildValidationRules = null)
         {
             name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
@@ -43,16 +44,16 @@ namespace Forest.UI.Forms
                 _fields.Remove(name).Add(
                     name, 
                     Tuple.Create(
-                        new FormField($"{_formName}.{name}", validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
+                        new FormField($"{_formName}.{name}", defaultValue, validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
                         inputViewType,
                         inputValueType)),
                 _fieldNames.Remove(name).Add(name));
         }
 
-        public IFormBuilder AddField<TFormInputView, TValue>(string name, Action<IValidationRuleBuilder> buildValidationRules = null) 
+        public IFormBuilder AddField<TFormInputView, TValue>(string name, TValue defaultValue = default(TValue), Action<IValidationRuleBuilder> buildValidationRules = null) 
             where TFormInputView : IFormInputView<TValue>
         {
-            return AddField(name, typeof(TFormInputView), typeof(TValue), buildValidationRules);
+            return AddField(name, typeof(TFormInputView), typeof(TValue), defaultValue, buildValidationRules);
         }
 
         private IEnumerable<KeyValuePair<string, IFormInputView>> DoBuild()

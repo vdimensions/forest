@@ -1,5 +1,4 @@
-﻿using System.Runtime.Serialization;
-using Forest.Globalization;
+﻿using Forest.Globalization;
 
 namespace Forest.UI.Forms.Validation
 {
@@ -21,7 +20,6 @@ namespace Forest.UI.Forms.Validation
         }
         
         [Localized]
-        [IgnoreDataMember]
         public string Message { get; set; }
     }
 }

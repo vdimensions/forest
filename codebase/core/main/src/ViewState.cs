@@ -12,8 +12,8 @@ namespace Forest
     [StructLayout(LayoutKind.Sequential)]
     public struct ViewState : IEquatable<ViewState>
     {
-        public static ViewState Create(object model, string globalizationKey = null) => new ViewState(
-            model.VerifyArgument(nameof(model)).IsNotNull().Value, null, globalizationKey);
+        public static ViewState Create(object model, string resourceBundle = null) => new ViewState(
+            model.VerifyArgument(nameof(model)).IsNotNull().Value, null, resourceBundle);
 
         public static ViewState UpdateModel(ViewState viewState, object model)
         {
@@ -32,9 +32,9 @@ namespace Forest
             return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.ResourceBundle);
         }
 
-        public static ViewState AssignResourceBundle(ViewState viewState, string ressssourceBundle)
+        public static ViewState AssignResourceBundle(ViewState viewState, string resourceBundle)
         {
-            return new ViewState(viewState.Model, viewState.DisabledCommands, ressssourceBundle);
+            return new ViewState(viewState.Model, viewState.DisabledCommands, resourceBundle);
         }
 
         public static readonly ViewState Empty;
