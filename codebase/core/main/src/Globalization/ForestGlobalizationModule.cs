@@ -162,9 +162,9 @@ namespace Forest.Globalization
             try
             {
                 ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
-                if (!string.IsNullOrEmpty(node.GlobalizationKey))
+                if (!string.IsNullOrEmpty(node.ResourceBundle))
                 {
-                    textDocument = new TextDocumentSubset(textDocument, node.GlobalizationKey);
+                    textDocument = new TextDocumentSubset(textDocument, node.ResourceBundle);
                 }
                 var newCommands = node.Commands;
                 var cmdKeys = newCommands.Keys;
@@ -204,7 +204,7 @@ namespace Forest.Globalization
                     node.Parent, 
                     node.Regions, 
                     newCommands, 
-                    node.GlobalizationKey, 
+                    node.ResourceBundle, 
                     node.Revision);
             }
             finally

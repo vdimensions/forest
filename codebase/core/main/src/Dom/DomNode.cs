@@ -80,7 +80,7 @@ namespace Forest.Dom
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
-        private readonly string _globalizationKey;
+        private readonly string _resourceBundle;
 
         internal DomNode(
                 string instanceId, 
@@ -90,7 +90,7 @@ namespace Forest.Dom
                 DomNode parent, 
                 ImmutableDictionary<string, IEnumerable<DomNode>> regions, 
                 ImmutableDictionary<string, ICommandModel> commands,
-                string globalizationKey,
+                string resourceBundle,
                 uint revision)
         {
             _instanceID = instanceId;
@@ -101,7 +101,7 @@ namespace Forest.Dom
             _regions = regions;
             _commands = commands;
             _revision = revision;
-            _globalizationKey = globalizationKey;
+            _resourceBundle = resourceBundle;
         }
 
         private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer = null)
@@ -142,7 +142,7 @@ namespace Forest.Dom
                 && Equals(_parent, other._parent)
                 && DictionaryEquals(_regions, other._regions, new DomNodesComparer())
                 && DictionaryEquals(_commands, other._commands)
-                && comparer.Equals(_globalizationKey, other._globalizationKey);
+                && comparer.Equals(_resourceBundle, other._resourceBundle);
         }
 
         public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is DomNode other && Equals(other);
@@ -158,7 +158,7 @@ namespace Forest.Dom
                 hashCode = (hashCode * 397) ^ (_parent != null ? _parent.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_regions != null ? this.CalculateHashCode(_regions.Cast<object>().ToArray()) : 0);
                 hashCode = (hashCode * 397) ^ (_commands != null ? this.CalculateHashCode(_commands.Cast<object>().ToArray()) : 0);
-                hashCode = (hashCode * 397) ^ (_globalizationKey != null ? this.CalculateHashCode(_globalizationKey.Cast<object>().ToArray()) : 0);
+                hashCode = (hashCode * 397) ^ (_resourceBundle != null ? this.CalculateHashCode(_resourceBundle.Cast<object>().ToArray()) : 0);
                 return hashCode;
             }
         }
@@ -170,7 +170,7 @@ namespace Forest.Dom
         public DomNode Parent => _parent;
         public ImmutableDictionary<string, IEnumerable<DomNode>> Regions => _regions;
         public ImmutableDictionary<string, ICommandModel> Commands => _commands;
-        public string GlobalizationKey => _globalizationKey;
+        public string ResourceBundle => _resourceBundle;
         public uint Revision => _revision;
     }
 }
