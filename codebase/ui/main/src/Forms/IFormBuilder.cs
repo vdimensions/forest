@@ -5,6 +5,10 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
+    /// <summary>
+    /// An interface for a form builder. The form builder is attached to a <see cref="IRegion"/>
+    /// instance and is used to insert form field views within.
+    /// </summary>
     public interface IFormBuilder
     {
         IFormBuilder AddField(

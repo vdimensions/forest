@@ -4,6 +4,10 @@ using Forest.UI.Forms.Input;
 
 namespace Forest.UI.Forms
 {
+    /// <summary>
+    /// A static class containing extension methods that aid in registering form field views
+    /// to a <see cref="IForestViewRegistry"/>.
+    /// </summary>
     public static class ViewRegistryExtensions
     {
         public static IForestViewRegistry RegisterFormField<TInput, TValue>(this IForestViewRegistry registry)
