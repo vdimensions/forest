@@ -2,7 +2,7 @@
 
 namespace Forest.Navigation
 {
-    [Requires(typeof(NavigationModule))]
+    [Requires(typeof(ForestNavigationModule))]
     public interface INavigationTreeConfigurer
     {
         void Configure(INavigationManager navigationManager);

@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Navigation\NavigationModule.INavigationManager.cs">
+    <Compile Update="Navigation\ForestNavigationModule.INavigationManager.cs">
       <DependentUpon>NavigationModule.cs</DependentUpon>
     </Compile>
     <Compile Update="Templates\Template.Content.cs">

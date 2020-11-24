@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Axle.Application.Services;
 using Axle.DependencyInjection;
 using Axle.Logging;
 using Axle.Modularity;
@@ -21,10 +22,10 @@ namespace Forest
     [Module]
     [Requires(typeof(ForestViewRegistry))]
     [Requires(typeof(ForestTemplatesModule))]
-    [Requires(typeof(NavigationModule))]
+    [Requires(typeof(ForestNavigationModule))]
     [Requires(typeof(ForestGlobalizationModule))]
     [Requires(typeof(ForestSecurityModule))]
-    internal sealed class ForestModule : 
+    internal sealed class ForestModule :
         IForestEngine, 
         IViewFactory, 
         IForestContext, 
@@ -53,7 +54,7 @@ namespace Forest
                 IForestSecurityExceptionHandler securityExceptionHandler,
                 IDependencyContainerFactory dependencyContainerFactory, 
                 ForestGlobalizationModule globalizationModule,
-                ILogger logger) 
+                ILogger logger)
         {
             _viewRegistry = viewRegistry;
             _viewFactory = new ContainerViewFactory(dependencyContainer.Parent ?? dependencyContainer, dependencyContainerFactory);
@@ -69,7 +70,7 @@ namespace Forest
         }
 
         [ModuleInit]
-        internal void Init(IDependencyExporter exporter)
+        internal void Initialize(IDependencyExporter exporter)
         {
             _messageAdvices.Add(this);
             _commandAdvices.Add(this);
