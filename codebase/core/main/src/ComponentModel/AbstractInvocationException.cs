@@ -14,8 +14,8 @@ namespace Forest.ComponentModel
                 string.Format(
                     "{0}An error occurred while invoking method '{1}' on type `{2}`.{3}",
                     message ?? string.Empty,
-                    viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value.FullName,
                     method.VerifyArgument(nameof(method)).IsNotNull().Value.Name,
+                    viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value.FullName,
                     inner == null ? string.Empty : " See the inner exception for more information on the cause of this error. "),
                 inner) { }
         protected AbstractInvocationException(Type viewType, IMethod method, Exception inner)

@@ -1,5 +1,5 @@
 ﻿//
-// Copyright 2014-2019 vdimensions.net.
+// Copyright 2014-2019 vdimensions.com.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,10 @@ namespace Forest.ComponentModel
     /// An interface representing a Forest event bus
     internal interface IEventBus : IDisposable
     {
-
         /// <summary>
         /// Publishes a message trough the event bus
         /// </summary>
-        /// <typeparam name="T">
+        /// <typeparam name="TMessage">
         /// The type of the message being pushed.
         /// </typeparam>
         /// <param name="sender">

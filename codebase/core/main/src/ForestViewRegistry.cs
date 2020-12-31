@@ -1,33 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Axle.Modularity;
+using Axle.Resources;
 using Forest.ComponentModel;
-using Forest.Templates;
 
 namespace Forest
 {
     [Module]
-    internal sealed class ForestViewRegistry
+    [RequiresResources]
+    internal sealed class ForestViewRegistry : IForestViewRegistry
     {
-        private readonly IViewRegistry _viewRegistry = new ViewRegistry();
+        private readonly ViewRegistry _viewRegistry;
 
         public ForestViewRegistry()
         {
+            _viewRegistry = new ViewRegistry();
         }
+        
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(_ForestViewProvider viewProvider) => viewProvider.RegisterViews(_viewRegistry);
 
         [ModuleDependencyInitialized]
-        internal void DependencyInitialized(IForestViewProvider viewProvider)
-        {
-            viewProvider.RegisterViews(_viewRegistry);
-        }
+        internal void DependencyInitialized(IForestViewProvider viewProvider) => viewProvider.RegisterViews(_viewRegistry);
 
-        public IViewDescriptor GetDescriptor(Type viewType) => _viewRegistry.GetDescriptor(viewType);
-        public IViewDescriptor GetDescriptor(string viewName) => _viewRegistry.GetDescriptor(viewName);
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(_ForestViewRegistryListener viewRegistryListener) => _viewRegistry.AddListener(viewRegistryListener);
 
-        public void Register<T>() where T: IView => _viewRegistry.Register<T>();
-        public void Register(Type viewType) => _viewRegistry.Register(viewType);
+        [ModuleDependencyInitialized]
+        internal void DependencyInitialized(IForestViewRegistryListener viewRegistryListener) => _viewRegistry.AddListener(viewRegistryListener);
 
-        public IEnumerable<IViewDescriptor> Descriptors => _viewRegistry.Descriptors;
+        public IForestViewDescriptor Describe(Type viewType) => _viewRegistry.Describe(viewType);
+        public IForestViewDescriptor Describe(string viewName) => _viewRegistry.Describe(viewName);
+
+        public IForestViewRegistry Register<T>() where T: IView => _viewRegistry.Register<T>();
+        public IForestViewRegistry Register(Type viewType) => _viewRegistry.Register(viewType);
+
+        public IEnumerable<IForestViewDescriptor> ViewDescriptors => _viewRegistry.ViewDescriptors;
     }
 }

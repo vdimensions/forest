@@ -13,13 +13,13 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class CommandSourceNotFoundException : CommandInstructionException
     {
-        public CommandSourceNotFoundException(InvokeCommandInstruction faultyInstruction, Exception inner) 
+        internal CommandSourceNotFoundException(InvokeCommandInstruction faultyInstruction, Exception inner) 
             : base(faultyInstruction, "The command source was not found. ", inner) { }
-        public CommandSourceNotFoundException(InvokeCommandInstruction faultyInstruction) 
+        internal CommandSourceNotFoundException(InvokeCommandInstruction faultyInstruction) 
             : this(faultyInstruction, null) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        protected CommandSourceNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+        internal CommandSourceNotFoundException(SerializationInfo info, StreamingContext context) : base(info, context) { }
         #endif
     }
 }

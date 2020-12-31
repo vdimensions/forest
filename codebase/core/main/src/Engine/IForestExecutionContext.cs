@@ -9,17 +9,13 @@ namespace Forest.Engine
         void SubscribeEvents(IRuntimeView receiver);
         void UnsubscribeEvents(IRuntimeView receiver);
 
-        ViewState? GetViewState(Tree.Node node);
-        ViewState SetViewState(bool silent, Tree.Node node, ViewState viewState);
-
-        //abstract member GetLinks : id : TreeNode -> List
+        ViewState? GetViewState(string nodeKey);
+        ViewState SetViewState(bool silent, string nodeKey, ViewState viewState);
 
         void ProcessInstructions(params ForestInstruction[] instructions);
 
         IView ActivateView(InstantiateViewInstruction instantiateViewInstruction);
 
-        IEnumerable<IView> GetRegionContents(Tree.Node node, string region);
-
-        //abstract member ProcessMessages : unit -> unit
+        IEnumerable<IView> GetRegionContents(string nodeKey, string region);
     }
 }

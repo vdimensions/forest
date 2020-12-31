@@ -27,9 +27,9 @@ namespace Forest.StateManagement
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
-        private readonly ImmutableArray<Tuple<NodeStateModification, Type>> _changes;
+        private readonly ImmutableArray<Tuple<TreeModification, Type>> _changes;
 
-        public ChangeLog(ForestState initialState, ForestState finalState, IEnumerable<NodeStateModification> changes)
+        public ChangeLog(ForestState initialState, ForestState finalState, IEnumerable<TreeModification> changes)
         {
             _initialState = initialState;
             _finalState = finalState;
@@ -40,6 +40,6 @@ namespace Forest.StateManagement
 
         public ForestState FinalState => _finalState;
 
-        public IEnumerable<NodeStateModification> Changes => _changes.Select(x => x.Item1);
+        public IEnumerable<TreeModification> Changes => _changes.Select(x => x.Item1);
     }
 }

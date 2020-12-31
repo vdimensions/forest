@@ -12,53 +12,45 @@ namespace Forest
     [StructLayout(LayoutKind.Sequential)]
     public struct ViewState : IEquatable<ViewState>
     {
-        public static ViewState Create(object model) => new ViewState(model.VerifyArgument(nameof(model)).IsNotNull().Value);
+        public static ViewState Create(object model, string resourceBundle = null) => new ViewState(
+            model.VerifyArgument(nameof(model)).IsNotNull().Value, null, resourceBundle);
 
         public static ViewState UpdateModel(ViewState viewState, object model)
         {
             model.VerifyArgument(nameof(model)).IsNotNull();
-            return new ViewState(model, viewState.DisabledCommands, viewState.DisabledLinks);
+            return new ViewState(model, viewState.DisabledCommands, viewState.ResourceBundle);
         }
 
         public static ViewState DisableCommand(ViewState viewState, string command)
         {
             command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands.Add(command), viewState.DisabledLinks);
+            return new ViewState(viewState.Model, viewState.DisabledCommands.Add(command), viewState.ResourceBundle);
         }
         public static ViewState EnableCommand(ViewState viewState, string command)
         {
             command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.DisabledLinks);
+            return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.ResourceBundle);
         }
 
-        public static ViewState DisableLink(ViewState viewState, string link)
+        public static ViewState AssignResourceBundle(ViewState viewState, string resourceBundle)
         {
-            link.VerifyArgument(nameof(link)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands, viewState.DisabledLinks.Add(link));
-        }
-        public static ViewState EnableLink(ViewState viewState, string link)
-        {
-            link.VerifyArgument(nameof(link)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands, viewState.DisabledLinks.Remove(link));
+            return new ViewState(viewState.Model, viewState.DisabledCommands, resourceBundle);
         }
 
         public static readonly ViewState Empty;
 
         private readonly IImmutableSet<string> _disabledCommands;
-        private readonly IImmutableSet<string> _disabledLinks;
 
-        private ViewState(object model) : this(model, ImmutableHashSet<string>.Empty, ImmutableHashSet<string>.Empty) { }
-        private ViewState(object model, IImmutableSet<string> disabledCommands, IImmutableSet<string> disabledLinks)
+        private ViewState(object model, IImmutableSet<string> disabledCommands = null, string resourceBundle = null)
         {
             Model = model;
             _disabledCommands = disabledCommands;
-            _disabledLinks = disabledLinks;
+            ResourceBundle = resourceBundle;
         }
 
         public bool Equals(ViewState other)
         {
             return Enumerable.SequenceEqual(DisabledCommands, other.DisabledCommands) 
-                && Enumerable.SequenceEqual(DisabledLinks, other.DisabledLinks) 
                 && Equals(Model, other.Model);
         }
         public override bool Equals(object obj) => obj is ViewState other && Equals(other);
@@ -68,7 +60,6 @@ namespace Forest
             unchecked
             {
                 var hashCode = DisabledCommands.GetHashCode();
-                hashCode = (hashCode * 397) ^ DisabledLinks.GetHashCode();
                 hashCode = (hashCode * 397) ^ (Model != null ? Model.GetHashCode() : 0);
                 return hashCode;
             }
@@ -76,6 +67,6 @@ namespace Forest
 
         public object Model { get; }
         public IImmutableSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create<string>(StringComparer.Ordinal);
-        public IImmutableSet<string> DisabledLinks => _disabledLinks ?? ImmutableHashSet.Create<string>(StringComparer.Ordinal);
+        public string ResourceBundle { get; }
     }
 }

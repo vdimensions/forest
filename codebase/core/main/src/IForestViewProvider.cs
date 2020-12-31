@@ -4,9 +4,9 @@ using Forest.ComponentModel;
 namespace Forest
 {
     [Requires(typeof(ForestViewRegistry))]
-    [UtilizedBy(typeof(ForestModule))]
+    [ProvidesFor(typeof(ForestModule))]
     public interface IForestViewProvider
     {
-        void RegisterViews(IViewRegistry registry);
+        void RegisterViews(IForestViewRegistry registry);
     }
 }

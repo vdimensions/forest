@@ -1,4 +1,5 @@
-﻿using Forest.Engine;
+﻿using Forest.Dom;
+using Forest.Engine;
 
 namespace Forest.UI
 {
@@ -11,6 +12,6 @@ namespace Forest.UI
     public interface IPhysicalViewRenderer<T> : IPhysicalViewRenderer where T : IPhysicalView
     {
         new T CreatePhysicalView(IForestEngine engine, DomNode domNode);
-        new T CreateNestedPhysicalView(IForestEngine engine, T parent, DomNode node);
+        T CreateNestedPhysicalView(IForestEngine engine, T parent, DomNode node);
     }
 }

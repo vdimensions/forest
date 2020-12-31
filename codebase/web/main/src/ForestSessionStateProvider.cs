@@ -1,65 +1,47 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using Axle.Web.AspNetCore.Session;
 using Forest.ComponentModel;
+using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
-using Microsoft.AspNetCore.Http;
 
 namespace Forest.Web.AspNetCore
 {
-    internal sealed class ForestSessionStateProvider : SessionScoped<ForestSessionState>, IClientViewsHelper
+    internal sealed class ForestSessionStateProvider : IClientViewsHelper
     {
-        private readonly IHttpContextAccessor _accessor;
+        private readonly SessionReference<ForestSessionState> _stateReference;
         private readonly IForestStateInspector _stateInspector;
 
-        public ForestSessionStateProvider(IHttpContextAccessor accessor, IForestStateInspector stateInspector) : base(accessor)
+        public ForestSessionStateProvider(ISessionReferenceProvider sessionReferenceProvider, IForestStateInspector stateInspector)
         {
-            _accessor = accessor;
+            _stateReference = sessionReferenceProvider.CreateSessionReference<ForestSessionState>();
             _stateInspector = stateInspector;
         }
 
         public void UpdateState(ForestState forestState)
         {
-            var sessionId = _accessor.HttpContext.Session.Id;
-            var s = Current;
-            AddOrReplace(
-                sessionId,
-                ForestSessionState.ReplaceState(s, forestState),
-                (oldState, newState) => newState);
-        }
-        public void UpdateAllViews(IImmutableDictionary<string, ViewNode> allViews)
-        {
-            var sessionId = _accessor.HttpContext.Session.Id;
-            var s = Current;
-            AddOrReplace(
-                sessionId,
-                ForestSessionState.ReplaceAllViews(s, allViews),
-                (oldState, newState) => newState);
-        }
-        public void UpdateUpdatedViews(IImmutableDictionary<string, ViewNode> updatedViews)
-        {
-            var sessionId = _accessor.HttpContext.Session.Id;
-            var s = Current;
-            AddOrReplace(
-                sessionId,
-                ForestSessionState.ReplaceUpdatedViews(s, updatedViews),
-                (oldState, newState) => newState);
+            var s = _stateReference.Value;
+            _stateReference.CompareReplace(ForestSessionState.ReplaceState(s, forestState), (oldState, newState) => newState);
         }
 
-        public IViewDescriptor GetDescriptor(string instanceId)
+        public void CompareReplace(ForestSessionState forestSessionState, Func<ForestSessionState, ForestSessionState, ForestSessionState> func) 
+            => _stateReference.CompareReplace(forestSessionState, func);
+       
+        public bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor)
         {
-            var state = Current.State;
-            return _stateInspector.GetViewDescriptor(state, instanceId);
+            if (_stateReference.TryGetValue(out var value))
+            {
+                var state = value;
+                return _stateInspector.TryGetViewDescriptor(state.State, instanceId, out descriptor);
+            }
+            descriptor = null;
+            return false;
         }
 
-        public bool TryGetDescriptor(string instanceId, out IViewDescriptor descriptor)
-        {
-            var state = Current.State;
-            return _stateInspector.TryGetViewDescriptor(state, instanceId, out descriptor);
-        }
-
-        public NavigationInfo NavigationInfo => Current.NavigationInfo;
-        public IImmutableDictionary<string, ViewNode> AllViews => Current.AllViews;
-        public IImmutableDictionary<string, ViewNode> UpdatedViews => Current.UpdatedViews;
+        public Location Location => _stateReference.Value.State.Location;
+        public IImmutableDictionary<string, ViewNode> AllViews => _stateReference.Value.AllViews;
+        public IImmutableDictionary<string, ViewNode> UpdatedViews => _stateReference.Value.UpdatedViews;
+        public ForestSessionState Value => _stateReference.Value;
     }
 }

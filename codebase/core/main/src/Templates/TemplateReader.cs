@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Axle.Verification;
 
@@ -8,6 +9,7 @@ namespace Forest.Templates
     {
         public abstract Template Read(string name, Stream stream);
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         protected Template CreateTemplateDefinition(string name, IEnumerable<Template.ViewItem> contents)
         {
             name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
@@ -15,6 +17,7 @@ namespace Forest.Templates
             return new Template.Definition(name, contents);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         protected Template CreateMasteredTemplate(string master, IEnumerable<Template.Content> contents)
         {
             master.VerifyArgument(nameof(master)).IsNotNullOrEmpty();
@@ -22,6 +25,7 @@ namespace Forest.Templates
             return new Template.Mastered(master, contents);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         protected Template.Content CreateTemplateContent(string placeholder, IEnumerable<Template.RegionItem> contents)
         {
             placeholder.VerifyArgument(nameof(placeholder)).IsNotNullOrEmpty();
@@ -41,6 +45,7 @@ namespace Forest.Templates
             return new Template.RegionItem.TemplateReference(name);
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         protected Template.RegionItem CreateView(string name, IEnumerable<Template.ViewItem> contents)
         {
             name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
@@ -50,6 +55,7 @@ namespace Forest.Templates
 
         protected Template.RegionItem CreateRegionItemsClearInstruction() => new Template.RegionItem.ClearInstruction();
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         protected Template.ViewItem CreateRegion(string name, IEnumerable<Template.RegionItem> contents)
         {
             name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();

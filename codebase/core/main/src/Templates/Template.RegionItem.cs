@@ -40,9 +40,7 @@ namespace Forest.Templates
 
             internal sealed class ClearInstruction : RegionItem
             {
-                internal ClearInstruction()
-                {
-                }
+                internal ClearInstruction() { }
             }
         }
     }

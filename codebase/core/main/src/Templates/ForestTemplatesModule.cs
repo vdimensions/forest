@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
+using Axle.DependencyInjection;
 using Axle.Modularity;
 using Axle.Resources;
 using Axle.Resources.Extraction;
 using Axle.Resources.Xml.Extraction;
+using Forest.ComponentModel;
 using Forest.Templates.Xml;
 
 namespace Forest.Templates
@@ -16,13 +17,12 @@ namespace Forest.Templates
         IForestTemplateMarshallerConfigurer, 
         IForestTemplateMarshallerRegistry,
         IForestTemplateExtractorRegistry,
-        ITemplateProvider
+        ITemplateProvider,
+        _ForestViewRegistryListener
     {
         internal const string BundleName = "Forest";
-        [Obsolete]
-        internal const string OldBundleName = "ForestTemplates";
         
-        private static string[] ForestBundleNames => new[] {BundleName, OldBundleName};
+        private static string[] ForestBundleNames => new[] {BundleName};
         
         private readonly IList<string> _bundles = new List<string>();
         private readonly LinkedList<IResourceExtractor> _templateSourceExtractors = new LinkedList<IResourceExtractor>();
@@ -38,7 +38,7 @@ namespace Forest.Templates
         }
 
         [ModuleInit]
-        internal void Init(ModuleExporter e)
+        internal void Init(IDependencyExporter e)
         {
             ModuleDependencyInitialized(this);
         }
@@ -61,8 +61,9 @@ namespace Forest.Templates
 
         private void InitResourceManager()
         {
+            _bundles.Clear();
             var resourceManager = new DefaultResourceManager();
-            var uriParser = new Axle.Conversion.Parsing.UriParser();
+            var uriParser = new Axle.Text.Parsing.UriParser();
             foreach (var marshallingExtractor in _marshallingExtractors)
             {
                 var bundleNames = ForestBundleNames.Select(
@@ -83,6 +84,10 @@ namespace Forest.Templates
                     var bundleContent = resourceManager.Bundles.Configure(bundle);
                     bundleContent
                         .Register(uriParser.Parse($"./{bundleInfo.DefaultBundle}"))
+                        .Extractors
+                        .Register(_templateSourceExtractors)
+                        .Register(marshallingExtractor.ToExtractorList());
+                    bundleContent
                         .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
                         .Extractors
                         .Register(_templateSourceExtractors)
@@ -97,13 +102,6 @@ namespace Forest.Templates
             _resourceManager = resourceManager;
         }
         
-        public void RegisterAssemblySource(Assembly assembly)
-        {
-            var assemblyName = assembly.GetName().Name;
-            _assemblies.Add(assemblyName);
-            InitResourceManager();
-        }
-
         public IForestTemplateMarshallerRegistry Register(IForestTemplateMarshaller marshaller)
         {
             var marshallingExtractor = new ForestTemplateExtractor(marshaller);
@@ -130,9 +128,9 @@ namespace Forest.Templates
 
                 var bundle = bundles[index];
                 var template = _resourceManager.Load(bundle, name, CultureInfo.InvariantCulture);
-                if (template.HasValue)
+                if (template != null)
                 {
-                    return template.Value.Resolve<Template>();
+                    return template.Resolve<Template>();
                 }
                 index = index + 1;
             }
@@ -146,6 +144,18 @@ namespace Forest.Templates
                 return result;
             }
             throw new ResourceNotFoundException(name, BundleName, CultureInfo.InvariantCulture);
+        }
+
+        public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
+        {
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            var asm = viewDescriptor.ViewType.Assembly;
+            #else
+            var asm = System.Reflection.IntrospectionExtensions.GetTypeInfo(viewDescriptor.ViewType).Assembly;
+            #endif
+            var assemblyName = asm.GetName().Name;
+            _assemblies.Add(assemblyName);
+            InitResourceManager();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Forest.Engine.Aspects;
 using Forest.Engine.Instructions;
+using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.UI;
 
@@ -10,31 +11,32 @@ namespace Forest.Engine
 {
     internal sealed class MasterExecutionContext : IForestExecutionContext
     {
-        private readonly IForestContext _context;
         private readonly IForestStateProvider _stateProvider;
-        internal IForestExecutionContext _slave;
+        private readonly IForestExecutionContext _slave;
+        private readonly IForestContext _context;
 
-        internal MasterExecutionContext(IForestContext context, IForestStateProvider stateProvider, IPhysicalViewRenderer physicalViewRenderer, IForestEngine sourceEngine)
+        private bool _discardState;
+
+        internal MasterExecutionContext(
+            IForestContext context, 
+            IForestStateProvider stateProvider, 
+            IPhysicalViewRenderer physicalViewRenderer, 
+            IForestEngine sourceEngine)
         {
-            var initialState = stateProvider.LoadState();
+            _context = context;
+            var initialState = stateProvider.BeginUsingState();
             var physicalViewDomProcessor = new PhysicalViewDomProcessor(sourceEngine, physicalViewRenderer, initialState.PhysicalViews);
-            var slave = new SlaveExecutionContext(_context = context, physicalViewDomProcessor, initialState, this);
+            var slave = new SlaveExecutionContext(context, physicalViewDomProcessor, initialState, this);
             _stateProvider = stateProvider;
-            var aspects = _context.Aspects.Reverse().ToArray();
-            if (aspects.Length > 0)
-            {
-                var aspect = aspects
-                    .Aggregate(
-                        new SlaveAspectExecutionContext(slave) as AbstractForestExecutionAspect,
-                        (former, x) => new ForestAspectExecutionContext(former, slave, x));
-                _slave = aspect;
-            }
-            else
-            {
-                _slave = slave;
-            }
+            _slave = slave;
             slave.Init();
         }
+
+        private bool ExecuteCommand(IExecuteCommandPointcut pointcut) => pointcut.Proceed();
+
+        private bool SendMessage(ISendMessagePointcut pointcut) => pointcut.Proceed();
+
+        private bool Navigate(INavigatePointcut pointcut) => pointcut.Proceed();
 
         IView IForestExecutionContext.ActivateView(InstantiateViewInstruction instantiateViewInstruction) => _slave.ActivateView(instantiateViewInstruction);
 
@@ -42,36 +44,64 @@ namespace Forest.Engine
         {
             try
             {
-                _stateProvider.CommitState(((IStateResolver) _slave).ResolveState());
-            }
-            catch
-            {
-                _stateProvider.RollbackState();
-                throw;
+                if (!_discardState)
+                {
+                    _stateProvider.UpdateState(((IStateResolver) _slave).ResolveState());
+                }
             }
             finally
             {
+                _stateProvider.EndUsingState();
                 _slave?.Dispose();
             }
         }
 
-        void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg) => _slave.ExecuteCommand(command, instanceID, arg);
+        IEnumerable<IView> IForestExecutionContext.GetRegionContents(string nodeKey, string region) => _slave.GetRegionContents(nodeKey, region);
 
-        IEnumerable<IView> IForestExecutionContext.GetRegionContents(Tree.Node node, string region) => _slave.GetRegionContents(node, region);
+        ViewState? IForestExecutionContext.GetViewState(string nodeKey) => _slave.GetViewState(nodeKey);
 
-        ViewState? IForestExecutionContext.GetViewState(Tree.Node node) => _slave.GetViewState(node);
+        void ICommandDispatcher.ExecuteCommand(string command, string instanceID, object arg)
+        {
+            if (!ExecuteCommand(_context.CommandAdvices.Reverse().Aggregate(
+                TerminalCommandPointcut.Create(_slave, instanceID, command, arg),
+                IntermediateCommandPointcut.Create)))
+            {
+                _discardState = true;
+            }
+        }
+        
+        void IMessageDispatcher.SendMessage<T>(T message)
+        {
+            if (!SendMessage(_context.MessageAdvices.Reverse().Aggregate(
+                TerminalMessagePointcut<T>.Create(_slave, message),
+                IntermediateMessagePointcut.Create)))
+            {
+                _discardState = true;
+            }
+        }
 
-        void ITreeNavigator.Navigate(string template) => _slave.Navigate(template);
+        void ITreeNavigator.Navigate(Location location)
+        {
+            if (!Navigate(_context.NavigationAdvices.Reverse().Aggregate(
+                TerminalNavigatePointcut.Create(_slave, location),
+                IntermediateNavigatePointcut.Create)))
+            {
+                _discardState = true;
+            }
+        }
 
-        void ITreeNavigator.Navigate<T>(string template, T message) => _slave.Navigate(template, message);
+        void ITreeNavigator.NavigateBack() => _slave.NavigateBack();
+        void ITreeNavigator.NavigateBack(int offset) => _slave.NavigateBack(offset);
+        
+        void ITreeNavigator.NavigateUp() => _slave.NavigateUp();
+        void ITreeNavigator.NavigateUp(int offset) => _slave.NavigateUp(offset);
 
         void IForestExecutionContext.ProcessInstructions(params ForestInstruction[] instructions) => _slave.ProcessInstructions(instructions);
 
         T IForestEngine.RegisterSystemView<T>() => _slave.RegisterSystemView<T>();
+        IView IForestEngine.RegisterSystemView(Type viewType) => _slave.RegisterSystemView(viewType);
 
-        void IMessageDispatcher.SendMessage<T>(T message) => _slave.SendMessage(message);
-
-        ViewState IForestExecutionContext.SetViewState(bool silent, Tree.Node node, ViewState viewState) => _slave.SetViewState(silent, node, viewState);
+        ViewState IForestExecutionContext.SetViewState(bool silent, string nodeKey, ViewState viewState) => _slave.SetViewState(silent, nodeKey, viewState);
 
         void IForestExecutionContext.SubscribeEvents(IRuntimeView receiver) => _slave.SubscribeEvents(receiver);
 

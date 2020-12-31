@@ -8,12 +8,18 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class NodeNotFoundException : ForestInstructionException
     {
-        public NodeNotFoundException(ForestInstruction instruction, Tree.Node node) : this(instruction, node, null) { }
-        public NodeNotFoundException(ForestInstruction instruction, Tree.Node node, Exception inner) 
-            : base(instruction, string.Format("Unable to process instruction {0} - node '{1}' cannot be located. ", instruction.VerifyArgument(nameof(instruction)).IsNotNull().Value, node), inner) { }
+        internal NodeNotFoundException(ForestInstruction instruction, string nodeKey) : this(instruction, nodeKey, null) { }
+        internal NodeNotFoundException(ForestInstruction instruction, string nodeKey, Exception inner) 
+            : base(
+                instruction, 
+                string.Format(
+                    "Unable to process instruction {0} - node '{1}' cannot be located. ", 
+                    instruction.VerifyArgument(nameof(instruction)).IsNotNull().Value, 
+                    nodeKey.VerifyArgument(nameof(nodeKey)).IsNotNull().Value), 
+                inner) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        protected NodeNotFoundException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        internal NodeNotFoundException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         #endif
     }
 }

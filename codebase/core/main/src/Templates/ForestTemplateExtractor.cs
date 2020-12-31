@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Axle.References;
 using Axle.Resources;
 using Axle.Resources.Extraction;
 
@@ -15,21 +14,21 @@ namespace Forest.Templates
             _marshaller = marshaller;
         }
 
-        protected override Nullsafe<ResourceInfo> DoExtract(ResourceContext context, string name)
+        protected override ResourceInfo DoExtract(IResourceContext context, string name)
         {
-            var baseResource = context.ExtractionChain.Extract($"{name}.{Extension}");
-            if (baseResource.HasValue)
+            var baseResource = context.Extract($"{name}.{Extension}");
+            if (baseResource != null)
             {
-                var t = _marshaller.Unmarshal(name, baseResource.Value);
+                var t = _marshaller.Unmarshal(name, baseResource);
                 if (t != null)
                 {
-                    return Nullsafe<ResourceInfo>.Some(new ForestTemplateResourceInfo(name, context.Culture, baseResource.Value, t));
+                    return new ForestTemplateResourceInfo(name, context.Culture, baseResource, t);
                 }
             }
-            return Nullsafe<ResourceInfo>.None;
+            return null;
         }
 
-        internal IEnumerable<IResourceExtractor> ToExtractorList() => new[] {this}.Union(_marshaller.ChainedExtractors);
+        internal IEnumerable<IResourceExtractor> ToExtractorList() => (_marshaller.ChainedExtractors).Union(new[] {this});
 
         public string Extension => _marshaller.Extension;
     }

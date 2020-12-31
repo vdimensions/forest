@@ -5,11 +5,11 @@ namespace Forest.StateManagement
 {
     internal sealed class DefaultForestStateInspector : IForestStateInspector
     {
-        public IViewDescriptor GetViewDescriptor(ForestState state, string instanceId)
+        public IForestViewDescriptor GetViewDescriptor(ForestState state, string instanceId)
         {
             return TryGetViewDescriptor(state, instanceId, out var descriptor) ? descriptor : null;
         }
-        public bool TryGetViewDescriptor(ForestState state, string instanceId, out IViewDescriptor descriptor)
+        public bool TryGetViewDescriptor(ForestState state, string instanceId, out IForestViewDescriptor descriptor)
         {
             state.VerifyArgument(nameof(state)).IsNotNull();
             instanceId.VerifyArgument(nameof(instanceId)).IsNotNull();

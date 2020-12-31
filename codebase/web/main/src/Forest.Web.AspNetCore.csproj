@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -25,18 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Configuration" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Resources" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
-    <PackageReference Include="Axle.Web.AspNetCore" Version="$(AxleVersion)" />
     <PackageReference Include="Axle.Web.AspNetCore.Mvc" Version="$(AxleVersion)" />
-    <PackageReference Include="Forest.Core" Version="$(PackageVersionRange)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Http\" />
-  </ItemGroup>
-
-  <Import Project="../../../Forest.Common.props" />
+  <Import Project="../../../../ref/Reference.Forest.Core.targets" />
 </Project>

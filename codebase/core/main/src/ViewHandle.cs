@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using Axle.Verification;
+using Forest.ComponentModel;
 
 namespace Forest
 {
@@ -33,21 +33,17 @@ namespace Forest
             public override bool Equals(ViewHandle other) => other is TypedViewHandle tvh && Equals(tvh);
             public bool Equals(TypedViewHandle other)
             {
-                return !ReferenceEquals(null, other) && (ReferenceEquals(this, other) || ViewType == other.ViewType);
+                return !ReferenceEquals(null, other) && 
+                       (ReferenceEquals(this, other) || ViewType == other.ViewType);
             }
 
             public override int GetHashCode() => (ViewType != null ? ViewType.GetHashCode() : 0);
 
-            public override string ToString()
-            {
-                var asmName = ViewType.GetTypeInfo().Assembly.GetName();
-                return new StringBuilder("View by type `")
-                    .Append(ViewType.FullName)
-                    .Append(", ")
-                    .Append(asmName.Name)
+            public override string ToString() =>
+                new StringBuilder("View by type `")
+                    .Append(ForestViewDescriptor.GetAnonymousViewName(ViewType))
                     .Append("`")
                     .ToString();
-            }
 
             public Type ViewType { get; }
         }
@@ -80,6 +76,6 @@ namespace Forest
         internal ViewHandle() { }
 
         public abstract bool Equals(ViewHandle other);
-        public sealed override bool Equals(object obj) => !ReferenceEquals(null, obj) && Equals((ViewHandle) obj);
+        public sealed override bool Equals(object obj) => obj is ViewHandle handle && Equals(handle);
     }
 }

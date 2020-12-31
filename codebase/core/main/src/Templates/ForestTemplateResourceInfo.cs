@@ -7,11 +7,12 @@ namespace Forest.Templates
 {
     internal sealed class ForestTemplateResourceInfo : ResourceInfo
     {
-        private const string ContentType = "text/forest-template+xml";
+        new private const string ContentType = "text/forest-template+xml";
 
         private readonly ResourceInfo _originalResource;
 
-        public ForestTemplateResourceInfo(string name, CultureInfo culture, ResourceInfo originalResource, Template template) : base(name, culture, ContentType)
+        public ForestTemplateResourceInfo(string name, CultureInfo culture, ResourceInfo originalResource, Template template) 
+            : base(name, culture, ContentType)
         {
             _originalResource = originalResource;
             Value = template;
@@ -29,11 +30,11 @@ namespace Forest.Templates
             }
         }
 
-        public override bool TryResolve(Type targetType, out object result)
+        public override bool TryResolve(Type type, out object result)
         {
-            if (targetType != typeof(Template))
+            if (type != typeof(Template))
             {
-                return base.TryResolve(targetType, out result);
+                return base.TryResolve(type, out result);
             }
             result = Value;
             return true;

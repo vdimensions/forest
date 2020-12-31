@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Runtime.Serialization;
 #endif
 using Forest.Engine;
+using Forest.Navigation;
 using Forest.UI;
 
 namespace Forest.StateManagement
@@ -18,11 +19,6 @@ namespace Forest.StateManagement
         #endif
         private readonly Guid _stateID;
 
-        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        [DataMember]
-        #endif
-        private readonly NavigationInfo _navigationInfo;
-        
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
@@ -43,29 +39,27 @@ namespace Forest.StateManagement
         #endif
         private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
 
+        private readonly Location _location;
+
         internal ForestState(
-            Guid stateID,
-            NavigationInfo navigationInfo,
+            Guid stateID, 
+            Location location,
             Tree tree,
-            ImmutableDictionary<string, ViewState> viewStates, 
             ImmutableDictionary<string, IRuntimeView> logicalViews,
             ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
             _stateID = stateID;
-            _navigationInfo = navigationInfo;
+            _location = location;
             _tree = tree;
-            _viewStates = viewStates;
-
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
-        public ForestState() : this(Guid.Empty, new NavigationInfo(), Tree.Root, ImmutableDictionary<string, ViewState>.Empty, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
+        public ForestState() : this(Guid.Empty, Location.Empty, Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
-        public NavigationInfo NavigationInfo => _navigationInfo;
         internal Tree Tree => _tree;
-        internal ImmutableDictionary<string, ViewState> ViewStates => _viewStates;
         internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
-        internal ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
+        public ImmutableDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
+        public Location Location => _location;
     }
 }

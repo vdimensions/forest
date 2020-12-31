@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- make MSBuild track this file for incremental builds. -->
+    <!-- ref https://blogs.msdn.microsoft.com/msbuild/2005/09/26/how-to-ensure-changes-to-a-custom-target-file-prompt-a-rebuild/ -->
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+  
+  <!-- Copyright info -->
+  <PropertyGroup>
+    <Company>Virtual Dimensions</Company>
+    <CopyrightYearSince>2013</CopyrightYearSince>
+    <Authors>$(Company)</Authors>
+    <Trademark></Trademark>
+    <License>Apache-2.0</License>
+  </PropertyGroup>
+
+  <!-- Versioning properties -->
+  <PropertyGroup>
+    <Deterministic>false</Deterministic>
+    <VersionMajor>2</VersionMajor>
+    <VersionMinor>8</VersionMinor>
+  </PropertyGroup>
+  <!-- <Choose>
+    <When Condition="'$(APPVEYOR_BUILD_NUMBER)' != ''">
+      <PropertyGroup>
+        <VersionMinor>$(APPVEYOR_BUILD_NUMBER)</VersionMinor>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <VersionMinor>7</VersionMinor>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose> -->
+
+  <!-- Common props -->
+  <PropertyGroup>
+    <AppDesignerFolder Condition=" '$(AppDesignerFolder)' == '' ">Properties</AppDesignerFolder>
+    <GenerateAssemblyInfo Condition=" '$(GenerateAssemblyInfo)' == '' ">true</GenerateAssemblyInfo>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+  
+  <!-- Packaging properties -->
+  <PropertyGroup>
+    <RestoreSources>https://api.nuget.org/v3/index.json;$(RestoreSources)</RestoreSources>
+    <RestoreSources>https://ci.appveyor.com/nuget/axle;$(RestoreSources)</RestoreSources>
+    <PackageOutputPath>$(MSBuildProjectDirectory)\..\..\..\..\dist</PackageOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore')">
+    <RestoreSources>$(MSBuildProjectDirectory)\..\..\..\..\..\forest\dist\restore;$(RestoreSources)</RestoreSources>
+  </PropertyGroup>
+
+  <!-- Configure VDimensions MSBuild Sdk -->
+  <PropertyGroup>
+    <!-- Enable local nuget feed for packages produced by this project -->
+    <EnableLocalPackageRestore>true</EnableLocalPackageRestore>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 
+      Disable multi-targeting inclusion from the VDimensions.MSBuild.Sdk.targets because it now
+      comes from a nuget package
+    -->
+    <EnableMultitargeting>false</EnableMultitargeting>
+    <EnableProjectMetadata>false</EnableProjectMetadata>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <AxleVersion>1.10.*</AxleVersion>
+    <VDimensionsMSBuildSdkVersion>0.2.*</VDimensionsMSBuildSdkVersion>
+  </PropertyGroup>
+
+  <Import Project="$(MSBuildProjectDirectory)\..\..\..\..\submodules\vdimensions_msbuild_sdk\src\VDimensions.MSBuild.Sdk.targets" />
+  <ItemGroup>
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Defaults" Version="$(VDimensionsMSBuildSdkVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Multitargeting" Version="$(VDimensionsMSBuildSdkVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Versioning properties -->
+  <PropertyGroup>
+    <Copyright>Copyright © $(Company) $(CopyrightYearSince)-$(CopyrightYearCurrent)</Copyright>
+    <Version>$(VersionMajor).$(VersionMinor).$(VersionBuild).$(VersionRevision)</Version>
+    <PackageVersionRange>$(VersionMajor).$(VersionMinor).*</PackageVersionRange>
+  </PropertyGroup>
+  
+  <!-- Assembly props -->
+  <PropertyGroup>
+    <AssemblyTitle>$(AssemblyName)</AssemblyTitle>
+    <AssemblyProduct>$(AssemblyTitle)</AssemblyProduct>
+    <AssemblyDescription>$(Description)</AssemblyDescription>
+    <AssemblyCompany>$(Company)</AssemblyCompany>
+    <AssemblyCopyright>$(Copyright)</AssemblyCopyright>  
+    <AssemblyTrademark>$(Trademark)</AssemblyTrademark>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+  </PropertyGroup>
+
+  <!-- nuget package properties -->
+  <PropertyGroup>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <PackageLicense>$(License)</PackageLicense>
+    <PackageLicenseExpression>$(PackageLicense)</PackageLicenseExpression>
+    <PackageProjectUrl></PackageProjectUrl>
+    <PackageIconUri></PackageIconUri>
+    <PackageVersion Condition=" '$(PackageVersion)' == '' ">$(Version)</PackageVersion>
+    <PackageTags Condition=" '$(PackageTags)' == '' ">$(AssemblyName)</PackageTags>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder Condition="'$(Configuration)' == 'Debug'">$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/vdimensions/forest</RepositoryUrl>
+  </PropertyGroup>
+</Project>
