@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Axle.DependencyInjection;
 using Axle.Modularity;
 using Forest.ComponentModel;
@@ -7,7 +8,7 @@ namespace Forest.Navigation
 {
     [Module]
     [Requires(typeof(ForestViewRegistry))]
-    internal sealed partial class ForestNavigationModule : _ForestViewProvider
+    internal sealed partial class ForestNavigationModule : _ForestViewProvider, INavigationManager
     {
         private volatile NavigationTree _navigationTree = new NavigationTree();
 
@@ -22,5 +23,15 @@ namespace Forest.Navigation
 
         void _ForestViewProvider.RegisterViews(IForestViewRegistry registry) 
             => registry.Register<NavigationSystem.View>();
+
+        void INavigationManager.UpdateNavigationTree(Func<INavigationTreeBuilder, INavigationTreeBuilder> configure)
+        {
+            var inputBuilder = new NavigationTreeBuilder(_navigationTree, NavigationTree.Root);
+            var outputBuilder = configure(inputBuilder);
+            var result = ((NavigationTreeBuilder) outputBuilder).Build();
+            _navigationTree = result;
+        }
+
+        public NavigationTree NavigationTree => _navigationTree;
     }
 }
