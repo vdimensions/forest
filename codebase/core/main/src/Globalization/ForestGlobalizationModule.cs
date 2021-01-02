@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using Axle.Caching;
 using Axle.Globalization;
-#if NETSTANDARD || NET45_OR_NEWER
+#if NETSTANDARD || NET45_OR_NEWER || UNITY_2018_1_OR_NEWER
 using System.Reflection;
 #endif
-#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+#if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK || UNITY_2018_1_OR_NEWER
 using System.IO;
 using System.Runtime.Serialization;
 using Axle.IO.Serialization;

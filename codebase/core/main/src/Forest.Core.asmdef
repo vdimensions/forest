@@ -1,6 +1,7 @@
 {
     "name": "Forest.Core",
     "references": [
+        "Axle.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
