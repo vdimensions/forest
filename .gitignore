@@ -48,35 +48,54 @@ _site
 # files
 # User-specific files
 *.suo
+*.suo.meta
 *.user
+*.user.meta
 *.userosscache
+*.userosscache.meta
 *.sln.docstates
+*.sln.docstates.meta
 *.cproj.user
+*.cproj.user.meta
 *.csproj.user
+*.csproj.user.meta
 *.[Dd]ot[Ss]ettings
+*.[Dd]ot[Ss]ettings.meta
 *.[Dd]ot[Ss]ettings.user
+*.[Dd]ot[Ss]ettings.user.meta
 *.desktop
+*.desktop.meta
 *.fsproj.user
+*.fsproj.user.meta
 *.lnk
 *.nproj.user
 *.nupkg
+*.nupkg.meta
 *.[Oo]pen[Cc]over.[Ss]ettings
+*.[Oo]pen[Cc]over.[Ss]ettings.meta
 *.opensdf
 *.[Rr]e[Ss]harper*
+*.[Rr]e[Ss]harper*.meta
 *.[Ss]tyle[Cc]op*
+*.[Ss]tyle[Cc]op*.meta
 *.sdf
 *.swp
 *.testsettings
+*.testsettings.meta
 *.tmp
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
+*.userprefs.meta
 *.vbproj.user
+*.vbproj.user.meta
 *.vsmdi
 *.vym.lock
 *~$*.dot
 build.fsx.lock
+build.fsx.lock.meta
 browse.VC.db
 desktop.ini
+desktop.ini.meta
 [Ss]tyle[Cc]op.*
 [Tt]humbs.db
 [Uu]pgrade[Ll]og.[Xx][Mm][Ll]
@@ -85,5 +104,8 @@ desktop.ini
 TestResult.xml
 # .NET Core
 project.lock.json
+project.lock.json.meta
 project.fragment.lock.json
+project.fragment.lock.json.meta
 **/Properties/launchSettings.json
+**/Properties/launchSettings.json.meta
