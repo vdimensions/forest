@@ -68,29 +68,38 @@ _site
 *.fsproj.user
 *.fsproj.user.meta
 *.lnk
+*.lnk.meta
 *.nproj.user
+*.nproj.user.meta
 *.nupkg
 *.nupkg.meta
 *.[Oo]pen[Cc]over.[Ss]ettings
 *.[Oo]pen[Cc]over.[Ss]ettings.meta
 *.opensdf
+*.opensdf.meta
 *.[Rr]e[Ss]harper*
 *.[Rr]e[Ss]harper*.meta
 *.[Ss]tyle[Cc]op*
 *.[Ss]tyle[Cc]op*.meta
 *.sdf
+*.sdf.meta
 *.swp
+*.swp.meta
 *.testsettings
 *.testsettings.meta
 *.tmp
+*.tmp.meta
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 *.userprefs.meta
 *.vbproj.user
 *.vbproj.user.meta
 *.vsmdi
+*.vsmdi.meta
 *.vym.lock
+*.vym.lock.meta
 *~$*.dot
+*~$*.dot.meta
 build.fsx.lock
 build.fsx.lock.meta
 browse.VC.db
@@ -98,10 +107,14 @@ desktop.ini
 desktop.ini.meta
 [Ss]tyle[Cc]op.*
 [Tt]humbs.db
+[Tt]humbs.db.meta
 [Uu]pgrade[Ll]og.[Xx][Mm][Ll]
+[Uu]pgrade[Ll]og.[Xx][Mm][Ll].meta
 # NUNIT
 *.VisualState.xml
+*.VisualState.xml.meta
 TestResult.xml
+TestResult.xml.meta
 # .NET Core
 project.lock.json
 project.lock.json.meta
