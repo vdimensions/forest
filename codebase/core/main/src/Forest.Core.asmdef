@@ -1,12 +1,14 @@
 {
     "name": "Forest.Core",
     "references": [
+        "Axle.Caching",
         "Axle.Configuration",
         "Axle.Core",
         "Axle.Application",
         "Axle.Resources",
         "Axle.Resources.Properties",
         "Axle.Resources.Yaml",
+        "Axle.Text.Documents",
         "Axle.Text.Documents.Properties",
         "Axle.Text.Documents.Yaml"
     ],
