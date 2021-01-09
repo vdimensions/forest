@@ -3,6 +3,7 @@
     "references": [
         "Axle.Core",
         "Axle.Application",
+        "Axle.Resources",
         "Axle.Resources.Properties",
         "Axle.Resources.Yaml",
         "Axle.Text.Documents.Properties",
