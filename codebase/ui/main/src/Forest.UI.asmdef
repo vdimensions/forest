@@ -1,6 +1,7 @@
 {
     "name": "Forest.UI",
     "references": [
+        "Axle.Configuration",
         "Axle.Core",
         "Axle.Application",
         "Axle.Resources",

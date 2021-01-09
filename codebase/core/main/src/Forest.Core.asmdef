@@ -1,6 +1,7 @@
 {
     "name": "Forest.Core",
     "references": [
+        "Axle.Configuration",
         "Axle.Core",
         "Axle.Application",
         "Axle.Resources",
