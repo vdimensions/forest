@@ -1,6 +1,6 @@
 {
   "name": "com.vdimensions.forest.ui",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "description": "Forest (Front-end over REST) is a UI abstraction framework for creating fully-functional applications while being agnostic of the presentation layer",
   "unity": "2019.3",
   "unityRelease": "2f1",

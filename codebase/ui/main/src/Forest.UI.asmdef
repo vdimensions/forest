@@ -2,6 +2,11 @@
     "name": "Forest.UI",
     "references": [
         "Axle.Core",
+        "Axle.Application",
+        "Axle.Resources.Properties",
+        "Axle.Resources.Yaml",
+        "Axle.Text.Documents.Properties",
+        "Axle.Text.Documents.Yaml",
         "Forest.Core"
     ],
     "includePlatforms": [],

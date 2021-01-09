@@ -1,7 +1,12 @@
 {
     "name": "Forest.Core",
     "references": [
-        "Axle.Core"
+        "Axle.Core",
+        "Axle.Application",
+        "Axle.Resources.Properties",
+        "Axle.Resources.Yaml",
+        "Axle.Text.Documents.Properties",
+        "Axle.Text.Documents.Yaml"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
