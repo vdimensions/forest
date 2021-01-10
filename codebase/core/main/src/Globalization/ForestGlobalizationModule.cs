@@ -30,6 +30,7 @@ namespace Forest.Globalization
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
     internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener, IDisposable
     {
+        #if !UNITY_WEBGL
         private static CultureScope CreateCultureScope(string cultureName, ILogger logger)
         {
             if (string.IsNullOrEmpty(cultureName))
@@ -47,6 +48,7 @@ namespace Forest.Globalization
                 return null;
             }
         }
+        #endif
         
         private readonly ResourceManager _resourceManager;
         private readonly ForestGlobalizationConfig _config;
@@ -91,7 +93,7 @@ namespace Forest.Globalization
                 clone = globalizationCloneable.Clone();
                 return true;
             }
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK || UNITY_2018_1_OR_NEWER
             if (obj is ICloneable cloneable)
             {
                 clone = cloneable.Clone();
@@ -103,7 +105,7 @@ namespace Forest.Globalization
                 clone = ShallowCopy.Create(obj);
                 return true;
             }
-            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+            #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK || UNITY_2018_1_OR_NEWER
             var stream = new MemoryStream();
             try
             {
@@ -158,7 +160,9 @@ namespace Forest.Globalization
                 return node;
             }
 
+            #if !UNITY_WEBGL
             var scope = CreateCultureScope(_config.DisplayLanguage, _logger);
+            #endif
             try
             {
                 ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
@@ -209,7 +213,9 @@ namespace Forest.Globalization
             }
             finally
             {
+                #if !UNITY_WEBGL
                 scope?.Dispose();
+                #endif
             }
         }
 
