@@ -1,5 +1,4 @@
 ﻿using System;
-using Axle.Extensions.Object;
 using Forest.Globalization;
 
 namespace Forest.Dom
@@ -29,25 +28,14 @@ namespace Forest.Dom
         }
         #endif
 
-        public bool Equals(CommandModel other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
-            var comparer = StringComparer.Ordinal;
-            return comparer.Equals(Name,other.Name) 
-                && comparer.Equals(Description, other.Description)
-                && comparer.Equals(DisplayName, other.DisplayName) 
-                && comparer.Equals(Tooltip, other.Tooltip);
-        }
+        public bool Equals(CommandModel other) => new CommandModelEqualityComparer().Equals(this, other);
 
         bool IEquatable<ICommandModel>.Equals(ICommandModel other) => Equals(other);
 
         public override bool Equals(object obj) 
             => ReferenceEquals(this, obj) || (obj is CommandModel other && Equals(other));
 
-        public override int GetHashCode() => this.CalculateHashCode(Name, Description, DisplayName, Tooltip);
+        public override int GetHashCode() => new CommandModelEqualityComparer().GetHashCode(this);
 
         public string Name { get; }
         [Localized]
