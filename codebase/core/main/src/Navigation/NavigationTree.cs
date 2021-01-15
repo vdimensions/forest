@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
+using Forest.Collections;
+using Forest.Collections.Immutable;
 
 namespace Forest.Navigation
 {
@@ -12,7 +13,7 @@ namespace Forest.Navigation
     {
         private static ICollection<string> ExpandChildren(
             string node, 
-            IImmutableDictionary<string, IImmutableList<string>> hierarchy, 
+            ImmutableDictionary<string, ImmutableList<string>> hierarchy, 
             ICollection<string> children)
         {
             if (hierarchy.TryGetValue(node, out var nc))
@@ -26,7 +27,7 @@ namespace Forest.Navigation
         }
         private static ICollection<string> ExpandAncestors(
             string node, 
-            IImmutableDictionary<string, string> inverseHierarchy, 
+            ImmutableDictionary<string, string> inverseHierarchy, 
             ICollection<string> ancestors)
         {
             if (inverseHierarchy.TryGetValue(node, out var parent))
@@ -42,12 +43,12 @@ namespace Forest.Navigation
 
         public NavigationTree() 
             : this(
-                ImmutableDictionary.Create<string, IImmutableList<string>>(Comparer),
+                ImmutableDictionary.Create<string, ImmutableList<string>>(Comparer),
                 ImmutableDictionary.Create<string, string>(Comparer),
                 ImmutableHashSet.Create(Comparer)) { }
         private NavigationTree(
-            IImmutableDictionary<string, IImmutableList<string>> hierarchy, 
-            IImmutableDictionary<string, string> inverseHierarchy, 
+            ImmutableDictionary<string, ImmutableList<string>> hierarchy, 
+            ImmutableDictionary<string, string> inverseHierarchy, 
             ImmutableHashSet<string> state)
         {
             Hierarchy = hierarchy;
@@ -168,8 +169,8 @@ namespace Forest.Navigation
             return SelectedNodes.Contains(node);
         }
 
-        private IImmutableDictionary<string, IImmutableList<string>> Hierarchy { get; }
-        private IImmutableDictionary<string, string> InverseHierarchy { get; }
+        private ImmutableDictionary<string, ImmutableList<string>> Hierarchy { get; }
+        private ImmutableDictionary<string, string> InverseHierarchy { get; }
         private ImmutableHashSet<string> State { get; }
 
         public IEnumerable<string> TopLevelNodes => GetChildren(Root);

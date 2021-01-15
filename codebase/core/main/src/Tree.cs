@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Forest.Collections;
+using Forest.Collections.Immutable;
 using Forest.ComponentModel;
 
 namespace Forest
@@ -22,7 +23,7 @@ namespace Forest
     [Serializable]
     #endif
     [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
-    public sealed partial class Tree : IEnumerable<Tree.Node>
+    public sealed class Tree : IEnumerable<Tree.Node>
     {
         #region Node
         /// <summary>
@@ -116,7 +117,7 @@ namespace Forest
             string node)
         {
             return hierarchy.TryGetValue(node ?? string.Empty, out var result) 
-                ? ImmutableList.Create(result.Select(k => nodes[k]).ToArray()) 
+                ? ImmutableList.CreateRange(result.Select(k => nodes[k]).ToArray()) 
                 : ImmutableList<Node>.Empty;
         }
 

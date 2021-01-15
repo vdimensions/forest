@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using Forest.Collections;
+using Forest.Collections.Immutable;
 using Forest.Dom;
 using Forest.Engine;
 
@@ -14,8 +15,8 @@ namespace Forest.UI
             UpdatedNode = 1
         }
 
-        private IImmutableSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
-        private IImmutableList<Tuple<DomNode, NodeState>> _nodeStates = ImmutableList<Tuple<DomNode, NodeState>>.Empty;
+        private ImmutableHashSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
+        private ImmutableList<Tuple<DomNode, NodeState>> _nodeStates = ImmutableList<Tuple<DomNode, NodeState>>.Empty;
 
         private readonly IForestEngine _engine;
         private readonly IPhysicalViewRenderer _renderer;

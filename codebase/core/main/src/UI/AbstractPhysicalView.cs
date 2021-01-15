@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Axle.Verification;
+using Forest.Collections;
+using Forest.Collections.Immutable;
 using Forest.Dom;
 using Forest.Engine;
 
@@ -52,9 +53,9 @@ namespace Forest.UI
 
         private sealed class PhysicalViewCommandIndex : IPhysicalViewCommandIndex
         {
-            private readonly IDictionary<string, IPhysicalViewCommand> _commands;
+            private readonly IReadOnlyDictionary<string, IPhysicalViewCommand> _commands;
 
-            public PhysicalViewCommandIndex(IDictionary<string, IPhysicalViewCommand> commands)
+            public PhysicalViewCommandIndex(IReadOnlyDictionary<string, IPhysicalViewCommand> commands)
             {
                 _commands = commands;
             }

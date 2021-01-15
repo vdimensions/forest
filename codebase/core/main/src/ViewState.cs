@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
+using Forest.Collections;
+using Forest.Collections.Immutable;
 
 namespace Forest
 {
@@ -39,9 +40,9 @@ namespace Forest
 
         public static readonly ViewState Empty;
 
-        private readonly IImmutableSet<string> _disabledCommands;
+        private readonly ImmutableHashSet<string> _disabledCommands;
 
-        private ViewState(object model, IImmutableSet<string> disabledCommands = null, string resourceBundle = null)
+        private ViewState(object model, ImmutableHashSet<string> disabledCommands = null, string resourceBundle = null)
         {
             Model = model;
             _disabledCommands = disabledCommands;
@@ -66,7 +67,7 @@ namespace Forest
         }
 
         public object Model { get; }
-        public IImmutableSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create<string>(StringComparer.Ordinal);
+        public ImmutableHashSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create<string>(StringComparer.Ordinal);
         public string ResourceBundle { get; }
     }
 }

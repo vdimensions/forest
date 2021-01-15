@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Forest.Globalization;
 using Forest.Navigation;
 
 namespace Forest.UI.Navigation

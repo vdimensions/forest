@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Axle.Extensions.Object;
+using Forest.Collections;
+using Forest.Collections.Immutable;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
@@ -111,7 +112,7 @@ namespace Forest.Dom
             return set2.Count == 0;
         }
 
-        private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer)
+        private bool DictionaryEquals<T>(IReadOnlyDictionary<string, T> left, IReadOnlyDictionary<string, T> right, IEqualityComparer<T> comparer)
         {
             if (ReferenceEquals(left, right))
             {
