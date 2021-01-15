@@ -1,5 +1,6 @@
 {
     "name": "Forest.Core",
+    "rootNamespace": "Forest",
     "references": [
         "Axle.Caching",
         "Axle.Configuration",
@@ -18,7 +19,6 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": true
 }

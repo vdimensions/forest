@@ -1,5 +1,6 @@
 {
     "name": "Forest.UI",
+    "rootNamespace": "Forest.UI",
     "references": [
         "Axle.Caching",
         "Axle.Configuration",
