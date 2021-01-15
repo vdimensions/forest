@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
+using Forest.Collections.Immutable;
 using Forest.ComponentModel;
 
 namespace Forest.Dom

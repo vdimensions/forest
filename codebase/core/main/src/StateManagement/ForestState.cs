@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using Forest.Collections.Immutable;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif

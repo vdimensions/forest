@@ -8,7 +8,7 @@ namespace Forest.Web.AspNetCore.Dom
     {
         public string ID { get; internal set; }
         public object Model { get; internal set; }
-        public IDictionary<string, CommandNode> Commands { get; internal set; }
-        public IDictionary<string, string[]> Regions { get; internal set; }
+        public IReadOnlyDictionary<string, CommandNode> Commands { get; internal set; }
+        public IReadOnlyDictionary<string, string[]> Regions { get; internal set; }
     }
 }

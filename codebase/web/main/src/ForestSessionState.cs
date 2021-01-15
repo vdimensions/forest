@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using Axle.Collections.Generic.Extensions.KeyValuePair;
-using Forest.Navigation;
+using Forest.Collections.Immutable;
 using Forest.StateManagement;
 using Forest.Web.AspNetCore.Dom;
 
@@ -29,8 +28,8 @@ namespace Forest.Web.AspNetCore
         private ForestSessionState(
             ForestState state, 
             object syncRoot, 
-            IImmutableDictionary<string, ViewNode> allViews, 
-            IImmutableDictionary<string, ViewNode> updatedViews)
+            ImmutableDictionary<string, ViewNode> allViews, 
+            ImmutableDictionary<string, ViewNode> updatedViews)
         {
             State = state;
             SyncRoot = syncRoot;
@@ -79,7 +78,7 @@ namespace Forest.Web.AspNetCore
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
-        internal IImmutableDictionary<string, ViewNode> AllViews { get; }
-        internal IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
+        internal ImmutableDictionary<string, ViewNode> AllViews { get; }
+        internal ImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }
 }

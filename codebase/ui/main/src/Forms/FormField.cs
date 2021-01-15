@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Forest.Globalization;
 using Forest.UI.Forms.Validation;
 
@@ -11,7 +12,7 @@ namespace Forest.UI.Forms
     [Localized]
     public sealed class FormField : ICloneable
     {
-        internal FormField(string name, object defaultValue, IDictionary<ValidationRule, ValidationState> validation)
+        internal FormField(string name, object defaultValue, IReadOnlyDictionary<ValidationRule, ValidationState> validation)
         {
             Name = name;
             DefaultValue = defaultValue;
@@ -25,9 +26,9 @@ namespace Forest.UI.Forms
                 DefaultValue,
                 // TODO:
                 // We make the validation dictionary mutable on purpose here, otherwise globalization may fail
-                // A workaround must be thought of, for instance a new IGlboalizationCloenable<T> interface which produces
+                // A workaround must be thought of, for instance a new <see cref="IGlobalizationCloneable{T}"/> interface which produces
                 // mutable clones for globalization purposes only.
-                new Dictionary<ValidationRule, ValidationState>(Validation));
+                new Dictionary<ValidationRule, ValidationState>(Validation.ToDictionary(x => x.Key, x => x.Value)));
         }
 
         /// <summary>
@@ -50,6 +51,6 @@ namespace Forest.UI.Forms
         /// Gets the validation rules associated with the current form field.
         /// </summary>
         [Localized]
-        public IDictionary<ValidationRule, ValidationState> Validation { get; }
+        public IReadOnlyDictionary<ValidationRule, ValidationState> Validation { get; }
     }
 }

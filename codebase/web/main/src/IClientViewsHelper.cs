@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using Forest.Collections.Immutable;
 using Forest.ComponentModel;
 using Forest.Navigation;
 using Forest.Web.AspNetCore.Dom;
@@ -10,7 +10,7 @@ namespace Forest.Web.AspNetCore
         bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor);
 
         Location Location { get; }
-        IImmutableDictionary<string, ViewNode> AllViews { get; }
-        IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
+        ImmutableDictionary<string, ViewNode> AllViews { get; }
+        ImmutableDictionary<string, ViewNode> UpdatedViews { get; }
     }
 }

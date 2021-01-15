@@ -8,7 +8,7 @@ namespace Forest.Navigation
 {
     [Module]
     [Requires(typeof(ForestViewRegistry))]
-    internal sealed partial class ForestNavigationModule : _ForestViewProvider, INavigationManager
+    internal sealed class ForestNavigationModule : _ForestViewProvider, INavigationManager
     {
         private volatile NavigationTree _navigationTree = new NavigationTree();
 
