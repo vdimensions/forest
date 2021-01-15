@@ -6,7 +6,7 @@ namespace Forest.Dom
 {
     public sealed class CommandModelEqualityComparer : IEqualityComparer<ICommandModel>
     {
-        bool IEqualityComparer<ICommandModel>.Equals(ICommandModel x, ICommandModel y)
+        public bool Equals(ICommandModel x, ICommandModel y)
         {
             if (ReferenceEquals(x, y))
             {
@@ -24,7 +24,7 @@ namespace Forest.Dom
                 && comparer.Equals(x.Tooltip, y.Tooltip);
         }
 
-        int IEqualityComparer<ICommandModel>.GetHashCode(ICommandModel obj)
+        public int GetHashCode(ICommandModel obj)
         {
             return obj.CalculateHashCode(obj.Name, obj.Description, obj.DisplayName, obj.Tooltip);
         }
