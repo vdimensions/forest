@@ -136,7 +136,7 @@ namespace Forest.Dom
                 && Equals(_model, other._model)
                 && Equals(_parent, other._parent)
                 && DictionaryEquals(_regions, other._regions, new DomNodesComparer())
-                && DictionaryEquals(_commands, other._commands, EqualityComparer<ICommandModel>.Default)
+                && DictionaryEquals(_commands, other._commands, new CommandModelEqualityComparer())
                 && comparer.Equals(_resourceBundle, other._resourceBundle);
         }
 
