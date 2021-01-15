@@ -1,6 +1,8 @@
-﻿namespace Forest.Dom
+﻿using System;
+
+namespace Forest.Dom
 {
-    public interface ICommandModel
+    public interface ICommandModel : IEquatable<ICommandModel>
     {
         string Name { get; }
         string Description { get; }
