@@ -5,6 +5,7 @@
   "unity": "2019.3",
   "unityRelease": "2f1",
   "dependencies": {
+    "system.collections.immutable": "1.6.0",
     "com.vdimensions.axle.application": "1.10.0"
   },
   "keywords": [

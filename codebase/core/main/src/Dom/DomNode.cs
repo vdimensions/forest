@@ -102,15 +102,37 @@ namespace Forest.Dom
             _revision = revision;
             _resourceBundle = resourceBundle;
         }
+        
+        private static bool ExceptAny(IEnumerable<string> a, IEnumerable<string> b, IEqualityComparer<string> comparer)
+        {
+            var set1 = new HashSet<string>(a, comparer);
+            var set2 = new HashSet<string>(b, comparer);
+            set2.ExceptWith(set1);
+            return set2.Count == 0;
+        }
 
         private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer)
         {
-            var strComparer = StringComparer.Ordinal;
-            if (left.Keys.Except(right.Keys, strComparer).Any())
+            if (ReferenceEquals(left, right))
+            {
+                return true;
+            }
+            if (left.Count != right.Count)
             {
                 return false;
             }
-            if (right.Keys.Except(left.Keys, strComparer).Any())
+            if (left.Count == 0)
+            {
+                return true;
+            }
+            
+            var strComparer = StringComparer.Ordinal;
+            
+            if (ExceptAny(left.Keys, right.Keys, strComparer))
+            {
+                return false;
+            }
+            if (ExceptAny(right.Keys, left.Keys, strComparer))
             {
                 return false;
             }
@@ -128,16 +150,16 @@ namespace Forest.Dom
             {
                 return true;
             }
-
+            
             var comparer = StringComparer.Ordinal;
             return comparer.Equals(_instanceID, other._instanceID)
                 && comparer.Equals(_name, other._name)
                 && comparer.Equals(_region, other._region)
-                && Equals(_model, other._model)
-                && Equals(_parent, other._parent)
+                && comparer.Equals(_resourceBundle, other._resourceBundle)
                 && DictionaryEquals(_regions, other._regions, new DomNodesComparer())
                 && DictionaryEquals(_commands, other._commands, new CommandModelEqualityComparer())
-                && comparer.Equals(_resourceBundle, other._resourceBundle);
+                && Equals(_model, other._model)
+                && Equals(_parent, other._parent);
         }
 
         public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is DomNode other && Equals(other);
