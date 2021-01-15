@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Axle.Extensions.Object;
-using Forest.UI;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
@@ -104,12 +103,8 @@ namespace Forest.Dom
             _resourceBundle = resourceBundle;
         }
 
-        private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer = null)
+        private bool DictionaryEquals<T>(IDictionary<string, T> left, IDictionary<string, T> right, IEqualityComparer<T> comparer)
         {
-            if (comparer == null)
-            {
-                comparer = EqualityComparer<T>.Default;
-            }
             var strComparer = StringComparer.Ordinal;
             if (left.Keys.Except(right.Keys, strComparer).Any())
             {
@@ -141,7 +136,7 @@ namespace Forest.Dom
                 && Equals(_model, other._model)
                 && Equals(_parent, other._parent)
                 && DictionaryEquals(_regions, other._regions, new DomNodesComparer())
-                && DictionaryEquals(_commands, other._commands)
+                && DictionaryEquals(_commands, other._commands, EqualityComparer<ICommandModel>.Default)
                 && comparer.Equals(_resourceBundle, other._resourceBundle);
         }
 

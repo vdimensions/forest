@@ -1,4 +1,5 @@
 ﻿using System;
+using Axle.Extensions.Object;
 using Forest.Globalization;
 
 namespace Forest.Dom
@@ -6,9 +7,9 @@ namespace Forest.Dom
     [Localized]
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
-    internal sealed class CommandModel : ICommandModel, ICloneable
+    internal sealed class CommandModel : ICommandModel, IEquatable<CommandModel>, ICloneable
     #else
-    internal sealed class CommandModel : ICommandModel
+    internal sealed class CommandModel : ICommandModel, IEquatable<CommandModel>
     #endif
     {
         public CommandModel(string name, string description, string displayName, string tooltip)
@@ -27,6 +28,26 @@ namespace Forest.Dom
             return new CommandModel(Name, Description, DisplayName, Tooltip);
         }
         #endif
+
+        public bool Equals(CommandModel other)
+        {
+            if (other == null)
+            {
+                return false;
+            }
+            var comparer = StringComparer.Ordinal;
+            return comparer.Equals(Name,other.Name) 
+                && comparer.Equals(Description, other.Description)
+                && comparer.Equals(DisplayName, other.DisplayName) 
+                && comparer.Equals(Tooltip, other.Tooltip);
+        }
+
+        bool IEquatable<ICommandModel>.Equals(ICommandModel other) => Equals(other);
+
+        public override bool Equals(object obj) 
+            => ReferenceEquals(this, obj) || (obj is CommandModel other && Equals(other));
+
+        public override int GetHashCode() => this.CalculateHashCode(Name, Description, DisplayName, Tooltip);
 
         public string Name { get; }
         [Localized]
