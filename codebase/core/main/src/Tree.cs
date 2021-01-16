@@ -6,8 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using Forest.Collections;
-using Forest.Collections.Immutable;
+using Axle.Collections.Immutable;
 using Forest.ComponentModel;
 
 namespace Forest

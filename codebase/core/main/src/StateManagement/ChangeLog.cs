@@ -4,7 +4,7 @@ using System.Linq;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
-using Forest.Collections.Immutable;
+using Axle.Collections.Immutable;
 using Forest.Engine.Instructions;
 
 namespace Forest.StateManagement

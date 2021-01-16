@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Axle.Collections.Immutable;
 using Axle.Verification;
-using Forest.Collections;
-using Forest.Collections.Immutable;
 
 namespace Forest.Navigation
 {

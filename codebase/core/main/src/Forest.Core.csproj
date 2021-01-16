@@ -14,7 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Collections.Immutable" Version="1.6.*" />
     <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
     <PackageReference Include="Axle.Core" Version="$(AxleVersion)" />
   </ItemGroup>
