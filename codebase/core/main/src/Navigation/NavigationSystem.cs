@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Forest.Collections.Immutable;
+using Axle.Collections.Immutable;
 using Forest.Navigation.Messages;
 
 namespace Forest.Navigation

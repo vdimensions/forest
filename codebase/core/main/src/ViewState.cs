@@ -2,8 +2,7 @@
 using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
-using Forest.Collections;
-using Forest.Collections.Immutable;
+using Axle.Collections.Immutable;
 
 namespace Forest
 {
@@ -67,7 +66,7 @@ namespace Forest
         }
 
         public object Model { get; }
-        public ImmutableHashSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create<string>(StringComparer.Ordinal);
+        public ImmutableHashSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create(StringComparer.Ordinal);
         public string ResourceBundle { get; }
     }
 }

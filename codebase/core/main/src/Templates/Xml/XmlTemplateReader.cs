@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using Forest.Collections;
-using Forest.Collections.Immutable;
+using Axle.Collections.Immutable;
 
 namespace Forest.Templates.Xml
 {
