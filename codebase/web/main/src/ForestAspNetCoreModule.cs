@@ -8,7 +8,6 @@ using Forest.StateManagement;
 using Forest.UI;
 using Forest.Web.AspNetCore.Dom;
 using Forest.Web.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 
 namespace Forest.Web.AspNetCore
 {
@@ -21,13 +20,18 @@ namespace Forest.Web.AspNetCore
         private readonly ILogger _logger;
         private readonly ForestMessageConverter _messageConverter;
 
-        public ForestAspNetCoreModule(IForestEngine forestEngine, IForestViewRegistry viewRegistry, ISessionReferenceProvider sessionReferenceProvider, IForestStateInspector stateInspector, ILogger logger)
+        public ForestAspNetCoreModule(
+            IForestEngine forestEngine, 
+            IForestViewRegistry viewRegistry, 
+            ISessionReferenceProvider sessionReferenceProvider, 
+            IForestStateInspector stateInspector, 
+            ILogger logger)
         {
             _forestEngine = forestEngine;
             _viewRegistry = viewRegistry;
             _sessionStateProvider = new ForestSessionStateProvider(sessionReferenceProvider, stateInspector);
-            _logger = logger;
             _messageConverter = new ForestMessageConverter();
+            _logger = logger;
         }
 
         [ModuleInit]
@@ -36,7 +40,7 @@ namespace Forest.Web.AspNetCore
             exporter.Export(new ForestRequestExecutor(_forestEngine, _sessionStateProvider, _messageConverter));
         }
 
-        protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => new WebApiPhysicalViewRenderer();
+        protected override IPhysicalViewRenderer GetPhysicalViewRenderer() => new WebApiPhysicalViewRenderer(_messageConverter);
         
         protected override IForestStateProvider GetForestStateProvider() => this;
     }

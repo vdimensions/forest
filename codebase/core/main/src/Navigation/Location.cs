@@ -15,7 +15,6 @@ namespace Forest.Navigation
     {
         public static readonly Location Empty = new Location();
         
-        
         public static Location Create(string path, object state)
         {
             path.VerifyArgument(nameof(path)).IsNotNullOrEmpty();
@@ -52,8 +51,14 @@ namespace Forest.Navigation
 
         bool IEquatable<Location>.Equals(Location other)
         {
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
             var cmp = StringComparer.Ordinal;
-            return other != null && cmp.Equals(Path, other.Path) && Equals(Value, other.Value);
+            return other != null 
+                && cmp.Equals(Path, other.Path) 
+                && Equals(Value, other.Value);
         }
         /// <inheritdoc />
         public override bool Equals(object obj) => obj is Location ni && Equals(ni);

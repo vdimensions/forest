@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Axle;
 using Axle.Collections.Immutable;
 using Axle.Extensions.Object;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -14,7 +15,7 @@ namespace Forest.Dom
     #endif
     public sealed class DomNode : IEquatable<DomNode>
     {
-        private sealed class DomNodesComparer : IEqualityComparer<IEnumerable<DomNode>>
+        private sealed class DomNodesComparer : AbstractEqualityComparer<IReadOnlyCollection<DomNode>>
         {
             private readonly IEqualityComparer<DomNode> _comparer;
 
@@ -24,10 +25,17 @@ namespace Forest.Dom
             }
             public DomNodesComparer() : this(EqualityComparer<DomNode>.Default) { }
 
-            public bool Equals(IEnumerable<DomNode> x, IEnumerable<DomNode> y) =>
-                (x is null && y is null) || (x != null && y != null && x.SequenceEqual(y, _comparer));
+            protected override bool DoEquals(IReadOnlyCollection<DomNode> x, IReadOnlyCollection<DomNode> y)
+            {
+                if (x.Count != y.Count)
+                {
+                    return false;
+                }
 
-            public int GetHashCode(IEnumerable<DomNode> obj) => obj == null ? 0 : this.CalculateHashCode(obj.ToArray());
+                return x.SequenceEqual(y, _comparer);
+            }
+
+            protected override int DoGetHashCode(IReadOnlyCollection<DomNode> obj) => this.CalculateHashCode(obj.ToArray());
         }
 
         /// Determines whether the specified <see cref="DomNode"/> instances are considered equal.
@@ -64,7 +72,7 @@ namespace Forest.Dom
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
-        private readonly ImmutableDictionary<string, IEnumerable<DomNode>> _regions;
+        private readonly ImmutableDictionary<string, IReadOnlyCollection<DomNode>> _regions;
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
@@ -87,7 +95,7 @@ namespace Forest.Dom
                 string region, 
                 object model, 
                 DomNode parent, 
-                ImmutableDictionary<string, IEnumerable<DomNode>> regions, 
+                ImmutableDictionary<string, IReadOnlyCollection<DomNode>> regions, 
                 ImmutableDictionary<string, ICommandModel> commands,
                 string resourceBundle,
                 uint revision)
@@ -103,18 +111,13 @@ namespace Forest.Dom
             _resourceBundle = resourceBundle;
         }
 
-        private bool DictionaryEquals<T>(IReadOnlyDictionary<string, T> left, IReadOnlyDictionary<string, T> right, IEqualityComparer<T> comparer)
+        private bool DictionaryKeysEquals(IEnumerable<string> left, IEnumerable<string> right, IEqualityComparer<string> comparer)
         {
-            var strComparer = StringComparer.Ordinal;
-            if (left.Keys.Except(right.Keys, strComparer).Any())
+            if (ReferenceEquals(left, right))
             {
-                return false;
+                return true;
             }
-            if (right.Keys.Except(left.Keys, strComparer).Any())
-            {
-                return false;
-            }
-            return left.Keys.All(key => comparer.Equals(left[key], right[key]));
+            return ImmutableHashSet.CreateRange(comparer, left).SymmetricExcept(right).Count == 0;
         }
 
         public bool Equals(DomNode other)
@@ -128,15 +131,17 @@ namespace Forest.Dom
             {
                 return true;
             }
+            
+            Console.WriteLine("DomNode.Equals {0}", _name);
 
             var comparer = StringComparer.Ordinal;
             return comparer.Equals(_instanceID, other._instanceID)
                 && comparer.Equals(_name, other._name)
                 && comparer.Equals(_region, other._region)
                 && Equals(_model, other._model)
-                && Equals(_parent, other._parent)
-                && DictionaryEquals(_regions, other._regions, new DomNodesComparer())
-                && DictionaryEquals(_commands, other._commands, new CommandModelEqualityComparer())
+                && (ReferenceEquals(_parent, other._parent) || comparer.Equals(_parent._instanceID, other._parent._instanceID))
+                && DictionaryKeysEquals(_regions.Keys, other._regions.Keys, comparer)
+                && DictionaryKeysEquals(_commands.Keys, other._commands.Keys, comparer)
                 && comparer.Equals(_resourceBundle, other._resourceBundle);
         }
 
@@ -150,7 +155,7 @@ namespace Forest.Dom
                 hashCode = (hashCode * 397) ^ (_name != null ? _name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_region != null ? _region.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_model != null ? _model.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_parent != null ? _parent.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_parent != null ? _parent.InstanceID.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_regions != null ? this.CalculateHashCode(_regions.Cast<object>().ToArray()) : 0);
                 hashCode = (hashCode * 397) ^ (_commands != null ? this.CalculateHashCode(_commands.Cast<object>().ToArray()) : 0);
                 hashCode = (hashCode * 397) ^ (_resourceBundle != null ? this.CalculateHashCode(_resourceBundle.Cast<object>().ToArray()) : 0);
@@ -163,7 +168,7 @@ namespace Forest.Dom
         public string Region => _region;
         public object Model => _model;
         public DomNode Parent => _parent;
-        public ImmutableDictionary<string, IEnumerable<DomNode>> Regions => _regions;
+        public ImmutableDictionary<string, IReadOnlyCollection<DomNode>> Regions => _regions;
         public ImmutableDictionary<string, ICommandModel> Commands => _commands;
         public string ResourceBundle => _resourceBundle;
         public uint Revision => _revision;

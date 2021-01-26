@@ -8,7 +8,17 @@ namespace Forest.Dom
 {
     internal sealed class ForestDomManager : IForestDomManager
     {
-        private static ICommandModel CreateModel(IForestCommandDescriptor descriptor) => new CommandModel(descriptor.Name);
+        private static ICommandModel CreateModel(IForestCommandDescriptor descriptor, ViewState viewState)
+        {
+            if (descriptor.TryResolveRedirect(viewState.Model, out var redirect))
+            {
+                return new CommandModel(descriptor.Name, redirect);
+            }
+            else
+            {
+                return new CommandModel(descriptor.Name);
+            }
+        }
 
         private readonly IForestContext _context;
 
@@ -29,7 +39,7 @@ namespace Forest.Dom
                 var commands = viewDescriptor.Commands.Values
                     .Where(cmd => !viewState.DisabledCommands.Contains(cmd.Name))
                     .Where(_context.SecurityManager.HasAccess)
-                    .Select(CreateModel)
+                    .Select(x => CreateModel(x, viewState))
                     .ToDictionary(x => x.Name, x => x, StringComparer.Ordinal);
                 var domNode = new DomNode(
                     node.Key, 
@@ -37,7 +47,7 @@ namespace Forest.Dom
                     node.Region,
                     viewState.Model,
                     nodeMap.TryGetValue(node.ParentKey, out var parent) ? parent : null, 
-                    ImmutableDictionary<string, IEnumerable<DomNode>>.Empty, 
+                    ImmutableDictionary<string, IReadOnlyCollection<DomNode>>.Empty, 
                     ImmutableDictionary.CreateRange(commands.Comparer, commands),
                     viewState.ResourceBundle,
                     node.Revision
@@ -57,7 +67,7 @@ namespace Forest.Dom
                 {
                     var region = domNode.Region;
                     var newRegionContents = parentDomNode.Regions.TryGetValue(region, out var nodes)
-                        ? new[] { domNode }.Union(nodes)
+                        ? new[] { domNode }.Union(nodes).ToArray()
                         : new[] { domNode };
                     var newRegions = parentDomNode.Regions
                         .Remove(region)

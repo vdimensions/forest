@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Navigation;
 
 namespace Forest.Dom
 {
@@ -8,5 +9,6 @@ namespace Forest.Dom
         string Description { get; }
         string DisplayName { get; }
         string Tooltip { get; }
+        Location Redirect { get; }
     }
 }

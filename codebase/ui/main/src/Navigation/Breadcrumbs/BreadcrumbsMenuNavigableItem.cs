@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Forest.Navigation;
 
 namespace Forest.UI.Navigation.Breadcrumbs
 {
@@ -18,7 +19,7 @@ namespace Forest.UI.Navigation.Breadcrumbs
 
             [Command(Commands.Navigate)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
-            internal void Navigate() => Engine.NavigateUp(Model.Offset);
+            internal static Location Navigate(NavigationNode model) => Location.Create(model.Path);
         }
     }
 }

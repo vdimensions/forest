@@ -2,13 +2,17 @@
 using Forest.Dom;
 using Forest.Engine;
 using Forest.UI;
+using Forest.Web.AspNetCore.Mvc;
 
 namespace Forest.Web.AspNetCore.Dom
 {
     internal sealed class WebApiPhysicalView : AbstractPhysicalView
     {
-        public WebApiPhysicalView(IForestEngine engine, string instanceID) : base(engine, instanceID)
+        private readonly ForestMessageConverter _messageConverter;
+
+        public WebApiPhysicalView(IForestEngine engine, string instanceID, ForestMessageConverter messageConverter) : base(engine, instanceID)
         {
+            _messageConverter = messageConverter;
         }
 
         protected override void Dispose(bool disposing)
@@ -22,6 +26,7 @@ namespace Forest.Web.AspNetCore.Dom
                 x => new CommandNode
                 {
                     Name = x.Value.Name,
+                    Path = _messageConverter.LocationConverter.Convert(x.Value.Redirect),
                     Description = x.Value.Description,
                     DisplayName = x.Value.DisplayName,
                     Tooltip = x.Value.Tooltip

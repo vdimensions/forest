@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Axle.Logging;
 using Axle.Modularity;
 using Axle.Resources;
 using Forest.ComponentModel;
@@ -12,9 +13,9 @@ namespace Forest
     {
         private readonly ViewRegistry _viewRegistry;
 
-        public ForestViewRegistry()
+        public ForestViewRegistry(ILogger logger)
         {
-            _viewRegistry = new ViewRegistry();
+            _viewRegistry = new ViewRegistry(logger);
         }
         
         [ModuleDependencyInitialized]

@@ -18,10 +18,11 @@ namespace Forest.Dom
             }
             
             var comparer = StringComparer.Ordinal;
-            return comparer.Equals(x.Name,y.Name) 
+            return comparer.Equals(x.Name, y.Name) 
                 && comparer.Equals(x.Description, y.Description)
                 && comparer.Equals(x.DisplayName, y.DisplayName) 
-                && comparer.Equals(x.Tooltip, y.Tooltip);
+                && comparer.Equals(x.Tooltip, y.Tooltip)
+                && Equals(x.Redirect, y.Redirect);
         }
 
         public int GetHashCode(ICommandModel obj)

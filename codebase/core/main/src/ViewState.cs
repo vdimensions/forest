@@ -12,36 +12,38 @@ namespace Forest
     [StructLayout(LayoutKind.Sequential)]
     public struct ViewState : IEquatable<ViewState>
     {
-        public static ViewState Create(object model, string resourceBundle = null) => new ViewState(
-            model.VerifyArgument(nameof(model)).IsNotNull().Value, null, resourceBundle);
+        public static ViewState Create(object model, string resourceBundle)
+        {
+            return new ViewState(model.VerifyArgument(nameof(model)).IsNotNull().Value, resourceBundle, null);
+        }
 
         public static ViewState UpdateModel(ViewState viewState, object model)
         {
             model.VerifyArgument(nameof(model)).IsNotNull();
-            return new ViewState(model, viewState.DisabledCommands, viewState.ResourceBundle);
+            return new ViewState(model, viewState.ResourceBundle, viewState.DisabledCommands);
         }
 
         public static ViewState DisableCommand(ViewState viewState, string command)
         {
             command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands.Add(command), viewState.ResourceBundle);
+            return new ViewState(viewState.Model, viewState.ResourceBundle, viewState.DisabledCommands.Add(command));
         }
         public static ViewState EnableCommand(ViewState viewState, string command)
         {
             command.VerifyArgument(nameof(command)).IsNotNullOrEmpty();
-            return new ViewState(viewState.Model, viewState.DisabledCommands.Remove(command), viewState.ResourceBundle);
+            return new ViewState(viewState.Model, viewState.ResourceBundle, viewState.DisabledCommands.Remove(command));
         }
 
         public static ViewState AssignResourceBundle(ViewState viewState, string resourceBundle)
         {
-            return new ViewState(viewState.Model, viewState.DisabledCommands, resourceBundle);
+            return new ViewState(viewState.Model, resourceBundle, viewState.DisabledCommands);
         }
 
         public static readonly ViewState Empty;
 
         private readonly ImmutableHashSet<string> _disabledCommands;
 
-        private ViewState(object model, ImmutableHashSet<string> disabledCommands = null, string resourceBundle = null)
+        private ViewState(object model, string resourceBundle, ImmutableHashSet<string> disabledCommands = null)
         {
             Model = model;
             _disabledCommands = disabledCommands;

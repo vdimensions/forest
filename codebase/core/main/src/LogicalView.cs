@@ -70,11 +70,11 @@ namespace Forest
                 var vs = _executionContext.GetViewState(_key);
                 _state = _executionContext.SetViewState(false, _key, vs.HasValue 
                     ? ViewState.UpdateModel(vs.Value, newModel) 
-                    : ViewState.Create(newModel));
+                    : ViewState.Create(newModel, ResourceBundle));
             }
             else
             {
-                _state = ViewState.Create(newModel);
+                _state = ViewState.Create(newModel, ResourceBundle);
             }
             return (T) _state.Model;
         }

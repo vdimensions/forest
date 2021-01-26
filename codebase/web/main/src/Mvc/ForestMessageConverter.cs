@@ -4,12 +4,59 @@ using System.Linq;
 using Axle.Conversion;
 using Axle.Text.Parsing;
 using Axle.Text.Expressions.Regular;
+using Forest.Navigation;
 
 namespace Forest.Web.AspNetCore.Mvc
 {
     public sealed class ForestMessageConverter
     {
+        private sealed class LocationToPathConverter : IConverter<Location, string>
+        {
+            private readonly ForestMessageConverter _messageConverter;
+
+            public LocationToPathConverter(ForestMessageConverter messageConverter)
+            {
+                _messageConverter = messageConverter;
+            }
+
+            public string Convert(Location location)
+            {
+                if (TryConvert(location, out var result))
+                {
+                    return result;
+                }
+
+                throw new ConversionException(typeof(Location), typeof(string));
+            }
+
+            public bool TryConvert(Location location, out string result)
+            {
+                result = null;
+                if (location == null)
+                {
+                    return false;
+                }
+                try
+                {
+                    if (location.Value != null)
+                    {
+                        var messageStr = _messageConverter.ConvertMessage(location.Value);
+                        result = $"{location.Path}/{messageStr}";
+                    }
+
+                    result = location.Path;
+                }
+                catch
+                {
+                    return false;
+                }
+            
+                return true;
+            }
+        }
+        
         private readonly ConcurrentDictionary<Type, IForestMessagePathConverter> _converters;
+        private readonly IConverter<Location, string> _locationConverter;
 
         internal ForestMessageConverter()
         {
@@ -37,6 +84,8 @@ namespace Forest.Web.AspNetCore.Mvc
             RegisterSimpleClassConverter(new Axle.Text.Parsing.UriParser());
             RegisterSimpleClassConverter(new TypeParser());
             RegisterSimpleClassConverter(new AssemblyParser());
+
+            _locationConverter = new LocationToPathConverter(this);
         }
         
         private void RegisterSimpleStructConverter<T>(IParser<T> parser) where T: struct
@@ -82,5 +131,7 @@ namespace Forest.Web.AspNetCore.Mvc
             }
             return converter.ConvertBack(path);
         }
+
+        public IConverter<Location, string> LocationConverter => _locationConverter;
     }
 }

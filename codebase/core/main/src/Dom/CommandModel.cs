@@ -1,5 +1,6 @@
 ﻿using System;
 using Forest.Globalization;
+using Forest.Navigation;
 
 namespace Forest.Dom
 {
@@ -11,20 +12,22 @@ namespace Forest.Dom
     internal sealed class CommandModel : ICommandModel, IEquatable<CommandModel>
     #endif
     {
-        public CommandModel(string name, string description, string displayName, string tooltip)
+        public CommandModel(string name, Location redirect, string description, string displayName, string tooltip)
         {
             Name = name;
+            Redirect = redirect;
             Description = description;
             DisplayName = displayName;
             Tooltip = tooltip;
         }
-        public CommandModel(string name) : this(name, string.Empty, string.Empty, string.Empty) { }
+        public CommandModel(string name, Location redirect) : this(name, redirect, string.Empty, string.Empty, string.Empty) { }
+        public CommandModel(string name) : this(name, Location.Empty) { }
         internal CommandModel() { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         object ICloneable.Clone()
         {
-            return new CommandModel(Name, Description, DisplayName, Tooltip);
+            return new CommandModel(Name, Redirect, Description, DisplayName, Tooltip);
         }
         #endif
 
@@ -38,10 +41,15 @@ namespace Forest.Dom
         public override int GetHashCode() => new CommandModelEqualityComparer().GetHashCode(this);
 
         public string Name { get; }
+
+        public Location Redirect { get; }
+        
         [Localized]
         public string Description { get; set; }
+        
         [Localized]
         public string DisplayName { get; set; }
+        
         [Localized]
         public string Tooltip { get; set; }
     }

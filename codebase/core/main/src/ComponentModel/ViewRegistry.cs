@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Axle.Logging;
 using Axle.Reflection;
 using Axle.Reflection.Extensions.Type;
 using Axle.Verification;
@@ -62,6 +63,7 @@ namespace Forest.ComponentModel
                 return false;
             }
             var baseMethods = overrideMethods
+                .Where(x => !x.IsStatic)
                 .Select(m => Tuple.Create(m.GetBaseDefinition(), m))
                 .Where(t => t.Item1.DeclaringType != t.Item2.DeclaringType)
                 .Select(t => t.Item1)
@@ -93,38 +95,32 @@ namespace Forest.ComponentModel
         private readonly ConcurrentDictionary<Type, IForestViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IForestViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
         private readonly ConcurrentBag<ForestViewRegistryListenerWrapper> _viewRegistryListeners = new ConcurrentBag<ForestViewRegistryListenerWrapper>();
+        private readonly ILogger _logger;
+
+        public ViewRegistry(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         protected virtual ITypeIntrospector CreateIntrospector(Type viewType) => new TypeIntrospector(viewType);
         
         private static IEnumerable<MethodAndAttributes<TAttribute>> ConsolidateMethods<TAttribute>(
-                IEnumerable<MethodAndAttributes<TAttribute>> data) 
+                IEnumerable<MethodAndAttributes<TAttribute>> data,
+                bool includeStatic = false) 
             where TAttribute : Attribute
         {
             const DeclarationType flags = DeclarationType.Virtual | DeclarationType.Abstract | DeclarationType.Override | DeclarationType.HideBySig | DeclarationType.Instance;
             var eligible = data
                 .Select(a => new MethodAndAttributes<TAttribute>(a.Method, a.Attributes.Distinct()))
-                .Where(x => flags.HasFlag(x.Method.Declaration))
+                .Where(x => flags.HasFlag(x.Method.Declaration) || (includeStatic && x.Method.Declaration.IsStatic()))
                 .ToArray();
             var overridingMethods = GetOverridingMethods(eligible.Select(x => x.Method.ReflectedMember).ToArray()).ToArray();
             return eligible.Where(x => !IsOverriden(x.Method.ReflectedMember, overridingMethods));
         }
         private IForestViewDescriptor CreateViewDescriptor(Type viewType)
         {
-            var strCmp = StringComparer.Ordinal;
             var introspector = CreateIntrospector(viewType);
             var viewAttribute = GetAttributes<ViewAttribute>(introspector).SingleOrDefault();
-            var methods = introspector.GetMethods(ScanOpts);
-            var commandDescriptors = 
-                ConsolidateMethods(methods.Select(m => new MethodAndAttributes<CommandAttribute>(m, GetAttributes<CommandAttribute>(m))))
-                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<CommandAttribute>(x.Method, new []{y})))
-                .Select(x => new ForestCommandDescriptor(x.Attributes.Single(), x.Method))
-                .ToDictionary(x => x.Name, x => x as IForestCommandDescriptor, strCmp);
-            var eventDescriptors = 
-                ConsolidateMethods(methods.Select(m => new MethodAndAttributes<SubscriptionAttribute>(m, GetAttributes<SubscriptionAttribute>(m))))
-                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<SubscriptionAttribute>(x.Method, new[] { y })))
-                .Select(x => new EventDescriptor(x.Attributes.Single().Topic, x.Method))
-                .ToArray();
-            var isSystemView = viewType.ExtendsOrImplements<ISystemView>();
             var isAnonymousView = viewAttribute == null;
             var viewName = isAnonymousView ? ForestViewDescriptor.GetAnonymousViewName(viewType) : viewAttribute.Name;
             var viewModelType = viewType
@@ -134,6 +130,21 @@ namespace Forest.ComponentModel
                 .Where(interfaceType => interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IView<>))
                 .Select(interfaceType => interfaceType.GetGenericArguments()[0])
                 .SingleOrDefault() ?? typeof(void);
+            var strCmp = StringComparer.Ordinal;
+            var commandDescriptors = ConsolidateMethods(
+                    introspector
+                        .GetMethods(ScanOpts|ScanOptions.Static)
+                        .Select(m => new MethodAndAttributes<CommandAttribute>(m, GetAttributes<CommandAttribute>(m))), 
+                    true)
+                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<CommandAttribute>(x.Method, new []{y})))
+                .Select(x => ForestCommandDescriptor.Create(viewType, viewModelType, x.Attributes.Single(), x.Method, _logger))
+                .ToDictionary(x => x.Name, x => x as IForestCommandDescriptor, strCmp);
+            var eventDescriptors = ConsolidateMethods(introspector.GetMethods(ScanOpts)
+                .Select(m => new MethodAndAttributes<SubscriptionAttribute>(m, GetAttributes<SubscriptionAttribute>(m))))
+                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<SubscriptionAttribute>(x.Method, new[] { y })))
+                .Select(x => new EventDescriptor(x.Attributes.Single().Topic, x.Method))
+                .ToArray();
+            var isSystemView = viewType.ExtendsOrImplements<ISystemView>();
             return new ForestViewDescriptor(
                 viewName, 
                 viewType, 

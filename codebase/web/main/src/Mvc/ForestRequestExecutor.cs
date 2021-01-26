@@ -52,27 +52,17 @@ namespace Forest.Web.AspNetCore.Mvc
             _messageConverter = messageConverter;
         }
         
-        private string GetPath(Location location)
-        {
-            if (location.Value != null)
-            {
-                var messageStr = _messageConverter.ConvertMessage(location.Value);
-                return $"{location.Path}/{messageStr}";
-            }
-            return location.Path;
-        }
-
         public ForestResult ExecuteCommand(string instanceId, string command, object arg)
         {
             _forest.ExecuteCommand(command, instanceId, arg);
-            return new ForestResult(GetPath(_clientViewsHelper.Location), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
+            return new ForestResult(_messageConverter.LocationConverter.Convert(_clientViewsHelper.Location), _clientViewsHelper.UpdatedViews.Values.ToArray(), HttpStatusCode.PartialContent);
         }
         
         public ActionResult Navigate(string template, string customPath = null)
         {
             _forest.Navigate(template);
             return new ForestResult(
-                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.Location) : customPath, 
+                string.IsNullOrEmpty(customPath) ? _messageConverter.LocationConverter.Convert(_clientViewsHelper.Location) : customPath, 
                 _clientViewsHelper.AllViews.Values.ToArray(), 
                 HttpStatusCode.OK);
         }
@@ -81,7 +71,7 @@ namespace Forest.Web.AspNetCore.Mvc
         {
             _forest.Navigate(template, message);
             return new ForestResult(
-                string.IsNullOrEmpty(customPath) ? GetPath(_clientViewsHelper.Location) : customPath, 
+                string.IsNullOrEmpty(customPath) ? _messageConverter.LocationConverter.Convert(_clientViewsHelper.Location) : customPath, 
                 _clientViewsHelper.AllViews.Values.ToArray(), 
                 HttpStatusCode.OK);
         }
@@ -90,7 +80,7 @@ namespace Forest.Web.AspNetCore.Mvc
         {
             if (_clientViewsHelper.AllViews.TryGetValue(instanceId, out var view))
             {
-                return new ForestResult(GetPath(_clientViewsHelper.Location), new []{ view }, HttpStatusCode.PartialContent);
+                return new ForestResult(_messageConverter.LocationConverter.Convert(_clientViewsHelper.Location), new []{ view }, HttpStatusCode.PartialContent);
             }
             return new NotFoundResult();
         }

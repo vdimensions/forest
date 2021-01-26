@@ -37,7 +37,7 @@ namespace Forest
         {
             internal static Node Create(string key, ViewHandle viewHandle, string region, object model, Node parent)
             {
-                var viewState = model == null ? null : new ViewState?(Forest.ViewState.Create(model));
+                var viewState = model == null ? null : new ViewState?(Forest.ViewState.Create(model, null));
                 
                 return new Node(parent.Key, region, viewHandle, key, viewState, 0u);
             }

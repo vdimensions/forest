@@ -34,7 +34,7 @@ namespace Forest.UI.Navigation
 
                 [Command(Commands.Navigate)]
                 [SuppressMessage("ReSharper", "UnusedMember.Global")]
-                internal Location Navigate() => Location.Create(Model.Path);
+                internal static Location Navigate(NavigationNode model) => Location.Create(model.Path);
             }
         }
     }
