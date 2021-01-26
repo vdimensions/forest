@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Axle;
 using Axle.Collections.Immutable;
 using Axle.Extensions.Object;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -15,29 +14,6 @@ namespace Forest.Dom
     #endif
     public sealed class DomNode : IEquatable<DomNode>
     {
-        private sealed class DomNodesComparer : AbstractEqualityComparer<IReadOnlyCollection<DomNode>>
-        {
-            private readonly IEqualityComparer<DomNode> _comparer;
-
-            public DomNodesComparer(IEqualityComparer<DomNode> comparer)
-            {
-                _comparer = comparer;
-            }
-            public DomNodesComparer() : this(EqualityComparer<DomNode>.Default) { }
-
-            protected override bool DoEquals(IReadOnlyCollection<DomNode> x, IReadOnlyCollection<DomNode> y)
-            {
-                if (x.Count != y.Count)
-                {
-                    return false;
-                }
-
-                return x.SequenceEqual(y, _comparer);
-            }
-
-            protected override int DoGetHashCode(IReadOnlyCollection<DomNode> obj) => this.CalculateHashCode(obj.ToArray());
-        }
-
         /// Determines whether the specified <see cref="DomNode"/> instances are considered equal.
         public static bool operator == (DomNode left, DomNode right) => Equals(left, right);
 
