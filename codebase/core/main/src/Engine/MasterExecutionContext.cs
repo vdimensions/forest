@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Axle.Logging;
 using Forest.Engine.Aspects;
 using Forest.Engine.Instructions;
 using Forest.Navigation;
@@ -14,6 +15,7 @@ namespace Forest.Engine
         private readonly IForestStateProvider _stateProvider;
         private readonly IForestExecutionContext _slave;
         private readonly IForestContext _context;
+        private readonly ILogger _logger;
 
         private bool _discardState;
 
@@ -21,7 +23,8 @@ namespace Forest.Engine
             IForestContext context, 
             IForestStateProvider stateProvider, 
             IPhysicalViewRenderer physicalViewRenderer, 
-            IForestEngine sourceEngine)
+            IForestEngine sourceEngine,
+            ILogger logger)
         {
             _context = context;
             var initialState = stateProvider.BeginUsingState();
@@ -29,6 +32,7 @@ namespace Forest.Engine
             var slave = new SlaveExecutionContext(context, physicalViewDomProcessor, initialState, this);
             _stateProvider = stateProvider;
             _slave = slave;
+            _logger = logger;
             slave.Init();
         }
 

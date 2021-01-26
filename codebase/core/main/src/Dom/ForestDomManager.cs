@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Axle.Collections.Immutable;
+using Axle.Logging;
 using Forest.ComponentModel;
 
 namespace Forest.Dom
@@ -21,10 +22,12 @@ namespace Forest.Dom
         }
 
         private readonly IForestContext _context;
+        private readonly ILogger _logger;
 
-        internal ForestDomManager(IForestContext context)
+        internal ForestDomManager(IForestContext context, ILogger logger)
         {
             _context = context;
+            _logger = logger;
         }
         
         private IEnumerable<DomNode> BuildDom(Tree tree)
@@ -115,6 +118,11 @@ namespace Forest.Dom
                     if (dn.Parent != null && changedNodes.TryGetValue(dn.Parent.InstanceID, out var updatedParent))
                     {
                         dn = new DomNode(dn.InstanceID, dn.Name, dn.Region, dn.Model, updatedParent, dn.Regions, dn.Commands, dn.ResourceBundle, dn.Revision);
+                    }
+
+                    if (isNodeChanged)
+                    {
+                        _logger.Debug("Updating changed dom node {0}", dn.Name);
                     }
                     dn = domProcessor.ProcessNode(dn, isNodeChanged);
                     changedNodes[dn.InstanceID] = dn;

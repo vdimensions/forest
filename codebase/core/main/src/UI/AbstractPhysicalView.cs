@@ -100,7 +100,7 @@ namespace Forest.UI
         {
             node.VerifyArgument(nameof(node)).IsNotNull();
 
-            if (node.Equals(_node))
+            if (node.Revision <= _node?.Revision)
             {
                 return;
             }

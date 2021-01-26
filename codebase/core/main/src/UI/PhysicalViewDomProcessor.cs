@@ -21,7 +21,10 @@ namespace Forest.UI
         private readonly IPhysicalViewRenderer _renderer;
         private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
 
-        internal PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, ImmutableDictionary<string, IPhysicalView> physicalViews = null)
+        internal PhysicalViewDomProcessor(
+            IForestEngine engine, 
+            IPhysicalViewRenderer renderer, 
+            ImmutableDictionary<string, IPhysicalView> physicalViews)
         {
             _engine = engine;
             _renderer = renderer;
@@ -134,7 +137,9 @@ namespace Forest.UI
             // At this point, invoking those update calls is safe and the described above side-effects are avoided.
             foreach (var x in updateCallArguments)
             {
-                x.Item1.Update(x.Item2);
+                var physicalView = x.Item1;
+                var domNode = x.Item2;
+                physicalView.Update(domNode);
             }
             
             return ImmutableDictionary.CreateRange(physicalViews.Comparer, physicalViews);

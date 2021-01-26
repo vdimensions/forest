@@ -132,8 +132,6 @@ namespace Forest.Dom
                 return true;
             }
             
-            Console.WriteLine("DomNode.Equals {0}", _name);
-
             var comparer = StringComparer.Ordinal;
             return comparer.Equals(_instanceID, other._instanceID)
                 && comparer.Equals(_name, other._name)

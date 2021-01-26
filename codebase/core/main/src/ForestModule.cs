@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Axle.Application.Services;
 using Axle.DependencyInjection;
 using Axle.Logging;
 using Axle.Modularity;
@@ -61,7 +60,7 @@ namespace Forest
             _securityManager = securityManager;
             _securityExceptionHandler = securityExceptionHandler;
             _templateProvider = templateProvider;
-            _domManager = new ForestDomManager(this);
+            _domManager = new ForestDomManager(this, logger);
             _messageAdvices = new List<IForestMessageAdvice>();
             _commandAdvices = new List<IForestCommandAdvice>();
             _navigationAdvices = new List<IForestNavigationAdvice>();
@@ -111,49 +110,49 @@ namespace Forest
 
         T IForestEngine.RegisterSystemView<T>()
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 return ctx.Engine.RegisterSystemView<T>();
             }
         }
         IView IForestEngine.RegisterSystemView(Type viewType)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 return ctx.Engine.RegisterSystemView(viewType);
             }
         }
         void ITreeNavigator.Navigate(Location location)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.Navigate(location);
             }
         }
         void ITreeNavigator.NavigateBack()
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.NavigateBack();
             }
         }
         void ITreeNavigator.NavigateBack(int offset)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.NavigateBack(offset);
             }
         }
         void ITreeNavigator.NavigateUp()
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.NavigateUp();
             }
         }
         void ITreeNavigator.NavigateUp(int offset)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.NavigateUp(offset);
             }
@@ -161,7 +160,7 @@ namespace Forest
         
         void ICommandDispatcher.ExecuteCommand(string command, string target, object arg)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.ExecuteCommand(command, target, arg);
             }
@@ -169,7 +168,7 @@ namespace Forest
 
         void IMessageDispatcher.SendMessage<T>(T msg)
         {
-            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors))
+            using (var ctx = EngineContextProvider.GetContext(this, SystemViewDescriptors, _logger))
             {
                 ctx.Engine.SendMessage(msg);
             }
