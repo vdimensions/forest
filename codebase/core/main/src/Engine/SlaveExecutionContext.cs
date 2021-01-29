@@ -179,6 +179,7 @@ namespace Forest.Engine
         }
 
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
+        [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Local")]
         private void ProcessTreeModification(
             TreeChangeScope scope, 
             TreeModification nsm, 

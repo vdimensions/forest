@@ -43,8 +43,10 @@ namespace Forest.Web.AspNetCore.Mvc
                         var messageStr = _messageConverter.ConvertMessage(location.Value);
                         result = $"{location.Path}/{messageStr}";
                     }
-
-                    result = location.Path;
+                    else
+                    {
+                        result = location.Path;
+                    }
                 }
                 catch
                 {

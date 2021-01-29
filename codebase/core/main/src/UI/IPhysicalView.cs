@@ -10,5 +10,6 @@ namespace Forest.UI
         IPhysicalViewCommandIndex Commands { get; }
         
         string Key { get; }
+        DomNode Node { get; }
     }
 }

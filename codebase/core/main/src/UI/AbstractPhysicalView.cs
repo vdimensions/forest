@@ -123,5 +123,6 @@ namespace Forest.UI
         public IPhysicalViewCommandIndex Commands => _commandIndex;
 
         string IPhysicalView.Key => _key;
+        DomNode IPhysicalView.Node => _node;
     }
 }

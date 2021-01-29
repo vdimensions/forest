@@ -10,8 +10,9 @@ namespace Forest.UI
     {
         public enum NodeState : sbyte
         {
-            NewNode = 0,
-            UpdatedNode = 1
+            Unchanged = 0,
+            NewNode = 1,
+            UpdatedNode = 2,
         }
 
         private IImmutableHashSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
@@ -36,10 +37,22 @@ namespace Forest.UI
         DomNode IDomProcessor.ProcessNode(DomNode node, bool isNodeUpdated)
         {
             _nodesToPreserve = _nodesToPreserve.Add(node.InstanceID);
+            var physicalViewExists = _physicalViews.TryGetValue(node.InstanceID, out var pv);
+            //
+            // Because of globalization or other processor interference, the dom node passed-in may be different
+            // than the dom node that is in possession of the physical view.
+            // In case there were no changes to that particular node, we must assume that
+            // the physical view is the source of truth. 
+            //
+            var actualNode = physicalViewExists 
+                ? isNodeUpdated ? (pv.Node ?? node) : node 
+                : node;
             _nodeStates = _nodeStates.Add(
                 Tuple.Create(
-                    node, 
-                    _physicalViews.TryGetValue(node.InstanceID, out _) ? NodeState.UpdatedNode : NodeState.NewNode));
+                    actualNode, 
+                    physicalViewExists
+                        ? isNodeUpdated ? NodeState.UpdatedNode : NodeState.Unchanged 
+                        : NodeState.NewNode));
             return node;
         }
 
@@ -63,16 +76,16 @@ namespace Forest.UI
 
             // store tuples of renderer and node to initiate an update call after the views are rendered
             var updateCallArguments = new List<Tuple<IPhysicalView, DomNode>>();
-            foreach(var nodeState in _nodeStates)
+            foreach(var nodeStateTuple in _nodeStates)
             {
-                var n = nodeState.Item1;
-                var isNewView = nodeState.Item2 == NodeState.NewNode;
+                var n = nodeStateTuple.Item1;
+                var nodeState = nodeStateTuple.Item2;
                 var current = physicalViews.TryGetValue(n.InstanceID, out var _n) ? _n : null;
 
                 IPhysicalView parent = null;
                 if (n.Parent == null || (n.Parent != null && physicalViews.TryGetValue(n.Parent.InstanceID, out parent)))
                 {
-                    if (current == null && isNewView)
+                    if (current == null && nodeState == NodeState.NewNode)
                     {
                         var physicalView = parent != null
                             ? _renderer.CreateNestedPhysicalView(_engine, parent, n)
@@ -80,11 +93,11 @@ namespace Forest.UI
                         updateCallArguments.Add(Tuple.Create(physicalView, n));
                         physicalViews.Add(n.InstanceID, physicalView);
                     }
-                    else if (current != null && !isNewView)
+                    else if (current != null && nodeState != NodeState.Unchanged)
                     {
                         updateCallArguments.Add(Tuple.Create(current, n));
                     }
-                    else if (current != null && isNewView)
+                    else if (current != null && nodeState == NodeState.NewNode)
                     {
                         throw new InvalidOperationException(n.Parent != null
                             ? string.Format(
@@ -98,7 +111,7 @@ namespace Forest.UI
                                 n.Name, 
                                 n.InstanceID));
                     }
-                    else if (current == null && !isNewView)
+                    else if (current == null && nodeState != NodeState.NewNode)
                     {
                         throw new InvalidOperationException(
                             string.Format(
