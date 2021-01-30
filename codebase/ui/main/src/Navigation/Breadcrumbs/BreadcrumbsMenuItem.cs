@@ -1,15 +1,12 @@
 ﻿namespace Forest.UI.Navigation.Breadcrumbs
 {
-    internal static class BreadcrumbsMenuItem
+    [View(Name)]
+    internal class BreadcrumbsMenuItemView : LogicalView<NavigationNode>
     {
         private const string Name = "BreadcrumbsMenuItem";
+            
+        protected BreadcrumbsMenuItemView(NavigationNode model) : base(model) { }
 
-        [View(Name)]
-        internal class View : LogicalView<NavigationNode>
-        {
-            protected View(NavigationNode model) : base(model) { }
-
-            protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Path.Replace("/", ".")}" : null;
-        }
+        protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Path.Replace("/", ".")}" : null;
     }
 }

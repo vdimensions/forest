@@ -1,22 +1,18 @@
 ﻿using System.Linq;
-using Axle.Modularity;
 using Forest.ComponentModel;
 using Forest.Navigation;
 
 namespace Forest.UI.Navigation.Breadcrumbs
 {
-    public static class BreadcrumbsMenu
+    [View(Name)]
+    internal sealed class BreadcrumbsMenuView : AbstractNavigationMenuView
     {
-        [Module]
-        internal sealed class Module : IForestViewProvider
+        [ViewRegistryCallback]
+        internal static void RegisterViews(IForestViewRegistry registry)
         {
-            void IForestViewProvider.RegisterViews(IForestViewRegistry registry)
-            {
-                registry
-                    .Register<View>()
-                    .Register<BreadcrumbsMenuItem.View>()
-                    .Register<BreadcrumbsMenuNavigableItem.View>();
-            }
+            registry
+                .Register<BreadcrumbsMenuItemView>()
+                .Register<BreadcrumbsMenuNavigableItemView>();
         }
         
         private const string Name = "BreadcrumbsMenu";
@@ -25,31 +21,27 @@ namespace Forest.UI.Navigation.Breadcrumbs
         {
             public const string Items = "Items";
         }
-
-        [View(Name)]
-        internal sealed class View : NavigationMenu.AbstractView
+            
+        protected override void OnNavigationTreeChanged(NavigationTree tree)
         {
-            protected override void OnNavigationTreeChanged(NavigationTree tree)
+            WithRegion(Regions.Items, itemsRegion =>
             {
-                WithRegion(Regions.Items, itemsRegion =>
+                itemsRegion.Clear();
+                var nodes = tree.SelectedNodes.ToArray();
+                var selectedItems = nodes
+                    .Select((x, i) => new NavigationNode { Path = x, Selected = true, Offset = nodes.Length - i - 1 })
+                    .ToArray();
+                if (selectedItems.Length == 0)
                 {
-                    itemsRegion.Clear();
-                    var nodes = tree.SelectedNodes.ToArray();
-                    var selectedItems = nodes
-                        .Select((x, i) => new NavigationNode { Path = x, Selected = true, Offset = nodes.Length - i - 1 })
-                        .ToArray();
-                    if (selectedItems.Length == 0)
-                    {
-                        return;
-                    }
-                    var last = selectedItems[selectedItems.Length - 1];
-                    for (var i = 0; i < selectedItems.Length - 1; i++)
-                    {
-                        itemsRegion.ActivateView<BreadcrumbsMenuNavigableItem.View, NavigationNode>(selectedItems[i]);
-                    }
-                    itemsRegion.ActivateView<BreadcrumbsMenuItem.View, NavigationNode>(last);
-                });
-            }
+                    return;
+                }
+                var last = selectedItems[selectedItems.Length - 1];
+                for (var i = 0; i < selectedItems.Length - 1; i++)
+                {
+                    itemsRegion.ActivateView<BreadcrumbsMenuNavigableItemView, NavigationNode>(selectedItems[i]);
+                }
+                itemsRegion.ActivateView<BreadcrumbsMenuItemView, NavigationNode>(last);
+            });
         }
     }
 }

@@ -38,7 +38,7 @@ namespace Forest.StateManagement
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [IgnoreDataMember]
         #endif
-        private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
+        private readonly IReadOnlyDictionary<string, IPhysicalView> _physicalViews;
 
         private readonly Location _location;
 
@@ -47,7 +47,7 @@ namespace Forest.StateManagement
             Location location,
             Tree tree,
             ImmutableDictionary<string, IRuntimeView> logicalViews,
-            ImmutableDictionary<string, IPhysicalView> physicalViews)
+            IReadOnlyDictionary<string, IPhysicalView> physicalViews)
         {
             _stateID = stateID;
             _location = location;

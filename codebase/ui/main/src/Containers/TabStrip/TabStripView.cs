@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Axle.Verification;
+using Forest.ComponentModel;
 using Forest.UI.Common;
 using Forest.UI.Containers.TabStrip.Messages;
 
@@ -9,6 +10,12 @@ namespace Forest.UI.Containers.TabStrip
 {
     public class TabStripView : Repeater<object, TabView, Tab>
     {
+        [ViewRegistryCallback]
+        internal static void RegisterViews(IForestViewRegistry viewRegistry)
+        {
+            viewRegistry.Register<TabView>();
+        }
+        
         private static class Regions
         {
             public const string TabList = "TabList";

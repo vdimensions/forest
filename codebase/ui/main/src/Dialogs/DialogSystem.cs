@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using Axle.Modularity;
 using Forest.ComponentModel;
 using Forest.Engine;
 
@@ -9,19 +8,6 @@ namespace Forest.UI.Dialogs
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class DialogSystem
     {
-        [Module]
-        internal sealed  class Module : IForestViewProvider
-        {
-            public void RegisterViews(IForestViewRegistry registry)
-            {
-                registry
-                    .Register<View>()
-                    .Register<ModalDialogFrame>()
-                    .Register<OkCancelDialogFrame>()
-                    .Register<ConfirmationDialogFrame>();
-            }
-        }
-        
         private const string Name = "DialogSystem";
         private const string MessageChannel = Name;
 
@@ -108,6 +94,15 @@ namespace Forest.UI.Dialogs
         [View(Name)]
         public sealed class View : LogicalView, ISystemView
         {
+            [ViewRegistryCallback]
+            public static void RegisterViews(IForestViewRegistry registry)
+            {
+                registry
+                    .Register<ModalDialogFrame>()
+                    .Register<OkCancelDialogFrame>()
+                    .Register<ConfirmationDialogFrame>();
+            }
+            
             [Subscription(MessageChannel)]
             internal void OnDialogMessage(Messages.IDialogMessage dialogMessage)
             {

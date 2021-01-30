@@ -56,7 +56,7 @@ namespace Forest.UI
             return node;
         }
 
-        public ImmutableDictionary<string, IPhysicalView> RenderViews()
+        public IReadOnlyDictionary<string, IPhysicalView> RenderViews()
         {
             var physicalViews = new Dictionary<string, IPhysicalView>(_physicalViews.KeyComparer);
             foreach (var kvp in _physicalViews)
