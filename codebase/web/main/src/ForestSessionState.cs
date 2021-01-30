@@ -36,7 +36,7 @@ namespace Forest.Web.AspNetCore
 
             if (allViews.Count == 0)
             {
-                var comparer = state.PhysicalViews.KeyComparer;
+                var comparer = StringComparer.Ordinal;
                 var allPairs = new List<KeyValuePair<string, WebApiPhysicalView>>();
                 var allViewsRange = new List<KeyValuePair<string, ViewNode>>();
                 var updatedViewsRange = new List<KeyValuePair<string, ViewNode>>();
@@ -78,7 +78,7 @@ namespace Forest.Web.AspNetCore
 
         public ForestState State { get; }
         internal object SyncRoot { get; }
-        internal ImmutableDictionary<string, ViewNode> AllViews { get; }
-        internal ImmutableDictionary<string, ViewNode> UpdatedViews { get; }
+        internal IReadOnlyDictionary<string, ViewNode> AllViews { get; }
+        internal IReadOnlyDictionary<string, ViewNode> UpdatedViews { get; }
     }
 }

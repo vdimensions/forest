@@ -1,5 +1,5 @@
 ﻿using System;
-using Axle.Collections.Immutable;
+using System.Collections.Generic;
 using Axle.Web.AspNetCore.Session;
 using Forest.ComponentModel;
 using Forest.Navigation;
@@ -40,8 +40,8 @@ namespace Forest.Web.AspNetCore
         }
 
         public Location Location => _stateReference.Value.State.Location;
-        public IImmutableDictionary<string, ViewNode> AllViews => _stateReference.Value.AllViews;
-        public IImmutableDictionary<string, ViewNode> UpdatedViews => _stateReference.Value.UpdatedViews;
+        public IReadOnlyDictionary<string, ViewNode> AllViews => _stateReference.Value.AllViews;
+        public IReadOnlyDictionary<string, ViewNode> UpdatedViews => _stateReference.Value.UpdatedViews;
         public ForestSessionState Value => _stateReference.Value;
     }
 }

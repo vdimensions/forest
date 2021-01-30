@@ -25,13 +25,13 @@ namespace Forest.UI
         internal PhysicalViewDomProcessor(
             IForestEngine engine, 
             IPhysicalViewRenderer renderer, 
-            ImmutableDictionary<string, IPhysicalView> physicalViews)
+            IReadOnlyDictionary<string, IPhysicalView> physicalViews)
         {
             _engine = engine;
             _renderer = renderer;
             _physicalViews = physicalViews == null
                 ? ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal)
-                : ImmutableDictionary.CreateRange(physicalViews.KeyComparer, physicalViews);
+                : ImmutableDictionary.CreateRange(StringComparer.Ordinal, physicalViews);
         }
 
         DomNode IDomProcessor.ProcessNode(DomNode node, bool isNodeUpdated)
