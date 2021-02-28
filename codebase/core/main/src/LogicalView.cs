@@ -174,7 +174,7 @@ namespace Forest
 
         void IDisposable.Dispose() => DoDispose(true);
 
-        protected virtual string ResourceBundle => _descriptor?.Name;
+        protected virtual string ResourceBundle => null;
 
         string IView.ResourceBundle => ResourceBundle;
 
