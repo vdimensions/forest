@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Axle.Application;
+using Axle.Caching;
 using Axle.DependencyInjection;
 using Axle.Modularity;
 using Axle.Resources;
@@ -28,14 +30,17 @@ namespace Forest.Templates
         private readonly LinkedList<IResourceExtractor> _templateSourceExtractors = new LinkedList<IResourceExtractor>();
         private readonly IList<ForestTemplateExtractor> _marshallingExtractors = new List<ForestTemplateExtractor>();
         private readonly ISet<string> _assemblies = new HashSet<string>(StringComparer.Ordinal);
+        private readonly IApplicationHost _host;
 
         private ResourceManager _resourceManager;
-        
 
-        public ForestTemplatesModule()
+        public ForestTemplatesModule(IApplicationHost host)
         {
-            _resourceManager = new DefaultResourceManager();
+            _host = host;
+            _resourceManager = CreateResourceManager();
         }
+
+        private ResourceManager CreateResourceManager() => _host.CreateResourceManager(new SimpleCacheManager());
 
         [ModuleInit]
         internal void Init(IDependencyExporter e)
@@ -62,7 +67,7 @@ namespace Forest.Templates
         private void InitResourceManager()
         {
             _bundles.Clear();
-            var resourceManager = new DefaultResourceManager();
+            var resourceManager = CreateResourceManager();
             var uriParser = new Axle.Text.Parsing.UriParser();
             foreach (var marshallingExtractor in _marshallingExtractors)
             {
