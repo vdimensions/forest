@@ -7,7 +7,7 @@ namespace Forest.Dom
     [Localized]
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
-    internal sealed class CommandModel : ICommandModel, IEquatable<CommandModel>, ICloneable
+    internal sealed class CommandModel : ICommandModel, IEquatable<CommandModel>, IGlobalizationCloneable
     #else
     internal sealed class CommandModel : ICommandModel, IEquatable<CommandModel>
     #endif
@@ -25,7 +25,7 @@ namespace Forest.Dom
         internal CommandModel() { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        object ICloneable.Clone()
+        object IGlobalizationCloneable.Clone()
         {
             return new CommandModel(Name, Redirect, Description, DisplayName, Tooltip);
         }
