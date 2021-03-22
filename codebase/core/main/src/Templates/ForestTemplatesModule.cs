@@ -93,11 +93,6 @@ namespace Forest.Templates
                         .Extractors
                         .Register(_templateSourceExtractors)
                         .Register(marshallingExtractor.ToExtractorList());
-                    // bundleContent
-                    //     .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
-                    //     .Extractors
-                    //     .Register(_templateSourceExtractors)
-                    //     .Register(marshallingExtractor.ToExtractorList());
                     foreach (var assemblyName in _assemblies)
                     {
                         bundleContent.Register(uriParser.Parse($"assembly://{assemblyName}/{bundle}"));
