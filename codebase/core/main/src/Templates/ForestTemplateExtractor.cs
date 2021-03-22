@@ -16,7 +16,9 @@ namespace Forest.Templates
 
         protected override ResourceInfo DoExtract(IResourceContext context, string name)
         {
-            var baseResource = context.Extract($"{name}.{Extension}");
+            var ext = $".{Extension}";
+            var resourceName = name.EndsWith(ext) ? name : $"{name}{ext}";
+            var baseResource = context.Extract(resourceName);
             if (baseResource != null)
             {
                 var t = _marshaller.Unmarshal(name, baseResource);

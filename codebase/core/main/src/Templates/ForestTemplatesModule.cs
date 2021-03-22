@@ -89,14 +89,15 @@ namespace Forest.Templates
                     var bundleContent = resourceManager.Bundles.Configure(bundle);
                     bundleContent
                         .Register(uriParser.Parse($"./{bundleInfo.DefaultBundle}"))
-                        .Extractors
-                        .Register(_templateSourceExtractors)
-                        .Register(marshallingExtractor.ToExtractorList());
-                    bundleContent
                         .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
                         .Extractors
                         .Register(_templateSourceExtractors)
                         .Register(marshallingExtractor.ToExtractorList());
+                    // bundleContent
+                    //     .Register(uriParser.Parse($"./{bundleInfo.SpecificBundle}"))
+                    //     .Extractors
+                    //     .Register(_templateSourceExtractors)
+                    //     .Register(marshallingExtractor.ToExtractorList());
                     foreach (var assemblyName in _assemblies)
                     {
                         bundleContent.Register(uriParser.Parse($"assembly://{assemblyName}/{bundle}"));
@@ -159,8 +160,10 @@ namespace Forest.Templates
             var asm = System.Reflection.IntrospectionExtensions.GetTypeInfo(viewDescriptor.ViewType).Assembly;
             #endif
             var assemblyName = asm.GetName().Name;
-            _assemblies.Add(assemblyName);
-            InitResourceManager();
+            if (_assemblies.Add(assemblyName))
+            {
+                InitResourceManager();
+            }
         }
     }
 }
