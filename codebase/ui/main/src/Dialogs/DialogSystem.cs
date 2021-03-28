@@ -11,7 +11,7 @@ namespace Forest.UI.Dialogs
         private const string Name = "DialogSystem";
         private const string MessageChannel = Name;
 
-        internal sealed class Regions
+        public sealed class Regions
         {
             public const string DialogArea = "DialogArea";
         }
