@@ -68,7 +68,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <AxleVersion>1.10.*</AxleVersion>
+    <AxleVersion>2.0.*</AxleVersion>
     <VDimensionsMSBuildSdkVersion>0.2.*</VDimensionsMSBuildSdkVersion>
   </PropertyGroup>
 

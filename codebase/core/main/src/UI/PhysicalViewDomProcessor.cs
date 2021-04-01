@@ -45,7 +45,7 @@ namespace Forest.UI
             // the physical view is the source of truth. 
             //
             var actualNode = physicalViewExists 
-                ? isNodeUpdated ? (pv.Node ?? node) : node 
+                ? isNodeUpdated ? node : (pv.Node ?? node)
                 : node;
             _nodeStates = _nodeStates.Add(
                 Tuple.Create(
