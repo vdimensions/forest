@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using Axle.Caching;
+using Axle.Extensions.String;
 using Axle.Globalization;
 #if NETSTANDARD || NET45_OR_NEWER
 using System.Reflection;
@@ -17,6 +17,8 @@ using Axle.References;
 using Axle.Resources;
 using Axle.Resources.Binding;
 using Axle.Resources.Bundling;
+using Axle.Resources.Properties.Extraction;
+using Axle.Resources.ResX.Extraction;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
 using Forest.ComponentModel;
@@ -54,7 +56,10 @@ namespace Forest.Globalization
         private readonly IDocumentBinder _binder;
         private readonly ICacheManager _cacheManager;
 
-        public ForestGlobalizationModule(ResourceManager resourceManager, ForestGlobalizationConfig config, ILogger logger)
+        public ForestGlobalizationModule(
+            ResourceManager resourceManager,
+            ForestGlobalizationConfig config,
+            ILogger logger)
         {
             _resourceManager = resourceManager;
             _config = config;
@@ -164,7 +169,8 @@ namespace Forest.Globalization
                 ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
                 if (!string.IsNullOrEmpty(node.ResourceBundle))
                 {
-                    textDocument = new TextDocumentSubset(textDocument, node.ResourceBundle);
+                    var actualBundleName = node.ResourceBundle.TrimStart($"{node.Name}.", StringComparison.Ordinal);
+                    textDocument = new TextDocumentSubset(textDocument, actualBundleName);
                 }
                 var newCommands = node.Commands;
                 var cmdKeys = newCommands.Keys;
@@ -225,12 +231,15 @@ namespace Forest.Globalization
             var viewBundle = _resourceManager.Bundles.Configure(viewDescriptor.Name);
             if (_config.AutoRegisterLocalizationBundles)
             {
+                var propertiesDir = "Properties";
                 viewBundle
-                    .Register(uriParser.Parse($"resx://{asm.GetName().Name}/Resources/{viewDescriptor.Name}/"))
-                    .Register(asm, $"Resources.properties/{viewDescriptor.Name}/")
-                    .Register(asm, $"Resources.yaml/{viewDescriptor.Name}/")
-                    .Register(asm, $"Resources.yml/{viewDescriptor.Name}/")
-                    ;
+                    .Register(asm, $"{propertiesDir}/")
+                    .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{viewDescriptor.Name}/"))
+                    .Extractors
+                        .Register(new PropertiesExtractor($"{viewDescriptor.Name}.properties"))
+                        .Register(new PropertiesExtractor($"Strings.properties/{viewDescriptor.Name}/"))
+                        .Register(new ResXResourceExtractor())
+                        ;
             }
         }
     }
