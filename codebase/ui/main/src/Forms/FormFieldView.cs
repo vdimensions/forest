@@ -20,8 +20,8 @@ namespace Forest.UI.Forms
         {
             viewRegistry.Register<TInput>().Register<ValidationMessageView>();
         }
-        
-        private static class Regions
+
+        public static class Regions
         {
             public const string Input = "Input";
             public const string Validation = "Validation";
