@@ -7,7 +7,7 @@ namespace Forest.UI.Forms.Input
           IFormInputView<TValue>, 
           ISupportsAssignFormField
     {
-        private static class Commands
+        public static class Commands
         {
             public const string UpdateValue = "UpdateValue";
         }
