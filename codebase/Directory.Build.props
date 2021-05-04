@@ -11,7 +11,7 @@
 
   <PropertyGroup>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/vdimensions/axle</RepositoryUrl>
+    <RepositoryUrl>https://github.com/vdimensions/forest</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <ContinuousIntegrationBuild Condition=" '$(ContinuousIntegrationBuild)' == '' ">false</ContinuousIntegrationBuild>
   </PropertyGroup>
