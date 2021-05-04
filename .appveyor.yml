@@ -1,25 +1,57 @@
-version: 2.8.{build}
+version: 3.0.{build}
+
 pull_requests:
   do_not_increment_build_number: true
-branches:
-  only:
-  - master
-skip_tags: true
 skip_branch_with_pr: true
+skip_tags: true
+
 image: Visual Studio 2019
 platform: Any CPU
-cache:
-- '%USERPROFILE%\.nuget\packages'
-- '%LocalAppData%\NuGet\Cache'
-- '%LocalAppData%\NuGet\v3-cache'
-build_script:
-- ps: "git submodule init -q \ngit submodule update -q \ngit submodule foreach git fetch origin -q \ngit submodule foreach git pull origin master -q \ncd dist \nmkdir restore \ncd .. \ncd codebase\ndotnet tool install fake-cli --tool-path .\\.tools\n.\\.tools\\fake --silent run .\\build.fsx"
+
 artifacts:
-- path: dist/*.nupkg
-  name: NuGet Package
-deploy:
-- provider: NuGet
-  api_key:
-    secure: 0XtyvuYsb7lhK8ulKJCa5BPQjFVgDxtV7/lRft1ls9Onua565SjHRXOK+xKBFxHy
-  on:
-    branch: master
+  - path: dist/*.nupkg
+    name: NuGet Package
+  - path: dist/*.snupkg
+    name: NuGet Symbols Package
+cache:
+  - '%USERPROFILE%\.nuget\packages'
+  - '%LocalAppData%\NuGet\Cache'
+  - '%LocalAppData%\NuGet\v3-cache'
+
+build_script:
+  - ps: "git submodule init -q \ngit submodule update -q \ngit submodule -q foreach git fetch origin -q \ngit submodule -q foreach git pull origin master -q"
+  - ps: "dotnet build -p:Version=$env:VERSION -p:ContinuousIntegrationBuild=true -c $env:CONFIGURATION \ndotnet pack -p:Version=$env:VERSION -p:ContinuousIntegrationBuild=true -c $env:CONFIGURATION --no-restore"
+
+for:
+  - branches:
+      only:
+        - master
+    environment:
+      CONFIGURATION: Release
+    init:
+      - ps: "$env:VERSION=$env:APPVEYOR_BUILD_VERSION"
+    cache:
+    deploy:
+      - provider: NuGet
+        api_key:
+          secure: 0XtyvuYsb7lhK8ulKJCa5BPQjFVgDxtV7/lRft1ls9Onua565SjHRXOK+xKBFxHy
+        on:
+          branch: master
+
+  - branches:
+      only:
+        - /alpha|beta|preview|rc|snapshot/
+    environment:
+      CONFIGURATION: Release
+    init:
+      - ps: "$env:VERSION=\"$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_BRANCH\""
+    deploy:
+      - provider: NuGet
+        api_key:
+          secure: 0XtyvuYsb7lhK8ulKJCa5BPQjFVgDxtV7/lRft1ls9Onua565SjHRXOK+xKBFxHy
+
+  - branches:
+      only:
+        - pr
+    init:
+      - ps: "$env:VERSION=\"$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_PULL_REQUEST_HEAD_REPO_BRANCH+$env:APPVEYOR_PULL_REQUEST_HEAD_COMMIT\""

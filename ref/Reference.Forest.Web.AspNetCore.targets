@@ -13,7 +13,7 @@
   <Choose>
     <When Condition="Exists('$(ForestPath)\dist\restore')">
       <ItemGroup>
-        <PackageReference Include="Forest.Web.AspNetCore" Version="$(PackageVersionRange)" />
+        <PackageReference Include="Forest.Web.AspNetCore" Version="$(ForestVersion)" />
       </ItemGroup>
     </When>
     <Otherwise>

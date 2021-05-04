@@ -5,9 +5,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Axle.Application" Version="$(AxleVersion)" />
+    <PackageReference Include="Axle.Application" />
   </ItemGroup>
 
   <Import Project="../../../../ref/Reference.Forest.Core.targets" />
-
 </Project>

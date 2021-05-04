@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Versioning properties (after sdk) -->
+  <PropertyGroup>
+    <ForestVersion>$(Version)</ForestVersion>
+  </PropertyGroup>
+
+  <!-- F# quirks -->
+  <PropertyGroup Condition=" '$(Language)' == 'F#' ">
+    <OtherFlags Condition="'$(Configuration)' != 'Debug' ">--debug:portable</OtherFlags>
+    <NoBuild Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">false</NoBuild>
+  </PropertyGroup>
+
+  <!-- NuGet package properties -->
+  <PropertyGroup>
+    <ContentTargetFolders>content</ContentTargetFolders>
+    <PackageLicense>$(License)</PackageLicense>
+    <PackageLicenseExpression>$(PackageLicense)</PackageLicenseExpression>
+    <PackageProjectUrl>$(RepositoryUrl)</PackageProjectUrl>
+    <PackageIconUri></PackageIconUri>
+    <PackageTags Condition=" '$(PackageTags)' == '' ">$(AssemblyName)</PackageTags>
+  </PropertyGroup>
+
+  <!-- Pin thrird-party dependency versions  -->
+  <PropertyGroup>
+    <AxleVersion>2.0.12-preview</AxleVersion>
+    <VDimensionsMSBuildSdkVersion>0.6.*</VDimensionsMSBuildSdkVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Update="Axle.Core" Version="$(AxleVersion)" />
+    <PackageReference Update="Axle.Application" Version="$(AxleVersion)" />
+    <PackageReference Update="Axle.Web.AspNetCore.Mvc" Version="$(AxleVersion)" />
+
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.0.0" />
+
+    <PackageReference Update="VDimensions.MSBuild.Sdk.Defaults" Version="$(VDimensionsMSBuildSdkVersion)" />
+    <PackageReference Update="VDimensions.MSBuild.Sdk.Copyright" Version="$(VDimensionsMSBuildSdkVersion)" />
+    <PackageReference Update="VDimensions.MSBuild.Sdk.Versioning" Version="$(VDimensionsMSBuildSdkVersion)" />
+    <PackageReference Update="VDimensions.MSBuild.Sdk.Multitargeting" Version="$(VDimensionsMSBuildSdkVersion)" />
+  </ItemGroup>
+</Project>

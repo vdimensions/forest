@@ -13,7 +13,7 @@
   <Choose>
     <When Condition="Exists('$(ForestPath)\dist\restore')">
       <ItemGroup>
-        <PackageReference Include="Forest.Forms" Version="$(PackageVersionRange)" />
+        <PackageReference Include="Forest.Forms" Version="$(ForestVersion)" />
       </ItemGroup>
     </When>
     <Otherwise>
