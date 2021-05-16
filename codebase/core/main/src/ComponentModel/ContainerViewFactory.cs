@@ -14,33 +14,33 @@ namespace Forest.ComponentModel
             _dependencyContainerFactory = dependencyContainerFactory.VerifyArgument(nameof(dependencyContainerFactory)).IsNotNull().Value;
         }
 
-        private IView DoResolve(IForestViewDescriptor descriptor, object model)
+        private IView DoResolve(IForestViewDescriptor descriptor, params object[] args)
         {
             using (var tmpContainer = _dependencyContainerFactory.CreateContainer(_dependencyContext))
             {
                 tmpContainer.RegisterType(descriptor.ViewType, descriptor.Name);
-                
-                if (model != null)
+
+                foreach (var o in args)
                 {
-                    // TODO: model localization
-                    tmpContainer.Export(model);
+                    tmpContainer.Export(o);
                 }
 
                 return (IView) tmpContainer.Resolve(descriptor.ViewType, descriptor.Name);
             }
         }
 
-        IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object model)
+        // TODO: `arg` should become `params object[] args`
+        IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object arg)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
-            model.VerifyArgument(nameof(model)).IsNotNull().IsOfType(descriptor.ModelType);
-            return DoResolve(descriptor, model);
+            arg.VerifyArgument(nameof(arg)).IsNotNull();
+            return DoResolve(descriptor, arg);
         }
 
         IView IViewFactory.Resolve(IForestViewDescriptor descriptor)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
-            return DoResolve(descriptor, null);
+            return DoResolve(descriptor);
         }
     }
 }
