@@ -220,7 +220,7 @@ namespace Forest.Engine
                         : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
                     try
                     {
-                        _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, ivi.Model, out var node);
+                        _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, viewInstance.Model, out var node);
                         viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
                         _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
                         viewInstance.Load(node.ViewState.GetValueOrDefault(ViewState.Empty));
