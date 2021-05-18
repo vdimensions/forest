@@ -39,11 +39,10 @@ namespace Forest.UI.Forms.Input.Select
             TItemView toggledSelectOptionView,
             IEqualityComparer<TItemModel> itemComparer);
 
-        private void Toggled(AbstractSelectOptionView<TItemModel> selectedSelectOptionView) => Toggled((TItemView) selectedSelectOptionView);
-        private void Toggled(TItemView selectedSelectOptionView)
-        {
-            HandleSelectionChanged(_optionViews, selectedSelectOptionView, _itemComparer);
-        }
+        private void Toggled(AbstractSelectOptionView<TItemModel> selectedSelectOptionView) 
+            => Toggled((TItemView) selectedSelectOptionView);
+        private void Toggled(TItemView selectedSelectOptionView) 
+            => HandleSelectionChanged(_optionViews, selectedSelectOptionView, _itemComparer);
 
         protected IEqualityComparer<TItemModel> ItemComparer => _itemComparer;
         

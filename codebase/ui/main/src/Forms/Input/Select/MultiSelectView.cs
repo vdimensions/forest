@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Forest.ComponentModel;
@@ -32,7 +33,11 @@ namespace Forest.UI.Forms.Input.Select
                 return Enumerable.Empty<TItemView>();
             }
             var result = PopulateAndSelect(items, selectedItems);
-            _value = result.Select(x => x.Model).Where(x => x.Selected).Select(x => x.Value).ToArray();
+            _value = result
+                .Select(x => x.Model)
+                .Where(SelectOption<TItemModel>.IsSelected)
+                .Select(SelectOption<TItemModel>.GetValue)
+                .ToArray();
             return result;
         }
 
@@ -56,7 +61,6 @@ namespace Forest.UI.Forms.Input.Select
                     selectedItems.Add(optionView.Model.Value);
                 }
             }
-            ValueChanged?.Invoke(_value = selectedItems.ToArray(), Validate(Value));
         }
 
         /// <inheritdoc />
@@ -85,15 +89,12 @@ namespace Forest.UI.Forms.Input.Select
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
-            ValueChanged = null;
             base.Dispose(disposing);
         }
 
         /// <inheritdoc />
-        public event FormInputValueChanged<TItemModel[]> ValueChanged;
-
-        /// <inheritdoc />
         public TItemModel[] Value => _value;
         object IFormInputView.Value => Value;
+        Type IFormInputView.ValueType => typeof(TItemModel[]);
     }
 }

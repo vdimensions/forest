@@ -61,5 +61,6 @@ namespace Forest
 
         string IRegion.Name => _name;
         public IEnumerable<IView> Views => _owner.Context.GetRegionContents(_owner.Key, _name);
+        public IView Owner => _owner;
     }
 }

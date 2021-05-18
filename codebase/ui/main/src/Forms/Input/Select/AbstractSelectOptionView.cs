@@ -26,6 +26,7 @@ namespace Forest.UI.Forms.Input.Select
             base.Dispose(disposing);
         }
 
+        [Obsolete]
         internal event Action<AbstractSelectOptionView<TModel>> Toggled;
     }
 }

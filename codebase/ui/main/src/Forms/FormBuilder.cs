@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Axle.Collections.Immutable;
 using Axle.Reflection;
 using Axle.Verification;
@@ -8,21 +9,44 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
+    using FormFieldDataTuple = Tuple<ImmutableDictionary<string, IFormInputView>, ImmutableList<string>>;
+    
     internal sealed class FormBuilder : IFormBuilder
     {
+        private static readonly IEqualityComparer<string> Comparer = StringComparer.Ordinal;
+        
         private readonly IRegion _region;
         private readonly string _formName;
-        private readonly ImmutableDictionary<string, Tuple<FormField, Type, Type>> _fields;
+        private readonly ImmutableDictionary<string, IFormInputView> _inputs;
         private readonly ImmutableList<string> _fieldNames;
 
         internal FormBuilder(IRegion region, string formName) 
-            : this(region, formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>>.Empty, ImmutableList<string>.Empty) { }
-        private FormBuilder(IRegion region, string formName, ImmutableDictionary<string, Tuple<FormField, Type, Type>> fields, ImmutableList<string> fieldNames)
+            : this(region, formName, null) { }
+        private FormBuilder(
+            IRegion region, 
+            string formName, 
+            FormFieldDataTuple formFieldData)
         {
             _region = region;
             _formName = formName;
-            _fields = fields;
-            _fieldNames = fieldNames;
+            if (formFieldData == null)
+            {
+                var pairs = region.Views
+                    .OfType<IFormFieldView>()
+                    .Select(v => new KeyValuePair<string, IFormInputView>(
+                        v.FormInputView.Field.Name,
+                        v.FormInputView))
+                    .ToArray();
+                var fields = ImmutableDictionary.CreateRange(Comparer, pairs);
+                var fieldNames = ImmutableList.CreateRange(pairs.Select(x => x.Key));
+                _inputs = fields;
+                _fieldNames = fieldNames;
+            }
+            else
+            {
+                _inputs = formFieldData.Item1;
+                _fieldNames = formFieldData.Item2;
+            }
         }
 
         public IFormBuilder AddField(
@@ -38,41 +62,73 @@ namespace Forest.UI.Forms
             
             var validationRulesBuilder = new ValidationRuleBuilder(_region);
             buildValidationRules?.Invoke(validationRulesBuilder);
+            
+            var field = new FormField($"{_formName}.{name}", defaultValue, validationRulesBuilder.ValidationStates.ToImmutableDictionary());
+            
+            var introspector = new TypeIntrospector(typeof(FormFieldView<,>));
+            var viewType = introspector
+                .GetGenericTypeDefinition()
+                .MakeGenericType(inputViewType, inputValueType)
+                .Introspect()
+                .IntrospectedType;
+            var view = ((IFormFieldView) _region.ActivateView(viewType, field)).FormInputView;
             return new FormBuilder(
                 _region, 
                 _formName,
-                _fields.Remove(name).Add(
-                    name, 
-                    Tuple.Create(
-                        new FormField($"{_formName}.{name}", defaultValue, validationRulesBuilder.ValidationStates.ToImmutableDictionary()), 
-                        inputViewType,
-                        inputValueType)),
-                _fieldNames.Remove(name).Add(name));
+                Tuple.Create(
+                    _inputs.Remove(name).Add(name, view),
+                    _fieldNames.Remove(name, Comparer).Add(name))
+                );
         }
 
-        public IFormBuilder AddField<TFormInputView, TValue>(string name, TValue defaultValue = default(TValue), Action<IValidationRuleBuilder> buildValidationRules = null) 
+        public IFormBuilder AddField<TFormInputView, TValue>(
+                string name, 
+                TValue defaultValue = default(TValue), 
+                Action<IValidationRuleBuilder> buildValidationRules = null) 
             where TFormInputView : IFormInputView<TValue>
         {
             return AddField(name, typeof(TFormInputView), typeof(TValue), defaultValue, buildValidationRules);
         }
+        
 
-        private IEnumerable<KeyValuePair<string, IFormInputView>> DoBuild()
+        public IReadOnlyDictionary<string, object> GetValues()
         {
-            _region.Clear();
-            var introspector = new TypeIntrospector(typeof(FormFieldView<,>));
-            foreach (var name in _fieldNames)
+            return _inputs.ToDictionary(x => x.Key, x => x.Value.Value, Comparer);
+        }
+        
+        public bool Submit(
+            out IReadOnlyDictionary<string, object> values,
+            out IReadOnlyDictionary<string, ValidationRule[]> errors)
+        {
+            var collectedValues = ImmutableDictionary.Create<string, object>(Comparer);
+            var collectedErrors = ImmutableDictionary.Create<string, ValidationRule[]>(Comparer);
+            foreach (var kvp in Inputs)
             {
-                var formFieldData = _fields[name];
-                var field = formFieldData.Item1;
-                var inputViewType = formFieldData.Item2;
-                var inputValueType = formFieldData.Item3;
-                var viewType = introspector.GetGenericTypeDefinition().MakeGenericType(inputViewType, inputValueType)
-                    .Introspect()
-                    .IntrospectedType;
-                yield return new KeyValuePair<string, IFormInputView>(name, ((IFormFieldView) _region.ActivateView(viewType, field)).FormInputView);
+                var key = kvp.Key;
+                var input = kvp.Value;
+                if (input.Validate(input.Value))
+                {
+                    collectedValues = collectedValues.Add(key, input.Value);
+                }
+                else
+                {
+                    var violatedRules = input.Field.Validation
+                        .Where(x => !x.Value.IsValid.GetValueOrDefault(true))
+                        .Select(x => x.Key)
+                        .ToArray();
+                    collectedErrors = collectedErrors.Add(
+                        key, 
+                        violatedRules);
+                }
             }
+
+            errors = collectedErrors;
+            values = collectedErrors.Count > 0 
+                ? collectedValues.Clear() 
+                : collectedValues;
+            return errors.Count == 0;
         }
 
-        public IReadOnlyDictionary<string, IFormInputView> Build() => DoBuild().ToImmutableDictionary();
+        public IReadOnlyDictionary<string, IFormInputView> Inputs => _inputs;
     }
 }

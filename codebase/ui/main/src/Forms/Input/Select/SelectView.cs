@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -67,7 +68,6 @@ namespace Forest.UI.Forms.Input.Select
                 var isTheCurrentItem = itemComparer.Equals(optionView.Model.Value, toggledSelectOptionView.Model.Value);
                 optionView.UpdateModel(m => new SelectOption<TItemModel>(m.Value, isTheCurrentItem));
             }
-            ValueChanged?.Invoke(toggledSelectOptionView.Model.Value, Validate(value));
         }
 
         /// <inheritdoc />
@@ -77,15 +77,12 @@ namespace Forest.UI.Forms.Input.Select
         /// <inheritdoc />
         protected override void Dispose(bool disposing)
         {
-            ValueChanged = null;
             base.Dispose(disposing);
         }
 
         /// <inheritdoc />
-        public event FormInputValueChanged<TItemModel> ValueChanged;
-
-        /// <inheritdoc />
         public TItemModel Value => _value;
         object IFormInputView.Value => _value;
+        Type IFormInputView.ValueType => typeof(TItemModel);
     }
 }

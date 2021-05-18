@@ -1,4 +1,6 @@
-﻿namespace Forest.UI.Forms.Input.Select
+﻿using System;
+
+namespace Forest.UI.Forms.Input.Select
 {
     /// <summary>
     /// Represents an option item in a select view.
@@ -6,6 +8,9 @@
     /// <typeparam name="TValue"></typeparam>
     public sealed class SelectOption<TValue>
     {
+        internal static readonly Func<SelectOption<TValue>, bool> IsSelected = x => x.Selected;
+        internal static readonly Func<SelectOption<TValue>, TValue> GetValue = x => x.Value;
+        
         internal SelectOption(TValue value, bool selected)
         {
             Value = value;

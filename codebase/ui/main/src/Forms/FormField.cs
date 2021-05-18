@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Forest.Globalization;
 using Forest.UI.Forms.Validation;
@@ -10,7 +9,7 @@ namespace Forest.UI.Forms
     /// The model for a <see cref="FormFieldView{TInput,TValue}"/>.
     /// </summary>
     [Localized]
-    public sealed class FormField : ICloneable
+    public sealed class FormField : IGlobalizationCloneable
     {
         internal FormField(string name, object defaultValue, IReadOnlyDictionary<ValidationRule, ValidationState> validation)
         {
@@ -19,16 +18,18 @@ namespace Forest.UI.Forms
             Validation = validation;
         }
 
-        object ICloneable.Clone()
+        object IGlobalizationCloneable.Clone()
         {
             return new FormField(
                 Name, 
                 DefaultValue,
-                // TODO:
-                // We make the validation dictionary mutable on purpose here, otherwise globalization may fail
-                // A workaround must be thought of, for instance a new <see cref="IGlobalizationCloneable{T}"/> interface which produces
-                // mutable clones for globalization purposes only.
-                new Dictionary<ValidationRule, ValidationState>(Validation.ToDictionary(x => x.Key, x => x.Value)));
+                new Dictionary<ValidationRule, ValidationState>(
+                    Validation.ToDictionary(
+                        x => x.Key, 
+                        x => x.Value)))
+            {
+                Label = Label
+            };
         }
 
         /// <summary>

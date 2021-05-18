@@ -21,7 +21,5 @@ namespace Forest.UI.Forms
             string name,
             TValue defaultValue = default(TValue),
             Action<IValidationRuleBuilder> buildValidationRules = null) where TFormInputView : IFormInputView<TValue>;
-
-        IReadOnlyDictionary<string, IFormInputView> Build();
     }
 }

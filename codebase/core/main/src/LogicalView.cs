@@ -177,7 +177,7 @@ namespace Forest
         protected virtual string ResourceBundle => null;
 
         string IView.ResourceBundle => ResourceBundle;
-
+        string IView.Name => _descriptor?.Name;
     }
 
     public abstract class LogicalView : LogicalView<object>

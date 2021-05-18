@@ -16,5 +16,6 @@ namespace Forest
 
         string Name { get; }
         IEnumerable<IView> Views { get; }
+        IView Owner { get; }
     }
 }

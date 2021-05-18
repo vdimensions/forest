@@ -14,6 +14,8 @@ namespace Forest
         void Close();
     
         object Model { get; }
+        
+        string Name { get; }
 
         string ResourceBundle { get; }
     }

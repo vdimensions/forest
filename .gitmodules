@@ -4,3 +4,6 @@
 [submodule "submodules/vdimensions_fake_sdk"]
 	path = submodules/vdimensions_fake_sdk
 	url = https://github.com/vdimensions/vdimensions_fake_sdk.git
+[submodule "submodules/vdimensions_msbuild_references"]
+	path = submodules/vdimensions_msbuild_references
+	url = https://github.com/vdimensions/vdimensions_msbuild_references

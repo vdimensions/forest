@@ -1,4 +1,5 @@
-﻿using Forest.UI.Forms.Validation;
+﻿using System;
+using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms.Input
 {
@@ -13,10 +14,11 @@ namespace Forest.UI.Forms.Input
         }
         
         private FormField _field;
-        private TValue _value;
+        private readonly Func<T, TValue> _valueFn;
 
-        protected AbstractInputView(T model) : base(model)
+        protected AbstractInputView(T model, Func<T, TValue> valueFn) : base(model)
         {
+            _valueFn = valueFn;
         }
 
         /// <inheritdoc />
@@ -24,41 +26,32 @@ namespace Forest.UI.Forms.Input
         bool IFormInputView.Validate(object value) => value is TValue val && Validate(val);
 
         [Command(Commands.UpdateValue)]
-        public virtual void UpdateValue(TValue value)
-        {
-            _value = value;
-            ValueChanged?.Invoke(value, Validate(value));
-        }
-
-        /// <inheritdoc />
-        public event FormInputValueChanged<TValue> ValueChanged;
+        public abstract void UpdateValue(TValue value);
 
         /// <inheritdoc />
         public FormField Field => _field;
+
         FormField ISupportsAssignFormField.Field
         {
-            set
-            {
-                _field = value;
-                if (_field.DefaultValue is TValue defaultValue)
-                {
-                    _value = defaultValue;
-                }
-            }
+            set => _field = value;
         }
 
         /// <inheritdoc />
-        public TValue Value => _value;
+        public virtual TValue Value => _valueFn(Model);
         object IFormInputView.Value => Value;
+        Type IFormInputView.ValueType => typeof(TValue);
     }
     public abstract class AbstractInputView<TValue> : AbstractInputView<TValue, TValue>
     {
-        protected AbstractInputView(TValue model) : base(model) { }
+        private static readonly  Func<TValue, TValue> ValueIdentity = x => x;
+        
+        protected AbstractInputView(TValue model) : base(model, ValueIdentity) { }
 
         public override void UpdateValue(TValue value)
         {
-            base.UpdateValue(value);
             UpdateModel(_ => value);
         }
+
+        public override TValue Value => Model;
     }
 }

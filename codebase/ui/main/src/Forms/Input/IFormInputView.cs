@@ -1,4 +1,6 @@
-﻿namespace Forest.UI.Forms.Input
+﻿using System;
+
+namespace Forest.UI.Forms.Input
 {
     public interface IFormInputView : IView
     {
@@ -7,13 +9,13 @@
         object Value { get; }
         
         FormField Field { get; }
+        
+        Type ValueType { get; }
     }
     
     public interface IFormInputView<TValue> : IFormInputView
     {
         bool Validate(TValue value);
-        
-        event FormInputValueChanged<TValue> ValueChanged;
         
         new TValue Value { get; }
     }
