@@ -22,14 +22,11 @@ namespace Forest.UI.Forms.Input
         }
 
         /// <inheritdoc />
-        public virtual bool Validate(TValue value) => Field?.Validate(value) ?? true;
-        bool IFormInputView.Validate(object value) => value is TValue val ? Validate(val) : Validate(default(TValue));
+        public virtual bool Validate(FormField field, TValue value) => field?.Validate(value) ?? true;
+        bool IFormInputView.Validate(FormField field, object value) => value is TValue val ? Validate(field, val) : Validate(field, default(TValue));
 
         [Command(Commands.UpdateValue)]
         public abstract void UpdateValue(TValue value);
-
-        /// <inheritdoc />
-        public FormField Field => _field;
 
         FormField ISupportsAssignFormField.Field
         {

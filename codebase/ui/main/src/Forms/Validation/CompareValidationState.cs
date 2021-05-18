@@ -12,6 +12,6 @@ namespace Forest.UI.Forms.Validation
 
         internal FormFieldReference Target { get; }
 
-        public string Name => Target.View?.Field?.Name;
+        public string Name => Target.View?.Model?.Name;
     }
 }

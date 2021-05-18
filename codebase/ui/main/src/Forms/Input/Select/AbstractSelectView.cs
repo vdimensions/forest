@@ -47,7 +47,6 @@ namespace Forest.UI.Forms.Input.Select
         protected IEqualityComparer<TItemModel> ItemComparer => _itemComparer;
         
         /// <inheritdoc cref="IFormInputView{TValue}.Field" />
-        public FormField Field => _field;
         FormField ISupportsAssignFormField.Field { set => _field = value; }
     }
 }

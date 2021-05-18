@@ -64,14 +64,14 @@ namespace Forest.UI.Forms.Input.Select
         }
 
         /// <inheritdoc />
-        public bool Validate(TItemModel[] value)
+        public bool Validate(FormField field, TItemModel[] value)
         {
-            if (Field == null)
+            if (field == null)
             {
                 return true;
             }
             var isValid = true;
-            foreach (var kvp in Field.Validation)
+            foreach (var kvp in field.Validation)
             {
                 ISupportsValidationStateChange setValidationState = kvp.Value; 
                 switch (kvp.Key)
@@ -84,7 +84,7 @@ namespace Forest.UI.Forms.Input.Select
             }
             return isValid;
         }
-        bool IFormInputView.Validate(object value) => value is TItemModel[] val && Validate(val);
+        bool IFormInputView.Validate(FormField field, object value) => value is TItemModel[] val && Validate(field, val);
 
         /// <inheritdoc />
         protected override void Dispose(bool disposing)

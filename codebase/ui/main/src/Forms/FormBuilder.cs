@@ -10,19 +10,19 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
-    using FormFieldDataTuple = Tuple<ImmutableDictionary<string, IFormInputView>, ImmutableList<string>>;
+    using FormFieldDataTuple = Tuple<ImmutableDictionary<string, IFormFieldView>, ImmutableList<string>>;
     
     internal sealed class FormBuilder : IFormBuilder
     {
         private static readonly IEqualityComparer<string> Comparer = StringComparer.Ordinal;
-        private static Func<KeyValuePair<string, IFormInputView>, string> ToFieldName(string formName)
+        private static Func<KeyValuePair<string, IFormFieldView>, string> ToFieldName(string formName)
         {
             return (x) => x.Key.TakeAfterFirst(formName).TrimStart('.');
         }
 
         private readonly IRegion _region;
         private readonly string _formName;
-        private readonly ImmutableDictionary<string, IFormInputView> _inputs;
+        private readonly ImmutableDictionary<string, IFormFieldView> _inputs;
         private readonly ImmutableList<string> _fieldNames;
 
         internal FormBuilder(IRegion region, string formName) 
@@ -38,9 +38,9 @@ namespace Forest.UI.Forms
             {
                 var pairs = region.Views
                     .OfType<IFormFieldView>()
-                    .Select(v => new KeyValuePair<string, IFormInputView>(
-                        v.FormInputView.Field.Name,
-                        v.FormInputView))
+                    .Select(v => new KeyValuePair<string, IFormFieldView>(
+                        v.Model.Name,
+                        v))
                     .ToArray();
                 var fields = ImmutableDictionary.CreateRange(Comparer, pairs);
                 var toFieldName = ToFieldName(formName);
@@ -77,7 +77,7 @@ namespace Forest.UI.Forms
                 .MakeGenericType(inputViewType, inputValueType)
                 .Introspect()
                 .IntrospectedType;
-            var view = ((IFormFieldView) _region.ActivateView(viewType, field)).FormInputView;
+            var view = ((IFormFieldView) _region.ActivateView(viewType, field));
             return new FormBuilder(
                 _region, 
                 _formName,
@@ -97,11 +97,6 @@ namespace Forest.UI.Forms
         }
         
 
-        public IReadOnlyDictionary<string, object> GetValues()
-        {
-            return _inputs.ToDictionary(x => x.Key, x => x.Value.Value, Comparer);
-        }
-        
         public bool Submit(
             out IReadOnlyDictionary<string, object> values,
             out IReadOnlyDictionary<string, ValidationRule[]> errors)
@@ -109,17 +104,18 @@ namespace Forest.UI.Forms
             var collectedValues = ImmutableDictionary.Create<string, object>(Comparer);
             var collectedErrors = ImmutableDictionary.Create<string, ValidationRule[]>(Comparer);
             var toFieldName = ToFieldName(_formName);
-            foreach (var kvp in Inputs)
+            foreach (var kvp in _inputs)
             {
                 var fieldName = toFieldName(kvp);
-                var input = kvp.Value;
-                if (input.Validate(input.Value))
+                var fieldView = kvp.Value;
+                var inputView = fieldView.FormInputView;
+                if (inputView.Validate(fieldView.Model, inputView.Value))
                 {
-                    collectedValues = collectedValues.Add(fieldName, input.Value);
+                    collectedValues = collectedValues.Add(fieldName, inputView.Value);
                 }
                 else
                 {
-                    var violatedRules = input.Field.Validation
+                    var violatedRules = fieldView.Model.Validation
                         .Where(x => !x.Value.IsValid.GetValueOrDefault(true))
                         .Select(x => x.Key)
                         .ToArray();
@@ -135,7 +131,5 @@ namespace Forest.UI.Forms
                 : collectedValues;
             return errors.Count == 0;
         }
-
-        public IReadOnlyDictionary<string, IFormInputView> Inputs => _inputs;
     }
 }

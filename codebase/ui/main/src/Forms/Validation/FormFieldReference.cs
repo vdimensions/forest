@@ -15,9 +15,8 @@ namespace Forest.UI.Forms.Validation
             _fieldName = fieldName;
         }
 
-        internal IFormInputView View => _region.Views
+        internal IFormFieldView View => _region.Views
             .OfType<IFormFieldView>()
-            .Select(x => x.FormInputView)
-            .SingleOrDefault(v => StringComparer.Ordinal.Equals(_fieldName, v?.Field?.Name));
+            .SingleOrDefault(v => StringComparer.Ordinal.Equals(_fieldName, v?.Model?.Name));
     }
 }

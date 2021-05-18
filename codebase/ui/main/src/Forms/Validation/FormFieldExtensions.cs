@@ -95,7 +95,7 @@ namespace Forest.UI.Forms.Validation
                             {
                                 break;
                             }
-                            validationStateChange.IsValid = view.Value is TValue v && equalityComparer.Equals(value, v);
+                            validationStateChange.IsValid = view.FormInputView.Value is TValue v && equalityComparer.Equals(value, v);
                         }
                         break;
                     default:

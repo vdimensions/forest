@@ -10,6 +10,6 @@ namespace Forest.UI.Forms.Input
         internal TextInputView(string model) : base(model) { }
         internal TextInputView() : this(string.Empty) { }
 
-        public override bool Validate(string value) => Field?.Validate(value, new[]{null, string.Empty}) ?? true;
+        public override bool Validate(FormField field, string value) => field?.Validate(value, new[]{null, string.Empty}) ?? true;
     }
 }
