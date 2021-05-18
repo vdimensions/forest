@@ -18,9 +18,9 @@ namespace Forest.UI.Forms.Validation
             IComparer<TValue> comparer = null)
         {
             formField.VerifyArgument(nameof(formField)).IsNotNull();
-            emptyValues ??= new[]{ default(TValue) };
-            equalityComparer ??= EqualityComparer<TValue>.Default;
-            comparer ??= Comparer<TValue>.Default;
+            emptyValues = emptyValues ?? new[]{ default(TValue) };
+            equalityComparer = equalityComparer ?? EqualityComparer<TValue>.Default;
+            comparer = comparer ?? Comparer<TValue>.Default;
             
             var isValid = true;
             var isEmpty = emptyValues.Any(emptyValue => equalityComparer.Equals(value, emptyValue));

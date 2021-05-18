@@ -71,7 +71,7 @@ namespace Forest.UI.Forms.Input.Select
         }
 
         /// <inheritdoc />
-        public bool Validate(TItemModel value) => Field?.Validate(value, default(TItemModel), ItemComparer) ?? true;
+        public bool Validate(TItemModel value) => Field?.Validate(value, null, ItemComparer) ?? true;
         bool IFormInputView.Validate(object value) => value is TItemModel item && Validate(item);
 
         /// <inheritdoc />
