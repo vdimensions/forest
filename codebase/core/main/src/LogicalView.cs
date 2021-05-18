@@ -44,7 +44,11 @@ namespace Forest
             }
         }
 
-        public void Publish<TM>(TM message, params string[] topics) => ExecutionContext.ProcessInstructions(new SendMessageInstruction(message, topics, _key));
+        public void Publish<TM>(TM message, params string[] topics) 
+            => ExecutionContext.ProcessInstructions(new SendTopicBasedMessageInstruction(message, topics, _key));
+        
+        public void Propagate<TM>(TM message) 
+            => ExecutionContext.ProcessInstructions(new SendPropagatingMessageInstruction(message, _key));
 
         [Obsolete("Use `WithRegion` instead")]
         public IRegion FindRegion(string name)

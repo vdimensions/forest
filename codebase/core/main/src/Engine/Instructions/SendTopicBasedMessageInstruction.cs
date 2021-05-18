@@ -7,9 +7,9 @@ namespace Forest.Engine.Instructions
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class SendMessageInstruction : ForestInstruction
+    public sealed class SendTopicBasedMessageInstruction : ForestInstruction
     {
-        public SendMessageInstruction(object message, string[] topics, string senderInstanceID)
+        public SendTopicBasedMessageInstruction(object message, string[] topics, string senderInstanceID)
         {
             Message = message;
             Topics = topics;
@@ -19,10 +19,10 @@ namespace Forest.Engine.Instructions
         protected override bool IsEqualTo(ForestInstruction other)
         {
             var cmp = StringComparer.Ordinal;
-            return other is SendMessageInstruction sm
-                   && cmp.Equals(SenderInstanceID, sm.SenderInstanceID)
-                   && Enumerable.SequenceEqual(Topics, sm.Topics, cmp)
-                   && Equals(Message, sm.Message);
+            return other is SendTopicBasedMessageInstruction sm
+                && cmp.Equals(SenderInstanceID, sm.SenderInstanceID)
+                && Enumerable.SequenceEqual(Topics, sm.Topics, cmp)
+                && Equals(Message, sm.Message);
         }
 
         protected override int DoGetHashCode() => this.CalculateHashCode(SenderInstanceID, this.CalculateHashCode(Topics), SenderInstanceID);

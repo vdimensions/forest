@@ -291,11 +291,19 @@ namespace Forest.Engine
                             ProcessTreeModification(_scope, nsm, template, instructionsFailedSecurityChecks);
                             break;
 
-                        case SendMessageInstruction smi:
-                            IRuntimeView sender = null;
-                            if (string.IsNullOrEmpty(smi.SenderInstanceID) || _logicalViews.TryGetValue(smi.SenderInstanceID, out sender))
+                        case SendTopicBasedMessageInstruction smi:
+                            IRuntimeView topicMessageSender = null;
+                            if (string.IsNullOrEmpty(smi.SenderInstanceID) || _logicalViews.TryGetValue(smi.SenderInstanceID, out topicMessageSender))
                             {
-                                _eventBus.Publish(sender, smi.Message, smi.Topics);
+                                _eventBus.Publish(topicMessageSender, smi.Message, smi.Topics);
+                            }
+                            break;
+
+                        case SendPropagatingMessageInstruction smi:
+                            IRuntimeView propagatingMessageSender = null;
+                            if (string.IsNullOrEmpty(smi.SenderInstanceID) || _logicalViews.TryGetValue(smi.SenderInstanceID, out propagatingMessageSender))
+                            {
+                                _eventBus.Propagate(propagatingMessageSender, smi.Message);
                             }
                             break;
 
@@ -407,7 +415,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null)
+                new SendTopicBasedMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null)
             };
             ProcessInstructions(instructions);
         }
@@ -420,7 +428,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendMessageInstruction(new NavigateBack(offset), new []{NavigationSystem.Messages.Topic}, null)
+                new SendTopicBasedMessageInstruction(new NavigateBack(offset), new []{NavigationSystem.Messages.Topic}, null)
             };
             ProcessInstructions(instructions);
         }
@@ -432,7 +440,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendMessageInstruction(new NavigateUp(), new [] { NavigationSystem.Messages.Topic }, null)
+                new SendTopicBasedMessageInstruction(new NavigateUp(), new [] { NavigationSystem.Messages.Topic }, null)
             };
             ProcessInstructions(instructions);
         }
@@ -445,7 +453,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendMessageInstruction(new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic }, null)
+                new SendTopicBasedMessageInstruction(new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic }, null)
             };
             ProcessInstructions(instructions);
         }
@@ -505,7 +513,7 @@ namespace Forest.Engine
         {
             var instructions = new ForestInstruction[]
             {
-                new SendMessageInstruction(message, new string[0], null)
+                new SendTopicBasedMessageInstruction(message, new string[0], null)
             };
             ProcessInstructions(instructions);
         }

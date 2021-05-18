@@ -58,15 +58,15 @@ namespace Forest.Templates
             }
             if (message != null)
             {
-                yield return new SendMessageInstruction(message, new string[0], null);
-                yield return new SendMessageInstruction(
+                yield return new SendTopicBasedMessageInstruction(message, new string[0], null);
+                yield return new SendTopicBasedMessageInstruction(
                     new Location(templateName, message), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
             }
             else
             {
-                yield return new SendMessageInstruction(
+                yield return new SendTopicBasedMessageInstruction(
                     new Location(templateName), 
                     new [] { NavigationSystem.Messages.Topic }, 
                     null);
