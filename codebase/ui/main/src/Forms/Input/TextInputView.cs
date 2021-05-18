@@ -1,4 +1,6 @@
-﻿namespace Forest.UI.Forms.Input
+﻿using Forest.UI.Forms.Validation;
+
+namespace Forest.UI.Forms.Input
 {
     [View(Name, TreatNameAsTypeAlias = false)]
     public sealed class TextInputView : FormInputView<string>
@@ -7,5 +9,7 @@
         
         internal TextInputView(string model) : base(model) { }
         internal TextInputView() : this(string.Empty) { }
+
+        public override bool Validate(string value) => Field?.Validate(value, new[]{null, string.Empty}) ?? true;
     }
 }

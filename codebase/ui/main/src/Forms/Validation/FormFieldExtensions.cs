@@ -13,16 +13,17 @@ namespace Forest.UI.Forms.Validation
         public static bool Validate<TValue>(
             this FormField formField, 
             TValue value,
-            TValue emptyValue = default(TValue),
+            TValue[] emptyValues = null,
             IEqualityComparer<TValue> equalityComparer = null,
             IComparer<TValue> comparer = null)
         {
             formField.VerifyArgument(nameof(formField)).IsNotNull();
-            equalityComparer = equalityComparer ?? EqualityComparer<TValue>.Default;
-            comparer = comparer ?? Comparer<TValue>.Default;
+            emptyValues ??= new[]{ default(TValue) };
+            equalityComparer ??= EqualityComparer<TValue>.Default;
+            comparer ??= Comparer<TValue>.Default;
             
             var isValid = true;
-            var isEmpty = equalityComparer.Equals(value, emptyValue);
+            var isEmpty = emptyValues.Any(emptyValue => equalityComparer.Equals(value, emptyValue));
 
             foreach (var kvp in formField.Validation)
             {
