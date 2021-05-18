@@ -115,14 +115,14 @@ namespace Forest.Navigation
                 Publish(new NavigationTreeChanged(state.Tree));
             }
 
-            [TopicSubscription(Messages.Topic)]
+            [Subscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnSelectionChanged(Location navigationHistoryEntry)
             {
                 OnNavigationTreeChanged(UpdateModel(m => m.Push(navigationHistoryEntry)));
             }
 
-            [TopicSubscription(Messages.Topic)]
+            [Subscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigateBack(NavigateBack message)
             {
@@ -141,7 +141,7 @@ namespace Forest.Navigation
                 }
             }
             
-            [TopicSubscription(Messages.Topic)]
+            [Subscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigateUp(NavigateUp message)
             {
@@ -160,7 +160,7 @@ namespace Forest.Navigation
                 }
             }
 
-            [TopicSubscription(Messages.Topic)]
+            [Subscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigationStateProviderLocated(INavigationStateProvider navigationStateProvider)
             {

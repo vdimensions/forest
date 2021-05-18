@@ -75,7 +75,7 @@ namespace Forest.UI.Containers.TabStrip
             OnTabSelected(new TabSelectedMessage(_guid, tabId));
         }
 
-        [TopicSubscription(Topics.TabStripInternalMessageTopic)]
+        [Subscription(Topics.TabStripInternalMessageTopic)]
         internal void OnTabSelected(TabSelectedMessage message)
         {
             if (!message.TabStripGuid.Equals(_guid))

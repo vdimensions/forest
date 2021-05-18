@@ -105,7 +105,7 @@ namespace Forest.UI.Dialogs
                     .Register<ConfirmationDialogFrame>();
             }
             
-            [TopicSubscription(MessageChannel)]
+            [Subscription(MessageChannel)]
             internal void OnDialogMessage(Messages.IDialogMessage dialogMessage)
             {
                 WithRegion(

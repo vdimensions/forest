@@ -8,7 +8,7 @@ namespace Forest.UI.Navigation
 {
     internal abstract class AbstractNavigationMenuView : LogicalView
     {
-        [TopicSubscription(NavigationSystem.Messages.Topic)]
+        [Subscription(NavigationSystem.Messages.Topic)]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal void OnNavigationTreeChanged(NavigationTreeChanged message)
         {
