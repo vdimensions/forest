@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Forest.Messaging;
+using Forest.Messaging.Propagating;
+using Forest.Messaging.TopicBased;
 
 namespace Forest.ComponentModel
 {
@@ -30,10 +33,17 @@ namespace Forest.ComponentModel
         IReadOnlyDictionary<string, IForestCommandDescriptor> Commands { get; }
         
         /// <summary>
-        /// Gets a collection of <see cref="IEventDescriptor">event descriptors</see> representing the event
+        /// Gets a collection of <see cref="ITopicEventDescriptor">topic event descriptors</see> representing the event
         /// subscriptions that are defined by the represented <see cref="LogicalView">logical view</see>.
         /// </summary>
-        IEnumerable<IEventDescriptor> Events { get; }
+        IEnumerable<ITopicEventDescriptor> TopicEvents { get; }
+        
+        /// <summary>
+        /// Gets a collection of <see cref="IPropagatingEventDescriptor">propagating event descriptors</see>
+        /// representing the event subscriptions that are defined by the represented
+        /// <see cref="LogicalView">logical view</see>.
+        /// </summary>
+        IEnumerable<IPropagatingEventDescriptor> PropagatingEvents { get; }
         
         /// <summary>
         /// Gets a <see cref="bool"/> value indicating whether the represented

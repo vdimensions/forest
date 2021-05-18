@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using Axle.Extensions.String;
 using Axle.Verification;
+using Forest.Messaging;
+using Forest.Messaging.Propagating;
+using Forest.Messaging.TopicBased;
 
 namespace Forest.ComponentModel
 {
@@ -17,7 +20,8 @@ namespace Forest.ComponentModel
             Type viewType, 
             Type modelType, 
             IReadOnlyDictionary<string, IForestCommandDescriptor> commands, 
-            IEnumerable<IEventDescriptor> events, 
+            IEnumerable<ITopicEventDescriptor> topicEvents, 
+            IEnumerable<IPropagatingEventDescriptor> propagatingEvents, 
             bool isSystemView, 
             bool isAnonymousView,
             bool useNameAsTypeAlias)
@@ -26,7 +30,8 @@ namespace Forest.ComponentModel
             ViewType = viewType;
             ModelType = modelType;
             Commands = commands;
-            Events = events;
+            TopicEvents = topicEvents;
+            PropagatingEvents = propagatingEvents;
             IsSystemView = isSystemView;
             IsAnonymousView = isAnonymousView;
             TreatNameAsTypeAlias = useNameAsTypeAlias;
@@ -36,7 +41,8 @@ namespace Forest.ComponentModel
         public Type ViewType { get; }
         public Type ModelType { get; }
         public IReadOnlyDictionary<string, IForestCommandDescriptor> Commands { get; }
-        public IEnumerable<IEventDescriptor> Events { get; }
+        public IEnumerable<ITopicEventDescriptor> TopicEvents { get; }
+        public IEnumerable<IPropagatingEventDescriptor> PropagatingEvents { get; }
         public bool IsSystemView { get; }
         public bool IsAnonymousView { get; }
         public bool TreatNameAsTypeAlias { get; }

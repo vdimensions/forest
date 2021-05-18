@@ -1,23 +1,23 @@
 ﻿using System;
 using Axle.Reflection;
-using Axle.Verification;
+using Forest.ComponentModel;
 
-namespace Forest.ComponentModel
+namespace Forest.Messaging.Propagating
 {
     #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
     [Serializable]
     #endif
-    public sealed class EventInvocationException : AbstractInvocationException
+    public sealed class PropagatingEventInvocationException : AbstractInvocationException
     {
-        internal EventInvocationException(Type viewType, IMethod method, string topic, Exception inner)
+        internal PropagatingEventInvocationException(Type viewType, IMethod method, Exception inner)
             : base(
                 viewType, 
                 method, 
-                string.Format("Failed to invoke event subscription for topic '{0}'. ", topic.VerifyArgument(nameof(topic)).IsNotNull().Value), 
+                "Failed to invoke propagating event subscription. ", 
                 inner) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        internal EventInvocationException(
+        internal PropagatingEventInvocationException(
             System.Runtime.Serialization.SerializationInfo info,
             System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         #endif

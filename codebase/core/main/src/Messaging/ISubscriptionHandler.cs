@@ -1,11 +1,13 @@
 ﻿using System;
 
-namespace Forest.ComponentModel
+namespace Forest.Messaging
 {
     internal interface ISubscriptionHandler
     {
         void Invoke(object message);
-        Type MessageType{ get; }
+        
+        Type MessageType { get; }
+        
         IView Receiver { get; }
     }
 }

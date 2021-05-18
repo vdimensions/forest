@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Forest.ComponentModel
+namespace Forest.Messaging
 {
     public interface IEventDescriptor
     {
         void Trigger(IView view, object message);
-        string Topic { get; }
+        
         Type MessageType { get; }
     }
 }

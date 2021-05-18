@@ -9,7 +9,7 @@ namespace Forest
 {
     public interface IForestContext
     {
-        IViewFactory ViewFactory { get; }
+        IForestViewFactory ViewFactory { get; }
         IForestViewRegistry ViewRegistry { get; }
         IForestSecurityManager SecurityManager { get; }
         ITemplateProvider TemplateProvider { get; }

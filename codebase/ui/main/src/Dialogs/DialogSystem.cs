@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using Forest.ComponentModel;
 using Forest.Engine;
+using Forest.Messaging;
+using Forest.Messaging.TopicBased;
 
 namespace Forest.UI.Dialogs
 {
@@ -103,7 +105,7 @@ namespace Forest.UI.Dialogs
                     .Register<ConfirmationDialogFrame>();
             }
             
-            [Subscription(MessageChannel)]
+            [TopicSubscription(MessageChannel)]
             internal void OnDialogMessage(Messages.IDialogMessage dialogMessage)
             {
                 WithRegion(

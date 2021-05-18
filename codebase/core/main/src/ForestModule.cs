@@ -26,14 +26,14 @@ namespace Forest
     [Requires(typeof(ForestSecurityModule))]
     internal sealed class ForestModule :
         IForestEngine, 
-        IViewFactory, 
+        IForestViewFactory, 
         IForestContext, 
         IForestCommandAdvice, 
         IForestMessageAdvice, 
         IForestNavigationAdvice
     {
         private readonly IForestViewRegistry _viewRegistry;
-        private readonly IViewFactory _viewFactory;
+        private readonly IForestViewFactory _viewFactory;
         private readonly IForestSecurityManager _securityManager;
         private readonly IForestSecurityExceptionHandler _securityExceptionHandler;
         private readonly ITemplateProvider _templateProvider;
@@ -173,10 +173,10 @@ namespace Forest
                 ctx.Engine.SendMessage(msg);
             }
         }
-        IView IViewFactory.Resolve(IForestViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
-        IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
+        IView IForestViewFactory.Resolve(IForestViewDescriptor descriptor) => _viewFactory.Resolve(descriptor);
+        IView IForestViewFactory.Resolve(IForestViewDescriptor descriptor, object model) => _viewFactory.Resolve(descriptor, model);
         
-        IViewFactory IForestContext.ViewFactory => this;
+        IForestViewFactory IForestContext.ViewFactory => this;
         IForestViewRegistry IForestContext.ViewRegistry => _viewRegistry;
         IForestSecurityManager IForestContext.SecurityManager => _securityManager;
         ITemplateProvider IForestContext.TemplateProvider => _templateProvider;

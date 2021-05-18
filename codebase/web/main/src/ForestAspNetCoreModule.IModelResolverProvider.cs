@@ -24,7 +24,7 @@ namespace Forest.Web.AspNetCore
             foreach (var viewDescriptor in _viewRegistry.ViewDescriptors)
             {
                 registry.Register(viewDescriptor.ModelType);
-                foreach (var eventDescriptor in viewDescriptor.Events)
+                foreach (var eventDescriptor in viewDescriptor.TopicEvents)
                 {
                     if (!string.IsNullOrEmpty(eventDescriptor.Topic))
                     {

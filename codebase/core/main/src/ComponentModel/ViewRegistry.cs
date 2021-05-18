@@ -9,6 +9,9 @@ using Axle.Logging;
 using Axle.Reflection;
 using Axle.Reflection.Extensions.Type;
 using Axle.Verification;
+using Forest.Messaging;
+using Forest.Messaging.Propagating;
+using Forest.Messaging.TopicBased;
 
 namespace Forest.ComponentModel
 {
@@ -139,10 +142,15 @@ namespace Forest.ComponentModel
                 .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<CommandAttribute>(x.Method, new []{y})))
                 .Select(x => ForestCommandDescriptor.Create(viewType, viewModelType, x.Attributes.Single(), x.Method, _logger))
                 .ToDictionary(x => x.Name, x => x as IForestCommandDescriptor, strCmp);
-            var eventDescriptors = ConsolidateMethods(introspector.GetMethods(ScanOpts)
-                .Select(m => new MethodAndAttributes<SubscriptionAttribute>(m, GetAttributes<SubscriptionAttribute>(m))))
-                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<SubscriptionAttribute>(x.Method, new[] { y })))
-                .Select(x => new EventDescriptor(x.Attributes.Single().Topic, x.Method))
+            var topicEventDescriptors = ConsolidateMethods(introspector.GetMethods(ScanOpts)
+                .Select(m => new MethodAndAttributes<TopicSubscriptionAttribute>(m, GetAttributes<TopicSubscriptionAttribute>(m))))
+                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<TopicSubscriptionAttribute>(x.Method, new[] { y })))
+                .Select(x => new TopicEventDescriptor(x.Attributes.Single().Topic, x.Method))
+                .ToArray();
+            var propagatingEventDescriptors = ConsolidateMethods(introspector.GetMethods(ScanOpts)
+                .Select(m => new MethodAndAttributes<PropagatingSubscriptionAttribute>(m, GetAttributes<PropagatingSubscriptionAttribute>(m))))
+                .SelectMany(x => x.Attributes.Select(y => new MethodAndAttributes<PropagatingSubscriptionAttribute>(x.Method, new[] { y })))
+                .Select(x => new PropagatingEventDescriptor(x.Method))
                 .ToArray();
             var isSystemView = viewType.ExtendsOrImplements<ISystemView>();
             return new ForestViewDescriptor(
@@ -150,7 +158,8 @@ namespace Forest.ComponentModel
                 viewType, 
                 viewModelType, 
                 new ReadOnlyDictionary<string, IForestCommandDescriptor>(commandDescriptors), 
-                eventDescriptors,
+                topicEventDescriptors,
+                propagatingEventDescriptors,
                 isSystemView,
                 isAnonymousView,
                 (viewAttribute?.TreatNameAsTypeAlias).GetValueOrDefault(false));

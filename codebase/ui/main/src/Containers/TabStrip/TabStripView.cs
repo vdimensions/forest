@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Axle.Verification;
 using Forest.ComponentModel;
+using Forest.Messaging;
+using Forest.Messaging.TopicBased;
 using Forest.UI.Common;
 using Forest.UI.Containers.TabStrip.Messages;
 
@@ -73,7 +75,7 @@ namespace Forest.UI.Containers.TabStrip
             OnTabSelected(new TabSelectedMessage(_guid, tabId));
         }
 
-        [Subscription(Topics.TabStripInternalMessageTopic)]
+        [TopicSubscription(Topics.TabStripInternalMessageTopic)]
         internal void OnTabSelected(TabSelectedMessage message)
         {
             if (!message.TabStripGuid.Equals(_guid))

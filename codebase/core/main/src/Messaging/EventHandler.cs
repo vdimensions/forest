@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Forest.ComponentModel
+namespace Forest.Messaging
 {
     internal sealed class EventHandler : ISubscriptionHandler
     {

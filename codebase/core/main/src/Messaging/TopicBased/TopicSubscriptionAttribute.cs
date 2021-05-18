@@ -1,16 +1,16 @@
 ﻿using System;
 using Axle.Verification;
 
-namespace Forest
+namespace Forest.Messaging.TopicBased
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-    public sealed class SubscriptionAttribute : Attribute
+    public sealed class TopicSubscriptionAttribute : SubscriptionAttribute
     {
-        public SubscriptionAttribute(string topic)
+        public TopicSubscriptionAttribute(string topic)
         {
             Topic = topic.VerifyArgument(nameof(topic)).IsNotNullOrEmpty();
         }
-        public SubscriptionAttribute()
+        public TopicSubscriptionAttribute()
         {
             Topic = string.Empty;
         }

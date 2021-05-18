@@ -3,7 +3,7 @@ using Axle.Verification;
 
 namespace Forest.ComponentModel
 {
-    internal sealed class ContainerViewFactory : IViewFactory
+    internal sealed class ContainerViewFactory : IForestViewFactory
     {
         private readonly IDependencyContainerFactory _dependencyContainerFactory;
         private readonly IDependencyContext _dependencyContext;
@@ -30,14 +30,14 @@ namespace Forest.ComponentModel
         }
 
         // TODO: `arg` should become `params object[] args`
-        IView IViewFactory.Resolve(IForestViewDescriptor descriptor, object arg)
+        IView IForestViewFactory.Resolve(IForestViewDescriptor descriptor, object arg)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
             arg.VerifyArgument(nameof(arg)).IsNotNull();
             return DoResolve(descriptor, arg);
         }
 
-        IView IViewFactory.Resolve(IForestViewDescriptor descriptor)
+        IView IForestViewFactory.Resolve(IForestViewDescriptor descriptor)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
             return DoResolve(descriptor);

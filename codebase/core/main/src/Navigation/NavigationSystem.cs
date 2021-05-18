@@ -2,6 +2,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Axle.Collections.Immutable;
+using Forest.Messaging;
+using Forest.Messaging.TopicBased;
 using Forest.Navigation.Messages;
 
 namespace Forest.Navigation
@@ -113,14 +115,14 @@ namespace Forest.Navigation
                 Publish(new NavigationTreeChanged(state.Tree));
             }
 
-            [Subscription(Messages.Topic)]
+            [TopicSubscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnSelectionChanged(Location navigationHistoryEntry)
             {
                 OnNavigationTreeChanged(UpdateModel(m => m.Push(navigationHistoryEntry)));
             }
 
-            [Subscription(Messages.Topic)]
+            [TopicSubscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigateBack(NavigateBack message)
             {
@@ -139,7 +141,7 @@ namespace Forest.Navigation
                 }
             }
             
-            [Subscription(Messages.Topic)]
+            [TopicSubscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigateUp(NavigateUp message)
             {
@@ -158,7 +160,7 @@ namespace Forest.Navigation
                 }
             }
 
-            [Subscription(Messages.Topic)]
+            [TopicSubscription(Messages.Topic)]
             [SuppressMessage("ReSharper", "UnusedMember.Global")]
             internal void OnNavigationStateProviderLocated(INavigationStateProvider navigationStateProvider)
             {

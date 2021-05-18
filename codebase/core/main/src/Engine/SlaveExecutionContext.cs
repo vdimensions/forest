@@ -7,12 +7,14 @@ using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Dom;
 using Forest.Engine.Instructions;
+using Forest.Messaging;
 using Forest.Navigation;
 using Forest.Navigation.Messages;
 using Forest.Security;
 using Forest.StateManagement;
 using Forest.Templates;
 using Forest.UI;
+using EventHandler = Forest.Messaging.EventHandler;
 
 namespace Forest.Engine
 {
@@ -52,7 +54,7 @@ namespace Forest.Engine
         }
         
         private readonly IForestContext _context;
-        private readonly IEventBus _eventBus;
+        private readonly CombinedEventBus _eventBus;
         private readonly IForestExecutionContext _executionContextReference;
         private readonly PhysicalViewDomProcessor _physicalViewDomProcessor;
         private readonly IDomProcessor _globalizationDomProcessor;
@@ -72,7 +74,7 @@ namespace Forest.Engine
                 context,
                 physicalViewDomProcessor,
                 context.GlobalizationDomProcessor,
-                new EventBus(), 
+                new CombinedEventBus(), 
                 initialState.Tree,
                 initialState.LogicalViews,
                 executionContextReference,
@@ -81,7 +83,7 @@ namespace Forest.Engine
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
                 IDomProcessor globalizationDomProcessor,
-                IEventBus eventBus,
+                CombinedEventBus eventBus,
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
                 IForestExecutionContext executionContextReference,
@@ -360,9 +362,13 @@ namespace Forest.Engine
 
         public void SubscribeEvents(IRuntimeView receiver)
         {
-            foreach (var evt in receiver.Descriptor.Events)
+            foreach (var evt in receiver.Descriptor.TopicEvents)
             {
-                _eventBus.Subscribe(new Forest.ComponentModel.EventHandler(evt, receiver), evt.Topic);
+                _eventBus.Subscribe(new EventHandler(evt, receiver), evt.Topic);
+            }
+            foreach (var evt in receiver.Descriptor.PropagatingEvents)
+            {
+                _eventBus.Subscribe(new EventHandler(evt, receiver));
             }
         }
 

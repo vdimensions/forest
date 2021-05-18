@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Axle.Core"/>
+    <PackageReference Include="Axle.Core" />
     <PackageReference Include="Axle.Application" />
   </ItemGroup>
 
