@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Axle.Collections.Immutable;
+using Axle.Extensions.String;
 using Axle.Reflection;
 using Axle.Verification;
 using Forest.UI.Forms.Input;
@@ -14,7 +15,11 @@ namespace Forest.UI.Forms
     internal sealed class FormBuilder : IFormBuilder
     {
         private static readonly IEqualityComparer<string> Comparer = StringComparer.Ordinal;
-        
+        private static Func<KeyValuePair<string, IFormInputView>, string> ToFieldName(string formName)
+        {
+            return (x) => x.Key.TakeAfterFirst(formName).TrimStart('.');
+        }
+
         private readonly IRegion _region;
         private readonly string _formName;
         private readonly ImmutableDictionary<string, IFormInputView> _inputs;
@@ -38,7 +43,8 @@ namespace Forest.UI.Forms
                         v.FormInputView))
                     .ToArray();
                 var fields = ImmutableDictionary.CreateRange(Comparer, pairs);
-                var fieldNames = ImmutableList.CreateRange(pairs.Select(x => x.Key));
+                var toFieldName = ToFieldName(formName);
+                var fieldNames = ImmutableList.CreateRange(pairs.Select(toFieldName));
                 _inputs = fields;
                 _fieldNames = fieldNames;
             }
@@ -102,13 +108,14 @@ namespace Forest.UI.Forms
         {
             var collectedValues = ImmutableDictionary.Create<string, object>(Comparer);
             var collectedErrors = ImmutableDictionary.Create<string, ValidationRule[]>(Comparer);
+            var toFieldName = ToFieldName(_formName);
             foreach (var kvp in Inputs)
             {
-                var key = kvp.Key;
+                var fieldName = toFieldName(kvp);
                 var input = kvp.Value;
                 if (input.Validate(input.Value))
                 {
-                    collectedValues = collectedValues.Add(key, input.Value);
+                    collectedValues = collectedValues.Add(fieldName, input.Value);
                 }
                 else
                 {
@@ -117,7 +124,7 @@ namespace Forest.UI.Forms
                         .Select(x => x.Key)
                         .ToArray();
                     collectedErrors = collectedErrors.Add(
-                        key, 
+                        fieldName, 
                         violatedRules);
                 }
             }

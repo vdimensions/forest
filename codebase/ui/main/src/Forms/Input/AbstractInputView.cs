@@ -23,7 +23,7 @@ namespace Forest.UI.Forms.Input
 
         /// <inheritdoc />
         public virtual bool Validate(TValue value) => Field?.Validate(value) ?? true;
-        bool IFormInputView.Validate(object value) => value is TValue val && Validate(val);
+        bool IFormInputView.Validate(object value) => value is TValue val ? Validate(val) : Validate(default(TValue));
 
         [Command(Commands.UpdateValue)]
         public abstract void UpdateValue(TValue value);
