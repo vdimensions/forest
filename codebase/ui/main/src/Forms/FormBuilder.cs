@@ -22,7 +22,7 @@ namespace Forest.UI.Forms
 
         private readonly IRegion _region;
         private readonly string _formName;
-        private readonly ImmutableDictionary<string, IFormFieldView> _inputs;
+        private readonly ImmutableDictionary<string, IFormFieldView> _fields;
         private readonly ImmutableList<string> _fieldNames;
 
         internal FormBuilder(IRegion region, string formName) 
@@ -45,12 +45,12 @@ namespace Forest.UI.Forms
                 var fields = ImmutableDictionary.CreateRange(Comparer, pairs);
                 var toFieldName = ToFieldName(formName);
                 var fieldNames = ImmutableList.CreateRange(pairs.Select(toFieldName));
-                _inputs = fields;
+                _fields = fields;
                 _fieldNames = fieldNames;
             }
             else
             {
-                _inputs = formFieldData.Item1;
+                _fields = formFieldData.Item1;
                 _fieldNames = formFieldData.Item2;
             }
         }
@@ -82,7 +82,7 @@ namespace Forest.UI.Forms
                 _region, 
                 _formName,
                 Tuple.Create(
-                    _inputs.Remove(name).Add(name, view),
+                    _fields.Remove(name).Add(name, view),
                     _fieldNames.Remove(name, Comparer).Add(name))
                 );
         }
@@ -104,12 +104,12 @@ namespace Forest.UI.Forms
             var collectedValues = ImmutableDictionary.Create<string, object>(Comparer);
             var collectedErrors = ImmutableDictionary.Create<string, ValidationRule[]>(Comparer);
             var toFieldName = ToFieldName(_formName);
-            foreach (var kvp in _inputs)
+            foreach (var kvp in _fields)
             {
                 var fieldName = toFieldName(kvp);
                 var fieldView = kvp.Value;
                 var inputView = fieldView.FormInputView;
-                if (inputView.Validate(fieldView.Model, inputView.Value))
+                if (fieldView.Validate())
                 {
                     collectedValues = collectedValues.Add(fieldName, inputView.Value);
                 }

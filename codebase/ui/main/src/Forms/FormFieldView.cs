@@ -36,12 +36,12 @@ namespace Forest.UI.Forms
         {
             base.Load();
             WithRegion(Regions.Input, ActivateFormInputView);
-            WithRegion(Regions.Validation, ActivateValidationViews);
+            WithRegion(Regions.Validation, UpdateValidationViews);
         }
 
         private void ActivateFormInputView(IRegion region) => region.Clear().ActivateView<TInput>();
 
-        private void ActivateValidationViews(IRegion region)
+        private void UpdateValidationViews(IRegion region)
         {
             region.Clear();
             foreach (var validationConfig in Model.Validation.Values)
@@ -54,18 +54,21 @@ namespace Forest.UI.Forms
             }
         }
 
+        public bool Validate()
+        {
+            var wasValidBefore = Model.Validation.Values.All(x => x.IsValid.GetValueOrDefault(true));
+            var isValidNow = FormInputView.Validate(Model, FormInputView.Value);
+            if (isValidNow != wasValidBefore)
+            {
+                WithRegion(Regions.Validation, UpdateValidationViews);
+            }
+            return isValidNow;
+        }
+
         [Subscription]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal void ValidationRequested(ValidationStateChanged _)
-        {
-            var wasValid = Model.Validation.Values.All(x => x.IsValid.GetValueOrDefault(true));
-            var isValidNow = FormInputView.Validate(Model, FormInputView.Value);
-            if (isValidNow != wasValid)
-            {
-                WithRegion(Regions.Validation, ActivateValidationViews);
-            }
-        }
-        
+        internal void ValidationRequested(ValidationStateChanged _) => Validate();
+
         protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Name}" : null;
 
         private IFormInputView FormInputView
