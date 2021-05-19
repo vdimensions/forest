@@ -3,6 +3,9 @@ using Axle.Extensions.Object;
 
 namespace Forest.Engine.Instructions
 {
+    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    [Serializable]
+    #endif
     public sealed class InvokeCommandInstruction : ForestInstruction
     {
         public InvokeCommandInstruction(string key, string commandName, object commandArg)
