@@ -21,12 +21,12 @@ namespace Forest.Messaging.Propagating
         {
             ICollection<string> result = new LinkedList<string>();
             
-            if (letter.DistributionData.PropagationTargets == null)
+            if (letter.DistributionData.PropagationTargets.Equals(PropagationTargets.None))
             {
                 return result;
             }
             
-            var propagationTargets = letter.DistributionData.PropagationTargets.Value;
+            var propagationTargets = letter.DistributionData.PropagationTargets;
             IEnumerable<string> siblings = null;
             if (propagationTargets.Direction.HasFlag(PropagationDirection.Ancestors))
             {

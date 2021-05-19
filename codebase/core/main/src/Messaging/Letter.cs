@@ -24,9 +24,9 @@ namespace Forest.Messaging
         public bool Equals(Letter other)
         {
             return ReferenceEquals(Sender, other.Sender) 
-                   && Equals(Message, other.Message) 
-                   && Equals(DistributionData, other.DistributionData) 
-                   && Timestamp == other.Timestamp;
+                && Equals(Message, other.Message) 
+                && Equals(DistributionData, other.DistributionData) 
+                && Timestamp == other.Timestamp;
         }
 
         public override int GetHashCode()

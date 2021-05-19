@@ -14,7 +14,7 @@ namespace Forest.Messaging
     {
         public DistributionData(params string[] topics) : this()
         {
-            PropagationTargets = null;
+            PropagationTargets = PropagationTargets.None;
             Topics = topics;
         }
         public DistributionData(PropagationTargets propagationTargets) : this()
@@ -35,7 +35,7 @@ namespace Forest.Messaging
             return this.CalculateHashCode(PropagationTargets, this.CalculateHashCode(Topics));
         }
         
-        public PropagationTargets? PropagationTargets { get; }
+        public PropagationTargets PropagationTargets { get; }
         public string[] Topics { get; }
     }
 }
