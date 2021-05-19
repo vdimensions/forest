@@ -49,7 +49,7 @@ namespace Forest.UI.Forms.Input
         public override void UpdateValue(TValue value)
         {
             UpdateModel(_ => value);
-            Publish(ValidationStateChanged.Instance, PropagationTargets.Ancestors);
+            Publish(ValidationStateChanged.Instance, PropagationTargets.Parent);
         }
 
         public override TValue Value => Model;
