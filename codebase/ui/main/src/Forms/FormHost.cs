@@ -5,6 +5,7 @@ using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
+    [SuppressMessage("ReSharper", "UnusedType.Global")]
     public abstract class FormHost<T> : LogicalView
     {
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
@@ -25,7 +26,8 @@ namespace Forest.UI.Forms
 
         protected abstract T Bind(IReadOnlyDictionary<string, object> formValues);
 
-        public bool TrySubmit(out T result, out IReadOnlyDictionary<string, ValidationRule[]> errors)
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+        public bool Submit(out T result, out IReadOnlyDictionary<string, ValidationRule[]> errors)
         {
             result = default(T);
             IReadOnlyDictionary<string, object> values = null;
@@ -50,6 +52,7 @@ namespace Forest.UI.Forms
             return true;
         }
 
-        public bool TrySubmit(out T result) => TrySubmit(out result, out _);
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        public bool Submit(out T result) => Submit(out result, out _);
     }
 }

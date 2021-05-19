@@ -39,14 +39,7 @@ namespace Forest.UI.Forms
             WithRegion(Regions.Validation, ActivateValidationViews);
         }
 
-        private void ActivateFormInputView(IRegion region)
-        {
-            var formInput = region.Clear().ActivateView<TInput>();
-            if (formInput is ISupportsAssignFormField supportsAssignFormField)
-            {
-                supportsAssignFormField.Field = Model;
-            }
-        }
+        private void ActivateFormInputView(IRegion region) => region.Clear().ActivateView<TInput>();
 
         private void ActivateValidationViews(IRegion region)
         {
@@ -57,7 +50,7 @@ namespace Forest.UI.Forms
                 {
                     continue;
                 }
-                region.ActivateView<ValidationMessageView, string>(validationState.Message);
+                region.ActivateView<ValidationMessageView, string>(validationState.Message ?? validationState.Rule.ToString());
             }
         }
 
