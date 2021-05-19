@@ -25,8 +25,8 @@ namespace Forest.Messaging
 
         public bool Equals(DistributionData other)
         {
-            return Nullable.Equals(PropagationTargets, other.PropagationTargets) 
-                   && Topics.SequenceEqual(other.Topics);
+            return Equals(PropagationTargets, other.PropagationTargets) 
+                && Topics.SequenceEqual(other.Topics);
         }
         public override bool Equals(object obj) => obj is DistributionData other && Equals(other);
 
