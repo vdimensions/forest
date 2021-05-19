@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Forest.Globalization;
 using Forest.UI.Forms.Validation;
@@ -36,6 +37,7 @@ namespace Forest.UI.Forms
         /// Gets the localized label of the current form field.
         /// </summary>
         [Localized]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public string Label { get; set; }
         
         /// <summary>
@@ -46,6 +48,7 @@ namespace Forest.UI.Forms
         /// <summary>
         /// Gets the default value for the form field, in case specified.
         /// </summary>
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public object DefaultValue { get; }
         
         /// <summary>

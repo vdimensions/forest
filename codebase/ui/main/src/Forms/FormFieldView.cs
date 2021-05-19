@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Forest.ComponentModel;
+using Forest.Messaging;
 using Forest.UI.Forms.Input;
 using Forest.UI.Forms.Validation;
 
@@ -21,6 +22,7 @@ namespace Forest.UI.Forms
             viewRegistry.Register<TInput>().Register<ValidationMessageView>();
         }
 
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
         public static class Regions
         {
             public const string Input = "Input";
@@ -57,6 +59,13 @@ namespace Forest.UI.Forms
                 }
                 region.ActivateView<ValidationMessageView, string>(validationState.Message);
             }
+        }
+
+        [Subscription]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal void ValidationRequested(ValidationStateChanged _)
+        {
+            WithRegion(Regions.Validation, ActivateValidationViews);
         }
         
         protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Name}" : null;

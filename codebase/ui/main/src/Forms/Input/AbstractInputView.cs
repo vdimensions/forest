@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Messaging.Propagating;
 using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms.Input
@@ -40,6 +41,7 @@ namespace Forest.UI.Forms.Input
     }
     public abstract class AbstractInputView<TValue> : AbstractInputView<TValue, TValue>
     {
+        
         private static readonly  Func<TValue, TValue> ValueIdentity = x => x;
         
         protected AbstractInputView(TValue model) : base(model, ValueIdentity) { }
@@ -47,6 +49,7 @@ namespace Forest.UI.Forms.Input
         public override void UpdateValue(TValue value)
         {
             UpdateModel(_ => value);
+            Publish(ValidationStateChanged.Instance, PropagationTargets.Ancestors);
         }
 
         public override TValue Value => Model;
