@@ -5,10 +5,19 @@ using Axle.Extensions.Object;
 
 namespace Forest.Messaging.Propagating
 {
+    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    [Serializable]
+    #endif
     [StructLayout(LayoutKind.Sequential)]
     [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public readonly struct PropagationTargets : IEquatable<PropagationTargets>
     {
+        /// <summary>
+        /// A <see cref="PropagationTargets"/> configuration that not trigger any subscriptions.
+        /// </summary>
+        public static readonly PropagationTargets None = new PropagationTargets(
+            PropagationDirection.None, 
+            PropagationRange.None);
         /// <summary>
         /// A <see cref="PropagationTargets"/> configuration that will subscribe only the sender node's parent.
         /// </summary>

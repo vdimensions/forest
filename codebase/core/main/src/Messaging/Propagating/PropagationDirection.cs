@@ -2,6 +2,9 @@
 
 namespace Forest.Messaging.Propagating
 {
+    #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+    [Serializable]
+    #endif
     [Flags]
     public enum PropagationDirection : byte
     {
