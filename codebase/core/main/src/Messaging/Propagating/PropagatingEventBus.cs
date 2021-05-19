@@ -17,6 +17,14 @@ namespace Forest.Messaging.Propagating
         private readonly IDictionary<string, ImmutableHashSet<string>> _parentChildrenMap 
             = new Dictionary<string, ImmutableHashSet<string>>(StringComparer);
         
+        public PropagatingEventBus(IEnumerable<Tree.Node> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                EstablishHierarchy(node);
+            }
+        }
+        
         private IEnumerable<string> DetermineReceivers(Letter letter)
         {
             ICollection<string> result = new LinkedList<string>();
@@ -151,7 +159,7 @@ namespace Forest.Messaging.Propagating
         {
             subscriptionHandler.VerifyArgument(nameof(subscriptionHandler)).IsNotNull();
             
-            EstablishHierarchy(subscriptionHandler);
+            EstablishHierarchy(subscriptionHandler.Node);
 
             if (!_subscriptions.TryGetValue(subscriptionHandler.Node.Key, out var receiverSubscriptions))
             {
@@ -164,9 +172,8 @@ namespace Forest.Messaging.Propagating
             subscriptionSet.Add(subscriptionHandler);
         }
 
-        private void EstablishHierarchy(ISubscriptionHandler subscriptionHandler)
+        private void EstablishHierarchy(Tree.Node node)
         {
-            var node = subscriptionHandler.Node;
             if (!_childParentMap.TryGetValue(node.Key, out var parent) ||
                 !StringComparer.Equals(parent, node.ParentKey))
             {

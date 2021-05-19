@@ -9,7 +9,7 @@ namespace Forest.Messaging
         private readonly ITopicEventBus _topicEventBus;
         private readonly IPropagatingEventBus _propagatingEventBus;
 
-        public CombinedEventBus() : this(new TopicEventBus(), new PropagatingEventBus()) { }
+        public CombinedEventBus(Tree tree) : this(new TopicEventBus(), new PropagatingEventBus(tree)) { }
         public CombinedEventBus(ITopicEventBus topicEventBus, IPropagatingEventBus propagatingEventBus)
         {
             _topicEventBus = topicEventBus;

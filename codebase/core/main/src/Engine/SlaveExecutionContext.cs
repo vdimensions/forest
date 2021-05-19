@@ -74,7 +74,7 @@ namespace Forest.Engine
                 context,
                 physicalViewDomProcessor,
                 context.GlobalizationDomProcessor,
-                new CombinedEventBus(), 
+                new CombinedEventBus(initialState.Tree), 
                 initialState.Tree,
                 initialState.LogicalViews,
                 initialState.Location,
