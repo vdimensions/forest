@@ -58,12 +58,17 @@ namespace Forest.UI.Forms
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal void ValidationRequested(ValidationStateChanged _)
         {
-            WithRegion(Regions.Validation, ActivateValidationViews);
+            var wasValid = Model.Validation.Values.All(x => x.IsValid.GetValueOrDefault(true));
+            var isValidNow = FormInputView.Validate(Model, FormInputView.Value);
+            if (isValidNow != wasValid)
+            {
+                WithRegion(Regions.Validation, ActivateValidationViews);
+            }
         }
         
         protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Name}" : null;
 
-        IFormInputView IFormFieldView.FormInputView
+        private IFormInputView FormInputView
         {
             get
             {
@@ -72,5 +77,6 @@ namespace Forest.UI.Forms
                 return view;
             }
         }
+        IFormInputView IFormFieldView.FormInputView => FormInputView;
     }
 }

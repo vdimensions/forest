@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Forest.Messaging.Propagating;
 using Forest.UI.Forms.Validation;
 
@@ -29,22 +28,19 @@ namespace Forest.UI.Forms.Input
             if (field == null)
             {
                 return true;
-            }
-            var isValid = field.Validation.Values.All(x => x.IsValid.GetValueOrDefault(true));
-            
-            var result =  value is TValue val ? Validate(field, val) : Validate(field, default(TValue));
-            
-            if (result != isValid)
-            {
-                Publish(ValidationStateChanged.Instance, PropagationTargets.Parent);
-            }
-
-            return result;
+            }            
+            return value is TValue val ? Validate(field, val) : Validate(field, default(TValue));
         }
 
         [Command(Commands.UpdateValue)]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        public abstract void UpdateValue(TValue value);
+        internal void DoUpdate(TValue value)
+        {
+            UpdateValue(value);
+            Publish(ValidationStateChanged.Instance, PropagationTargets.Parent);
+        }
+        
+        protected abstract void UpdateValue(TValue value);
 
         /// <inheritdoc />
         public virtual TValue Value => _valueFn(Model);
@@ -58,7 +54,7 @@ namespace Forest.UI.Forms.Input
         
         protected AbstractInputView(TValue model) : base(model, ValueIdentity) { }
 
-        public override void UpdateValue(TValue value)
+        protected override void UpdateValue(TValue value)
         {
             UpdateModel(_ => value);
         }
