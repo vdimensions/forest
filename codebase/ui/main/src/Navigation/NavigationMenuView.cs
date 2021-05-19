@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Forest.ComponentModel;
 using Forest.Navigation;
 
 namespace Forest.UI.Navigation
 {
     [View(Name)]
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
     internal sealed class NavigationMenuView : AbstractNavigationMenuView
     {
         [ViewRegistryCallback]
@@ -30,23 +32,26 @@ namespace Forest.UI.Navigation
 
         protected override void OnNavigationTreeChanged(NavigationTree tree)
         {
-            WithRegion(Regions.Items, itemsRegion =>
-            {
-                itemsRegion.Clear();
-                var topLevel = tree.TopLevelNodes
-                        .Select(x => new NavigationNode { Path = x, Selected = tree.IsSelected(x) });
-                foreach (var item in topLevel)
+            WithRegion(
+                Regions.Items, 
+                (itemsRegion, t) =>
                 {
-                    if (item.Selected)
+                    itemsRegion.Clear();
+                    var topLevel = t.TopLevelNodes
+                            .Select(x => new NavigationNode { Path = x, Selected = t.IsSelected(x) });
+                    foreach (var item in topLevel)
                     {
-                        itemsRegion.ActivateView<NavigationMenuItemView, NavigationNode>(item);
+                        if (item.Selected)
+                        {
+                            itemsRegion.ActivateView<NavigationMenuItemView, NavigationNode>(item);
+                        }
+                        else
+                        {
+                            itemsRegion.ActivateView<NavigationMenuNavigableItemView, NavigationNode>(item);
+                        }
                     }
-                    else
-                    {
-                        itemsRegion.ActivateView<NavigationMenuNavigableItemView, NavigationNode>(item);
-                    }
-                }
-            });
+                },
+                tree);
         }
     }
 }

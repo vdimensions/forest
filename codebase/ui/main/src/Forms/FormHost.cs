@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Axle.Collections.Immutable;
 using Forest.UI.Forms.Validation;
@@ -19,7 +20,8 @@ namespace Forest.UI.Forms
             base.Load();
             WithRegion(
                 Regions.Form,
-                r => BuildForm(r.DefineForm(r.Owner.Name)));
+                (r, x) => x.BuildForm(r.DefineForm(r.Owner.Name)),
+                this);
         }
 
         protected abstract void BuildForm(IFormBuilder formBuilder);
@@ -30,20 +32,19 @@ namespace Forest.UI.Forms
         public bool Submit(out T result, out IReadOnlyDictionary<string, ValidationRule[]> errors)
         {
             result = default(T);
-            IReadOnlyDictionary<string, object> values = null;
-            IReadOnlyDictionary<string, ValidationRule[]> errors1 = null;
-            WithRegion(
+            var tuple = WithRegion(
                 Regions.Form,
                 r =>
                 {
                     var builder = (FormBuilder) r.DefineForm(r.Owner.Name);
                     if (builder.Submit(out var v, out var e))
                     {
-                        values = v;
-                        errors1 = e;
+                        return Tuple.Create(v, e);
                     }
+                    return null;
                 });
-            errors = errors1 ?? ImmutableDictionary.Create<string, ValidationRule[]>();
+            errors = tuple?.Item2 ?? ImmutableDictionary.Create<string, ValidationRule[]>();
+            var values = tuple?.Item1;
             if (values == null || errors.Count > 0)
             {
                 return false;

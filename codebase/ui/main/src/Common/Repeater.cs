@@ -28,16 +28,19 @@ namespace Forest.UI.Common
         public Repeater(TModel model) : this(model, Regions.Items) { }
 
         protected void WithItemsRegion(Action<IRegion> action) => WithRegion(_itemsRegionName, action);
+        protected void WithItemsRegion<T>(Action<IRegion, T> action, T arg) => WithRegion(_itemsRegionName, action, arg);
+        protected TResult WithItemsRegion<TResult>(Func<IRegion, TResult> func) => WithRegion(_itemsRegionName, func);
+        protected TResult WithItemsRegion<T, TResult>(Func<IRegion, T, TResult> func, T arg) => WithRegion(_itemsRegionName, func, arg);
 
         public IEnumerable<TItemView> Populate(IEnumerable<TItemModel> items)
         {
-            IEnumerable<TItemView> result = null;
-            WithItemsRegion( 
-                itemsRegion =>
+            IEnumerable<TItemView> result = WithItemsRegion( 
+                (itemsRegion, x) =>
                 {
                     itemsRegion.Clear();
-                    result = items.Select(item => ActivateItemView(itemsRegion, item)).ToArray();
-                });
+                    return items.Select(item => x.ActivateItemView(itemsRegion, item)).ToArray();
+                },
+                this);
             return result;
         }
 

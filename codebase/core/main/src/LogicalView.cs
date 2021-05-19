@@ -65,6 +65,27 @@ namespace Forest
             action.VerifyArgument(nameof(action)).IsNotNull();
             action.Invoke(new RegionImpl(this, regionName));
         }
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion<T>(string regionName, Action<IRegion, T> action, T arg)
+        {
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            action.VerifyArgument(nameof(action)).IsNotNull();
+            action.Invoke(new RegionImpl(this, regionName), arg);
+        }
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<TResult>(string regionName, Func<IRegion, TResult> func)
+        {
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            func.VerifyArgument(nameof(func)).IsNotNull();
+            return func.Invoke(new RegionImpl(this, regionName));
+        }
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<T, TResult>(string regionName, Func<IRegion, T, TResult> func, T arg)
+        {
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            func.VerifyArgument(nameof(func)).IsNotNull();
+            return func.Invoke(new RegionImpl(this, regionName), arg);
+        }
         
         public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_key));
 

@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Forest.ComponentModel;
 using Forest.Navigation;
 
 namespace Forest.UI.Navigation.Breadcrumbs
 {
     [View(Name)]
+    [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
     internal sealed class BreadcrumbsMenuView : AbstractNavigationMenuView
     {
         [ViewRegistryCallback]
@@ -24,24 +26,27 @@ namespace Forest.UI.Navigation.Breadcrumbs
             
         protected override void OnNavigationTreeChanged(NavigationTree tree)
         {
-            WithRegion(Regions.Items, itemsRegion =>
-            {
-                itemsRegion.Clear();
-                var nodes = tree.SelectedNodes.ToArray();
-                var selectedItems = nodes
-                    .Select((x, i) => new NavigationNode { Path = x, Selected = true, Offset = nodes.Length - i - 1 })
-                    .ToArray();
-                if (selectedItems.Length == 0)
+            WithRegion(
+                Regions.Items, 
+                (itemsRegion, t) =>
                 {
-                    return;
-                }
-                var last = selectedItems[selectedItems.Length - 1];
-                for (var i = 0; i < selectedItems.Length - 1; i++)
-                {
-                    itemsRegion.ActivateView<BreadcrumbsMenuNavigableItemView, NavigationNode>(selectedItems[i]);
-                }
-                itemsRegion.ActivateView<BreadcrumbsMenuItemView, NavigationNode>(last);
-            });
+                    itemsRegion.Clear();
+                    var nodes = t.SelectedNodes.ToArray();
+                    var selectedItems = nodes
+                        .Select((x, i) => new NavigationNode { Path = x, Selected = true, Offset = nodes.Length - i - 1 })
+                        .ToArray();
+                    if (selectedItems.Length == 0)
+                    {
+                        return;
+                    }
+                    var last = selectedItems[selectedItems.Length - 1];
+                    for (var i = 0; i < selectedItems.Length - 1; i++)
+                    {
+                        itemsRegion.ActivateView<BreadcrumbsMenuNavigableItemView, NavigationNode>(selectedItems[i]);
+                    }
+                    itemsRegion.ActivateView<BreadcrumbsMenuItemView, NavigationNode>(last);
+                },
+                tree);
         }
     }
 }

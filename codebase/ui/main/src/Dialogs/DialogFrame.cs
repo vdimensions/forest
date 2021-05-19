@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Forest.Navigation;
 
 namespace Forest.UI.Dialogs
@@ -11,12 +12,12 @@ namespace Forest.UI.Dialogs
         {
             public const string Close = "Close";
         }
+        
         public static class Regions
         {
             public const string Content = "Content";
         }
 
-        private TDialogView _view;
 
         protected DialogFrame(DialogOptions options) : base(options) { }
         protected DialogFrame() : base(DialogOptions.Default) { }
@@ -25,18 +26,24 @@ namespace Forest.UI.Dialogs
 
         void IDialogFrame.InitInternalView(Type viewType, object model) 
         {
-            WithRegion(Regions.Content, content => _view = content.ActivateView(viewType, model) as TDialogView);
+            WithRegion(
+                Regions.Content, 
+                (region, t) =>
+                {
+                    region.ActivateView(t.Item1, t.Item2);
+                }, 
+                Tuple.Create(viewType, model));
         }
 
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         [Command(Commands.Close)]
         internal Location CloseCommand()
         {
-            var result = _view?.OnClose();
+            var result = View?.OnClose();
             Close();
             return result;
         }
 
-        protected TDialogView View => _view;
+        protected TDialogView View => WithRegion(Regions.Content, r => r.Views.OfType<TDialogView>().SingleOrDefault());
     }
 }

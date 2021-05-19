@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.Messaging;
-using Forest.Messaging.TopicBased;
 
 namespace Forest.UI.Dialogs
 {
@@ -110,11 +109,12 @@ namespace Forest.UI.Dialogs
             {
                 WithRegion(
                     Regions.DialogArea, 
-                    dialogArea =>
+                    (dialogArea, msg) =>
                     {
-                        var view = (IDialogFrame) dialogArea.ActivateView(dialogMessage.FrameViewType, dialogMessage.DialogOptions);
-                        view.InitInternalView(dialogMessage.ViewType, dialogMessage.Model);
-                    });
+                        var view = (IDialogFrame) dialogArea.ActivateView(msg.FrameViewType, msg.DialogOptions);
+                        view.InitInternalView(msg.ViewType, msg.Model);
+                    },
+                    dialogMessage);
             }
         }
 
