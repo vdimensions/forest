@@ -153,7 +153,7 @@ namespace Forest.Messaging.Propagating
             
             EstablishHierarchy(subscriptionHandler);
 
-            if (_subscriptions.TryGetValue(subscriptionHandler.Node.Key, out var receiverSubscriptions))
+            if (!_subscriptions.TryGetValue(subscriptionHandler.Node.Key, out var receiverSubscriptions))
             {
                 _subscriptions.Add(subscriptionHandler.Node.Key, receiverSubscriptions = new Dictionary<Type, SubscriptionHandlerSet>());
             }
