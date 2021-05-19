@@ -55,6 +55,7 @@ namespace Forest.UI.Forms
         /// Gets the validation rules associated with the current form field.
         /// </summary>
         [Localized]
-        public IReadOnlyDictionary<ValidationRule, ValidationState> Validation { get; }
+        [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
+        public IReadOnlyDictionary<ValidationRule, ValidationState> Validation { get; internal set; }
     }
 }

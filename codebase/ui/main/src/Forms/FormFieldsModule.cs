@@ -1,6 +1,7 @@
 ﻿using Axle.Modularity;
 using Forest.ComponentModel;
 using Forest.UI.Forms.Input;
+using Forest.UI.Forms.Validation;
 
 namespace Forest.UI.Forms
 {
@@ -22,6 +23,7 @@ namespace Forest.UI.Forms
                 .RegisterFormField<SingleInputView, float>().RegisterFormField<NullableSingleInputView, float?>()
                 .RegisterFormField<DoubleInputView, double>().RegisterFormField<NullableDoubleInputView, double?>()
                 .RegisterFormField<DecimalInputView, decimal>().RegisterFormField<NullableDecimalInputView, decimal?>()
+                .Register<ValidationMessageView>()
                 ;
         }
     }

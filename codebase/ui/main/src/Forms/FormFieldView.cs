@@ -19,7 +19,7 @@ namespace Forest.UI.Forms
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IForestViewRegistry viewRegistry)
         {
-            viewRegistry.Register<TInput>().Register<ValidationMessageView>();
+            viewRegistry.Register<TInput>();
         }
 
         [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
