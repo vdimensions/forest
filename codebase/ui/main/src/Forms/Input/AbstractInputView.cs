@@ -23,23 +23,24 @@ namespace Forest.UI.Forms.Input
         }
 
         /// <inheritdoc />
-        public virtual bool Validate(FormField field, TValue value)
+        public virtual bool Validate(FormField field, TValue value) => field.Validate(value);
+        bool IFormInputView.Validate(FormField field, object value)
         {
             if (field == null)
             {
                 return true;
             }
-
             var isValid = field.Validation.Values.All(x => x.IsValid.GetValueOrDefault(true));
-            var result = field.Validate(value);
+            
+            var result =  value is TValue val ? Validate(field, val) : Validate(field, default(TValue));
+            
             if (result != isValid)
             {
                 Publish(ValidationStateChanged.Instance, PropagationTargets.Parent);
             }
+
             return result;
         }
-
-        bool IFormInputView.Validate(FormField field, object value) => value is TValue val ? Validate(field, val) : Validate(field, default(TValue));
 
         [Command(Commands.UpdateValue)]
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
