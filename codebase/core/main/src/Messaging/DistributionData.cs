@@ -15,12 +15,12 @@ namespace Forest.Messaging
         public DistributionData(params string[] topics) : this()
         {
             PropagationTargets = PropagationTargets.None;
-            Topics = topics;
+            Topics = topics ?? new string[0];
         }
         public DistributionData(PropagationTargets propagationTargets) : this()
         {
             PropagationTargets = propagationTargets;
-            Topics = null;
+            Topics = new string[0];
         }
 
         public bool Equals(DistributionData other)
