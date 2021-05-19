@@ -16,6 +16,8 @@ namespace Forest
         object Model { get; }
         
         string Name { get; }
+        
+        string Key { get; }
 
         string ResourceBundle { get; }
     }

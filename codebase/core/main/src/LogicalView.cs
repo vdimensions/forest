@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.Engine.Instructions;
+using Forest.Messaging.Propagating;
 
 namespace Forest
 {
@@ -45,10 +47,9 @@ namespace Forest
         }
 
         public void Publish<TM>(TM message, params string[] topics) 
-            => ExecutionContext.ProcessInstructions(new SendTopicBasedMessageInstruction(message, topics, _key));
-        
-        public void Propagate<TM>(TM message) 
-            => ExecutionContext.ProcessInstructions(new SendPropagatingMessageInstruction(message, _key));
+            => ExecutionContext.ProcessInstructions(new SendTopicBasedMessageInstruction(_key, message, topics));
+        public void Publish<TM>(TM message, PropagationTargets targets) 
+            => ExecutionContext.ProcessInstructions(new SendPropagatingMessageInstruction(_key, message, targets));
 
         [Obsolete("Use `WithRegion` instead")]
         public IRegion FindRegion(string name)
@@ -57,6 +58,7 @@ namespace Forest
             return new RegionImpl(this, name);
         }
 
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
         public void WithRegion(string regionName, Action<IRegion> action)
         {
             regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
@@ -125,7 +127,7 @@ namespace Forest
                 // TODO: How is this different than Resume(_state)
                 context.SetViewState(true, _key, _state);
             }
-            (_executionContext = context).SubscribeEvents(this);
+            (_executionContext = context).SubscribeEvents(this, node);
         }
 
         void IRuntimeView.DetachContext(IForestExecutionContext context)
@@ -172,7 +174,6 @@ namespace Forest
 
         object IRuntimeView.CreateModel() => CreateModel();
 
-        string IRuntimeView.Key => _key;
         IForestViewDescriptor IRuntimeView.Descriptor => _descriptor;
         IForestExecutionContext IRuntimeView.Context => ExecutionContext;
 
@@ -182,6 +183,7 @@ namespace Forest
 
         string IView.ResourceBundle => ResourceBundle;
         string IView.Name => _descriptor?.Name;
+        string IView.Key => _key;
     }
 
     public abstract class LogicalView : LogicalView<object>

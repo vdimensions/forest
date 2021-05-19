@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Forest.Dom;
 using Forest.Engine.Instructions;
 
 namespace Forest.Engine
 {
     internal interface IForestExecutionContext : IForestEngine, IDisposable
     {
-        void SubscribeEvents(IRuntimeView receiver);
+        void SubscribeEvents(IRuntimeView receiver, Tree.Node node);
         void UnsubscribeEvents(IRuntimeView receiver);
 
         ViewState? GetViewState(string nodeKey);

@@ -68,7 +68,7 @@ namespace Forest
         }
 
         public object Model { get; }
-        public ImmutableHashSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet.Create(StringComparer.Ordinal);
+        public ImmutableHashSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet<string>.Empty;
         public string ResourceBundle { get; }
     }
 }

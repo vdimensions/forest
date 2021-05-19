@@ -5,7 +5,7 @@ namespace Forest.Messaging.TopicBased
     internal interface ITopicEventBus : IEventBus
     {
         /// <summary>
-        /// Publishes a message trough the event bus
+        /// Publishes a message trough the event bus.
         /// </summary>
         /// <typeparam name="TMessage">
         /// The type of the message being pushed.

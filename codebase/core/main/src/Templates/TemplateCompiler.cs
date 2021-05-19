@@ -58,18 +58,12 @@ namespace Forest.Templates
             }
             if (message != null)
             {
-                yield return new SendTopicBasedMessageInstruction(message, new string[0], null);
-                yield return new SendTopicBasedMessageInstruction(
-                    new Location(templateName, message), 
-                    new [] { NavigationSystem.Messages.Topic }, 
-                    null);
+                yield return new SendTopicBasedMessageInstruction(null, message, new string[0]);
+                yield return new SendTopicBasedMessageInstruction(null, new Location(templateName, message), new [] { NavigationSystem.Messages.Topic });
             }
             else
             {
-                yield return new SendTopicBasedMessageInstruction(
-                    new Location(templateName), 
-                    new [] { NavigationSystem.Messages.Topic }, 
-                    null);
+                yield return new SendTopicBasedMessageInstruction(null, new Location(templateName), new [] { NavigationSystem.Messages.Topic });
             }
             yield return new ApplyNavigationStateInstruction(new Location(templateName, message));
         }

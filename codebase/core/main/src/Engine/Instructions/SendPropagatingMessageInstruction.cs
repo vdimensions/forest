@@ -1,5 +1,6 @@
 ﻿using System;
 using Axle.Extensions.Object;
+using Forest.Messaging.Propagating;
 
 namespace Forest.Engine.Instructions
 {
@@ -8,29 +9,33 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class SendPropagatingMessageInstruction : ForestInstruction
     {
-        public SendPropagatingMessageInstruction(object message, string senderInstanceID)
+        public SendPropagatingMessageInstruction(string key, object message, PropagationTargets targets)
         {
             Message = message;
-            SenderInstanceID = senderInstanceID;
+            Key = key;
+            Targets = targets;
         }
 
         protected override bool IsEqualTo(ForestInstruction other)
         {
             var cmp = StringComparer.Ordinal;
-            return other is SendTopicBasedMessageInstruction sm
-                && cmp.Equals(SenderInstanceID, sm.SenderInstanceID)
-                && Equals(Message, sm.Message);
+            return other is SendPropagatingMessageInstruction sm
+                && cmp.Equals(Key, sm.Key)
+                && Equals(Message, sm.Message)
+                && Equals(Targets, sm.Targets);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(SenderInstanceID, SenderInstanceID);
+        protected override int DoGetHashCode() => this.CalculateHashCode(Key, Message, Targets);
 
-        public void Deconstruct(out object message, out string senderInstanceID)
+        public void Deconstruct(out string key, out object message, out PropagationTargets targets)
         {
+            key = Key;
             message = Message;
-            senderInstanceID = SenderInstanceID;
+            targets = Targets;
         }
 
         public object Message { get; }
-        public string SenderInstanceID { get; }
+        public string Key { get; }
+        public PropagationTargets Targets { get; }
     }
 }

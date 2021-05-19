@@ -9,33 +9,33 @@ namespace Forest.Engine.Instructions
     #endif
     public sealed class SendTopicBasedMessageInstruction : ForestInstruction
     {
-        public SendTopicBasedMessageInstruction(object message, string[] topics, string senderInstanceID)
+        public SendTopicBasedMessageInstruction(string key, object message, string[] topics)
         {
             Message = message;
             Topics = topics;
-            SenderInstanceID = senderInstanceID;
+            Key = key;
         }
 
         protected override bool IsEqualTo(ForestInstruction other)
         {
             var cmp = StringComparer.Ordinal;
             return other is SendTopicBasedMessageInstruction sm
-                && cmp.Equals(SenderInstanceID, sm.SenderInstanceID)
+                && cmp.Equals(Key, sm.Key)
                 && Enumerable.SequenceEqual(Topics, sm.Topics, cmp)
                 && Equals(Message, sm.Message);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(SenderInstanceID, this.CalculateHashCode(Topics), SenderInstanceID);
+        protected override int DoGetHashCode() => this.CalculateHashCode(Key, this.CalculateHashCode(Topics), Message);
 
-        public void Deconstruct(out object message, out string[] topics, out string senderInstanceID)
+        public void Deconstruct(out string key, out object message, out string[] topics)
         {
             message = Message;
             topics = Topics;
-            senderInstanceID = SenderInstanceID;
+            key = Key;
         }
 
+        public string Key { get; }
         public object Message { get; }
         public string[] Topics { get; }
-        public string SenderInstanceID { get; }
     }
 }

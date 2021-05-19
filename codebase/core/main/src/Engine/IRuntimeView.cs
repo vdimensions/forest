@@ -12,7 +12,6 @@ namespace Forest.Engine
         void Destroy();
         object CreateModel();
 
-        string Key { get; }
         IForestViewDescriptor Descriptor { get; }
         IForestExecutionContext Context { get; }
     }

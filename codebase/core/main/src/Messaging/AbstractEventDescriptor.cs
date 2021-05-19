@@ -13,7 +13,7 @@ namespace Forest.Messaging
         protected AbstractEventDescriptor(IMethod handlerMethod)
         {
             handlerMethod.VerifyArgument(nameof(handlerMethod)).IsNotNull();
-            _parameter = (HandlerMethod = handlerMethod).GetParameters().SingleOrDefault();
+            _parameter = (HandlerMethod = handlerMethod).GetParameters().LastOrDefault();
         }
 
         protected void DoTrigger(IView sender, object arg)

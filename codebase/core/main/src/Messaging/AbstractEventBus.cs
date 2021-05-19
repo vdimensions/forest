@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Axle;
 using Axle.Collections;
 using Axle.Extensions.Object;
+using Forest.Messaging.Propagating;
 
 namespace Forest.Messaging
 {
@@ -17,14 +18,44 @@ namespace Forest.Messaging
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        protected readonly struct DistributionData : IEquatable<DistributionData>
+        {
+            public DistributionData(params string[] topics) : this()
+            {
+                PropagationTargets = null;
+                Topics = topics;
+            }
+            public DistributionData(PropagationTargets propagationTargets) : this()
+            {
+                PropagationTargets = propagationTargets;
+                Topics = null;
+            }
+
+            public bool Equals(DistributionData other)
+            {
+                return Nullable.Equals(PropagationTargets, other.PropagationTargets) 
+                    && Topics.SequenceEqual(other.Topics);
+            }
+            public override bool Equals(object obj) => obj is DistributionData other && Equals(other);
+
+            public override int GetHashCode()
+            {
+                return this.CalculateHashCode(PropagationTargets, this.CalculateHashCode(Topics));
+            }
+            
+            public PropagationTargets? PropagationTargets { get; }
+            public string[] Topics { get; }
+        }
+        
+        [StructLayout(LayoutKind.Sequential)]
         protected readonly struct Letter : IComparable<Letter>, IEquatable<Letter>
         {
-            public Letter(IView sender, object message, long timestamp, params string[] topics)
+            public Letter(IView sender, object message, long timestamp, DistributionData distributionData)
             {
                 Sender = sender;
                 Message = message;
                 Timestamp = timestamp;
-                Topics = topics;
+                DistributionData = distributionData;
             }
 
             public int CompareTo(Letter other) => Timestamp.CompareTo(other.Timestamp);
@@ -33,7 +64,10 @@ namespace Forest.Messaging
 
             public bool Equals(Letter other)
             {
-                return ReferenceEquals(Sender, other.Sender) && Equals(Message, other.Message) && Topics.SequenceEqual(other.Topics) && Timestamp == other.Timestamp;
+                return ReferenceEquals(Sender, other.Sender) 
+                    && Equals(Message, other.Message) 
+                    && Equals(DistributionData, other.DistributionData) 
+                    && Timestamp == other.Timestamp;
             }
 
             public override int GetHashCode()
@@ -43,7 +77,7 @@ namespace Forest.Messaging
                     var hashCode = 848193896;
                     hashCode = hashCode * -1521134295 + (Sender == null ? 0 : Sender.GetHashCode());
                     hashCode = hashCode * -1521134295 + Message.GetHashCode();
-                    hashCode = hashCode * -1521134295 + this.CalculateHashCode(Topics);
+                    hashCode = hashCode * -1521134295 + DistributionData.GetHashCode();
                     hashCode = hashCode * -1521134295 + Timestamp.GetHashCode();
                     return hashCode;
                 }
@@ -51,7 +85,7 @@ namespace Forest.Messaging
 
             public IView Sender { get; }
             public object Message { get; }
-            public string[] Topics { get; }
+            public DistributionData DistributionData { get; }
             private long Timestamp { get; }
         }
         

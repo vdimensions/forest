@@ -2,7 +2,7 @@
 {
     internal interface IPropagatingEventBus : IEventBus
     {
-        void Propagate<TMessage>(IView sender, TMessage message);
+        void Publish<TMessage>(IView sender, TMessage message, PropagationTargets propagationTargets);
         void Subscribe(ISubscriptionHandler subscriptionHandler);
     }
 }

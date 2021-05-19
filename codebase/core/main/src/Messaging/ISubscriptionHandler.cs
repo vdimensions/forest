@@ -9,5 +9,7 @@ namespace Forest.Messaging
         Type MessageType { get; }
         
         IView Receiver { get; }
+        
+        Tree.Node Node { get; }
     }
 }

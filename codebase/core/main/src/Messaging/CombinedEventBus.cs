@@ -42,11 +42,9 @@ namespace Forest.Messaging
         }
 
         public void Publish<TMessage>(IView sender, TMessage message, params string[] topics) => _topicEventBus.Publish(sender, message, topics);
+        public void Publish<TMessage>(IView sender, TMessage message, PropagationTargets targets) => _propagatingEventBus.Publish(sender, message, targets);
 
         public void Subscribe(ISubscriptionHandler subscriptionHandler, string topic) => _topicEventBus.Subscribe(subscriptionHandler, topic);
-
-        public void Propagate<TMessage>(IView sender, TMessage message) => _propagatingEventBus.Propagate(sender, message);
-
         public void Subscribe(ISubscriptionHandler subscriptionHandler) => _propagatingEventBus.Subscribe(subscriptionHandler);
     }
 }

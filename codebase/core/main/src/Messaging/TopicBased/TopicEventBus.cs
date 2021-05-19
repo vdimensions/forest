@@ -13,7 +13,7 @@ namespace Forest.Messaging.TopicBased
         protected override int ProcessMessage(Letter letter, ISet<ISubscriptionHandler> subscribersToIgnore)
         {
             var countHandled = 0;
-            if (letter.Topics.Length == 0)
+            if (letter.DistributionData.Topics.Length == 0)
             {
                 foreach (var topicSubscriptionHandlers in _subscriptions.Values.ToList())
                 {
@@ -22,7 +22,7 @@ namespace Forest.Messaging.TopicBased
             }
             else
             {
-                foreach (var topic in letter.Topics)
+                foreach (var topic in letter.DistributionData.Topics)
                 {
                     if (_subscriptions.TryGetValue(topic, out var topicSubscriptionHandlers))
                     {
@@ -47,7 +47,7 @@ namespace Forest.Messaging.TopicBased
         public void Publish<T>(IView sender, T message, params string[] topics)
         {
             message.VerifyArgument(nameof(message)).IsNotNull();
-            var letter = new Letter(sender, message, DateTime.UtcNow.Ticks, topics);
+            var letter = new Letter(sender, message, DateTime.UtcNow.Ticks, new DistributionData(topics));
             if (!MessageHistory.TryGetValue(letter, out _))
             {
                 MessageHistory[letter] = new SubscriptionHandlerSet();

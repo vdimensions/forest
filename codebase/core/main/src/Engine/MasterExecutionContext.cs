@@ -107,7 +107,7 @@ namespace Forest.Engine
 
         ViewState IForestExecutionContext.SetViewState(bool silent, string nodeKey, ViewState viewState) => _slave.SetViewState(silent, nodeKey, viewState);
 
-        void IForestExecutionContext.SubscribeEvents(IRuntimeView receiver) => _slave.SubscribeEvents(receiver);
+        void IForestExecutionContext.SubscribeEvents(IRuntimeView receiver, Tree.Node node) => _slave.SubscribeEvents(receiver, node);
 
         void IForestExecutionContext.UnsubscribeEvents(IRuntimeView receiver) => _slave.UnsubscribeEvents(receiver);
     }

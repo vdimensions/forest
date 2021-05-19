@@ -77,8 +77,8 @@ namespace Forest.Engine
                 new CombinedEventBus(), 
                 initialState.Tree,
                 initialState.LogicalViews,
-                executionContextReference,
-                initialState.Location) { }
+                initialState.Location,
+                executionContextReference) { }
         private SlaveExecutionContext(
                 IForestContext context,
                 PhysicalViewDomProcessor physicalViewDomProcessor,
@@ -86,8 +86,8 @@ namespace Forest.Engine
                 CombinedEventBus eventBus,
                 Tree tree,
                 ImmutableDictionary<string, IRuntimeView> logicalViews,
-                IForestExecutionContext executionContextReference,
-                Location location)
+                Location location,
+                IForestExecutionContext executionContextReference)
         {
             _scope = new TreeChangeScope(_tree = tree);
             _context = context;
@@ -293,7 +293,7 @@ namespace Forest.Engine
 
                         case SendTopicBasedMessageInstruction smi:
                             IRuntimeView topicMessageSender = null;
-                            if (string.IsNullOrEmpty(smi.SenderInstanceID) || _logicalViews.TryGetValue(smi.SenderInstanceID, out topicMessageSender))
+                            if (string.IsNullOrEmpty(smi.Key) || _logicalViews.TryGetValue(smi.Key, out topicMessageSender))
                             {
                                 _eventBus.Publish(topicMessageSender, smi.Message, smi.Topics);
                             }
@@ -301,9 +301,9 @@ namespace Forest.Engine
 
                         case SendPropagatingMessageInstruction smi:
                             IRuntimeView propagatingMessageSender = null;
-                            if (string.IsNullOrEmpty(smi.SenderInstanceID) || _logicalViews.TryGetValue(smi.SenderInstanceID, out propagatingMessageSender))
+                            if (string.IsNullOrEmpty(smi.Key) || _logicalViews.TryGetValue(smi.Key, out propagatingMessageSender))
                             {
-                                _eventBus.Propagate(propagatingMessageSender, smi.Message);
+                                _eventBus.Publish(propagatingMessageSender, smi.Message);
                             }
                             break;
 
@@ -368,15 +368,15 @@ namespace Forest.Engine
             }
         }
 
-        public void SubscribeEvents(IRuntimeView receiver)
+        public void SubscribeEvents(IRuntimeView receiver, Tree.Node node)
         {
             foreach (var evt in receiver.Descriptor.TopicEvents)
             {
-                _eventBus.Subscribe(new EventHandler(evt, receiver), evt.Topic);
+                _eventBus.Subscribe(new EventHandler(evt, receiver, node), evt.Topic);
             }
             foreach (var evt in receiver.Descriptor.PropagatingEvents)
             {
-                _eventBus.Subscribe(new EventHandler(evt, receiver));
+                _eventBus.Subscribe(new EventHandler(evt, receiver, node));
             }
         }
 
@@ -415,7 +415,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendTopicBasedMessageInstruction(new NavigateBack(), new []{NavigationSystem.Messages.Topic}, null)
+                new SendTopicBasedMessageInstruction(null, new NavigateBack(), new []{NavigationSystem.Messages.Topic})
             };
             ProcessInstructions(instructions);
         }
@@ -428,7 +428,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendTopicBasedMessageInstruction(new NavigateBack(offset), new []{NavigationSystem.Messages.Topic}, null)
+                new SendTopicBasedMessageInstruction(null, new NavigateBack(offset), new []{NavigationSystem.Messages.Topic})
             };
             ProcessInstructions(instructions);
         }
@@ -440,7 +440,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendTopicBasedMessageInstruction(new NavigateUp(), new [] { NavigationSystem.Messages.Topic }, null)
+                new SendTopicBasedMessageInstruction(null, new NavigateUp(), new [] { NavigationSystem.Messages.Topic })
             };
             ProcessInstructions(instructions);
         }
@@ -453,7 +453,7 @@ namespace Forest.Engine
             }
             var instructions = new ForestInstruction[]
             {
-                new SendTopicBasedMessageInstruction(new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic }, null)
+                new SendTopicBasedMessageInstruction(null, new NavigateUp(offset), new [] { NavigationSystem.Messages.Topic })
             };
             ProcessInstructions(instructions);
         }
@@ -513,7 +513,7 @@ namespace Forest.Engine
         {
             var instructions = new ForestInstruction[]
             {
-                new SendTopicBasedMessageInstruction(message, new string[0], null)
+                new SendTopicBasedMessageInstruction(null, message, new string[0])
             };
             ProcessInstructions(instructions);
         }
