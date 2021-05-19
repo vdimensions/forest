@@ -12,7 +12,7 @@ namespace Forest.UI.Forms
     [Localized]
     public sealed class FormField : IGlobalizationCloneable
     {
-        internal FormField(string name, object defaultValue, IReadOnlyDictionary<ValidationRule, ValidationState> validation)
+        internal FormField(string name, object defaultValue, IReadOnlyDictionary<ValidationRule, ValidationConfig> validation)
         {
             Name = name;
             DefaultValue = defaultValue;
@@ -24,7 +24,7 @@ namespace Forest.UI.Forms
             return new FormField(
                 Name, 
                 DefaultValue,
-                new Dictionary<ValidationRule, ValidationState>(
+                new Dictionary<ValidationRule, ValidationConfig>(
                     Validation.ToDictionary(
                         x => x.Key, 
                         x => x.Value)))
@@ -55,7 +55,6 @@ namespace Forest.UI.Forms
         /// Gets the validation rules associated with the current form field.
         /// </summary>
         [Localized]
-        [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Global")]
-        public IReadOnlyDictionary<ValidationRule, ValidationState> Validation { get; internal set; }
+        public IReadOnlyDictionary<ValidationRule, ValidationConfig> Validation { get; }
     }
 }

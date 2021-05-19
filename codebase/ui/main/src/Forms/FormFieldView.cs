@@ -44,13 +44,13 @@ namespace Forest.UI.Forms
         private void ActivateValidationViews(IRegion region)
         {
             region.Clear();
-            foreach (var validationState in Model.Validation.Values)
+            foreach (var validationConfig in Model.Validation.Values)
             {
-                if (validationState.IsValid.GetValueOrDefault(true))
+                if (validationConfig.IsValid.GetValueOrDefault(true))
                 {
                     continue;
                 }
-                region.ActivateView<ValidationMessageView, string>(validationState.Message ?? validationState.Rule.ToString());
+                region.ActivateView<ValidationMessageView, ValidationState>(new ValidationState(ResourceBundle, validationConfig.Rule));
             }
         }
 

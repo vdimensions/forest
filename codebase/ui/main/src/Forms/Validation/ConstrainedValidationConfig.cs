@@ -3,9 +3,9 @@
 namespace Forest.UI.Forms.Validation
 {
     [Localized]
-    public sealed class ConstrainedValidationState<T> : ValidationState
+    public sealed class ConstrainedValidationConfig<T> : ValidationConfig
     {
-        internal ConstrainedValidationState(ValidationRule rule, T constraint) : base(rule)
+        internal ConstrainedValidationConfig(ValidationRule rule, T constraint) : base(rule)
         {
             Constraint = constraint;
         }
