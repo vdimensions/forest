@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Forest.Messaging.Propagating;
 using Forest.UI.Forms.Validation;
 
@@ -22,7 +23,22 @@ namespace Forest.UI.Forms.Input
         }
 
         /// <inheritdoc />
-        public virtual bool Validate(FormField field, TValue value) => field?.Validate(value) ?? true;
+        public virtual bool Validate(FormField field, TValue value)
+        {
+            if (field == null)
+            {
+                return true;
+            }
+
+            var isValid = field.Validation.Values.All(x => x.IsValid.GetValueOrDefault(true));
+            var result = field.Validate(value);
+            if (result != isValid)
+            {
+                Publish(ValidationStateChanged.Instance, PropagationTargets.Parent);
+            }
+            return result;
+        }
+
         bool IFormInputView.Validate(FormField field, object value) => value is TValue val ? Validate(field, val) : Validate(field, default(TValue));
 
         [Command(Commands.UpdateValue)]
@@ -44,7 +60,6 @@ namespace Forest.UI.Forms.Input
         public override void UpdateValue(TValue value)
         {
             UpdateModel(_ => value);
-            Publish(ValidationStateChanged.Instance, PropagationTargets.Parent);
         }
 
         public override TValue Value => Model;
