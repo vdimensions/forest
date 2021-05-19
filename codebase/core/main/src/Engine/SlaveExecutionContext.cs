@@ -303,7 +303,7 @@ namespace Forest.Engine
                             IRuntimeView propagatingMessageSender = null;
                             if (string.IsNullOrEmpty(smi.Key) || _logicalViews.TryGetValue(smi.Key, out propagatingMessageSender))
                             {
-                                _eventBus.Publish(propagatingMessageSender, smi.Message);
+                                _eventBus.Publish(propagatingMessageSender, smi.Message, smi.Targets);
                             }
                             break;
 
