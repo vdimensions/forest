@@ -52,8 +52,9 @@ namespace Forest
 
         public bool Equals(ViewState other)
         {
-            return Enumerable.SequenceEqual(DisabledCommands, other.DisabledCommands) 
-                && Equals(Model, other.Model);
+            return Equals(Model, other.Model)
+                && (ReferenceEquals(DisabledCommands, other.DisabledCommands) || DisabledCommands.SetEquals(other.DisabledCommands))
+                && StringComparer.Ordinal.Equals(ResourceBundle, other.ResourceBundle);
         }
         public override bool Equals(object obj) => obj is ViewState other && Equals(other);
 
