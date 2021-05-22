@@ -97,7 +97,7 @@ namespace Forest.ComponentModel
 
         private readonly ConcurrentDictionary<Type, IForestViewDescriptor> _descriptorsByType = new ConcurrentDictionary<Type, IForestViewDescriptor>();
         private readonly ConcurrentDictionary<string, Type> _namedDescriptors = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
-        private readonly ConcurrentBag<ForestViewRegistryListenerWrapper> _viewRegistryListeners = new ConcurrentBag<ForestViewRegistryListenerWrapper>();
+        private readonly ConcurrentQueue<ForestViewRegistryListenerWrapper> _viewRegistryListeners = new ConcurrentQueue<ForestViewRegistryListenerWrapper>();
         private readonly ILogger _logger;
 
         public ViewRegistry(ILogger logger)
@@ -203,7 +203,7 @@ namespace Forest.ComponentModel
         public void AddListener(_ForestViewRegistryListener listener)
         {
             var w = new ForestViewRegistryListenerWrapper(listener);
-            _viewRegistryListeners.Add(w);
+            _viewRegistryListeners.Enqueue(w);
             foreach (var viewDescriptor in _descriptorsByType.Values)
             {
                 w.OnViewRegistered(viewDescriptor);
@@ -212,7 +212,7 @@ namespace Forest.ComponentModel
         public void AddListener(IForestViewRegistryListener listener)
         {
             var w = new ForestViewRegistryListenerWrapper(listener);
-            _viewRegistryListeners.Add(w);
+            _viewRegistryListeners.Enqueue(w);
             foreach (var viewDescriptor in _descriptorsByType.Values)
             {
                 w.OnViewRegistered(viewDescriptor);
