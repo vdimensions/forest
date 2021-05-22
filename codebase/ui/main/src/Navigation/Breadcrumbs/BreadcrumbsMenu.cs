@@ -10,6 +10,7 @@ namespace Forest.UI.Navigation.Breadcrumbs
     internal sealed class BreadcrumbsMenuView : AbstractNavigationMenuView
     {
         [ViewRegistryCallback]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal static void RegisterViews(IForestViewRegistry registry)
         {
             registry

@@ -21,6 +21,7 @@ using Axle.Resources.Properties.Extraction;
 using Axle.Resources.ResX.Extraction;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
+using Axle.Text.Parsing;
 using Forest.ComponentModel;
 using Forest.Dom;
 using Forest.Globalization.Configuration;
@@ -45,7 +46,8 @@ namespace Forest.Globalization
             }
             catch (Exception e)
             {
-                logger.Warn($"An error occurred while trying to create CultureInfo object from language code '{cultureName}'. The default system locale '{defaultLocale}' will be used instead.");
+                logger.Warn(
+                    $"An error occurred while trying to create CultureInfo object from language code '{cultureName}'. The default system locale '{defaultLocale}' will be used instead.", e);
                 return null;
             }
         }
@@ -228,19 +230,28 @@ namespace Forest.Globalization
             #else
             var asm = viewType.Assembly;
             #endif
-            var viewBundle = _resourceManager.Bundles.Configure(viewDescriptor.Name);
             if (_config.AutoRegisterLocalizationBundles)
             {
-                var propertiesDir = "Properties";
-                viewBundle
-                    .Register(asm, $"{propertiesDir}/")
-                    .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{viewDescriptor.Name}/"))
-                    .Extractors
-                        .Register(new PropertiesExtractor($"{viewDescriptor.Name}.properties"))
-                        .Register(new PropertiesExtractor($"Strings.properties/{viewDescriptor.Name}/"))
-                        .Register(new ResXResourceExtractor())
-                        ;
+                RegisterViewBundle(viewDescriptor.Name, asm, uriParser);
             }
+        }
+
+        private void RegisterViewBundle(string bundleName, Assembly asm, IParser<Uri> uriParser)
+        {
+            if (_resourceManager.Bundles[bundleName] != null)
+            {
+                return;
+            }
+            var viewBundle = _resourceManager.Bundles.Configure(bundleName);
+            var propertiesDir = "Properties";
+            viewBundle
+                .Register(asm, $"{propertiesDir}/")
+                .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{bundleName}/"))
+                .Extractors
+                    .Register(new PropertiesExtractor($"{bundleName}.properties"))
+                    .Register(new PropertiesExtractor($"Strings.properties/{bundleName}/"))
+                    .Register(new ResXResourceExtractor())
+                    ;
         }
     }
 }
