@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Axle.Caching;
 using Axle.Extensions.String;
@@ -31,7 +33,11 @@ namespace Forest.Globalization
     [Module]
     [RequiresResources]
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
-    internal sealed class ForestGlobalizationModule : IDomProcessor, _ForestViewRegistryListener, IDisposable
+    internal sealed class ForestGlobalizationModule 
+        : IDomProcessor, 
+          _ForestViewRegistryListener,
+          IForestGlobalizationConfigurer,
+          IDisposable
     {
         private static CultureScope CreateCultureScope(string cultureName, ILogger logger)
         {
@@ -57,6 +63,7 @@ namespace Forest.Globalization
         private readonly ILogger _logger;
         private readonly IDocumentBinder _binder;
         private readonly ICacheManager _cacheManager;
+        private readonly ConcurrentQueue<IForestGlobalizationConfigurer> _listeners;
 
         public ForestGlobalizationModule(
             ResourceManager resourceManager,
@@ -68,9 +75,24 @@ namespace Forest.Globalization
             _logger = logger;
             _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
             _cacheManager = new SimpleCacheManager();
+            _listeners = new ConcurrentQueue<IForestGlobalizationConfigurer>();
+            OnModuleDependencyInitialized(this);
         }
         public ForestGlobalizationModule(ResourceManager resourceManager, ILogger logger) 
             : this(resourceManager, new ForestGlobalizationConfig(), logger) { }
+
+        [ModuleDependencyInitialized]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal void OnModuleDependencyInitialized(IForestGlobalizationConfigurer configurer)
+        {
+            _listeners.Enqueue(configurer);
+        }
+        [ModuleDependencyTerminated]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
+        internal void OnModuleDependencyTerminated(IForestGlobalizationConfigurer configurer)
+        {
+            // TODO
+        }
 
         void IDisposable.Dispose()
         {
@@ -223,33 +245,42 @@ namespace Forest.Globalization
 
         public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
         {
-            var viewType = viewDescriptor.ViewType;
-            var uriParser = new Axle.Text.Parsing.UriParser();
-            #if NETSTANDARD || NET45_OR_NEWER
-            var asm = viewType.GetTypeInfo().Assembly;
-            #else
-            var asm = viewType.Assembly;
-            #endif
             if (_config.AutoRegisterLocalizationBundles)
             {
-                RegisterViewBundle(viewDescriptor.Name, asm, uriParser);
+                RegisterViewBundle(viewDescriptor.Name, viewDescriptor);
             }
         }
 
-        private void RegisterViewBundle(string bundleName, Assembly asm, IParser<Uri> uriParser)
+        private void RegisterViewBundle(string bundleName, IForestViewDescriptor viewDescriptor)
         {
             if (_resourceManager.Bundles.Contains(bundleName))
             {
                 return;
             }
             var viewBundle = _resourceManager.Bundles.Configure(bundleName);
+            foreach (var globalizationListener in _listeners)
+            {
+                globalizationListener.ConfigureViewResourceBundle(viewBundle, viewDescriptor);
+            }
+        }
+
+        public void ConfigureViewResourceBundle(
+            IConfigurableBundleContent bundle,
+            IForestViewDescriptor viewDescriptor)
+        {
+            #if NETSTANDARD || NET45_OR_NEWER
+            var asm = viewDescriptor.ViewType.GetTypeInfo().Assembly;
+            #else
+            var asm = viewDescriptor.ViewType.Assembly;
+            #endif
+            var uriParser = new Axle.Text.Parsing.UriParser();
             var propertiesDir = "Properties";
-            viewBundle
+            bundle
                 .Register(asm, $"{propertiesDir}/")
-                .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{bundleName}/"))
+                .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{bundle.Bundle}/"))
                 .Extractors
-                    .Register(new PropertiesExtractor($"{bundleName}.properties"))
-                    .Register(new PropertiesExtractor($"Strings.properties/{bundleName}/"))
+                    .Register(new PropertiesExtractor($"{bundle.Bundle}.properties"))
+                    .Register(new PropertiesExtractor($"Strings.properties/{bundle.Bundle}/"))
                     .Register(new ResXResourceExtractor())
                     ;
         }
