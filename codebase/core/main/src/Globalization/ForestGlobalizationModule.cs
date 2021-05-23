@@ -238,7 +238,7 @@ namespace Forest.Globalization
 
         private void RegisterViewBundle(string bundleName, Assembly asm, IParser<Uri> uriParser)
         {
-            if (_resourceManager.Bundles[bundleName] != null)
+            if (_resourceManager.Bundles.Contains(bundleName))
             {
                 return;
             }
