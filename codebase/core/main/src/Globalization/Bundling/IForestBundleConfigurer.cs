@@ -1,10 +1,10 @@
 ﻿using Axle.Resources.Bundling;
 using Forest.ComponentModel;
 
-namespace Forest.Globalization
+namespace Forest.Globalization.Bundling
 {
-    [RequiresForestGlobalization]
-    public interface IForestGlobalizationConfigurer
+    [ForestBundleConfig(IsPublic = false)]
+    public interface IForestBundleConfigurer
     {
         void ConfigureViewResourceBundle(IConfigurableBundleContent bundle, IForestViewDescriptor viewDescriptor);
     }

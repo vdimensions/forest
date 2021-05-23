@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Axle.Caching;
 using Axle.Extensions.String;
@@ -23,20 +21,20 @@ using Axle.Resources.Properties.Extraction;
 using Axle.Resources.ResX.Extraction;
 using Axle.Text.Documents;
 using Axle.Text.Documents.Binding;
-using Axle.Text.Parsing;
 using Forest.ComponentModel;
 using Forest.Dom;
+using Forest.Globalization.Bundling;
 using Forest.Globalization.Configuration;
 
 namespace Forest.Globalization
 {
     [Module]
     [RequiresResources]
+    [Requires(typeof(ForestBundleConfigModule))]
     [ModuleConfigSection(typeof(ForestGlobalizationConfig), "Forest.Globalization")]
     internal sealed class ForestGlobalizationModule 
         : IDomProcessor, 
           _ForestViewRegistryListener,
-          IForestGlobalizationConfigurer,
           IDisposable
     {
         private static CultureScope CreateCultureScope(string cultureName, ILogger logger)
@@ -63,36 +61,26 @@ namespace Forest.Globalization
         private readonly ILogger _logger;
         private readonly IDocumentBinder _binder;
         private readonly ICacheManager _cacheManager;
-        private readonly ConcurrentQueue<IForestGlobalizationConfigurer> _listeners;
+        private readonly ForestBundleConfigModule _bundleConfig;
 
-        public ForestGlobalizationModule(
-            ResourceManager resourceManager,
+        public ForestGlobalizationModule(ResourceManager resourceManager,
+            ForestBundleConfigModule bundleConfig,
             ForestGlobalizationConfig config,
             ILogger logger)
         {
             _resourceManager = resourceManager;
+            _bundleConfig = bundleConfig;
             _config = config;
             _logger = logger;
             _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
             _cacheManager = new SimpleCacheManager();
-            _listeners = new ConcurrentQueue<IForestGlobalizationConfigurer>();
-            OnModuleDependencyInitialized(this);
         }
-        public ForestGlobalizationModule(ResourceManager resourceManager, ILogger logger) 
-            : this(resourceManager, new ForestGlobalizationConfig(), logger) { }
+        public ForestGlobalizationModule(
+                ResourceManager resourceManager,
+                ForestBundleConfigModule bundleConfig, 
+                ILogger logger) 
+            : this(resourceManager, bundleConfig, new ForestGlobalizationConfig(), logger) { }
 
-        [ModuleDependencyInitialized]
-        [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal void OnModuleDependencyInitialized(IForestGlobalizationConfigurer configurer)
-        {
-            _listeners.Enqueue(configurer);
-        }
-        [ModuleDependencyTerminated]
-        [SuppressMessage("ReSharper", "UnusedMember.Global")]
-        internal void OnModuleDependencyTerminated(IForestGlobalizationConfigurer configurer)
-        {
-            // TODO
-        }
 
         void IDisposable.Dispose()
         {
@@ -258,10 +246,7 @@ namespace Forest.Globalization
                 return;
             }
             var viewBundle = _resourceManager.Bundles.Configure(bundleName);
-            foreach (var globalizationListener in _listeners)
-            {
-                globalizationListener.ConfigureViewResourceBundle(viewBundle, viewDescriptor);
-            }
+            ConfigureViewResourceBundle(viewBundle, viewDescriptor);
         }
 
         public void ConfigureViewResourceBundle(
@@ -283,6 +268,7 @@ namespace Forest.Globalization
                     .Register(new PropertiesExtractor($"Strings.properties/{bundle.Bundle}/"))
                     .Register(new ResXResourceExtractor())
                     ;
+            _bundleConfig.ConfigureViewResourceBundle(bundle, viewDescriptor);
         }
     }
 }
