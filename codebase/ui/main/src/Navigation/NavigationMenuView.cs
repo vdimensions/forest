@@ -26,7 +26,7 @@ namespace Forest.UI.Navigation
         
         public override void Load()
         {
-            Engine.RegisterSystemView<NavigationSystem.View>();
+            //Context.RegisterSystemView<NavigationSystem.View>();
             base.Load();
         }
 

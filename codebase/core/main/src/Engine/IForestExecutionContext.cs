@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Forest.Dom;
 using Forest.Engine.Instructions;
 
 namespace Forest.Engine
@@ -10,8 +9,9 @@ namespace Forest.Engine
         void SubscribeEvents(IRuntimeView receiver, Tree.Node node);
         void UnsubscribeEvents(IRuntimeView receiver);
 
-        ViewState? GetViewState(string nodeKey);
+        ViewState GetViewState(string nodeKey);
         ViewState SetViewState(bool silent, string nodeKey, ViewState viewState);
+        ViewState UpdateViewState(string nodeKey, Func<ViewState, ViewState> updateFn, bool silent);
 
         void ProcessInstructions(params ForestInstruction[] instructions);
 

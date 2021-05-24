@@ -10,10 +10,10 @@ namespace Forest
 {
     public abstract class LogicalView<T> : IView<T>, IRuntimeView
     {
+        [Obsolete]
         private ViewState _state;
-        private IForestExecutionContext _executionContext;
-        private IForestViewDescriptor _descriptor;
         private string _key;
+        private _ForestViewContext<T> _context;
 
         private LogicalView(ViewState state)
         {
@@ -38,18 +38,15 @@ namespace Forest
                 }
                 finally
                 {
-                    if (_executionContext != null)
-                    {
-                        ((IRuntimeView) this).DetachContext(_executionContext);
-                    }
+                    ((IRuntimeView) this).DetachContext();
                 }
             }
         }
 
         public void Publish<TM>(TM message, params string[] topics) 
-            => ExecutionContext.ProcessInstructions(new SendTopicBasedMessageInstruction(_key, message, topics));
+            => _context.ProcessInstructions(new SendTopicBasedMessageInstruction(_key, message, topics));
         public void Publish<TM>(TM message, PropagationTargets targets) 
-            => ExecutionContext.ProcessInstructions(new SendPropagatingMessageInstruction(_key, message, targets));
+            => _context.ProcessInstructions(new SendPropagatingMessageInstruction(_key, message, targets));
 
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
         public void WithRegion(string regionName, Action<IRegion> action) => WithRegion(regionName, string.Empty, action);
@@ -91,72 +88,46 @@ namespace Forest
             return func.Invoke(new Region(this, regionName, resourceBundle), arg);
         }
         
-        public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_key));
+        public void Close() => _context.ProcessInstructions(new DestroyViewInstruction(_key));
 
-        public T UpdateModel(Func<T, T> updateFunc)
-        {
-            var newModel = updateFunc.Invoke(Model);
-            if (_executionContext != null)
-            {
-                var vs = _executionContext.GetViewState(_key);
-                _state = _executionContext.SetViewState(false, _key, vs.HasValue 
-                    ? ViewState.UpdateModel(vs.Value, newModel) 
-                    : ViewState.Create(newModel));
-            }
-            else
-            {
-                _state = ViewState.Create(newModel);
-            }
-            return (T) _state.Model;
-        }
+        [Obsolete]
+        public T UpdateModel(Func<T, T> updateFunc) => _context.Model = updateFunc(_context.Model);
 
         public virtual void Load() { }
         public virtual void Resume() { }
         
         protected virtual T CreateModel() => default(T);
 
-        internal IForestExecutionContext ExecutionContext => _executionContext ?? throw new InvalidOperationException("No execution context is available.");
+        public T Model => Context == null ? (T) _state.Model : Context.Model;
 
-        protected IForestEngine Engine => ExecutionContext;
-
-        public T Model => (T) _state.Model;
+        [Obsolete]
         T IView<T>.Model => Model;
+        [Obsolete]
         object IView.Model => Model;
 
-        void IRuntimeView.AttachContext(Tree.Node node, IForestViewDescriptor vd, IForestExecutionContext context)
+        void IRuntimeView.AttachContext(
+            _ForestViewContext viewContext, 
+            Tree.Node node, 
+            IForestExecutionContext context)
         {
-            if (_executionContext != null)
+            if (_context != null)
             {
                 throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.ViewHandle));
             }
+
+            _context = ForestViewContext.Wrap<T>(viewContext);
             _key = node.Key;
-            _descriptor = vd;
-            var vs = context.GetViewState(_key);
-            if (vs.HasValue)
+            if (_state.Model != null)
             {
-                _state = vs.Value;
+                viewContext.Model = _state.Model;
             }
-            else
-            {
-                // TODO: How is this different than Resume(_state)
-                context.SetViewState(true, _key, _state);
-            }
-            (_executionContext = context).SubscribeEvents(this, node);
+            _state = context.GetViewState(_key);
         }
 
-        void IRuntimeView.DetachContext(IForestExecutionContext context)
+        void IRuntimeView.DetachContext()
         {
-            if (!ReferenceEquals(context, _executionContext))
-            {
-                throw new InvalidOperationException("The provided context is not correct");
-            }
-            context.UnsubscribeEvents(this);
-            var vs = context.GetViewState(_key);
-            if (vs.HasValue)
-            {
-                _state = vs.Value;
-            }
-            _executionContext = null;
+            _context.UnsubscribeEvents(this);
+            _context = null;
         }
 
         void IRuntimeView.Load(ViewState viewState)
@@ -167,7 +138,7 @@ namespace Forest
         
         void IRuntimeView.Resume(ViewState viewState)
         {
-            _state = ExecutionContext.SetViewState(true, _key, viewState);
+            //_state = _context.SetViewState(true, _key, viewState);
             Resume();
         }
 
@@ -179,24 +150,23 @@ namespace Forest
             }
             finally
             {
-                if (_executionContext != null)
-                {
-                    ((IRuntimeView) this).DetachContext(_executionContext);
-                }
+                ((IRuntimeView) this).DetachContext();
             }
         }
 
         object IRuntimeView.CreateModel() => CreateModel();
 
-        IForestViewDescriptor IRuntimeView.Descriptor => _descriptor;
-        IForestExecutionContext IRuntimeView.Context => ExecutionContext;
+        IForestViewDescriptor IRuntimeView.Descriptor => _context?.Descriptor;
+        _ForestViewContext IRuntimeView.Context => _context;
 
         void IDisposable.Dispose() => DoDispose(true);
 
-        string IView.Name => _descriptor?.Name;
-        string IView.Key => _key;
+        string IView.Name => _context?.Descriptor?.Name;
+        string IView.Key => _context?.Key;
 
-        protected string ResourceBundle => _state.ResourceBundle;
+        protected IForestViewContext<T> Context => _context;
+        IForestViewContext IView.Context => _context;
+        IForestViewContext<T> IView<T>.Context => Context;
     }
 
     public abstract class LogicalView : LogicalView<object>

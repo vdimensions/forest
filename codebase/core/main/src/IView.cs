@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Engine;
 using Forest.Messaging.Propagating;
 
 namespace Forest
@@ -13,17 +14,23 @@ namespace Forest
 
         void Close();
     
+        [Obsolete]
         object Model { get; }
         
         string Name { get; }
         
         string Key { get; }
+        
+        IForestViewContext Context { get; }
     }
     
     public interface IView<T> : IView
     {
-        T UpdateModel(Func<T, T> updateFunc); 
+        T UpdateModel(Func<T, T> updateFunc);
+        
+        IForestViewContext<T> Context { get; }
 
+        [Obsolete]
         new T Model { get; }
     }
 }

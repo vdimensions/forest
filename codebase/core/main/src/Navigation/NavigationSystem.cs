@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Axle.Collections.Immutable;
 using Forest.Messaging;
-using Forest.Messaging.TopicBased;
 using Forest.Navigation.Messages;
 
 namespace Forest.Navigation
@@ -127,16 +126,16 @@ namespace Forest.Navigation
             internal void OnNavigateBack(NavigateBack message)
             {
                 Location navigationHistoryEntry = null;
-                OnNavigationTreeChanged(UpdateModel(m => m.Pop(message.Offset, out navigationHistoryEntry)));
+                OnNavigationTreeChanged(Context.Model = Context.Model.Pop(message.Offset, out navigationHistoryEntry));
                 if (navigationHistoryEntry != null)
                 {
                     if (navigationHistoryEntry.Value != null)
                     {
-                        Engine.Navigate(navigationHistoryEntry.Path, navigationHistoryEntry.Value);
+                        Context.Navigate(navigationHistoryEntry.Path, navigationHistoryEntry.Value);
                     }
                     else
                     {
-                        Engine.Navigate(navigationHistoryEntry.Path);
+                        Context.Navigate(navigationHistoryEntry.Path);
                     }
                 }
             }
@@ -151,11 +150,11 @@ namespace Forest.Navigation
                 {
                     if (navigationHistoryEntry.Value != null)
                     {
-                        Engine.Navigate(navigationHistoryEntry.Path, navigationHistoryEntry.Value);
+                        Context.Navigate(navigationHistoryEntry.Path, navigationHistoryEntry.Value);
                     }
                     else
                     {
-                        Engine.Navigate(navigationHistoryEntry.Path);
+                        Context.Navigate(navigationHistoryEntry.Path);
                     }
                 }
             }

@@ -39,7 +39,7 @@ namespace Forest.UI.Forms
             WithRegion(Regions.Validation, UpdateValidationViews);
         }
 
-        private void ActivateFormInputView(IRegion region) => region.Clear().ActivateView<TInput>(ResourceBundle);
+        private void ActivateFormInputView(IRegion region) => region.Clear().ActivateView<TInput>(Context.ResourceBundle);
 
         private void UpdateValidationViews(IRegion region)
         {
@@ -52,7 +52,7 @@ namespace Forest.UI.Forms
                 }
                 region.ActivateView<ValidationMessageView, string>(
                     validationConfig.Message ?? validationConfig.Rule.ToString(),
-                    ResourceBundle);
+                    Context.ResourceBundle);
             }
         }
 

@@ -4,9 +4,9 @@ using Axle.Collections.Immutable;
 #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
 using System.Runtime.Serialization;
 #endif
-using Forest.Engine;
 using Forest.Navigation;
 using Forest.UI;
+using ViewContextTuple = System.Tuple<Forest.Engine._ForestViewContext, Forest.Engine.IRuntimeView>;
 
 namespace Forest.StateManagement
 {
@@ -33,7 +33,7 @@ namespace Forest.StateManagement
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [IgnoreDataMember]
         #endif
-        private readonly ImmutableDictionary<string, IRuntimeView> _logicalViews;
+        private readonly ImmutableDictionary<string, ViewContextTuple> _logicalViews;
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [IgnoreDataMember]
@@ -46,7 +46,7 @@ namespace Forest.StateManagement
             Guid stateID, 
             Location location,
             Tree tree,
-            ImmutableDictionary<string, IRuntimeView> logicalViews,
+            ImmutableDictionary<string, ViewContextTuple> logicalViews,
             IReadOnlyDictionary<string, IPhysicalView> physicalViews)
         {
             _stateID = stateID;
@@ -55,11 +55,11 @@ namespace Forest.StateManagement
             _logicalViews = logicalViews;
             _physicalViews = physicalViews;
         }
-        public ForestState() : this(Guid.Empty, Location.Empty, Tree.Root, ImmutableDictionary<string, IRuntimeView>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
+        public ForestState() : this(Guid.Empty, Location.Empty, Tree.Root, ImmutableDictionary<string, ViewContextTuple>.Empty, ImmutableDictionary<string, IPhysicalView>.Empty) { }
 
         internal Guid StateID => _stateID;
         internal Tree Tree => _tree;
-        internal ImmutableDictionary<string, IRuntimeView> LogicalViews => _logicalViews;
+        internal ImmutableDictionary<string, ViewContextTuple> LogicalViews => _logicalViews;
         public IReadOnlyDictionary<string, IPhysicalView> PhysicalViews => _physicalViews;
         public Location Location => _location;
     }

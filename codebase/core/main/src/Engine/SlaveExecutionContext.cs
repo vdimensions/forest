@@ -15,6 +15,7 @@ using Forest.StateManagement;
 using Forest.Templates;
 using Forest.UI;
 using EventHandler = Forest.Messaging.EventHandler;
+using ViewContextTuple = System.Tuple<Forest.Engine._ForestViewContext, Forest.Engine.IRuntimeView>;
 
 namespace Forest.Engine
 {
@@ -24,7 +25,7 @@ namespace Forest.Engine
         private static IList<ForestInstruction> VerifySecurityAccess(
             IForestSecurityManager forestSecurityManager, 
             IForestViewRegistry viewRegistry, 
-            ImmutableDictionary<string,IRuntimeView> logicalViews,
+            ImmutableDictionary<string, ViewContextTuple> logicalViews,
             ForestInstruction[] instructions)
         {
             IList<ForestInstruction> failedInstructions = new List<ForestInstruction>();
@@ -41,7 +42,7 @@ namespace Forest.Engine
                         break;
                     case InvokeCommandInstruction ici:
                         if (logicalViews.TryGetValue(ici.Key, out var view) 
-                            && view.Descriptor.Commands.TryGetValue(ici.CommandName, out var commandDescriptor)
+                            && view.Item1.Descriptor.Commands.TryGetValue(ici.CommandName, out var commandDescriptor)
                             && !forestSecurityManager.HasAccess(commandDescriptor))
                         {
                             failedInstructions.Add(ici);
@@ -60,7 +61,7 @@ namespace Forest.Engine
         private readonly IDomProcessor _globalizationDomProcessor;
         private readonly TreeChangeScope _scope;
 
-        private ImmutableDictionary<string, IRuntimeView> _logicalViews;
+        private ImmutableDictionary<string, ViewContextTuple> _logicalViews;
         private Tree _tree;
         private int _nestedCalls;
         private Location _location;
@@ -85,7 +86,7 @@ namespace Forest.Engine
                 IDomProcessor globalizationDomProcessor,
                 CombinedEventBus eventBus,
                 Tree tree,
-                ImmutableDictionary<string, IRuntimeView> logicalViews,
+                ImmutableDictionary<string, ViewContextTuple> logicalViews,
                 Location location,
                 IForestExecutionContext executionContextReference)
         {
@@ -105,8 +106,8 @@ namespace Forest.Engine
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
-                var descriptor = view.Descriptor;
-                view.AttachContext(node, descriptor, _executionContextReference);
+                var descriptor = view.Item1.Descriptor;
+                SupplyViewContext(view, node, descriptor);
             }
         }
 
@@ -118,7 +119,7 @@ namespace Forest.Engine
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
-                view.DetachContext(_executionContextReference);
+                view.Item2.DetachContext();
                 if (changedViews.Contains(key))
                 {
                     changedNodes.Add(node);
@@ -141,7 +142,7 @@ namespace Forest.Engine
             (_scope as IDisposable).Dispose();
         }
 
-        private void RemoveNode(TreeChangeScope scope, Tree tree, ImmutableDictionary<string, IRuntimeView> views, string nodeKey, out Tree newTree, out ImmutableDictionary<string, IRuntimeView> newViews)
+        private void RemoveNode(TreeChangeScope scope, Tree tree, ImmutableDictionary<string, ViewContextTuple> views, string nodeKey, out Tree newTree, out ImmutableDictionary<string, ViewContextTuple> newViews)
         {
             newTree = tree.Remove(scope, nodeKey, out var removedNodes);
             newViews = views;
@@ -151,7 +152,7 @@ namespace Forest.Engine
                 if (newViews.TryGetValue(key, out var view))
                 {
                     newViews = newViews.Remove(key);
-                    view.Destroy();
+                    view.Item2.Destroy();
                 }
             }
         }
@@ -229,8 +230,8 @@ namespace Forest.Engine
                     try
                     {
                         _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, defaultViewState, out var node);
-                        viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
-                        _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
+                        var context = SupplyViewContext(new ViewContextTuple(null, viewInstance), node, viewDescriptor);
+                        _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, context);
                         viewInstance.Load(node.ViewState);
                     }
                     catch
@@ -276,6 +277,20 @@ namespace Forest.Engine
             }
         }
 
+        private ViewContextTuple SupplyViewContext(ViewContextTuple viewData, Tree.Node node, IForestViewDescriptor viewDescriptor)
+        {
+            if (viewData.Item1 == null)
+            {
+                viewData = new ViewContextTuple(new ForestViewContext(node, viewDescriptor, _executionContextReference), viewData.Item2);
+            }
+            viewData.Item2.AttachContext(
+                viewData.Item1,
+                node,
+                _executionContextReference);
+            _executionContextReference.SubscribeEvents(viewData.Item2, node);
+            return viewData;
+        }
+
         public void ProcessInstructions(ForestInstruction[] instructions) => ProcessInstructions(null, instructions);
 
         [SuppressMessage("ReSharper", "CognitiveComplexity")]
@@ -298,18 +313,20 @@ namespace Forest.Engine
                             break;
 
                         case SendTopicBasedMessageInstruction smi:
-                            IRuntimeView topicMessageSender = null;
-                            if (string.IsNullOrEmpty(smi.Key) || _logicalViews.TryGetValue(smi.Key, out topicMessageSender))
+                            if (string.IsNullOrEmpty(smi.Key))
                             {
-                                _eventBus.Publish(topicMessageSender, smi.Message, smi.Topics);
+                                _eventBus.Publish(null, smi.Message, smi.Topics);
+                            }
+                            else if (_logicalViews.TryGetValue(smi.Key, out var topicMessageSender))
+                            {
+                                _eventBus.Publish(topicMessageSender.Item2, smi.Message, smi.Topics);
                             }
                             break;
 
                         case SendPropagatingMessageInstruction smi:
-                            IRuntimeView propagatingMessageSender = null;
-                            if (string.IsNullOrEmpty(smi.Key) || _logicalViews.TryGetValue(smi.Key, out propagatingMessageSender))
+                            if (!string.IsNullOrEmpty(smi.Key) && _logicalViews.TryGetValue(smi.Key, out var propagatingMessageSender))
                             {
-                                _eventBus.Publish(propagatingMessageSender, smi.Message, smi.Targets);
+                                _eventBus.Publish(propagatingMessageSender.Item2, smi.Message, smi.Targets);
                             }
                             break;
 
@@ -328,18 +345,18 @@ namespace Forest.Engine
                                 throw new ForestSecurityException("Unable to perform the requested operation");
                             }
                             
-                            if (!_logicalViews.TryGetValue(ici.Key, out var view))
+                            if (!_logicalViews.TryGetValue(ici.Key, out var viewData))
                             {
                                 throw new CommandSourceNotFoundException(ici);
                             }
-                            if (!view.Descriptor.Commands.TryGetValue(ici.CommandName, out var cmd))
+                            if (!viewData.Item1.Descriptor.Commands.TryGetValue(ici.CommandName, out var cmd))
                             {
                                 throw new CommandNotFoundException(ici);
                             }
 
                             try
                             {
-                                var navigationResult = cmd.Invoke(view, ici.CommandArg);
+                                var navigationResult = cmd.Invoke(viewData.Item2, ici.CommandArg);
                                 if (navigationResult != null && !string.IsNullOrEmpty(navigationResult.Path))
                                 {
                                     _executionContextReference.Navigate(navigationResult);
@@ -353,10 +370,10 @@ namespace Forest.Engine
                         
                         case ApplyNavigationStateInstruction ansi:
                             var targetView = _logicalViews.Values
-                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Descriptor.Name, ansi.Location.Path));
-                            if (targetView != null && targetView is INavigationStateProvider nsp)
+                                .SingleOrDefault(x => StringComparer.Ordinal.Equals(x.Item1.Descriptor.Name, ansi.Location.Path));
+                            if (targetView != default(ViewContextTuple) && targetView.Item2 is INavigationStateProvider nsp)
                             {
-                                _eventBus.Publish(targetView, nsp, NavigationSystem.Messages.Topic);
+                                _eventBus.Publish(targetView.Item2, nsp, NavigationSystem.Messages.Topic);
                             }
                             break;
                         
@@ -387,7 +404,7 @@ namespace Forest.Engine
         }
 
         public void UnsubscribeEvents(IRuntimeView receiver) => _eventBus.Unsubscribe(receiver);
-        
+
         public void Navigate(Location location)
         {
             var path = location.Path;
@@ -470,7 +487,7 @@ namespace Forest.Engine
                 _context.ViewRegistry.Describe(typeof(T)) ??
                 _context.ViewRegistry.Register<T>().Describe(typeof(T));
             return _logicalViews.Values
-                .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
+                .Where(x => ReferenceEquals(x.Item1.Descriptor, systemViewDescriptor))
                 .Cast<T>()
                 .SingleOrDefault() ?? (T) ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name),Tree.Node.Shell.Region, Tree.Node.Shell.Key, null, null));
         }
@@ -484,18 +501,32 @@ namespace Forest.Engine
                 _context.ViewRegistry.Describe(viewType) ??
                 _context.ViewRegistry.Register(viewType).Describe(viewType);
             return _logicalViews.Values
-                .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
+                .Where(x => ReferenceEquals(x.Item1.Descriptor, systemViewDescriptor))
+                .Select(x => x.Item2)
                 .Cast<IView>()
                 .SingleOrDefault() ?? ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name), Tree.Node.Shell.Region, Tree.Node.Shell.Key, null, null));
         }
 
-        public ViewState? GetViewState(string nodeKey) => 
-            _tree.TryFind(nodeKey, out var node) ? node.ViewState : null as ViewState?;
 
+        public ViewState GetViewState(string nodeKey)
+        {
+            if (!_tree.TryFind(nodeKey, out var node))
+            {
+                throw new InvalidOperationException(string.Format("Non-existing view state for node {0}.", nodeKey));
+            }
+            return node.ViewState;
+        }
+        
         public ViewState SetViewState(bool silent, string nodeKey, ViewState viewState)
         {
             _tree = _tree.SetViewState(_scope, nodeKey, viewState);
             return viewState;
+        }
+
+        ViewState IForestExecutionContext.UpdateViewState(string nodeKey, Func<ViewState, ViewState> updateFn, bool silent)
+        {
+            _tree = _tree.UpdateViewState(_scope, nodeKey, updateFn);
+            return GetViewState(nodeKey);
         }
 
         public IView ActivateView(InstantiateViewInstruction instantiateViewInstruction)
@@ -505,14 +536,14 @@ namespace Forest.Engine
                 instantiateViewInstruction
             };
             ProcessInstructions(instructions);
-            return _logicalViews[instantiateViewInstruction.NodeKey];
+            return _logicalViews[instantiateViewInstruction.NodeKey].Item2;
         }
 
         public IEnumerable<IView> GetRegionContents(string nodeKey, string region)
         {
             return _tree
                 .Filter(n => StringComparer.Ordinal.Equals(n.Region, region), nodeKey)
-                .Select(x => _logicalViews[x.Key] as IView);
+                .Select(x => _logicalViews[x.Key].Item2 as IView);
         }
 
         void IMessageDispatcher.SendMessage<T>(T message)
