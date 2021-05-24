@@ -33,6 +33,11 @@ namespace Forest.Dom
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
         [DataMember]
         #endif
+        private readonly ViewHandle _handle;
+
+        #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
+        [DataMember]
+        #endif
         private readonly string _region;
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
@@ -68,6 +73,7 @@ namespace Forest.Dom
         internal DomNode(
                 string instanceId, 
                 string name, 
+                ViewHandle handle,
                 string region, 
                 object model, 
                 DomNode parent, 
@@ -78,6 +84,7 @@ namespace Forest.Dom
         {
             _instanceID = instanceId;
             _name = name;
+            _handle = handle;
             _region = region;
             _model = model;
             _parent = parent;
@@ -86,14 +93,28 @@ namespace Forest.Dom
             _revision = revision;
             _resourceBundle = resourceBundle;
         }
-
+        
         private bool DictionaryKeysEquals(IEnumerable<string> left, IEnumerable<string> right, IEqualityComparer<string> comparer)
         {
             if (ReferenceEquals(left, right))
             {
                 return true;
             }
+            #if !UNITY_WEBGL
             return ImmutableHashSet.CreateRange(comparer, left).SymmetricExcept(right).Count == 0;
+            #else
+            var leftA = left.ToArray();
+            var rightA = right.ToArray();
+            if (leftA.Length != rightA.Length)
+            {
+                return false;
+            }
+            if (leftA.Except(rightA, comparer).Any() || rightA.Except(leftA, comparer).Any())
+            {
+                return false;
+            }
+            return true;
+            #endif
         }
 
         public bool Equals(DomNode other)
@@ -111,6 +132,7 @@ namespace Forest.Dom
             var comparer = StringComparer.Ordinal;
             return comparer.Equals(_instanceID, other._instanceID)
                 && comparer.Equals(_name, other._name)
+                && Equals(_handle, other._handle)
                 && comparer.Equals(_region, other._region)
                 && Equals(_model, other._model)
                 && (ReferenceEquals(_parent, other._parent) || comparer.Equals(_parent._instanceID, other._parent._instanceID))
@@ -127,6 +149,7 @@ namespace Forest.Dom
             {
                 var hashCode = _instanceID != null ? _instanceID.GetHashCode() : 0;
                 hashCode = (hashCode * 397) ^ (_name != null ? _name.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_handle != null ? _handle.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_region != null ? _region.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_model != null ? _model.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (_parent != null ? _parent.InstanceID.GetHashCode() : 0);
@@ -139,6 +162,7 @@ namespace Forest.Dom
 
         public string InstanceID => _instanceID;
         public string Name => _name;
+        public ViewHandle Handle => _handle;
         public string Region => _region;
         public object Model => _model;
         public DomNode Parent => _parent;

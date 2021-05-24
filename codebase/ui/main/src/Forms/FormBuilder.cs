@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Axle.Collections.Immutable;
-using Axle.Extensions.String;
 using Axle.Reflection;
 using Axle.Verification;
 using Forest.UI.Forms.Input;
@@ -15,10 +14,6 @@ namespace Forest.UI.Forms
     internal sealed class FormBuilder : IFormBuilder
     {
         private static readonly IEqualityComparer<string> Comparer = StringComparer.Ordinal;
-        private static Func<KeyValuePair<string, IFormFieldView>, string> ToFieldName(string formName)
-        {
-            return (x) => x.Key.TakeAfterFirst(formName).TrimStart('.');
-        }
 
         private readonly IRegion _region;
         private readonly string _formName;
@@ -42,11 +37,8 @@ namespace Forest.UI.Forms
                         v.Model.Name,
                         v))
                     .ToArray();
-                var fields = ImmutableDictionary.CreateRange(Comparer, pairs);
-                var toFieldName = ToFieldName(formName);
-                var fieldNames = ImmutableList.CreateRange(pairs.Select(toFieldName));
-                _fields = fields;
-                _fieldNames = fieldNames;
+                _fields = ImmutableDictionary.CreateRange(Comparer, pairs);
+                _fieldNames = ImmutableList.CreateRange(pairs.Select(kvp => kvp.Key));
             }
             else
             {
@@ -103,10 +95,9 @@ namespace Forest.UI.Forms
         {
             var collectedValues = ImmutableDictionary.Create<string, object>(Comparer);
             var collectedErrors = ImmutableDictionary.Create<string, ValidationRule[]>(Comparer);
-            var toFieldName = ToFieldName(_formName);
             foreach (var kvp in _fields)
             {
-                var fieldName = toFieldName(kvp);
+                var fieldName = kvp.Key;
                 var fieldView = kvp.Value;
                 var inputView = fieldView.FormInputView;
                 if (fieldView.Validate())

@@ -38,7 +38,7 @@ namespace Forest.Dom
             foreach (var node in tree)
             {
                 var viewDescriptor = _context.ViewRegistry.Describe(node.ViewHandle);
-                var viewState = node.ViewState.Value;
+                var viewState = node.ViewState;
                 var commands = viewDescriptor.Commands.Values
                     .Where(cmd => !viewState.DisabledCommands.Contains(cmd.Name))
                     .Where(_context.SecurityManager.HasAccess)
@@ -47,6 +47,7 @@ namespace Forest.Dom
                 var domNode = new DomNode(
                     node.Key, 
                     viewDescriptor.Name,
+                    node.ViewHandle,
                     node.Region,
                     viewState.Model,
                     nodeMap.TryGetValue(node.ParentKey, out var parent) ? parent : null, 
@@ -78,6 +79,7 @@ namespace Forest.Dom
                     var newParent = new DomNode(
                         parentDomNode.InstanceID, 
                         parentDomNode.Name, 
+                        parentDomNode.Handle, 
                         parentDomNode.Region, 
                         parentDomNode.Model, 
                         parentDomNode.Parent, 
@@ -87,7 +89,8 @@ namespace Forest.Dom
                         parentDomNode.Revision);
                     var newNode = new DomNode(
                         domNode.InstanceID, 
-                        domNode.Name, 
+                        domNode.Name,
+                        domNode.Handle,
                         domNode.Region, 
                         domNode.Model, 
                         newParent, 
@@ -117,7 +120,17 @@ namespace Forest.Dom
                 {
                     if (dn.Parent != null && changedNodes.TryGetValue(dn.Parent.InstanceID, out var updatedParent))
                     {
-                        dn = new DomNode(dn.InstanceID, dn.Name, dn.Region, dn.Model, updatedParent, dn.Regions, dn.Commands, dn.ResourceBundle, dn.Revision);
+                        dn = new DomNode(
+                            dn.InstanceID,
+                            dn.Name,
+                            dn.Handle,
+                            dn.Region,
+                            dn.Model,
+                            updatedParent,
+                            dn.Regions,
+                            dn.Commands,
+                            dn.ResourceBundle,
+                            dn.Revision);
                     }
 
                     if (isNodeChanged)

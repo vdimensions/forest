@@ -216,6 +216,7 @@ namespace Forest.Globalization
                 return new DomNode(
                     node.InstanceID, 
                     node.Name, 
+                    node.Handle,
                     node.Region, 
                     newModel, 
                     node.Parent, 
@@ -239,7 +240,7 @@ namespace Forest.Globalization
             else
             {
                 var bundleName = node.ResourceBundle.TrimStart($"{node.Name}.", StringComparison.Ordinal);
-                RegisterViewBundle(bundleName, _viewRegistry.Describe(node.Name));
+                RegisterViewBundle(bundleName, _viewRegistry.Describe(node.Handle));
                 ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, bundleName);
                 return new TextDocumentSubset(textDocument, node.Name);
             }

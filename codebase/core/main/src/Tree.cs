@@ -35,10 +35,8 @@ namespace Forest
         [DebuggerDisplay("{this." + nameof(ToString) + "()}")]
         public struct Node : IComparable<Node>, IEquatable<Node>
         {
-            internal static Node Create(string key, ViewHandle viewHandle, string region, object model, Node parent)
+            internal static Node Create(string key, ViewHandle viewHandle, string region, ViewState viewState, Node parent)
             {
-                var viewState = model == null ? null : new ViewState?(Forest.ViewState.Create(model));
-                
                 return new Node(parent.Key, region, viewHandle, key, viewState, 0u);
             }
 
@@ -50,8 +48,8 @@ namespace Forest
             private readonly string _parentKey;
 
             internal Node(Node parent, string region, ViewHandle viewHandle, string key) 
-                : this(parent.Key, region, viewHandle, key, null, 0u) { }
-            private Node(string parentKey, string region, ViewHandle viewHandle, string key, ViewState? viewState, uint revision)
+                : this(parent.Key, region, viewHandle, key, ViewState.Empty, 0u) { }
+            private Node(string parentKey, string region, ViewHandle viewHandle, string key, ViewState viewState, uint revision)
             {
                 _key = key;
                 _parentKey = parentKey;
@@ -103,7 +101,7 @@ namespace Forest
             /// </summary>
             public string Key => _key ?? Guid.Empty.ToString();
             
-            public ViewState? ViewState { get; }
+            public ViewState ViewState { get; }
             public uint Revision { get; }
 
             //public string RegionSegment => ToStringBuilder(true).ToString();
@@ -176,7 +174,7 @@ namespace Forest
             ViewHandle viewHandle, 
             string region, 
             string ownerKey, 
-            object model, 
+            ViewState viewState, 
             out Node node)
         {
             if (!TryFind(ownerKey, out var parent))
@@ -187,7 +185,7 @@ namespace Forest
             var tree = TryInsert(
                 scope, 
                 this, 
-                Node.Create(key, viewHandle, region, model, parent), out var result) ? result : this;
+                Node.Create(key, viewHandle, region, viewState, parent), out var result) ? result : this;
             node = tree[key].Value;
             return tree;
         }
@@ -267,7 +265,7 @@ namespace Forest
                 throw new InvalidOperationException("Cannot find node!");
             }
             return new Tree(
-                _nodes.Remove(key).Add(key, scope.UpdateRevision(targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState ?? ViewState.Empty)))),
+                _nodes.Remove(key).Add(key, scope.UpdateRevision(targetNode.SetViewState(viewStateUpdateFn(targetNode.ViewState)))),
                 _hierarchy);
         }
 

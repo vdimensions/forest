@@ -220,15 +220,18 @@ namespace Forest.Engine
                     var viewInstance = ivi.Model != null
                         ? (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
                         : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
+                    var baseViewState = viewInstance.Model == null
+                        ? ViewState.Empty
+                        : ViewState.Create(viewInstance.Model);
+                    var defaultViewState = string.IsNullOrEmpty(ivi.ResourceBundle)
+                        ? baseViewState
+                        : ViewState.AssignResourceBundle(baseViewState, ivi.ResourceBundle);
                     try
                     {
-                        _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, viewInstance.Model, out var node);
+                        _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, defaultViewState, out var node);
                         viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
                         _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
-                        var defaultViewState = string.IsNullOrEmpty(ivi.ResourceBundle)
-                            ? ViewState.Empty
-                            : ViewState.AssignResourceBundle(ViewState.Empty, ivi.ResourceBundle);
-                        viewInstance.Load(node.ViewState.GetValueOrDefault(defaultViewState));
+                        viewInstance.Load(node.ViewState);
                     }
                     catch
                     {
