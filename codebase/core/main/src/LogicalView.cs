@@ -12,7 +12,6 @@ namespace Forest
     {
         [Obsolete]
         private ViewState _state;
-        private string _key;
         private _ForestViewContext<T> _context;
 
         private LogicalView(ViewState state)
@@ -44,9 +43,9 @@ namespace Forest
         }
 
         public void Publish<TM>(TM message, params string[] topics) 
-            => _context.ProcessInstructions(new SendTopicBasedMessageInstruction(_key, message, topics));
+            => _context.ProcessInstructions(new SendTopicBasedMessageInstruction(_context.Key, message, topics));
         public void Publish<TM>(TM message, PropagationTargets targets) 
-            => _context.ProcessInstructions(new SendPropagatingMessageInstruction(_key, message, targets));
+            => _context.ProcessInstructions(new SendPropagatingMessageInstruction(_context.Key, message, targets));
 
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
         public void WithRegion(string regionName, Action<IRegion> action) => WithRegion(regionName, string.Empty, action);
@@ -88,7 +87,7 @@ namespace Forest
             return func.Invoke(new Region(this, regionName, resourceBundle), arg);
         }
         
-        public void Close() => _context.ProcessInstructions(new DestroyViewInstruction(_key));
+        public void Close() => _context.ProcessInstructions(new DestroyViewInstruction(_context.Key));
 
         [Obsolete]
         public T UpdateModel(Func<T, T> updateFunc) => _context.Model = updateFunc(_context.Model);
@@ -116,13 +115,12 @@ namespace Forest
             }
 
             _context = ForestViewContext.Wrap<T>(viewContext);
-            _key = node.Key;
             // TODO: terrible, terrible workaround
             if (_state.Model != null && viewContext.Model == null)
             {
                 viewContext.Model = _state.Model;
             }
-            _state = context.GetViewState(_key);
+            _state = context.GetViewState(viewContext.Key);
         }
 
         void IRuntimeView.DetachContext()
