@@ -117,7 +117,8 @@ namespace Forest
 
             _context = ForestViewContext.Wrap<T>(viewContext);
             _key = node.Key;
-            if (_state.Model != null)
+            // TODO: terrible, terrible workaround
+            if (_state.Model != null && viewContext.Model == null)
             {
                 viewContext.Model = _state.Model;
             }
