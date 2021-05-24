@@ -15,9 +15,11 @@ namespace Forest.Engine
         T RegisterSystemView<T>() where T: class, ISystemView;
         IView RegisterSystemView(Type viewType);
         
-        void UnsubscribeEvents(IRuntimeView view);
+        void UnsubscribeEvents(_View view);
         
-        IForestViewDescriptor  Descriptor { get; }
+        Tree.Node Node { get; }
+        
+        _ForestViewDescriptor Descriptor { get; }
     }
     internal interface _ForestViewContext<T> : IForestViewContext<T>, _ForestViewContext
     {
@@ -70,7 +72,7 @@ namespace Forest.Engine
             public T1 RegisterSystemView<T1>() where T1 : class, ISystemView => _context.RegisterSystemView<T1>();
             public IView RegisterSystemView(Type viewType) => _context.RegisterSystemView(viewType);
 
-            public void UnsubscribeEvents(IRuntimeView view) => _context.UnsubscribeEvents(view);
+            public void UnsubscribeEvents(_View view) => _context.UnsubscribeEvents(view);
 
             object IForestViewContext.Model
             {
@@ -88,16 +90,17 @@ namespace Forest.Engine
 
             public string Key => _context.Key;
 
-            IForestViewDescriptor _ForestViewContext.Descriptor => _context.Descriptor;
+            _ForestViewDescriptor _ForestViewContext.Descriptor => _context.Descriptor;
+            Tree.Node _ForestViewContext.Node => _context.Node;
         }
 
         internal static _ForestViewContext<T> Wrap<T>(_ForestViewContext context) => new Wrapped<T>(context);
         
         private Tree.Node _node;
-        private readonly IForestViewDescriptor _descriptor;
+        private readonly _ForestViewDescriptor _descriptor;
         private readonly IForestExecutionContext _executionContext;
 
-        public ForestViewContext(Tree.Node node, IForestViewDescriptor descriptor, IForestExecutionContext executionContext)
+        public ForestViewContext(Tree.Node node, _ForestViewDescriptor descriptor, IForestExecutionContext executionContext)
         {
             _node = node;
             _descriptor = descriptor;
@@ -126,7 +129,7 @@ namespace Forest.Engine
         public IView RegisterSystemView(Type viewType)
             => _executionContext.RegisterSystemView(viewType);
 
-        public void UnsubscribeEvents(IRuntimeView view) => _executionContext.UnsubscribeEvents(view);
+        public void UnsubscribeEvents(_View view) => _executionContext.UnsubscribeEvents(view);
 
         public object Model
         {
@@ -138,6 +141,8 @@ namespace Forest.Engine
 
         public string Key => _node.Key;
 
-        IForestViewDescriptor _ForestViewContext.Descriptor => _descriptor;
+        _ForestViewDescriptor _ForestViewContext.Descriptor => _descriptor;
+        
+        Tree.Node _ForestViewContext.Node => _node;
     }
 }

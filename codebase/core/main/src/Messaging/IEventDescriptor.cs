@@ -1,10 +1,11 @@
 ﻿using System;
+using Forest.Engine;
 
 namespace Forest.Messaging
 {
-    public interface IEventDescriptor
+    internal interface IEventDescriptor
     {
-        void Trigger(IView view, object message);
+        void Trigger(_ForestViewContext context, IView view, object message);
         
         Type MessageType { get; }
     }

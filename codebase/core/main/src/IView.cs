@@ -9,6 +9,8 @@ namespace Forest
     /// and the possible user interactions (commands) allowed.
     public interface IView : IDisposable
     {
+        void Load(IForestViewContext context);
+        
         void Publish<TM>(TM message, params string[] topics);
         void Publish<TM>(TM message, PropagationTargets propagationTargets);
 
@@ -21,13 +23,17 @@ namespace Forest
         
         string Key { get; }
         
+        [Obsolete]
         IForestViewContext Context { get; }
     }
     
     public interface IView<T> : IView
     {
+        void Load(IForestViewContext<T> context);
+        
         T UpdateModel(Func<T, T> updateFunc);
         
+        [Obsolete]
         IForestViewContext<T> Context { get; }
 
         [Obsolete]

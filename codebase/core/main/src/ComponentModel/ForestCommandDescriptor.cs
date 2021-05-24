@@ -3,6 +3,7 @@ using System.Linq;
 using Axle.Logging;
 using Axle.Reflection;
 using Axle.Verification;
+using Forest.Engine;
 using Forest.Navigation;
 
 namespace Forest.ComponentModel
@@ -19,8 +20,9 @@ namespace Forest.ComponentModel
                 _parameter = (_commandMethod = commandMethod.VerifyArgument(nameof(commandMethod)).IsNotNull().Value).GetParameters().SingleOrDefault();
             }
 
-            Location IForestCommandDescriptor.Invoke(IView sender, object arg)
+            Location IForestCommandDescriptor.Invoke(IForestViewContext context, IView sender, object arg)
             {
+                // TODO: use context
                 try
                 {
                     object navResult;
@@ -67,7 +69,7 @@ namespace Forest.ComponentModel
                 Redirect = redirect;
             }
 
-            Location IForestCommandDescriptor.Invoke(IView sender, object arg) => Redirect;
+            Location IForestCommandDescriptor.Invoke(IForestViewContext context, IView sender, object arg) => Redirect;
             
             public bool TryResolveRedirect(object _, out Location redirect)
             {
@@ -90,7 +92,7 @@ namespace Forest.ComponentModel
                 _parameter = (_commandMethod = commandMethod.VerifyArgument(nameof(commandMethod)).IsNotNull().Value).GetParameters().SingleOrDefault();
             }
 
-            public Location Invoke(IView sender, object arg)
+            public Location Invoke(IForestViewContext context, IView sender, object arg)
             {
                 try
                 {
@@ -122,7 +124,7 @@ namespace Forest.ComponentModel
 
             bool IForestCommandDescriptor.TryResolveRedirect(object arg, out Location redirect)
             {
-                redirect = Invoke(null, arg);
+                redirect = Invoke(null, null, arg);
                 return redirect != null;
             }
 
@@ -130,7 +132,12 @@ namespace Forest.ComponentModel
             public Type ArgumentType => _parameter?.Type;
         }
         
-        public static IForestCommandDescriptor Create(Type viewType, Type viewModelType, CommandAttribute attribute, IMethod commandMethod, ILogger logger)
+        public static IForestCommandDescriptor Create(
+            Type viewType, 
+            Type viewModelType, 
+            CommandAttribute attribute, 
+            IMethod commandMethod, 
+            ILogger logger)
         {
             if (commandMethod.Declaration.IsStatic() && commandMethod.ReturnType == typeof(Location))
             {
@@ -167,7 +174,7 @@ namespace Forest.ComponentModel
             _impl = impl;
         }
 
-        public Location Invoke(IView sender, object arg) => _impl.Invoke(sender, arg);
+        public Location Invoke(IForestViewContext context, IView sender, object arg) => _impl.Invoke(context, sender, arg);
 
         public bool TryResolveRedirect(object arg, out Location redirect) 
             => _impl.TryResolveRedirect(arg, out redirect);

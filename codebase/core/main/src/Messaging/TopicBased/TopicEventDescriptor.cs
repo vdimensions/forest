@@ -1,6 +1,7 @@
 ﻿using System;
 using Axle.Reflection;
 using Axle.Verification;
+using Forest.Engine;
 
 namespace Forest.Messaging.TopicBased
 {
@@ -11,11 +12,11 @@ namespace Forest.Messaging.TopicBased
             Topic = topic.VerifyArgument(nameof(topic)).IsNotNull();
         }
         
-        public void Trigger(IView sender, object arg)
+        public void Trigger(_ForestViewContext context, IView sender, object arg)
         {
             try
             {
-                DoTrigger(sender, arg);
+                DoTrigger(context, sender, arg);
             }
             catch (Exception e)
             {

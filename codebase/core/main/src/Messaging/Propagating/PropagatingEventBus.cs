@@ -159,11 +159,11 @@ namespace Forest.Messaging.Propagating
         {
             subscriptionHandler.VerifyArgument(nameof(subscriptionHandler)).IsNotNull();
             
-            EstablishHierarchy(subscriptionHandler.Node);
+            EstablishHierarchy(subscriptionHandler.Context.Node);
 
-            if (!_subscriptions.TryGetValue(subscriptionHandler.Node.Key, out var receiverSubscriptions))
+            if (!_subscriptions.TryGetValue(subscriptionHandler.Context.Key, out var receiverSubscriptions))
             {
-                _subscriptions.Add(subscriptionHandler.Node.Key, receiverSubscriptions = new Dictionary<Type, SubscriptionHandlerSet>());
+                _subscriptions.Add(subscriptionHandler.Context.Key, receiverSubscriptions = new Dictionary<Type, SubscriptionHandlerSet>());
             }
             if (!receiverSubscriptions.TryGetValue(subscriptionHandler.MessageType, out var subscriptionSet))
             {

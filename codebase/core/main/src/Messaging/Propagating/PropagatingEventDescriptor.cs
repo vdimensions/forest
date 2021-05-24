@@ -1,5 +1,6 @@
 ﻿using System;
 using Axle.Reflection;
+using Forest.Engine;
 
 namespace Forest.Messaging.Propagating
 {
@@ -7,11 +8,11 @@ namespace Forest.Messaging.Propagating
     {
         public PropagatingEventDescriptor(IMethod handlerMethod) : base(handlerMethod) { }
 
-        public void Trigger(IView sender, object arg)
+        public void Trigger(_ForestViewContext context, IView sender, object arg)
         {
             try
             {
-                DoTrigger(sender, arg);
+                DoTrigger(context, sender, arg);
             }
             catch (Exception e)
             {

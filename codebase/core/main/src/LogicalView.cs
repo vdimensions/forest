@@ -8,7 +8,7 @@ using Forest.Messaging.Propagating;
 
 namespace Forest
 {
-    public abstract class LogicalView<T> : IView<T>, IRuntimeView
+    public abstract class LogicalView<T> : IView<T>, _View
     {
         [Obsolete]
         private ViewState _state;
@@ -37,7 +37,7 @@ namespace Forest
                 }
                 finally
                 {
-                    ((IRuntimeView) this).DetachContext();
+                    ((_View) this).DetachContext();
                 }
             }
         }
@@ -92,9 +92,12 @@ namespace Forest
         [Obsolete]
         public T UpdateModel(Func<T, T> updateFunc) => _context.Model = updateFunc(_context.Model);
 
-        public virtual void Load() { }
-        public virtual void Resume() { }
+        private void LoadContext(IForestViewContext context) => Load((IForestViewContext<T>) context);
         
+        void IView.Load(IForestViewContext context) => LoadContext(context);
+        public virtual void Load(IForestViewContext<T> context) => Load();
+        public virtual void Load() { }
+
         protected virtual T CreateModel() => default(T);
 
         public T Model => Context == null ? (T) _state.Model : Context.Model;
@@ -104,44 +107,28 @@ namespace Forest
         [Obsolete]
         object IView.Model => Model;
 
-        void IRuntimeView.AttachContext(
-            _ForestViewContext viewContext, 
-            Tree.Node node, 
-            IForestExecutionContext context)
+        void _View.Load(_ForestViewContext viewContext, bool initialLoad)
         {
-            if (_context != null)
-            {
-                throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.Handle));
-            }
-
             _context = ForestViewContext.Wrap<T>(viewContext);
             // TODO: terrible, terrible workaround
             if (_state.Model != null && viewContext.Model == null)
             {
                 viewContext.Model = _state.Model;
             }
-            _state = context.GetViewState(viewContext.Key);
+            _state = viewContext.Node.ViewState;
+            if (initialLoad)
+            {
+                LoadContext(_context);
+            }
         }
 
-        void IRuntimeView.DetachContext()
+        void _View.DetachContext()
         {
             _context.UnsubscribeEvents(this);
             _context = null;
         }
 
-        void IRuntimeView.Load(ViewState viewState)
-        {
-            //_state = ExecutionContext.SetViewState(true, _key, viewState);
-            Load();
-        }
-        
-        void IRuntimeView.Resume(ViewState viewState)
-        {
-            //_state = _context.SetViewState(true, _key, viewState);
-            Resume();
-        }
-
-        void IRuntimeView.Destroy()
+        void _View.Destroy()
         {
             try
             {
@@ -149,14 +136,14 @@ namespace Forest
             }
             finally
             {
-                ((IRuntimeView) this).DetachContext();
+                ((_View) this).DetachContext();
             }
         }
 
-        object IRuntimeView.CreateModel() => CreateModel();
+        object _View.CreateModel() => CreateModel();
 
-        IForestViewDescriptor IRuntimeView.Descriptor => _context?.Descriptor;
-        _ForestViewContext IRuntimeView.Context => _context;
+        _ForestViewDescriptor _View.Descriptor => _context?.Descriptor;
+        _ForestViewContext _View.Context => _context;
 
         void IDisposable.Dispose() => DoDispose(true);
 

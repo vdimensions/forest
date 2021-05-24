@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Engine;
 
 namespace Forest.Messaging
 {
@@ -10,6 +11,6 @@ namespace Forest.Messaging
         
         IView Receiver { get; }
         
-        Tree.Node Node { get; }
+        _ForestViewContext Context { get; }
     }
 }

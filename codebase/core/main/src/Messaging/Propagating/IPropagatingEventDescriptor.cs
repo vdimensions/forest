@@ -1,6 +1,6 @@
 ﻿namespace Forest.Messaging.Propagating
 {
-    public interface IPropagatingEventDescriptor : IEventDescriptor
+    internal interface IPropagatingEventDescriptor : IEventDescriptor
     {
     }
 }

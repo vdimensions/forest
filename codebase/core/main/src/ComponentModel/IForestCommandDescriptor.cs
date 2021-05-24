@@ -1,11 +1,12 @@
 ﻿using System;
+using Forest.Engine;
 using Forest.Navigation;
 
 namespace Forest.ComponentModel
 {
     public interface IForestCommandDescriptor
     {
-        Location Invoke(IView sender, object arg);
+        Location Invoke(IForestViewContext context, IView sender, object arg);
 
         bool TryResolveRedirect(object arg, out Location redirect);
         

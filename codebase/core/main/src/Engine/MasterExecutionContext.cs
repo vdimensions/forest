@@ -109,8 +109,9 @@ namespace Forest.Engine
         T IForestEngine.RegisterSystemView<T>() => _slave.RegisterSystemView<T>();
         IView IForestEngine.RegisterSystemView(Type viewType) => _slave.RegisterSystemView(viewType);
 
-        void IForestExecutionContext.SubscribeEvents(IRuntimeView receiver, Tree.Node node) => _slave.SubscribeEvents(receiver, node);
+        void IForestExecutionContext.SubscribeEvents(_ForestViewContext context, _View receiver) 
+            => _slave.SubscribeEvents(context, receiver);
 
-        void IForestExecutionContext.UnsubscribeEvents(IRuntimeView receiver) => _slave.UnsubscribeEvents(receiver);
+        void IForestExecutionContext.UnsubscribeEvents(_View receiver) => _slave.UnsubscribeEvents(receiver);
     }
 }

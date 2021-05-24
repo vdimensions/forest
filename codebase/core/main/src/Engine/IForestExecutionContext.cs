@@ -6,8 +6,8 @@ namespace Forest.Engine
 {
     internal interface IForestExecutionContext : IForestEngine, IDisposable
     {
-        void SubscribeEvents(IRuntimeView receiver, Tree.Node node);
-        void UnsubscribeEvents(IRuntimeView receiver);
+        void SubscribeEvents(_ForestViewContext context, _View receiver);
+        void UnsubscribeEvents(_View receiver);
 
         ViewState GetViewState(string nodeKey);
         ViewState SetViewState(bool silent, string nodeKey, ViewState viewState);

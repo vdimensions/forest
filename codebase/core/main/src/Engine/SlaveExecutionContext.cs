@@ -15,7 +15,7 @@ using Forest.StateManagement;
 using Forest.Templates;
 using Forest.UI;
 using EventHandler = Forest.Messaging.EventHandler;
-using ViewContextTuple = System.Tuple<Forest.Engine._ForestViewContext, Forest.Engine.IRuntimeView>;
+using ViewContextTuple = System.Tuple<Forest.Engine._ForestViewContext, Forest.Engine._View>;
 
 namespace Forest.Engine
 {
@@ -106,8 +106,8 @@ namespace Forest.Engine
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
-                var descriptor = _context.ViewRegistry.Describe(node.Handle);
-                SupplyViewContext(view, node, descriptor);
+                var descriptor = (_ForestViewDescriptor) _context.ViewRegistry.Describe(node.Handle);
+                SupplyViewContext(view, node, descriptor, false);
             }
         }
 
@@ -193,7 +193,7 @@ namespace Forest.Engine
             switch (nsm)
             {
                 case InstantiateViewInstruction ivi:
-                    var viewDescriptor = _context.ViewRegistry.Describe(ivi.ViewHandle);
+                    var viewDescriptor = (_ForestViewDescriptor) _context.ViewRegistry.Describe(ivi.ViewHandle);
                     if (failedSecurityChecks
                         .OfType<InstantiateViewInstruction>()
                         .Any(x => viewDescriptor.Equals(_context.ViewRegistry.Describe(x.ViewHandle))))
@@ -220,8 +220,8 @@ namespace Forest.Engine
                     }
 
                     var viewInstance = ivi.Model != null
-                        ? (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
-                        : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
+                        ? (_View) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
+                        : (_View) _context.ViewFactory.Resolve(viewDescriptor);
                     // TODO: view instance should no longer supply the model initial value once we move to stateless views
                     var baseViewState = viewInstance.Model == null
                         ? ViewState.Empty
@@ -232,8 +232,7 @@ namespace Forest.Engine
                     try
                     {
                         _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, defaultViewState, out var node);
-                        SupplyViewContext(new ViewContextTuple(null, viewInstance), node, viewDescriptor);
-                        viewInstance.Load(node.ViewState);
+                        SupplyViewContext(new ViewContextTuple(null, viewInstance), node, viewDescriptor, true);
                     }
                     catch
                     {
@@ -281,18 +280,20 @@ namespace Forest.Engine
         private void SupplyViewContext(
             ViewContextTuple viewData, 
             Tree.Node node, 
-            IForestViewDescriptor viewDescriptor)
+            _ForestViewDescriptor viewDescriptor,
+            bool initialLoad)
         {
             if (viewData.Item1 == null)
             {
                 viewData = new ViewContextTuple(new ForestViewContext(node, viewDescriptor, _executionContextReference), viewData.Item2);
             }
-            viewData.Item2.AttachContext(
-                viewData.Item1,
-                node,
-                _executionContextReference);
+            if (viewData.Item2.Context != null)
+            {
+                throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.Handle));
+            }
+            viewData.Item2.Load(viewData.Item1, initialLoad);
             _logicalViews = _logicalViews.Remove(viewData.Item1.Key).Add(viewData.Item1.Key, viewData);
-            _executionContextReference.SubscribeEvents(viewData.Item2, node);
+            _executionContextReference.SubscribeEvents(viewData.Item1, viewData.Item2);
         }
 
         public void ProcessInstructions(ForestInstruction[] instructions) => ProcessInstructions(null, instructions);
@@ -360,7 +361,7 @@ namespace Forest.Engine
 
                             try
                             {
-                                var navigationResult = cmd.Invoke(viewData.Item2, ici.CommandArg);
+                                var navigationResult = cmd.Invoke(viewData.Item1, viewData.Item2, ici.CommandArg);
                                 if (navigationResult != null && !string.IsNullOrEmpty(navigationResult.Path))
                                 {
                                     _executionContextReference.Navigate(navigationResult);
@@ -395,19 +396,19 @@ namespace Forest.Engine
             }
         }
 
-        public void SubscribeEvents(IRuntimeView receiver, Tree.Node node)
+        public void SubscribeEvents(_ForestViewContext context, _View receiver)
         {
             foreach (var evt in receiver.Descriptor.TopicEvents)
             {
-                _eventBus.Subscribe(new EventHandler(evt, receiver, node), evt.Topic);
+                _eventBus.Subscribe(new EventHandler(evt, context, receiver), evt.Topic);
             }
             foreach (var evt in receiver.Descriptor.PropagatingEvents)
             {
-                _eventBus.Subscribe(new EventHandler(evt, receiver, node));
+                _eventBus.Subscribe(new EventHandler(evt, context, receiver));
             }
         }
 
-        public void UnsubscribeEvents(IRuntimeView receiver) => _eventBus.Unsubscribe(receiver);
+        public void UnsubscribeEvents(_View receiver) => _eventBus.Unsubscribe(receiver);
 
         public void Navigate(Location location)
         {

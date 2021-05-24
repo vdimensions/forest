@@ -8,7 +8,7 @@ using Forest.Messaging.TopicBased;
 
 namespace Forest.ComponentModel
 {
-    internal sealed class ForestViewDescriptor : IForestViewDescriptor
+    internal sealed class ForestViewDescriptor : _ForestViewDescriptor
     {
         public static string GetAnonymousViewName(Type viewType)
         {
