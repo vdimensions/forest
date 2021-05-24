@@ -37,7 +37,7 @@ namespace Forest.Dom
             var nodeMap = new Dictionary<string, DomNode>(StringComparer.Ordinal);
             foreach (var node in tree)
             {
-                var viewDescriptor = _context.ViewRegistry.Describe(node.ViewHandle);
+                var viewDescriptor = _context.ViewRegistry.Describe(node.Handle);
                 var viewState = node.ViewState;
                 var commands = viewDescriptor.Commands.Values
                     .Where(cmd => !viewState.DisabledCommands.Contains(cmd.Name))
@@ -47,7 +47,7 @@ namespace Forest.Dom
                 var domNode = new DomNode(
                     node.Key, 
                     viewDescriptor.Name,
-                    node.ViewHandle,
+                    node.Handle,
                     node.Region,
                     viewState.Model,
                     nodeMap.TryGetValue(node.ParentKey, out var parent) ? parent : null, 

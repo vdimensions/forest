@@ -112,7 +112,7 @@ namespace Forest
         {
             if (_context != null)
             {
-                throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.ViewHandle));
+                throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.Handle));
             }
 
             _context = ForestViewContext.Wrap<T>(viewContext);

@@ -106,7 +106,7 @@ namespace Forest.Engine
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
-                var descriptor = view.Item1.Descriptor;
+                var descriptor = _context.ViewRegistry.Describe(node.Handle);
                 SupplyViewContext(view, node, descriptor);
             }
         }
@@ -119,6 +119,7 @@ namespace Forest.Engine
             {
                 var key = node.Key;
                 var view = _logicalViews[key];
+                _logicalViews = _logicalViews.Remove(key).Add(key, new ViewContextTuple(null, view.Item2));
                 view.Item2.DetachContext();
                 if (changedViews.Contains(key))
                 {
@@ -510,7 +511,6 @@ namespace Forest.Engine
                 .Cast<IView>()
                 .SingleOrDefault() ?? ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name), Tree.Node.Shell.Region, Tree.Node.Shell.Key, null, null));
         }
-
 
         public ViewState GetViewState(string nodeKey)
         {
