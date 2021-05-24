@@ -12,7 +12,5 @@ namespace Forest.UI.Forms.Validation
         private const string Name = "ValidationMessage";
 
         internal ValidationMessageView(ValidationState model) : base(model) { }
-
-        protected override string ResourceBundle => Model == null ? null : $"{Model.Name}.Validation.{Model.Rule}";
     }
 }

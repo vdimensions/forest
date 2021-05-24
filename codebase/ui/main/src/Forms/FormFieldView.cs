@@ -39,7 +39,7 @@ namespace Forest.UI.Forms
             WithRegion(Regions.Validation, UpdateValidationViews);
         }
 
-        private void ActivateFormInputView(IRegion region) => region.Clear().ActivateView<TInput>();
+        private void ActivateFormInputView(IRegion region) => region.Clear().ActivateView<TInput>(ResourceBundle);
 
         private void UpdateValidationViews(IRegion region)
         {
@@ -50,7 +50,9 @@ namespace Forest.UI.Forms
                 {
                     continue;
                 }
-                region.ActivateView<ValidationMessageView, ValidationState>(new ValidationState(ResourceBundle, validationConfig.Rule));
+                region.ActivateView<ValidationMessageView, ValidationState>(
+                    new ValidationState(ResourceBundle, validationConfig.Rule),
+                    ResourceBundle);
             }
         }
 
@@ -69,15 +71,13 @@ namespace Forest.UI.Forms
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         internal void ValidationRequested(ValidationStateChanged _) => Validate();
 
-        protected override string ResourceBundle => Model != null ? $"{Name}.{Model.Name}" : null;
-
         private IFormInputView FormInputView
         {
             get
             {
-                IFormInputView view = null;
-                WithRegion(Regions.Input, region => view = region.Views.OfType<IFormInputView>().SingleOrDefault());
-                return view;
+                return WithRegion(
+                    Regions.Input, 
+                    region => region.Views.OfType<IFormInputView>().SingleOrDefault());
             }
         }
         IFormInputView IFormFieldView.FormInputView => FormInputView;

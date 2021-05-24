@@ -195,12 +195,18 @@ namespace Forest
 
         object IRuntimeView.CreateModel() => CreateModel();
 
+        string IRuntimeView.ResourceBundle
+        {
+            get => ResourceBundle;
+            set => ResourceBundle = value;
+        }
+
         IForestViewDescriptor IRuntimeView.Descriptor => _descriptor;
         IForestExecutionContext IRuntimeView.Context => ExecutionContext;
 
         void IDisposable.Dispose() => DoDispose(true);
 
-        protected virtual string ResourceBundle => null;
+        protected string ResourceBundle { get; set; }
 
         string IView.ResourceBundle => ResourceBundle;
         string IView.Name => _descriptor?.Name;

@@ -17,30 +17,61 @@ namespace Forest
             _name = name;
         }
 
-        public IView ActivateView(string name)
-        {
-            return _owner.Context.ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(name), _name, _owner.Key, null));
-        }
-        public IView ActivateView(string name, object model)
-        {
-            return _owner.Context.ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(name), _name, _owner.Key, model));
-        }
-        public IView ActivateView(Type viewType)
-        {
-            return _owner.Context.ActivateView(new InstantiateViewInstruction(ViewHandle.FromType(viewType), _name, _owner.Key, null));
-        }
-        public IView ActivateView(Type viewType, object model)
-        {
-            return _owner.Context.ActivateView(new InstantiateViewInstruction(ViewHandle.FromType(viewType), _name, _owner.Key, model));
-        }
-        public TView ActivateView<TView>() where TView : IView
-        {
-            return (TView) _owner.Context.ActivateView(new InstantiateViewInstruction(ViewHandle.FromType(typeof(TView)), _name, _owner.Key, null));
-        }
-        public TView ActivateView<TView, T>(T model) where TView : IView<T>
-        {
-            return (TView) _owner.Context.ActivateView(new InstantiateViewInstruction(ViewHandle.FromType(typeof(TView)), _name, _owner.Key, model));
-        }
+        public IView ActivateView(string name) => ActivateView(name, null);
+        public IView ActivateView(string name, string resourceBundle) => ActivateView(
+            new InstantiateViewInstruction(
+                ViewHandle.FromName(name), 
+                _name, 
+                _owner.Key, 
+                null, 
+                resourceBundle));
+
+        public IView ActivateView(string name, object model) => ActivateView(name, model, null);
+        public IView ActivateView(string name, object model, string resourceBundle) => ActivateView(
+            new InstantiateViewInstruction(
+                ViewHandle.FromName(name), 
+                _name, 
+                _owner.Key, 
+                model, 
+                resourceBundle));
+
+        public IView ActivateView(Type viewType) => ActivateView(viewType, null);
+        public IView ActivateView(Type viewType, string resourceBundle) => ActivateView(
+            new InstantiateViewInstruction(
+                ViewHandle.FromType(viewType), 
+                _name, 
+                _owner.Key, 
+                null, 
+                resourceBundle));
+
+        public IView ActivateView(Type viewType, object model) => ActivateView(viewType, model, null);
+        public IView ActivateView(Type viewType, object model, string resourceBundle) => ActivateView(
+            new InstantiateViewInstruction(
+                ViewHandle.FromType(viewType), 
+                _name, 
+                _owner.Key, 
+                model, 
+                resourceBundle));
+
+        public TView ActivateView<TView>() where TView : IView => ActivateView<TView>(null);
+        public TView ActivateView<TView>(string resourceBundle) where TView : IView => (TView) ActivateView(
+            new InstantiateViewInstruction(
+                ViewHandle.FromType(typeof(TView)), 
+                _name, 
+                _owner.Key, 
+                null, 
+                resourceBundle));
+
+        public TView ActivateView<TView, T>(T model) where TView : IView<T> => ActivateView<TView, T>(model, null);
+        public TView ActivateView<TView, T>(T model, string resourceBundle) where TView : IView<T> => (TView) ActivateView(
+            new InstantiateViewInstruction(
+                ViewHandle.FromType(typeof(TView)), 
+                _name, 
+                _owner.Key, 
+                model, 
+                resourceBundle));
+
+        private IView ActivateView(InstantiateViewInstruction instruction) => _owner.Context.ActivateView(instruction);
 
         IRegion IRegion.Clear()
         {

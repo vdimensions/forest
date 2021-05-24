@@ -170,14 +170,24 @@ namespace Forest
             return GetChildren(_nodes, _hierarchy, parent).Where(child => filter(child));
         }
 
-        public Tree Insert(TreeChangeScope scope, string key, ViewHandle viewHandle, string region, string ownerKey, object model, out Node node)
+        public Tree Insert(
+            TreeChangeScope scope, 
+            string key, 
+            ViewHandle viewHandle, 
+            string region, 
+            string ownerKey, 
+            object model, 
+            out Node node)
         {
             if (!TryFind(ownerKey, out var parent))
             {
                 //TODO: throw new NodeNotFoundException(node);
                 throw new InvalidOperationException("Cannot find node!");
             }
-            var tree = TryInsert(scope, this, Node.Create(key, viewHandle, region, model, parent), out var result) ? result : this;
+            var tree = TryInsert(
+                scope, 
+                this, 
+                Node.Create(key, viewHandle, region, model, parent), out var result) ? result : this;
             node = tree[key].Value;
             return tree;
         }

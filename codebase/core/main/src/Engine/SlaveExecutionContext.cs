@@ -220,12 +220,16 @@ namespace Forest.Engine
                     var viewInstance = ivi.Model != null
                         ? (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
                         : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
+                    viewInstance.ResourceBundle = ivi.ResourceBundle;
                     try
                     {
                         _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, viewInstance.Model, out var node);
                         viewInstance.AttachContext(node, viewDescriptor, _executionContextReference);
                         _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, viewInstance);
-                        viewInstance.Load(node.ViewState.GetValueOrDefault(ViewState.Empty));
+                        var defaultViewState = string.IsNullOrEmpty(ivi.ResourceBundle)
+                            ? ViewState.Empty
+                            : ViewState.AssignResourceBundle(ViewState.Empty, ivi.ResourceBundle);
+                        viewInstance.Load(node.ViewState.GetValueOrDefault(defaultViewState));
                     }
                     catch
                     {
@@ -466,7 +470,7 @@ namespace Forest.Engine
             return _logicalViews.Values
                 .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
                 .Cast<T>()
-                .SingleOrDefault() ?? (T) ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name),Tree.Node.Shell.Region, Tree.Node.Shell.Key, null));
+                .SingleOrDefault() ?? (T) ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name),Tree.Node.Shell.Region, Tree.Node.Shell.Key, null, null));
         }
 
         IView IForestEngine.RegisterSystemView(Type viewType)
@@ -480,7 +484,7 @@ namespace Forest.Engine
             return _logicalViews.Values
                 .Where(x => ReferenceEquals(x.Descriptor, systemViewDescriptor))
                 .Cast<IView>()
-                .SingleOrDefault() ?? ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name), Tree.Node.Shell.Region, Tree.Node.Shell.Key, null));
+                .SingleOrDefault() ?? ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name), Tree.Node.Shell.Region, Tree.Node.Shell.Key, null, null));
         }
 
         public ViewState? GetViewState(string nodeKey) => 

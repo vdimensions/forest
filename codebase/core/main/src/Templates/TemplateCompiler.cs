@@ -33,7 +33,7 @@ namespace Forest.Templates
                 switch (regionItem)
                 {
                     case Template.RegionItem.View v:
-                        var i = new InstantiateViewInstruction(ViewHandle.FromName(v.Name), regionName, parentViewInstruction.NodeKey, null);
+                        var i = new InstantiateViewInstruction(ViewHandle.FromName(v.Name), regionName, parentViewInstruction.NodeKey, null, null);
                         foreach (var expandedViewInstruction in CompileViews(i, v.Contents))
                         {
                             yield return expandedViewInstruction;
@@ -51,7 +51,7 @@ namespace Forest.Templates
         {
             var shell = Tree.Node.Shell;
             yield return new ClearRegionInstruction(shell.Key, shell.Region);
-            var templateNodeInstruction = new InstantiateViewInstruction(ViewHandle.FromName(template.Name), shell.Region, shell.Key, null); 
+            var templateNodeInstruction = new InstantiateViewInstruction(ViewHandle.FromName(template.Name), shell.Region, shell.Key, null, null); 
             foreach (var instruction in CompileViews(templateNodeInstruction, template.Contents))
             {
                 yield return instruction;

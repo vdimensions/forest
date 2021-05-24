@@ -24,13 +24,20 @@ namespace Forest.Engine.Instructions
         [System.Runtime.Serialization.DataMember]
         #endif
         private readonly string _owner;
+        private readonly string _resourceBundle;
 
-        public InstantiateViewInstruction(ViewHandle viewHandle, string region, string owner, object model) : base(GuidGenerator.NewID().ToString())
+        public InstantiateViewInstruction(
+            ViewHandle viewHandle, 
+            string region, 
+            string owner, 
+            object model,
+            string resourceBundle) : base(GuidGenerator.NewID().ToString())
         {
             _viewHandle = viewHandle;
             _region = region;
             _model = model;
             _owner = owner;
+            _resourceBundle = resourceBundle;
         }
 
         protected override bool IsEqualTo(TreeModification other)
@@ -52,5 +59,7 @@ namespace Forest.Engine.Instructions
         public string Owner => _owner;
 
         public object Model => _model;
+        
+        public string ResourceBundle => _resourceBundle;
     }
 }

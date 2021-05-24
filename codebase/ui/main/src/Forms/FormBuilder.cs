@@ -69,7 +69,7 @@ namespace Forest.UI.Forms
             var validationRulesBuilder = new ValidationRuleBuilder(_region);
             buildValidationRules?.Invoke(validationRulesBuilder);
             
-            var field = new FormField($"{_formName}.{name}", defaultValue, validationRulesBuilder.ValidationStates.ToImmutableDictionary());
+            var field = new FormField(name, defaultValue, validationRulesBuilder.ValidationStates.ToImmutableDictionary());
             
             var introspector = new TypeIntrospector(typeof(FormFieldView<,>));
             var viewType = introspector
@@ -77,7 +77,7 @@ namespace Forest.UI.Forms
                 .MakeGenericType(inputViewType, inputValueType)
                 .Introspect()
                 .IntrospectedType;
-            var view = ((IFormFieldView) _region.ActivateView(viewType, field));
+            var view = ((IFormFieldView) _region.ActivateView(viewType, field, $"{_formName}.{name}"));
             return new FormBuilder(
                 _region, 
                 _formName,
