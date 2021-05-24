@@ -31,7 +31,7 @@ namespace Forest
         internal void DependencyInitialized(IForestViewRegistryListener viewRegistryListener) => _viewRegistry.AddListener(viewRegistryListener);
 
         public IForestViewDescriptor Describe(Type viewType) => _viewRegistry.Describe(viewType);
-        public IForestViewDescriptor Describe(string viewName) => _viewRegistry.Describe(viewName);
+        public IForestViewDescriptor Describe(ViewHandle handle) => _viewRegistry.Describe(handle);
 
         public IForestViewRegistry Register<T>() where T: IView => _viewRegistry.Register<T>();
         public IForestViewRegistry Register(Type viewType) => _viewRegistry.Register(viewType);

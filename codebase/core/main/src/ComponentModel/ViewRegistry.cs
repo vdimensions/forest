@@ -190,15 +190,28 @@ namespace Forest.ComponentModel
         public IForestViewRegistry Register(Type viewType) => DoRegister(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>().Value);
         public IForestViewRegistry Register<T>() where T : IView => DoRegister(typeof(T));
 
-        private IForestViewDescriptor DoGetDescriptor(Type viewType) => 
-            _descriptorsByType.TryGetValue(viewType, out var result) ? result : null;
+        private IForestViewDescriptor DoGetDescriptor(Type viewType)
+            => _descriptorsByType.TryGetValue(viewType, out var result) ? result : null;
 
-        public IForestViewDescriptor Describe(Type viewType) => 
-            DoGetDescriptor(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>());
+        public IForestViewDescriptor Describe(Type viewType)
+            => DoGetDescriptor(viewType.VerifyArgument(nameof(viewType)).IsNotNull().Is<IView>());
 
-        public IForestViewDescriptor Describe(string viewName) =>
-            _namedDescriptors.TryGetValue(viewName.VerifyArgument(nameof(viewName)).IsNotNullOrEmpty().Value, out var viewType)
-                ? DoGetDescriptor(viewType) : null;
+        public IForestViewDescriptor Describe(ViewHandle viewHandle)
+        {
+            switch (viewHandle)
+            {
+                case ViewHandle.TypedViewHandle t:
+                    return DoGetDescriptor(t.ViewType);
+                case ViewHandle.NamedViewHandle n:
+                    return _namedDescriptors.TryGetValue(n.Name, out var viewType)
+                        ? DoGetDescriptor(viewType)
+                        : null;
+                default:
+                    throw new ArgumentException(
+                        string.Format("Unsupported ViewHandle type: {0}", viewHandle.GetType().AssemblyQualifiedName), 
+                        nameof(viewHandle));
+            }
+        }
 
         public void AddListener(_ForestViewRegistryListener listener)
         {
