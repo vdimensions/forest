@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using Forest.ComponentModel;
 using Forest.Engine.Instructions;
+using Forest.Messaging;
+using Forest.Messaging.Instructions;
+using Forest.Messaging.Propagating;
 using Forest.Navigation;
 
 namespace Forest.Engine
@@ -25,7 +28,10 @@ namespace Forest.Engine
     {
     }
     
-    public interface IForestViewContext : ITreeNavigator
+    public interface IForestViewContext 
+        : ITreeNavigator, 
+          ITopicMessagePublisher,
+          IPropagatingMessagePublisher
     {
         void ProcessInstructions(params ForestInstruction[] instructions);
         
@@ -39,7 +45,7 @@ namespace Forest.Engine
         new T Model { get; set; }
     }
 
-    internal sealed class ForestViewContext : IForestViewContext, _ForestViewContext
+    internal sealed class ForestViewContext : _ForestViewContext
     {
         private sealed class Wrapped<T> : _ForestViewContext<T>
         {
@@ -71,6 +77,12 @@ namespace Forest.Engine
 
             public T1 RegisterSystemView<T1>() where T1 : class, ISystemView => _context.RegisterSystemView<T1>();
             public IView RegisterSystemView(Type viewType) => _context.RegisterSystemView(viewType);
+            
+            public void Publish<TMessage>(TMessage message, params string[] topics) 
+                => _context.Publish(message, topics);
+            
+            public void Publish<TMessage>(TMessage message, PropagationTargets targets) 
+                => _context.Publish(message, targets);
 
             public void UnsubscribeEvents(_View view) => _context.UnsubscribeEvents(view);
 
@@ -98,46 +110,51 @@ namespace Forest.Engine
         
         private Tree.Node _node;
         private readonly _ForestViewDescriptor _descriptor;
-        private readonly IForestExecutionContext _executionContext;
+        private readonly _ForestEngine _engine;
 
-        public ForestViewContext(Tree.Node node, _ForestViewDescriptor descriptor, IForestExecutionContext executionContext)
+        public ForestViewContext(Tree.Node node, _ForestViewDescriptor descriptor, _ForestEngine engine)
         {
             _node = node;
             _descriptor = descriptor;
-            _executionContext = executionContext;
+            _engine = engine;
         }
 
         public IView ActivateView(InstantiateViewInstruction instantiateViewInstruction) 
-            => _executionContext.ActivateView(instantiateViewInstruction);
+            => _engine.ActivateView(instantiateViewInstruction);
 
         public IEnumerable<IView> GetRegionContents(string nodeKey, string region)
-            => _executionContext.GetRegionContents(nodeKey, region);
+            => _engine.GetRegionContents(nodeKey, region);
 
-        public void Navigate(Location location) => _executionContext.Navigate(location);
+        public void Navigate(Location location) => _engine.Navigate(location);
 
-        public void NavigateBack() => _executionContext.NavigateBack();
-        public void NavigateBack(int offset) => _executionContext.NavigateBack(offset);
+        public void NavigateBack() => _engine.NavigateBack();
+        public void NavigateBack(int offset) => _engine.NavigateBack(offset);
 
-        public void NavigateUp() => _executionContext.NavigateUp();
-        public void NavigateUp(int offset) => _executionContext.NavigateUp(offset);
+        public void NavigateUp() => _engine.NavigateUp();
+        public void NavigateUp(int offset) => _engine.NavigateUp(offset);
 
         public void ProcessInstructions(params ForestInstruction[] instructions) 
-            => _executionContext.ProcessInstructions(instructions);
+            => _engine.ProcessInstructions(instructions);
 
         public T RegisterSystemView<T>() where T : class, ISystemView
-            => _executionContext.RegisterSystemView<T>();
+            => _engine.RegisterSystemView<T>();
         public IView RegisterSystemView(Type viewType)
-            => _executionContext.RegisterSystemView(viewType);
+            => _engine.RegisterSystemView(viewType);
+        
+        public void Publish<T>(T message, params string[] topics) 
+            => ProcessInstructions(new SendTopicBasedMessageInstruction(Key, message, topics));
+        public void Publish<T>(T message, PropagationTargets targets) 
+            => ProcessInstructions(new SendPropagatingMessageInstruction(Key, message, targets));
 
-        public void UnsubscribeEvents(_View view) => _executionContext.UnsubscribeEvents(view);
+        public void UnsubscribeEvents(_View view) => _engine.UnsubscribeEvents(view);
 
         public object Model
         {
-            get => _executionContext.GetViewState(Key).Model;
-            set => _executionContext.UpdateViewState(Key, vs => ViewState.UpdateModel(vs, value), true);
+            get => _engine.GetViewState(Key).Model;
+            set => _engine.UpdateViewState(Key, vs => ViewState.UpdateModel(vs, value), true);
         }
 
-        public string ResourceBundle => _executionContext.GetViewState(Key).ResourceBundle;
+        public string ResourceBundle => _engine.GetViewState(Key).ResourceBundle;
 
         public string Key => _node.Key;
 

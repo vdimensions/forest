@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Axle.Collections.Immutable;
 using Axle.Logging;
+using Forest.Commands;
 using Forest.ComponentModel;
 
 namespace Forest.Dom

@@ -1,6 +1,6 @@
 ﻿namespace Forest.Messaging.TopicBased
 {
-    internal interface ITopicEventDescriptor : IEventDescriptor
+    public interface ITopicEventDescriptor : IEventDescriptor
     {
         string Topic { get; }
     }

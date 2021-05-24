@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Axle.Logging;
 using Forest.ComponentModel;
+using Forest.Messaging;
 using Forest.Navigation;
 using Forest.StateManagement;
 using Forest.UI;
@@ -13,14 +14,14 @@ namespace Forest.Engine
         private sealed class ForestEngineContext : IForestEngineContext, IForestEngine
         {
             private readonly IForestContext _context;
-            private readonly IForestExecutionContext _executionContext;
+            private readonly _ForestEngine _engine;
             private readonly ForestEngineContextProvider _provider;
             private readonly ILogger _logger;
     
             public ForestEngineContext(IForestContext context, ForestEngineContextProvider provider, ILogger logger)
             {
                 _context = context;
-                _executionContext = new MasterExecutionContext(
+                _engine = new MasterEngine(
                     context, 
                     provider.GetForestStateProvider(), 
                     provider.GetPhysicalViewRenderer(), 
@@ -30,9 +31,9 @@ namespace Forest.Engine
                 _logger = logger;
             }
 
-            public void Dispose() => _executionContext.Dispose();
+            public void Dispose() => _engine.Dispose();
 
-            public IForestEngine Engine => _executionContext;
+            public IForestEngine Engine => _engine;
             
             void IMessageDispatcher.SendMessage<T>(T message)
             {

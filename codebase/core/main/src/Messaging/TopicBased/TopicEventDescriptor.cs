@@ -5,7 +5,7 @@ using Forest.Engine;
 
 namespace Forest.Messaging.TopicBased
 {
-    internal sealed class TopicEventDescriptor : AbstractEventDescriptor, ITopicEventDescriptor
+    internal sealed class TopicEventDescriptor : AbstractEventDescriptor, _TopicEventDescriptor
     {
         public TopicEventDescriptor(string topic, IMethod handlerMethod) : base(handlerMethod)
         {

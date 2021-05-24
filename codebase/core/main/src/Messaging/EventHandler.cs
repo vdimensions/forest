@@ -5,9 +5,9 @@ namespace Forest.Messaging
 {
     internal sealed class EventHandler : ISubscriptionHandler
     {
-        private readonly IEventDescriptor _descriptor;
+        private readonly _EventDescriptor _descriptor;
 
-        public EventHandler(IEventDescriptor descriptor, _ForestViewContext context, IView view)
+        public EventHandler(_EventDescriptor descriptor, _ForestViewContext context, IView view)
         {
             _descriptor = descriptor;
             Context = context;

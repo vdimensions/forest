@@ -4,7 +4,7 @@ using Forest.Engine;
 
 namespace Forest.Messaging.Propagating
 {
-    internal sealed class PropagatingEventDescriptor : AbstractEventDescriptor, IPropagatingEventDescriptor
+    internal sealed class PropagatingEventDescriptor : AbstractEventDescriptor, _PropagatingEventDescriptor
     {
         public PropagatingEventDescriptor(IMethod handlerMethod) : base(handlerMethod) { }
 
