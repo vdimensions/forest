@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Axle.Verification;
 using Axle.Collections.Immutable;
@@ -12,9 +11,9 @@ namespace Forest
     [StructLayout(LayoutKind.Sequential)]
     public struct ViewState : IEquatable<ViewState>
     {
-        public static ViewState Create(object model, string resourceBundle)
+        public static ViewState Create(object model)
         {
-            return new ViewState(model.VerifyArgument(nameof(model)).IsNotNull().Value, resourceBundle, null);
+            return new ViewState(model.VerifyArgument(nameof(model)).IsNotNull().Value, null, null);
         }
 
         public static ViewState UpdateModel(ViewState viewState, object model)
@@ -42,12 +41,13 @@ namespace Forest
         public static readonly ViewState Empty;
 
         private readonly ImmutableHashSet<string> _disabledCommands;
+        private readonly string _resourceBundle;
 
         private ViewState(object model, string resourceBundle, ImmutableHashSet<string> disabledCommands = null)
         {
             Model = model;
             _disabledCommands = disabledCommands;
-            ResourceBundle = resourceBundle;
+            _resourceBundle = resourceBundle;
         }
 
         public bool Equals(ViewState other)
@@ -70,6 +70,6 @@ namespace Forest
 
         public object Model { get; }
         public ImmutableHashSet<string> DisabledCommands => _disabledCommands ?? ImmutableHashSet<string>.Empty;
-        public string ResourceBundle { get; }
+        public string ResourceBundle => _resourceBundle ?? string.Empty;
     }
 }

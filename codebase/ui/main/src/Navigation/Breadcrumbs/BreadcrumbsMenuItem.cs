@@ -5,14 +5,6 @@
     {
         private const string Name = "BreadcrumbsMenuItem";
 
-        protected BreadcrumbsMenuItemView(NavigationNode model) : base(model)
-        {
-            ResourceBundle = Model.Path.Replace("/", ".");
-        }
-
-        public override void Load()
-        {
-            base.Load();
-        }
+        protected BreadcrumbsMenuItemView(NavigationNode model) : base(model) { }
     }
 }

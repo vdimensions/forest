@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Messaging.Propagating;
 
 namespace Forest
 {
@@ -8,9 +9,8 @@ namespace Forest
     public interface IView : IDisposable
     {
         void Publish<TM>(TM message, params string[] topics);
+        void Publish<TM>(TM message, PropagationTargets propagationTargets);
 
-        IRegion FindRegion(string name);
-    
         void Close();
     
         object Model { get; }
@@ -18,8 +18,6 @@ namespace Forest
         string Name { get; }
         
         string Key { get; }
-
-        string ResourceBundle { get; }
     }
     
     public interface IView<T> : IView

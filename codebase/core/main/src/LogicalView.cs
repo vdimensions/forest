@@ -19,7 +19,7 @@ namespace Forest
         {
             _state = state;
         }
-        protected LogicalView(T model) : this(ReferenceEquals(model, null) ? ViewState.Empty : ViewState.Create(model, null)) { }
+        protected LogicalView(T model) : this(ReferenceEquals(model, null) ? ViewState.Empty : ViewState.Create(model)) { }
         ~LogicalView() => DoDispose(false);
 
         protected virtual void Dispose(bool disposing) { }
@@ -51,40 +51,44 @@ namespace Forest
         public void Publish<TM>(TM message, PropagationTargets targets) 
             => ExecutionContext.ProcessInstructions(new SendPropagatingMessageInstruction(_key, message, targets));
 
-        [Obsolete("Use `WithRegion` instead")]
-        public IRegion FindRegion(string name)
-        {
-            name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
-            return new RegionImpl(this, name);
-        }
-
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
-        public void WithRegion(string regionName, Action<IRegion> action)
+        public void WithRegion(string regionName, Action<IRegion> action) => WithRegion(regionName, string.Empty, action);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion(string regionName, string resourceBundle, Action<IRegion> action)
         {
             regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
             action.VerifyArgument(nameof(action)).IsNotNull();
-            action.Invoke(new RegionImpl(this, regionName));
+            action.Invoke(new Region(this, regionName, resourceBundle));
         }
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
-        public void WithRegion<T>(string regionName, Action<IRegion, T> action, T arg)
+        public void WithRegion<T>(string regionName, Action<IRegion, T> action, T arg) 
+            => WithRegion(regionName, string.Empty, action, arg);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion<T>(string regionName, string resourceBundle, Action<IRegion, T> action, T arg)
         {
             regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
             action.VerifyArgument(nameof(action)).IsNotNull();
-            action.Invoke(new RegionImpl(this, regionName), arg);
+            action.Invoke(new Region(this, regionName, resourceBundle), arg);
         }
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
-        public TResult WithRegion<TResult>(string regionName, Func<IRegion, TResult> func)
+        public TResult WithRegion<TResult>(string regionName, Func<IRegion, TResult> func) 
+            => WithRegion(regionName, string.Empty, func);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<TResult>(string regionName, string resourceBundle, Func<IRegion, TResult> func)
         {
             regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
             func.VerifyArgument(nameof(func)).IsNotNull();
-            return func.Invoke(new RegionImpl(this, regionName));
+            return func.Invoke(new Region(this, regionName, resourceBundle));
         }
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
-        public TResult WithRegion<T, TResult>(string regionName, Func<IRegion, T, TResult> func, T arg)
+        public TResult WithRegion<T, TResult>(string regionName, Func<IRegion, T, TResult> func, T arg) 
+            => WithRegion(regionName, string.Empty, func, arg);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<T, TResult>(string regionName, string resourceBundle, Func<IRegion, T, TResult> func, T arg)
         {
             regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
             func.VerifyArgument(nameof(func)).IsNotNull();
-            return func.Invoke(new RegionImpl(this, regionName), arg);
+            return func.Invoke(new Region(this, regionName, resourceBundle), arg);
         }
         
         public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_key));
@@ -97,11 +101,11 @@ namespace Forest
                 var vs = _executionContext.GetViewState(_key);
                 _state = _executionContext.SetViewState(false, _key, vs.HasValue 
                     ? ViewState.UpdateModel(vs.Value, newModel) 
-                    : ViewState.Create(newModel, ResourceBundle));
+                    : ViewState.Create(newModel));
             }
             else
             {
-                _state = ViewState.Create(newModel, ResourceBundle);
+                _state = ViewState.Create(newModel);
             }
             return (T) _state.Model;
         }
@@ -130,18 +134,7 @@ namespace Forest
             var vs = context.GetViewState(_key);
             if (vs.HasValue)
             {
-                if (string.IsNullOrEmpty(vs.Value.ResourceBundle))
-                {
-                    var key = ResourceBundle;
-                    if (!string.IsNullOrEmpty(key))
-                    {
-                        context.SetViewState(true, _key, _state = ViewState.AssignResourceBundle(vs.Value, key));
-                    }
-                }
-                else
-                {
-                    _state = vs.Value;
-                }
+                _state = vs.Value;
             }
             else
             {
@@ -195,22 +188,15 @@ namespace Forest
 
         object IRuntimeView.CreateModel() => CreateModel();
 
-        string IRuntimeView.ResourceBundle
-        {
-            get => ResourceBundle;
-            set => ResourceBundle = value;
-        }
-
         IForestViewDescriptor IRuntimeView.Descriptor => _descriptor;
         IForestExecutionContext IRuntimeView.Context => ExecutionContext;
 
         void IDisposable.Dispose() => DoDispose(true);
 
-        protected string ResourceBundle { get; set; }
-
-        string IView.ResourceBundle => ResourceBundle;
         string IView.Name => _descriptor?.Name;
         string IView.Key => _key;
+
+        protected string ResourceBundle => _state.ResourceBundle;
     }
 
     public abstract class LogicalView : LogicalView<object>

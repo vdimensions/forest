@@ -37,7 +37,7 @@ namespace Forest.Engine.Instructions
             _region = region;
             _model = model;
             _owner = owner;
-            _resourceBundle = resourceBundle;
+            _resourceBundle = resourceBundle ?? string.Empty;
         }
 
         protected override bool IsEqualTo(TreeModification other)
@@ -47,10 +47,11 @@ namespace Forest.Engine.Instructions
                 && Equals(ViewHandle, ivi.ViewHandle)
                 && Equals(Region, ivi.Region)
                 && Equals(Owner, ivi.Owner)
-                && Equals(Model, ivi.Model);
+                && Equals(Model, ivi.Model)
+                && Equals(ResourceBundle, ivi.ResourceBundle);
         }
 
-        protected override int DoGetHashCode() => this.CalculateHashCode(NodeKey, ViewHandle, Region, Owner, Model);
+        protected override int DoGetHashCode() => this.CalculateHashCode(NodeKey, ViewHandle, Region, Owner, Model, ResourceBundle);
 
         public ViewHandle ViewHandle => _viewHandle;
 

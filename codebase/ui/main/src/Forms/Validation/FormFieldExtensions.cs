@@ -41,7 +41,7 @@ namespace Forest.UI.Forms.Validation
                         {
                             break;
                         }
-                        if (validationStateChange is ConstrainedValidationConfig<TValue> valueRangeValidationState)
+                        if (validationStateChange is ConstrainedValidationState<TValue> valueRangeValidationState)
                         {
                             validationStateChange.IsValid = validationRule == ValidationRule.MaxValue
                                 ? comparer.Compare(value, valueRangeValidationState.Constraint) <= 0
@@ -54,7 +54,7 @@ namespace Forest.UI.Forms.Validation
                         {
                             break;
                         }
-                        if (value is IEnumerable enumerable && validationStateChange is ConstrainedValidationConfig<int> lengthValidationState)
+                        if (value is IEnumerable enumerable && validationStateChange is ConstrainedValidationState<int> lengthValidationState)
                         {
                             var length = new GenericEnumerable<object>(enumerable).Count();
                             validationStateChange.IsValid = validationRule == ValidationRule.MaxLength
@@ -71,13 +71,13 @@ namespace Forest.UI.Forms.Validation
                         {
                             switch (validationState)
                             {
-                                case ConstrainedValidationConfig<string> regexStringConstrainedValidationState:
+                                case ConstrainedValidationState<string> regexStringConstrainedValidationState:
                                     validationStateChange.IsValid = Regex.IsMatch(str, regexStringConstrainedValidationState.Constraint);
                                     break;
-                                case ConstrainedValidationConfig<Regex> regexConstrainedValidationState:
+                                case ConstrainedValidationState<Regex> regexConstrainedValidationState:
                                     validationStateChange.IsValid = regexConstrainedValidationState.Constraint.IsMatch(str);
                                     break;
-                                case ConstrainedValidationConfig<IRegularExpression> axleRegexConstrainedValidationState:
+                                case ConstrainedValidationState<IRegularExpression> axleRegexConstrainedValidationState:
                                     validationStateChange.IsValid = axleRegexConstrainedValidationState.Constraint.IsMatch(str);
                                     break;
                             }
@@ -88,7 +88,7 @@ namespace Forest.UI.Forms.Validation
                         {
                             break;
                         }
-                        if (validationState is CompareValidationConfig compareValidationState)
+                        if (validationState is CompareValidationState compareValidationState)
                         {
                             var view = compareValidationState.Target.View;
                             if (view == null)

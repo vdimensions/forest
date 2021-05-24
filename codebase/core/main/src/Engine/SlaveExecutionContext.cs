@@ -220,7 +220,6 @@ namespace Forest.Engine
                     var viewInstance = ivi.Model != null
                         ? (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
                         : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
-                    viewInstance.ResourceBundle = ivi.ResourceBundle;
                     try
                     {
                         _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, viewInstance.Model, out var node);

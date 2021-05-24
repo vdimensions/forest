@@ -43,11 +43,11 @@ namespace Forest.UI.Navigation
                     {
                         if (item.Selected)
                         {
-                            itemsRegion.ActivateView<NavigationMenuItemView, NavigationNode>(item);
+                            itemsRegion.ActivateView<NavigationMenuItemView, NavigationNode>(item, item.Path.Replace("/", "."));
                         }
                         else
                         {
-                            itemsRegion.ActivateView<NavigationMenuNavigableItemView, NavigationNode>(item);
+                            itemsRegion.ActivateView<NavigationMenuNavigableItemView, NavigationNode>(item, item.Path.Replace("/", "."));
                         }
                     }
                 },

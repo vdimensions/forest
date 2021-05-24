@@ -6,70 +6,79 @@ using Forest.Engine.Instructions;
 
 namespace Forest
 {
-    internal sealed class RegionImpl : IRegion
+    internal sealed class Region : IRegion
     {
         private readonly IRuntimeView _owner;
         private readonly string _name;
+        private readonly string _resourceBundle;
 
-        public RegionImpl(IRuntimeView owner, string name)
+        public Region(IRuntimeView owner, string name, string resourceBundle = null)
         {
             _owner = owner;
             _name = name;
+            _resourceBundle = resourceBundle;
         }
 
-        public IView ActivateView(string name) => ActivateView(name, null);
+        private string ResolveResourceBundle(string resourceBundle)
+        {
+            return string.IsNullOrEmpty(_resourceBundle)
+                ? resourceBundle
+                : $"{_resourceBundle}.{resourceBundle}";
+        }
+
+        public IView ActivateView(string name) => ActivateView(name, _resourceBundle);
         public IView ActivateView(string name, string resourceBundle) => ActivateView(
             new InstantiateViewInstruction(
                 ViewHandle.FromName(name), 
                 _name, 
                 _owner.Key, 
                 null, 
-                resourceBundle));
+                ResolveResourceBundle(resourceBundle)));
 
-        public IView ActivateView(string name, object model) => ActivateView(name, model, null);
+        public IView ActivateView(string name, object model) => ActivateView(name, model, _resourceBundle);
         public IView ActivateView(string name, object model, string resourceBundle) => ActivateView(
             new InstantiateViewInstruction(
                 ViewHandle.FromName(name), 
                 _name, 
                 _owner.Key, 
                 model, 
-                resourceBundle));
+                ResolveResourceBundle(resourceBundle)));
 
-        public IView ActivateView(Type viewType) => ActivateView(viewType, null);
+        public IView ActivateView(Type viewType) => ActivateView(viewType, _resourceBundle);
         public IView ActivateView(Type viewType, string resourceBundle) => ActivateView(
             new InstantiateViewInstruction(
                 ViewHandle.FromType(viewType), 
                 _name, 
                 _owner.Key, 
                 null, 
-                resourceBundle));
+                ResolveResourceBundle(resourceBundle)));
 
-        public IView ActivateView(Type viewType, object model) => ActivateView(viewType, model, null);
+        public IView ActivateView(Type viewType, object model) => ActivateView(viewType, model, _resourceBundle);
         public IView ActivateView(Type viewType, object model, string resourceBundle) => ActivateView(
             new InstantiateViewInstruction(
                 ViewHandle.FromType(viewType), 
                 _name, 
                 _owner.Key, 
                 model, 
-                resourceBundle));
+                ResolveResourceBundle(resourceBundle)));
 
-        public TView ActivateView<TView>() where TView : IView => ActivateView<TView>(null);
+        public TView ActivateView<TView>() where TView : IView => ActivateView<TView>(_resourceBundle);
         public TView ActivateView<TView>(string resourceBundle) where TView : IView => (TView) ActivateView(
             new InstantiateViewInstruction(
                 ViewHandle.FromType(typeof(TView)), 
                 _name, 
                 _owner.Key, 
                 null, 
-                resourceBundle));
+                ResolveResourceBundle(resourceBundle)));
 
-        public TView ActivateView<TView, T>(T model) where TView : IView<T> => ActivateView<TView, T>(model, null);
+        public TView ActivateView<TView, T>(T model) where TView : IView<T> => ActivateView<TView, T>(model, _resourceBundle);
         public TView ActivateView<TView, T>(T model, string resourceBundle) where TView : IView<T> => (TView) ActivateView(
             new InstantiateViewInstruction(
                 ViewHandle.FromType(typeof(TView)), 
                 _name, 
                 _owner.Key, 
                 model, 
-                resourceBundle));
+                ResolveResourceBundle(resourceBundle)));
 
         private IView ActivateView(InstantiateViewInstruction instruction) => _owner.Context.ActivateView(instruction);
 

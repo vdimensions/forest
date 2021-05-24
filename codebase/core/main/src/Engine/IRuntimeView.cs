@@ -14,6 +14,5 @@ namespace Forest.Engine
 
         IForestViewDescriptor Descriptor { get; }
         IForestExecutionContext Context { get; }
-        string ResourceBundle { get; set; }
     }
 }

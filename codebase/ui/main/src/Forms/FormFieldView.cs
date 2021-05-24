@@ -50,8 +50,8 @@ namespace Forest.UI.Forms
                 {
                     continue;
                 }
-                region.ActivateView<ValidationMessageView, ValidationState>(
-                    new ValidationState(ResourceBundle, validationConfig.Rule),
+                region.ActivateView<ValidationMessageView, string>(
+                    validationConfig.Message ?? validationConfig.Rule.ToString(),
                     ResourceBundle);
             }
         }

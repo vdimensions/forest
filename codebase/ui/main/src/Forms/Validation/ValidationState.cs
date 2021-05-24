@@ -3,21 +3,30 @@
 namespace Forest.UI.Forms.Validation
 {
     [Localized]
-    public sealed class ValidationState : IGlobalizationCloneable
+    public class ValidationState : ISupportsValidationStateChange, IGlobalizationCloneable
     {
-        public ValidationState(string name, ValidationRule rule)
+        internal ValidationState(ValidationRule rule)
         {
-            Name = name;
             Rule = rule;
         }
-
+        
         object IGlobalizationCloneable.Clone()
         {
-            return new ValidationState(Name, Rule);
+            return new ValidationState(Rule)
+            {
+                IsValid = IsValid,
+                Message = Message
+            };
         }
 
-        internal string Name { get; }
         public ValidationRule Rule { get; }
+        
+        public bool? IsValid { get; private set; }
+        bool? ISupportsValidationStateChange.IsValid
+        {
+            get => IsValid;
+            set => IsValid = value;
+        }
         
         [Localized]
         public string Message { get; set; }

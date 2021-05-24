@@ -5,9 +5,6 @@
     {
         private const string Name = "NavigationMenuItem";
 
-        protected NavigationMenuItemView(NavigationNode model) : base(model)
-        {
-            ResourceBundle = Model.Path.Replace("/", ".");
-        }
+        protected NavigationMenuItemView(NavigationNode model) : base(model) { }
     }
 }

@@ -3,9 +3,9 @@
 namespace Forest.UI.Forms.Validation
 {
     [Localized]
-    public sealed class CompareValidationConfig : ValidationConfig
+    public sealed class CompareValidationState : ValidationState
     {
-        internal CompareValidationConfig(ValidationRule rule, FormFieldReference target) : base(rule)
+        internal CompareValidationState(ValidationRule rule, FormFieldReference target) : base(rule)
         {
             Target = target;
         }

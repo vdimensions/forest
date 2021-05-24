@@ -43,9 +43,10 @@ namespace Forest.UI.Navigation.Breadcrumbs
                     var last = selectedItems[selectedItems.Length - 1];
                     for (var i = 0; i < selectedItems.Length - 1; i++)
                     {
-                        itemsRegion.ActivateView<BreadcrumbsMenuNavigableItemView, NavigationNode>(selectedItems[i]);
+                        var item = selectedItems[i];
+                        itemsRegion.ActivateView<BreadcrumbsMenuNavigableItemView, NavigationNode>(item, item.Path.Replace("/", "."));
                     }
-                    itemsRegion.ActivateView<BreadcrumbsMenuItemView, NavigationNode>(last);
+                    itemsRegion.ActivateView<BreadcrumbsMenuItemView, NavigationNode>(last, last.Path.Replace("/", "."));
                 },
                 tree);
         }

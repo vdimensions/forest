@@ -4,7 +4,6 @@ using System.Linq;
 using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Messaging;
-using Forest.Messaging.TopicBased;
 using Forest.UI.Common;
 using Forest.UI.Containers.TabStrip.Messages;
 
@@ -41,26 +40,28 @@ namespace Forest.UI.Containers.TabStrip
         public void AddTab(string tabId, bool activate)
         {
             tabId.VerifyArgument("tabId").IsNotNullOrEmpty();
-            WithItemsRegion(tabsRegion =>
-            {
-                var knownTabs = tabsRegion.Views.Cast<TabView>().ToDictionary(x => x.Model.ID, _tabIdComparer);
-                Tab tab;
-                if (knownTabs.TryGetValue(tabId, out var existing))
+            WithItemsRegion(
+                (tabsRegion, t) =>
                 {
-                    tab = existing.Model;
-                }
-                else
-                {
-                    tab = new Tab(tabId);
-                    var tabView = tabsRegion.ActivateView<TabView, Tab>(tab);
-                    AfterItemViewActivated(tabView);
-                }
+                    var knownTabs = tabsRegion.Views.Cast<TabView>().ToDictionary(x => x.Model.ID, _tabIdComparer);
+                    Tab tab;
+                    if (knownTabs.TryGetValue(t, out var existing))
+                    {
+                        tab = existing.Model;
+                    }
+                    else
+                    {
+                        tab = new Tab(t);
+                        var tabView = tabsRegion.ActivateView<TabView, Tab>(tab);
+                        AfterItemViewActivated(tabView);
+                    }
 
-                if (activate)
-                {
-                    ActivateTab(tab.ID);
-                }
-            });
+                    if (activate)
+                    {
+                        ActivateTab(tab.ID);
+                    }
+                },
+                tabId);
         }
 
         protected override void AfterItemViewActivated(TabView view)
@@ -94,8 +95,7 @@ namespace Forest.UI.Containers.TabStrip
                             if (!tabModel.Selected)
                             {
                                 tabView.UpdateModel(m => new Tab(m.ID, true));
-                                var contentRegion = FindRegion(Regions.Content).Clear();
-                                ActivateContentView(contentRegion, tabView.Model.ID);
+                                WithRegion(Regions.Content, (r, id) => ActivateContentView(r.Clear(), id), tabView.Model.ID);
                             }
                             else
                             {

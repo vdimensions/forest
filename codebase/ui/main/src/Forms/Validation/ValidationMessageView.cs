@@ -7,10 +7,10 @@ namespace Forest.UI.Forms.Validation
     /// </summary>
     [View(Name)]
     [SuppressMessage("ReSharper", "ClassNeverInstantiated.Global")]
-    public sealed class ValidationMessageView : LogicalView<ValidationState>
+    public sealed class ValidationMessageView : LogicalView<string>
     {
         private const string Name = "ValidationMessage";
 
-        internal ValidationMessageView(ValidationState model) : base(model) { }
+        internal ValidationMessageView(string model) : base(model) { }
     }
 }
