@@ -221,6 +221,7 @@ namespace Forest.Engine
                     var viewInstance = ivi.Model != null
                         ? (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor, ivi.Model)
                         : (IRuntimeView) _context.ViewFactory.Resolve(viewDescriptor);
+                    // TODO: view instance should no longer supply the model initial value once we move to stateless views
                     var baseViewState = viewInstance.Model == null
                         ? ViewState.Empty
                         : ViewState.Create(viewInstance.Model);
@@ -230,8 +231,7 @@ namespace Forest.Engine
                     try
                     {
                         _tree = _tree.Insert(scope, ivi.NodeKey, ivi.ViewHandle, ivi.Region, ivi.Owner, defaultViewState, out var node);
-                        var context = SupplyViewContext(new ViewContextTuple(null, viewInstance), node, viewDescriptor);
-                        _logicalViews = _logicalViews.Remove(ivi.NodeKey).Add(ivi.NodeKey, context);
+                        SupplyViewContext(new ViewContextTuple(null, viewInstance), node, viewDescriptor);
                         viewInstance.Load(node.ViewState);
                     }
                     catch
@@ -277,7 +277,10 @@ namespace Forest.Engine
             }
         }
 
-        private ViewContextTuple SupplyViewContext(ViewContextTuple viewData, Tree.Node node, IForestViewDescriptor viewDescriptor)
+        private void SupplyViewContext(
+            ViewContextTuple viewData, 
+            Tree.Node node, 
+            IForestViewDescriptor viewDescriptor)
         {
             if (viewData.Item1 == null)
             {
@@ -287,8 +290,8 @@ namespace Forest.Engine
                 viewData.Item1,
                 node,
                 _executionContextReference);
+            _logicalViews = _logicalViews.Remove(viewData.Item1.Key).Add(viewData.Item1.Key, viewData);
             _executionContextReference.SubscribeEvents(viewData.Item2, node);
-            return viewData;
         }
 
         public void ProcessInstructions(ForestInstruction[] instructions) => ProcessInstructions(null, instructions);
@@ -488,6 +491,7 @@ namespace Forest.Engine
                 _context.ViewRegistry.Register<T>().Describe(typeof(T));
             return _logicalViews.Values
                 .Where(x => ReferenceEquals(x.Item1.Descriptor, systemViewDescriptor))
+                .Select(x => x.Item2)
                 .Cast<T>()
                 .SingleOrDefault() ?? (T) ActivateView(new InstantiateViewInstruction(ViewHandle.FromName(systemViewDescriptor.Name),Tree.Node.Shell.Region, Tree.Node.Shell.Key, null, null));
         }
