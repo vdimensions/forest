@@ -62,14 +62,17 @@ namespace Forest.Globalization
         private readonly IDocumentBinder _binder;
         private readonly ICacheManager _cacheManager;
         private readonly ForestBundleConfigModule _bundleConfig;
+        private readonly IForestViewRegistry _viewRegistry;
 
         public ForestGlobalizationModule(ResourceManager resourceManager,
             ForestBundleConfigModule bundleConfig,
-            ForestGlobalizationConfig config,
+            IForestViewRegistry viewRegistry,
+            ForestGlobalizationConfig config, 
             ILogger logger)
         {
             _resourceManager = resourceManager;
             _bundleConfig = bundleConfig;
+            _viewRegistry = viewRegistry;
             _config = config;
             _logger = logger;
             _binder = new DefaultDocumentBinder(new GlobalizationObjectProvider(), new DefaultBindingConverter());
@@ -78,8 +81,9 @@ namespace Forest.Globalization
         public ForestGlobalizationModule(
                 ResourceManager resourceManager,
                 ForestBundleConfigModule bundleConfig, 
+                IForestViewRegistry viewRegistry, 
                 ILogger logger) 
-            : this(resourceManager, bundleConfig, new ForestGlobalizationConfig(), logger) { }
+            : this(resourceManager, bundleConfig, viewRegistry, new ForestGlobalizationConfig(), logger) { }
 
 
         void IDisposable.Dispose()
@@ -178,12 +182,7 @@ namespace Forest.Globalization
             var scope = CreateCultureScope(_config.DisplayLanguage, _logger);
             try
             {
-                ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, node.Name);
-                if (!string.IsNullOrEmpty(node.ResourceBundle))
-                {
-                    var actualBundleName = node.ResourceBundle.TrimStart($"{node.Name}.", StringComparison.Ordinal);
-                    textDocument = new TextDocumentSubset(textDocument, actualBundleName);
-                }
+                var textDocument = ResolveTextDocument(node);
                 var newCommands = node.Commands;
                 var cmdKeys = newCommands.Keys;
                 foreach (var commandName in cmdKeys)
@@ -231,6 +230,21 @@ namespace Forest.Globalization
             }
         }
 
+        private ITextDocumentObject ResolveTextDocument(DomNode node)
+        {
+            if (string.IsNullOrEmpty(node.ResourceBundle))
+            {
+                return new ResourceDocumentRoot(_resourceManager, node.Name);
+            }
+            else
+            {
+                var bundleName = node.ResourceBundle.TrimStart($"{node.Name}.", StringComparison.Ordinal);
+                RegisterViewBundle(bundleName, _viewRegistry.Describe(node.Name));
+                ITextDocumentObject textDocument = new ResourceDocumentRoot(_resourceManager, bundleName);
+                return new TextDocumentSubset(textDocument, node.Name);
+            }
+        }
+
         public void OnViewRegistered(IForestViewDescriptor viewDescriptor)
         {
             if (_config.AutoRegisterLocalizationBundles)
@@ -249,25 +263,29 @@ namespace Forest.Globalization
             ConfigureViewResourceBundle(viewBundle, viewDescriptor);
         }
 
-        public void ConfigureViewResourceBundle(
-            IConfigurableBundleContent bundle,
-            IForestViewDescriptor viewDescriptor)
+        private void ConfigureViewResourceBundle(IConfigurableBundleContent bundle, IForestViewDescriptor viewDescriptor)
         {
-            #if NETSTANDARD || NET45_OR_NEWER
-            var asm = viewDescriptor.ViewType.GetTypeInfo().Assembly;
-            #else
-            var asm = viewDescriptor.ViewType.Assembly;
-            #endif
-            var uriParser = new Axle.Text.Parsing.UriParser();
-            var propertiesDir = "Properties";
-            bundle
-                .Register(asm, $"{propertiesDir}/")
-                .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{bundle.Bundle}/"))
-                .Extractors
-                    .Register(new PropertiesExtractor($"{bundle.Bundle}.properties"))
-                    .Register(new PropertiesExtractor($"Strings.properties/{bundle.Bundle}/"))
-                    .Register(new ResXResourceExtractor())
+            if (viewDescriptor != null)
+            {
+                #if NETSTANDARD || NET45_OR_NEWER
+                var asm = viewDescriptor.ViewType.GetTypeInfo().Assembly;
+                #else
+                var asm = viewDescriptor.ViewType.Assembly;
+                #endif
+                var uriParser = new Axle.Text.Parsing.UriParser();
+                var propertiesDir = "Properties";
+
+                bundle
+                    .Register(asm, $"{propertiesDir}/")
+                    .Register(uriParser.Parse($"resx://{asm.GetName().Name}/{propertiesDir}/{bundle.Bundle}/"))
                     ;
+            }
+            
+            bundle.Extractors
+                .Register(new PropertiesExtractor($"{bundle.Bundle}.properties"))
+                .Register(new PropertiesExtractor($"Strings.properties/{bundle.Bundle}/"))
+                .Register(new ResXResourceExtractor())
+                ;
             _bundleConfig.ConfigureViewResourceBundle(bundle, viewDescriptor);
         }
     }
