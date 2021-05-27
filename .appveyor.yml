@@ -1,5 +1,3 @@
-version: 3.0.1.{build}
-
 pull_requests:
   do_not_increment_build_number: true
 skip_branch_with_pr: true
@@ -18,19 +16,20 @@ cache:
   - '%LocalAppData%\NuGet\Cache'
   - '%LocalAppData%\NuGet\v3-cache'
 
+init:
+  - ps: "$env:VERSION=$env:APPVEYOR_BUILD_VERSION"
+
 build_script:
   - ps: "git submodule init -q \ngit submodule update -q \ngit submodule -q foreach git fetch origin -q \ngit submodule -q foreach git pull origin master -q"
   - ps: "dotnet build -p:Version=$env:VERSION -p:ContinuousIntegrationBuild=true -c $env:CONFIGURATION \ndotnet pack -p:Version=$env:VERSION -p:ContinuousIntegrationBuild=true -c $env:CONFIGURATION --no-restore"
 
 for:
-  - branches:
+  - version: 3.0.1.{build}
+    branches:
       only:
         - master
     environment:
       CONFIGURATION: Release
-    init:
-      - ps: "$env:VERSION=$env:APPVEYOR_BUILD_VERSION"
-    cache:
     deploy:
       - provider: NuGet
         api_key:
@@ -38,14 +37,12 @@ for:
         on:
           branch: master
 
-  - branches:
+  - version: 3.0.2-{branch}.{build}
+    branches:
       only:
         - /alpha|beta|preview|rc|snapshot/
-    version: 3.0.1-{branch}.{build}
     environment:
       CONFIGURATION: Release
-    init:
-      - ps: "$env:VERSION=$env:APPVEYOR_BUILD_VERSION"
     deploy:
       - provider: NuGet
         api_key:
