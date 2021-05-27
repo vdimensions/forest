@@ -41,7 +41,7 @@ for:
   - branches:
       only:
         - /alpha|beta|preview|rc|snapshot/
-    version: 3.0.1-{branch}-{build}
+    version: 3.0.1-{branch}.{build}
     environment:
       CONFIGURATION: Release
     init:
