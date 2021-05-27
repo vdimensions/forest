@@ -45,7 +45,7 @@ for:
     environment:
       CONFIGURATION: Release
     init:
-      - ps: "$env:VERSION=\"$env:APPVEYOR_BUILD_VERSION-$env:APPVEYOR_REPO_BRANCH\""
+      - ps: "$env:VERSION=$env:APPVEYOR_BUILD_VERSION"
     deploy:
       - provider: NuGet
         api_key:
