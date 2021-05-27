@@ -2,6 +2,7 @@
 using System.Linq;
 using Axle.Reflection;
 using Axle.Verification;
+using Forest.Engine;
 
 namespace Forest.Messaging
 {
@@ -16,8 +17,9 @@ namespace Forest.Messaging
             _parameter = (HandlerMethod = handlerMethod).GetParameters().LastOrDefault();
         }
 
-        protected void DoTrigger(IView sender, object arg)
+        protected void DoTrigger(_ForestViewContext context, IView sender, object arg)
         {
+            // TODO: use context
             if (_parameter != null)
             {
                 HandlerMethod.Invoke(sender, arg ?? _parameter.DefaultValue);

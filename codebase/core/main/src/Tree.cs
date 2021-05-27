@@ -76,11 +76,11 @@ namespace Forest
             /// <inheritdoc />
             public override int GetHashCode() => (Key != null ? Key.GetHashCode() : 0);
 
-            internal Node UpdateRevision() => new Node(ParentKey, Region, ViewHandle, Key, ViewState, 1u + Revision);
+            internal Node UpdateRevision() => new Node(ParentKey, Region, Handle, Key, ViewState, 1u + Revision);
 
             internal Node SetViewState(ViewState viewState)
             {
-                return new Node(ParentKey, Region, ViewHandle, Key, viewState, Revision);
+                return new Node(ParentKey, Region, Handle, Key, viewState, Revision);
             }
 
             public string ParentKey => _parentKey ?? string.Empty;
@@ -91,10 +91,10 @@ namespace Forest
             public string Region => _region ?? string.Empty;
 
             /// <summary>
-            /// Gets a <see cref="ViewHandle"/> that can be used to obtain the 
+            /// Gets a <see cref="Handle"/> that can be used to obtain the 
             /// <see cref="IForestViewDescriptor">view descriptor</see>
             /// </summary>
-            public ViewHandle ViewHandle => _viewHandle ?? ViewHandle.FromName(string.Empty);
+            public ViewHandle Handle => _viewHandle ?? ViewHandle.FromName(string.Empty);
 
             /// <summary>
             /// A unique string identifying the current node.
@@ -311,7 +311,7 @@ namespace Forest
                 var line = string.Format(
                     "{0}/{1} #{2}", 
                     (string.IsNullOrEmpty(tuple.Item1.Region) ? "shell" : tuple.Item1.Region),
-                    tuple.Item1.ViewHandle, 
+                    tuple.Item1.Handle, 
                     tuple.Item1.Key);
                 sb = sb.AppendLine(line.PadLeft(line.Length + (tuple.Item2 * 2), ' '));
             }

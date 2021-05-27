@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Forest.Engine.Instructions;
+using Forest.Messaging.Instructions;
 using Forest.Navigation;
 
 namespace Forest.Templates

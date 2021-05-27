@@ -1,21 +1,22 @@
 ﻿using System;
 using Axle.Reflection;
 using Axle.Verification;
+using Forest.Engine;
 
 namespace Forest.Messaging.TopicBased
 {
-    internal sealed class TopicEventDescriptor : AbstractEventDescriptor, ITopicEventDescriptor
+    internal sealed class TopicEventDescriptor : AbstractEventDescriptor, _TopicEventDescriptor
     {
         public TopicEventDescriptor(string topic, IMethod handlerMethod) : base(handlerMethod)
         {
             Topic = topic.VerifyArgument(nameof(topic)).IsNotNull();
         }
         
-        public void Trigger(IView sender, object arg)
+        public void Trigger(_ForestViewContext context, IView sender, object arg)
         {
             try
             {
-                DoTrigger(sender, arg);
+                DoTrigger(context, sender, arg);
             }
             catch (Exception e)
             {

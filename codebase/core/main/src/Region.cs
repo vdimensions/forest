@@ -8,11 +8,11 @@ namespace Forest
 {
     internal sealed class Region : IRegion
     {
-        private readonly IRuntimeView _owner;
+        private readonly _View _owner;
         private readonly string _name;
         private readonly string _resourceBundle;
 
-        public Region(IRuntimeView owner, string name, string resourceBundle = null)
+        public Region(_View owner, string name, string resourceBundle = null)
         {
             _owner = owner;
             _name = name;
@@ -93,7 +93,7 @@ namespace Forest
             _owner.Context.ProcessInstructions(
                 Views
                     .Where(predicate.Invoke)
-                    .Select(x => (ForestInstruction) new DestroyViewInstruction(((IRuntimeView) x).Key))
+                    .Select(x => (ForestInstruction) new DestroyViewInstruction(((_View) x).Key))
                     .ToArray()
             );
             return this;
