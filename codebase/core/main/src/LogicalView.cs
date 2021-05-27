@@ -42,10 +42,8 @@ namespace Forest
             }
         }
 
-        public void Publish<TM>(TM message, params string[] topics) 
-            => _context.Publish(message, topics);
-        public void Publish<TM>(TM message, PropagationTargets targets) 
-            => _context.Publish(message, targets);
+        public void Publish<TM>(TM message, params string[] topics) => _context.Publish(message, topics);
+        public void Publish<TM>(TM message, PropagationTargets targets) => _context.Publish(message, targets);
 
         [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
         public void WithRegion(string regionName, Action<IRegion> action) => WithRegion(regionName, string.Empty, action);
