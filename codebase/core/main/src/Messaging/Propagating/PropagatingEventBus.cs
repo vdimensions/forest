@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
+using Axle.Collections.Immutable;
 using Axle.Verification;
 
 namespace Forest.Messaging.Propagating

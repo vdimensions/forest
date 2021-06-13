@@ -23,7 +23,7 @@
 
   <!-- Pin thrird-party dependency versions  -->
   <PropertyGroup>
-    <AxleVersion>2.0.14-preview</AxleVersion>
+    <AxleVersion>2.1-preview</AxleVersion>
     <VDimensionsMSBuildSdkVersion>0.6.*</VDimensionsMSBuildSdkVersion>
   </PropertyGroup>
   <ItemGroup>
