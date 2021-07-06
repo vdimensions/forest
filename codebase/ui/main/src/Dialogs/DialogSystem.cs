@@ -118,6 +118,7 @@ namespace Forest.UI.Dialogs
             }
         }
 
+        [Obsolete]
         private static void ShowDialog<TMessage>(IForestEngine forest, TMessage message)
             where TMessage: Messages.IDialogMessage
         {
@@ -125,17 +126,43 @@ namespace Forest.UI.Dialogs
             forest.SendMessage(message);
         }
 
+        [Obsolete]
         public static void ShowModal<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView: IView<TModel>
         {
             ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions));
         }
+        [Obsolete]
         public static void ShowConfirmation<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView : IView<TModel>, IConfirmationDialogView
         {
             ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions));
         }
+        [Obsolete]
         public static void ShowOkCancelDialog<TView, TModel>(this IForestEngine forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
+            where TView : IView<TModel>, IOkCancelDialogView
+        {
+            ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions));
+        }
+        
+        private static void ShowDialog<TMessage>(IForestViewContext context, TMessage message)
+            where TMessage: Messages.IDialogMessage
+        {
+            //context.RegisterSystemView<View>();
+            context.Publish(message);
+        }
+
+        public static void ShowModal<TView, TModel>(this IForestViewContext forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
+            where TView: IView<TModel>
+        {
+            ShowDialog(forest, new Messages.Modal<TView, TModel>(model, dialogOptions));
+        }
+        public static void ShowConfirmation<TView, TModel>(this IForestViewContext forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
+            where TView : IView<TModel>, IConfirmationDialogView
+        {
+            ShowDialog(forest, new Messages.ConfirmationDialog<TView, TModel>(model, dialogOptions));
+        }
+        public static void ShowOkCancelDialog<TView, TModel>(this IForestViewContext forest, TModel model, DialogOptions dialogOptions = DialogOptions.Default)
             where TView : IView<TModel>, IOkCancelDialogView
         {
             ShowDialog(forest, new Messages.OkCancelDialog<TView, TModel>(model, dialogOptions));

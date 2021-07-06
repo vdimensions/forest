@@ -122,6 +122,10 @@ namespace Forest
 
         void _View.DetachContext()
         {
+            if (_context == null)
+            {
+                return;
+            }
             _context.UnsubscribeEvents(this);
             _context = null;
         }

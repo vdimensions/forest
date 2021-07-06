@@ -15,7 +15,7 @@ namespace Forest.StateManagement
             instanceId.VerifyArgument(nameof(instanceId)).IsNotNull();
             if (state.LogicalViews.TryGetValue(instanceId, out var logicalView))
             {
-                descriptor = logicalView.Item1.Descriptor;
+                descriptor = logicalView.Item2;
                 return true;
             }
             descriptor = null;

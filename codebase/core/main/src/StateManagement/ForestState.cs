@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 #endif
 using Forest.Navigation;
 using Forest.UI;
-using ViewContextTuple = System.Tuple<Forest.Engine._ForestViewContext, Forest.Engine._View>;
+using ViewContextTuple = System.Tuple<Forest.Engine._ForestViewContext, Forest.ComponentModel.IForestViewDescriptor, Forest.Engine._View>;
 
 namespace Forest.StateManagement
 {
