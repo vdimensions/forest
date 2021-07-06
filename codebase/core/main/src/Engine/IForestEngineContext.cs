@@ -1,6 +1,8 @@
-﻿namespace Forest.Engine
+﻿using System;
+
+namespace Forest.Engine
 {
-    public interface IForestEngineContext : System.IDisposable
+    public interface IForestEngineContext : IDisposable
     {
         IForestEngine Engine { get; }
     }

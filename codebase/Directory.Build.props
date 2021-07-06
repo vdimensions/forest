@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!-- Copyright info -->
+  <PropertyGroup>
+    <Company>Virtual Dimensions</Company>
+    <CopyrightYearSince>2013</CopyrightYearSince>
+    <Authors>$(Company)</Authors>
+    <Trademark></Trademark>
+    <License>Apache-2.0</License>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/vdimensions/forest</RepositoryUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <ContinuousIntegrationBuild Condition=" '$(ContinuousIntegrationBuild)' == '' ">false</ContinuousIntegrationBuild>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">
+    <Deterministic>true</Deterministic>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <DebugType>portable</DebugType>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(ContinuousIntegrationBuild)' == 'true' ">
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All"/>
+  </ItemGroup>
+
+  <!-- Versioning properties -->
+  <PropertyGroup>
+    <VersionMajor>3</VersionMajor>
+    <VersionMinor>0</VersionMinor>
+    <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">snapshot</VersionSuffix>
+  </PropertyGroup>
+
+  <!-- Common props -->
+  <PropertyGroup>
+    <AppDesignerFolder Condition=" '$(AppDesignerFolder)' == '' ">Properties</AppDesignerFolder>
+    <GenerateAssemblyInfo Condition=" '$(GenerateAssemblyInfo)' == '' ">true</GenerateAssemblyInfo>
+    <MultiProcessorCompilation>false</MultiProcessorCompilation>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+  
+  <!-- Packaging properties -->
+  <PropertyGroup>
+    <!-- Avoid implicitly added preview feeds -->
+    <AddDotnetfeedProjectSource>false</AddDotnetfeedProjectSource>
+    <PackageOutputPath>$(MSBuildProjectDirectory)\..\..\..\..\dist</PackageOutputPath>
+    <RestoreSources>https://api.nuget.org/v3/index.json;$(RestoreSources)</RestoreSources>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Defaults">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Copyright">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Versioning">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="VDimensions.MSBuild.Sdk.Multitargeting">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="packages\**" />
+    <Compile Remove="paket-files\**" />
+    <EmbeddedResource Remove="packages\**" />
+    <EmbeddedResource Remove="paket-files\**" />
+    <None Remove="packages\**" />
+    <None Remove="paket-files\**" />
+  </ItemGroup>
+</Project>

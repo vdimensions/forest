@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Axle.Collections.Immutable;
 
 namespace Forest.Templates.Xml
 {
@@ -22,13 +22,13 @@ namespace Forest.Templates.Xml
             var root = doc.Root;
             var master = root.Attribute(XName.Get("master"))?.Value;
             return !string.IsNullOrEmpty(master)
-                ? this.CreateMasteredTemplate(master, ReadPlaceHolderDefinitions(root.Elements()))
-                : this.CreateTemplateDefinition(name, ReadViewContents(root.Elements()));
+                ? CreateMasteredTemplate(master, ReadPlaceHolderDefinitions(root.Elements()))
+                : CreateTemplateDefinition(name, ReadViewContents(root.Elements()));
         }
 
         private IEnumerable<Template.Content> ReadPlaceHolderDefinitions(IEnumerable<XElement> elements)
         {
-            return elements
+            return ImmutableList.CreateRange(elements
                 .Select(
                     x =>
                     {
@@ -41,13 +41,12 @@ namespace Forest.Templates.Xml
                         var contents = ReadRegionContents(x.Elements());
                         return CreateTemplateContent(id, contents);
                     })
-                .Where(x => x.Contents.Any())
-                .ToImmutableList();
+                .Where(x => x.Contents.Any()));
         }
 
         private IEnumerable<Template.RegionItem> ReadRegionContents(IEnumerable<XElement> elements)
         {
-            return elements
+            return ImmutableList.CreateRange(elements
                 .Select(
                     e =>
                     {
@@ -76,13 +75,12 @@ namespace Forest.Templates.Xml
 
                         return null;
                     })
-                .Where(x => x != null)
-                .ToImmutableList();
+                .Where(x => x != null));
         }
 
         private IEnumerable<Template.ViewItem> ReadViewContents(IEnumerable<XElement> elements)
         {
-            return elements
+            return ImmutableList.CreateRange(elements
                 .Select(
                     e =>
                     {
@@ -105,8 +103,7 @@ namespace Forest.Templates.Xml
 
                         return null;
                     })
-                .Where(x => x != null)
-                .ToImmutableList();
+                .Where(x => x != null));
         }
     }
 }

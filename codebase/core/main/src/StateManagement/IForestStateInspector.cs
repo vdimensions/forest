@@ -4,7 +4,7 @@ namespace Forest.StateManagement
 {
     public interface IForestStateInspector
     {
-        IViewDescriptor GetViewDescriptor(ForestState state, string instanceId);
-        bool TryGetViewDescriptor(ForestState state, string instanceId, out IViewDescriptor descriptor);
+        IForestViewDescriptor GetViewDescriptor(ForestState state, string instanceId);
+        bool TryGetViewDescriptor(ForestState state, string instanceId, out IForestViewDescriptor descriptor);
     }
 }

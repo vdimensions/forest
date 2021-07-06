@@ -1,17 +1,16 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
 using Forest.ComponentModel;
-using Forest.StateManagement;
+using Forest.Navigation;
 using Forest.Web.AspNetCore.Dom;
 
 namespace Forest.Web.AspNetCore
 {
-    public interface IClientViewsHelper
+    internal interface IClientViewsHelper
     {
-        IViewDescriptor GetDescriptor(string instanceId);
-        bool TryGetDescriptor(string instanceId, out IViewDescriptor descriptor);
+        bool TryGetViewDescriptor(string instanceId, out IForestViewDescriptor descriptor);
 
-        NavigationInfo NavigationInfo { get; }
-        IImmutableDictionary<string, ViewNode> AllViews { get; }
-        IImmutableDictionary<string, ViewNode> UpdatedViews { get; }
+        Location Location { get; }
+        IReadOnlyDictionary<string, ViewNode> AllViews { get; }
+        IReadOnlyDictionary<string, ViewNode> UpdatedViews { get; }
     }
 }

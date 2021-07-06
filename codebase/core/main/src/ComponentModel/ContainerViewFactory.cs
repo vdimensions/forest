@@ -1,48 +1,46 @@
-﻿using Axle;
-using Axle.DependencyInjection;
+﻿using Axle.DependencyInjection;
 using Axle.Verification;
 
 namespace Forest.ComponentModel
 {
-    internal sealed class ContainerViewFactory : IViewFactory
+    internal sealed class ContainerViewFactory : IForestViewFactory
     {
-        private readonly Application _app;
-        private readonly IContainer _container;
+        private readonly IDependencyContainerFactory _dependencyContainerFactory;
+        private readonly IDependencyContext _dependencyContext;
 
-        public ContainerViewFactory(IContainer container, Application app)
+        public ContainerViewFactory(IDependencyContext dependencyContext, IDependencyContainerFactory dependencyContainerFactory)
         {
-            _container = container.VerifyArgument(nameof(container)).IsNotNull().Value;
-            _app = app.VerifyArgument(nameof(app)).IsNotNull().Value;
+            _dependencyContext = dependencyContext.VerifyArgument(nameof(dependencyContext)).IsNotNull().Value;
+            _dependencyContainerFactory = dependencyContainerFactory.VerifyArgument(nameof(dependencyContainerFactory)).IsNotNull().Value;
         }
 
-        private IView DoResolve(IViewDescriptor descriptor, object model)
+        private IView DoResolve(IForestViewDescriptor descriptor, params object[] args)
         {
-            using (var tmpContainer = _app.CreateContainer(_container))
+            using (var tmpContainer = _dependencyContainerFactory.CreateContainer(_dependencyContext))
             {
                 tmpContainer.RegisterType(descriptor.ViewType, descriptor.Name);
-                if (model != null)
+
+                foreach (var o in args)
                 {
-                    tmpContainer.RegisterInstance(model);
+                    tmpContainer.Export(o);
                 }
-                else
-                {
-                    tmpContainer.RegisterType(descriptor.ModelType);
-                }
+
                 return (IView) tmpContainer.Resolve(descriptor.ViewType, descriptor.Name);
             }
         }
 
-        IView IViewFactory.Resolve(IViewDescriptor descriptor, object model)
+        // TODO: `arg` should become `params object[] args`
+        IView IForestViewFactory.Resolve(IForestViewDescriptor descriptor, object arg)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
-            model.VerifyArgument(nameof(model)).IsNotNull().IsOfType(descriptor.ModelType);
-            return DoResolve(descriptor, model);
+            arg.VerifyArgument(nameof(arg)).IsNotNull();
+            return DoResolve(descriptor, arg);
         }
 
-        IView IViewFactory.Resolve(IViewDescriptor descriptor)
+        IView IForestViewFactory.Resolve(IForestViewDescriptor descriptor)
         {
             descriptor.VerifyArgument(nameof(descriptor)).IsNotNull();
-            return DoResolve(descriptor, null);
+            return DoResolve(descriptor);
         }
     }
 }

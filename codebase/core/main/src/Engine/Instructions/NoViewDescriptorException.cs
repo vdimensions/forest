@@ -12,13 +12,13 @@ namespace Forest.Engine.Instructions
     {
         private NoViewDescriptorException(InstantiateViewInstruction faultyInstruction, string message, Exception inner) 
             : base(faultyInstruction, message, inner) { }
-        public NoViewDescriptorException(InstantiateViewInstruction faultyInstruction, Exception inner) 
+        internal NoViewDescriptorException(InstantiateViewInstruction faultyInstruction, Exception inner) 
             : this(faultyInstruction, "Unable to obtain view descriptor. ", inner) { }
-        public NoViewDescriptorException(InstantiateViewInstruction faultyInstruction) 
+        internal NoViewDescriptorException(InstantiateViewInstruction faultyInstruction) 
             : this(faultyInstruction, null) { }
 
         #if NETSTANDARD2_0_OR_NEWER || NETFRAMEWORK
-        protected NoViewDescriptorException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+        internal NoViewDescriptorException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
         #endif
     }
 }

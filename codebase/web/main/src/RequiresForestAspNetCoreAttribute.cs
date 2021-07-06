@@ -8,6 +8,9 @@ namespace Forest.Web.AspNetCore
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = true, AllowMultiple = false)]
     public sealed class RequiresForestAspNetCoreAttribute : RequiresAttribute
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RequiresForestAspNetCoreAttribute"/> class.
+        /// </summary>
         public RequiresForestAspNetCoreAttribute() : base(typeof(ForestAspNetCoreModule)) { }
     }
 }

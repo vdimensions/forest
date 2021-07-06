@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <!-- make MSBuild track this file for incremental builds. -->
+    <!-- ref https://blogs.msdn.microsoft.com/msbuild/2005/09/26/how-to-ensure-changes-to-a-custom-target-file-prompt-a-rebuild/ -->
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ForestPath)' == ''">
+    <ForestPath>$(MSBuildProjectDirectory)\..\..\..\..\..\forest</ForestPath>
+  </PropertyGroup>
+  
+  <Choose>
+    <When Condition="Exists('$(ForestPath)\dist\restore')">
+      <ItemGroup>
+        <PackageReference Include="Forest.UI" Version="$(ForestVersion)" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <ProjectReference Include="$(ForestPath)\codebase\ui\main\src\Forest.UI.csproj" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
+</Project>

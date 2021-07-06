@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Axle.Verification;
 using Forest.ComponentModel;
 using Forest.Engine;
 using Forest.Engine.Instructions;
+using Forest.Messaging.Propagating;
 
 namespace Forest
 {
-    public abstract class LogicalView<T> : IView<T>, IRuntimeView
+    public abstract class LogicalView<T> : IView<T>, _View
     {
+        [Obsolete]
         private ViewState _state;
-        private IForestExecutionContext _executionContext;
-        private IViewDescriptor _descriptor;
-        private Tree.Node _node;
+        private _ForestViewContext<T> _context;
 
         private LogicalView(ViewState state)
         {
@@ -36,93 +37,100 @@ namespace Forest
                 }
                 finally
                 {
-                    if (_executionContext != null)
-                    {
-                        ((IRuntimeView) this).AbandonContext(_executionContext);
-                    }
+                    ((_View) this).DetachContext();
                 }
             }
         }
 
-        public void Publish<TM>(TM message, params string[] topics) => ExecutionContext.ProcessInstructions(new SendMessageInstruction(message, topics, _node.InstanceID));
+        public void Publish<TM>(TM message, params string[] topics) => _context.Publish(message, topics);
+        public void Publish<TM>(TM message, PropagationTargets targets) => _context.Publish(message, targets);
 
-        public IRegion FindRegion(string name)
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion(string regionName, Action<IRegion> action) => WithRegion(regionName, string.Empty, action);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion(string regionName, string resourceBundle, Action<IRegion> action)
         {
-            name.VerifyArgument(nameof(name)).IsNotNullOrEmpty();
-            return new RegionImpl(this, name);
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            action.VerifyArgument(nameof(action)).IsNotNull();
+            action.Invoke(new Region(this, regionName, resourceBundle));
         }
-
-        public void Close() => ExecutionContext.ProcessInstructions(new DestroyViewInstruction(_node));
-
-        public void UpdateModel(Func<T, T> updateFunc)
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion<T>(string regionName, Action<IRegion, T> action, T arg) 
+            => WithRegion(regionName, string.Empty, action, arg);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public void WithRegion<T>(string regionName, string resourceBundle, Action<IRegion, T> action, T arg)
         {
-            var newModel = updateFunc.Invoke(Model);
-            if (_executionContext != null)
-            {
-                var vs = _executionContext.GetViewState(_node);
-                _state = _executionContext.SetViewState(false, _node, vs.HasValue ? ViewState.UpdateModel(vs.Value, newModel) : ViewState.Create(newModel));
-            }
-            else
-            {
-                _state = ViewState.Create(newModel);
-            }
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            action.VerifyArgument(nameof(action)).IsNotNull();
+            action.Invoke(new Region(this, regionName, resourceBundle), arg);
         }
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<TResult>(string regionName, Func<IRegion, TResult> func) 
+            => WithRegion(regionName, string.Empty, func);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<TResult>(string regionName, string resourceBundle, Func<IRegion, TResult> func)
+        {
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            func.VerifyArgument(nameof(func)).IsNotNull();
+            return func.Invoke(new Region(this, regionName, resourceBundle));
+        }
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<T, TResult>(string regionName, Func<IRegion, T, TResult> func, T arg) 
+            => WithRegion(regionName, string.Empty, func, arg);
+        [SuppressMessage("ReSharper", "MemberCanBeProtected.Global")]
+        public TResult WithRegion<T, TResult>(string regionName, string resourceBundle, Func<IRegion, T, TResult> func, T arg)
+        {
+            regionName.VerifyArgument(nameof(regionName)).IsNotNullOrEmpty();
+            func.VerifyArgument(nameof(func)).IsNotNull();
+            return func.Invoke(new Region(this, regionName, resourceBundle), arg);
+        }
+        
+        public void Close() => _context.ProcessInstructions(new DestroyViewInstruction(_context.Key));
 
+        [Obsolete]
+        public T UpdateModel(Func<T, T> updateFunc) => _context.Model = updateFunc(_context.Model);
+
+        private void LoadContext(IForestViewContext context) => Load((IForestViewContext<T>) context);
+        
+        void IView.Load(IForestViewContext context) => LoadContext(context);
+        public virtual void Load(IForestViewContext<T> context) => Load();
         public virtual void Load() { }
-        public virtual void Resume() { }
 
-        internal IForestExecutionContext ExecutionContext => _executionContext ?? throw new InvalidOperationException("No execution context is available.");
+        protected virtual T CreateModel() => default(T);
 
-        protected IForestEngine Engine => ExecutionContext;
+        public T Model => Context == null ? (T) _state.Model : Context.Model;
 
-        public T Model => (T) _state.Model;
-
+        [Obsolete]
+        T IView<T>.Model => Model;
+        [Obsolete]
         object IView.Model => Model;
 
-        void IRuntimeView.AcquireContext(Tree.Node node, IViewDescriptor vd, IForestExecutionContext context)
+        void _View.Load(_ForestViewContext viewContext, bool initialLoad)
         {
-            if (_executionContext != null)
+            _context = ForestViewContext.Wrap<T>(viewContext);
+            // TODO: terrible, terrible workaround
+            if (_state.Model != null && viewContext.Model == null)
             {
-                throw new InvalidOperationException(string.Format("View {0} has already acquired a context. ", node.ViewHandle));
+                viewContext.Model = _state.Model;
             }
-            _node = node;
-            _descriptor = vd;
-            var vs = context.GetViewState(_node);
-            if (vs.HasValue)
+            _state = viewContext.Node.ViewState;
+            if (initialLoad)
             {
-                _state = vs.Value;
+                LoadContext(_context);
             }
-            else
-            {
-                // TODO: How is this different than Resume(_state)
-                context.SetViewState(true, node, _state);
-            }
-            (_executionContext = context).SubscribeEvents(this);
         }
 
-        void IRuntimeView.AbandonContext(IForestExecutionContext context)
+        void _View.DetachContext()
         {
-            if (!ReferenceEquals(context, _executionContext))
+            if (_context == null)
             {
-                throw new InvalidOperationException("The provided context is not correct");
+                return;
             }
-            context.UnsubscribeEvents(this);
-            var vs = context.GetViewState(_node);
-            if (vs.HasValue)
-            {
-                _state = vs.Value;
-            }
-            _executionContext = null;
+            _context.UnsubscribeEvents(this);
+            _context = null;
         }
 
-        void IRuntimeView.Resume(ViewState viewState)
-        {
-            
-            _state = this.ExecutionContext.SetViewState(true, _node, viewState);
-            Resume();
-        }
-
-        void IRuntimeView.Destroy()
+        void _View.Destroy()
         {
             try
             {
@@ -130,18 +138,23 @@ namespace Forest
             }
             finally
             {
-                if (_executionContext != null)
-                {
-                    ((IRuntimeView)this).AbandonContext(_executionContext);
-                }
+                ((_View) this).DetachContext();
             }
         }
 
-        Tree.Node IRuntimeView.Node => _node;
-        IViewDescriptor IRuntimeView.Descriptor => _descriptor;
-        IForestExecutionContext IRuntimeView.Context => ExecutionContext;
+        object _View.CreateModel() => CreateModel();
+
+        _ForestViewDescriptor _View.Descriptor => _context?.Descriptor;
+        _ForestViewContext _View.Context => _context;
 
         void IDisposable.Dispose() => DoDispose(true);
+
+        string IView.Name => _context?.Descriptor?.Name;
+        string IView.Key => _context?.Key;
+
+        protected IForestViewContext<T> Context => _context;
+        IForestViewContext IView.Context => _context;
+        IForestViewContext<T> IView<T>.Context => Context;
     }
 
     public abstract class LogicalView : LogicalView<object>

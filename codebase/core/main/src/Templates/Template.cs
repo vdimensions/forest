@@ -6,6 +6,122 @@ namespace Forest.Templates
 {
     public abstract partial class Template
     {
+        #region Content
+        public struct Content
+        {
+            internal Content(string placeholder, IEnumerable<RegionItem> contents)
+            {
+                Placeholder = placeholder;
+                Contents = contents;
+            }
+
+            public string Placeholder { get; }
+            public IEnumerable<RegionItem> Contents { get; }
+        }
+        #endregion
+
+        #region Definition
+        internal sealed class Definition : Template
+        {
+            public Definition(string name, IEnumerable<ViewItem> contents)
+            {
+                Name = name;
+                Contents = contents;
+            }
+
+            public string Name { get; }
+            public IEnumerable<ViewItem> Contents { get; }
+        }
+        #endregion
+
+        #region Mastered
+        internal sealed class Mastered : Template
+        {
+            public Mastered(string master, IEnumerable<Content> contents)
+            {
+                Master = master;
+                Contents = contents;
+            }
+
+            public string Master { get; }
+            public IEnumerable<Content> Contents { get; }
+        }
+        #endregion
+
+        #region RegionItem
+        public abstract class RegionItem
+        {
+            internal sealed class Placeholder : RegionItem
+            {
+                internal Placeholder(string id)
+                {
+                    ID = id;
+                }
+
+                public string ID { get; }
+            }
+
+            internal sealed class TemplateReference : RegionItem
+            {
+                internal TemplateReference(string template)
+                {
+                    Template = template;
+                }
+
+                public string Template { get; }
+            }
+
+            internal sealed class View : RegionItem
+            {
+                internal View(string name, IEnumerable<ViewItem> contents)
+                {
+                    Name = name;
+                    Contents = contents;
+                }
+
+                public string Name { get; }
+                public IEnumerable<ViewItem> Contents { get; }
+            }
+
+            internal sealed class ClearInstruction : RegionItem
+            {
+                internal ClearInstruction() { }
+            }
+        }
+        #endregion
+
+        #region ViewItem
+        public abstract class ViewItem
+        {
+            internal sealed class Region : ViewItem
+            {
+                public Region(string name, IEnumerable<RegionItem> contents)
+                {
+                    Name = name;
+                    Contents = contents;
+                }
+
+                public string Name { get; }
+                public IEnumerable<RegionItem> Contents { get; }
+            }
+
+            internal sealed class InlinedTemplate : ViewItem
+            {
+                internal InlinedTemplate(string template)
+                {
+                    Template = template;
+                }
+
+                public string Template { get; }
+            }
+
+            internal sealed class ClearInstruction : ViewItem
+            {
+                internal ClearInstruction() { }
+            }
+        }
+        #endregion
+
         /// <summary>
         /// Expands a given <c>template</c>'s hierarchy to a <see cref="Template.Definition">template definition</see> 
         /// list with the top-hierarchy root the last
@@ -28,7 +144,7 @@ namespace Forest.Templates
             }
         }
 
-        private static IEnumerable<ViewItem> ProcessPlaceholders(IDictionary<string, ICollection<RegionItem>> placeholderData, IEnumerable<ViewItem> current)
+        private static IEnumerable<ViewItem> ProcessPlaceholders(ITemplateProvider provider, IDictionary<string, ICollection<RegionItem>> placeholderData, IEnumerable<ViewItem> current)
         {
             if (placeholderData.Count == 0)
             {
@@ -43,8 +159,11 @@ namespace Forest.Templates
                     case ViewItem.ClearInstruction _:
                         result.Clear();
                         break;
-                    case ViewItem.InlinedTemplate _:
-                        result.Add(vc);
+                    case ViewItem.InlinedTemplate inlinedTemplate:
+                        foreach (var vcc in LoadTemplate(provider, inlinedTemplate.Template).Contents)
+                        {
+                            result.Add(vcc);
+                        }
                         break;
                     case ViewItem.Region region:
                         var newRegionContents = new List<RegionItem>();
@@ -67,7 +186,7 @@ namespace Forest.Templates
                                     }
                                     break;
                                 case RegionItem.View view:
-                                    var newViewContents = ProcessPlaceholders(placeholderData, view.Contents);
+                                    var newViewContents = ProcessPlaceholders(provider, placeholderData, view.Contents);
                                     newRegionContents.Add(new RegionItem.View(view.Name, newViewContents));
                                     break;
                                 case RegionItem.TemplateReference _:
@@ -170,6 +289,7 @@ namespace Forest.Templates
                 var newContents = InlineTemplates(
                     provider, 
                     ProcessPlaceholders(
+                        provider,
                         placeholderMap, 
                         ExpandTemplates(provider, res.Contents)));
 

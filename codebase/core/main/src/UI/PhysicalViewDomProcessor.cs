@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
+using Axle.Collections.Immutable;
+using Forest.Dom;
 using Forest.Engine;
 
 namespace Forest.UI
@@ -10,46 +10,56 @@ namespace Forest.UI
     {
         public enum NodeState : sbyte
         {
-            NewNode = 0,
-            UpdatedNode = 1
+            Unchanged = 0,
+            NewNode = 1,
+            UpdatedNode = 2,
         }
 
-        private IImmutableSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
+        private IImmutableHashSet<string> _nodesToPreserve = ImmutableHashSet<string>.Empty;
         private IImmutableList<Tuple<DomNode, NodeState>> _nodeStates = ImmutableList<Tuple<DomNode, NodeState>>.Empty;
 
         private readonly IForestEngine _engine;
         private readonly IPhysicalViewRenderer _renderer;
+        private readonly ImmutableDictionary<string, IPhysicalView> _physicalViews;
 
-        private PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, StringComparer stringComparer, ImmutableDictionary<string, IPhysicalView> physicalViews)
+        internal PhysicalViewDomProcessor(
+            IForestEngine engine, 
+            IPhysicalViewRenderer renderer, 
+            IReadOnlyDictionary<string, IPhysicalView> physicalViews)
         {
             _engine = engine;
             _renderer = renderer;
-            PhysicalViews = physicalViews == null
+            _physicalViews = physicalViews == null
                 ? ImmutableDictionary.Create<string, IPhysicalView>(StringComparer.Ordinal)
-                : ImmutableDictionary.CreateRange(physicalViews.KeyComparer, physicalViews);
+                : ImmutableDictionary.CreateRange(StringComparer.Ordinal, physicalViews);
         }
-        internal PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer, ImmutableDictionary<string, IPhysicalView> physicalViews = null)
-            : this(engine, renderer, StringComparer.Ordinal, physicalViews) { }
-        public PhysicalViewDomProcessor(IForestEngine engine, IPhysicalViewRenderer renderer) 
-            : this(engine, renderer, null) { }
 
-        [Obsolete]
-        public ImmutableDictionary<string, IPhysicalView> PhysicalViews { get; internal set; }
-
-        DomNode IDomProcessor.ProcessNode(DomNode node)
+        DomNode IDomProcessor.ProcessNode(DomNode node, bool isNodeUpdated)
         {
             _nodesToPreserve = _nodesToPreserve.Add(node.InstanceID);
+            var physicalViewExists = _physicalViews.TryGetValue(node.InstanceID, out var pv);
+            //
+            // Because of globalization or other processor interference, the dom node passed-in may be different
+            // than the dom node that is in possession of the physical view.
+            // In case there were no changes to that particular node, we must assume that
+            // the physical view is the source of truth. 
+            //
+            var actualNode = physicalViewExists 
+                ? isNodeUpdated ? node : (pv.Node ?? node)
+                : node;
             _nodeStates = _nodeStates.Add(
                 Tuple.Create(
-                    node, 
-                    PhysicalViews.TryGetValue(node.InstanceID, out _) ? NodeState.UpdatedNode : NodeState.NewNode));
+                    actualNode, 
+                    physicalViewExists
+                        ? isNodeUpdated ? NodeState.UpdatedNode : NodeState.Unchanged 
+                        : NodeState.NewNode));
             return node;
         }
 
-        void IDomProcessor.Complete(IEnumerable<DomNode> nodes)
+        public IReadOnlyDictionary<string, IPhysicalView> RenderViews()
         {
-            var physicalViews = new Dictionary<string, IPhysicalView>(PhysicalViews.KeyComparer);
-            foreach (var kvp in PhysicalViews)
+            var physicalViews = new Dictionary<string, IPhysicalView>(_physicalViews.KeyComparer);
+            foreach (var kvp in _physicalViews)
             {
                 if (_nodesToPreserve.Contains(kvp.Key))
                 {
@@ -66,46 +76,62 @@ namespace Forest.UI
 
             // store tuples of renderer and node to initiate an update call after the views are rendered
             var updateCallArguments = new List<Tuple<IPhysicalView, DomNode>>();
-            foreach(var nodeState in _nodeStates)
+            foreach(var nodeStateTuple in _nodeStates)
             {
-                var n = nodeState.Item1;
-                var isNewView = nodeState.Item2 == NodeState.NewNode;
+                var n = nodeStateTuple.Item1;
+                var nodeState = nodeStateTuple.Item2;
                 var current = physicalViews.TryGetValue(n.InstanceID, out var _n) ? _n : null;
 
                 IPhysicalView parent = null;
                 if (n.Parent == null || (n.Parent != null && physicalViews.TryGetValue(n.Parent.InstanceID, out parent)))
                 {
-                    if (current == null && isNewView)
+                    if (current == null && nodeState == NodeState.NewNode)
                     {
                         var physicalView = parent != null
                             ? _renderer.CreateNestedPhysicalView(_engine, parent, n)
                             : _renderer.CreatePhysicalView(_engine, n);
-                        //updateCallArguments < -(physicalView, n)::updateCallArguments
                         updateCallArguments.Add(Tuple.Create(physicalView, n));
                         physicalViews.Add(n.InstanceID, physicalView);
                     }
-                    else if (current != null && !isNewView)
+                    else if (current != null && nodeState != NodeState.Unchanged)
                     {
                         updateCallArguments.Add(Tuple.Create(current, n));
                     }
-                    else if (current != null && isNewView)
+                    else if (current != null && nodeState == NodeState.NewNode)
                     {
                         throw new InvalidOperationException(n.Parent != null
-                            ? string.Format("Did not expect physical view {0} #{1} to contain child {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID)
-                            : string.Format("Physical view {0} #{1} already exists", n.Name, n.InstanceID));
+                            ? string.Format(
+                                "Did not expect physical view {0} #{1} to contain child {2} #{3}", 
+                                n.Parent.Name, 
+                                n.Parent.InstanceID, 
+                                n.Name, 
+                                n.InstanceID)
+                            : string.Format(
+                                "Physical view {0} #{1} already exists", 
+                                n.Name, 
+                                n.InstanceID));
                     }
-                    else if (current == null && !isNewView)
+                    else if (current == null && nodeState != NodeState.NewNode)
                     {
-                        throw new InvalidOperationException(string.Format("Could not locate physical view {0} #{1}", n.Name, n.InstanceID));
+                        throw new InvalidOperationException(
+                            string.Format(
+                                "Could not locate physical view {0} #{1}", 
+                                n.Name, 
+                                n.InstanceID));
                     }
                 }
                 else if (n.Parent != null && parent == null)
                 {
-                    throw new InvalidOperationException(string.Format("Could not locate physical view {0} #{1} that should be parent of {2} #{3}", n.Parent.Name, n.Parent.InstanceID, n.Name, n.InstanceID));
+                    throw new InvalidOperationException(
+                        string.Format(
+                            "Could not locate physical view {0} #{1} that should be parent of {2} #{3}", 
+                            n.Parent.Name, 
+                            n.Parent.InstanceID, 
+                            n.Name, 
+                            n.InstanceID));
                 }
             }
 
-            PhysicalViews = ImmutableDictionary.CreateRange(physicalViews.Comparer, physicalViews);
             _nodesToPreserve = _nodesToPreserve.Clear();
             _nodeStates = _nodeStates.Clear();
 
@@ -124,8 +150,12 @@ namespace Forest.UI
             // At this point, invoking those update calls is safe and the described above side-effects are avoided.
             foreach (var x in updateCallArguments)
             {
-                x.Item1.Update(x.Item2);
+                var physicalView = x.Item1;
+                var domNode = x.Item2;
+                physicalView.Update(domNode);
             }
+            
+            return ImmutableDictionary.CreateRange(physicalViews.Comparer, physicalViews);
         }
     }
 }

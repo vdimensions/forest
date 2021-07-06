@@ -1,4 +1,5 @@
 ﻿using System;
+using Forest.Dom;
 
 namespace Forest.UI
 {
@@ -6,11 +7,9 @@ namespace Forest.UI
     {
         void Update(DomNode node);
 
-        void InvokeCommand(string commandName, object arg);
-
-        void NavigateTo(string template);
-        void NavigateTo<T>(string template, T message);
-
-        string InstanceID { get; }
+        IPhysicalViewCommandIndex Commands { get; }
+        
+        string Key { get; }
+        DomNode Node { get; }
     }
 }
